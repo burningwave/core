@@ -3,7 +3,6 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
-
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
@@ -66,6 +65,10 @@ public class ComponentContainerTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
 			componentContainer.getPathScannerClassLoader();
+			componentContainer.setConfigProperty(
+				PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
+				null
+			);
 			componentContainer.setConfigProperty(
 				PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER,
 				Thread.currentThread().getContextClassLoader()

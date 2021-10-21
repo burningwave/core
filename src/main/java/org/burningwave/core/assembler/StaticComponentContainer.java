@@ -36,16 +36,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -70,8 +73,6 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-			private static final String ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER = "static-component-container.on-close.close-file-system-helper";
-			private static final String ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS = "static-component-container.on-close.close-all-component-containers";
 		}
 		
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -137,16 +138,6 @@ public class StaticComponentContainer {
 				Key.JVM_DRIVER_INIT,
 				false
 			);			
-			
-			defaultValues.put(
-				Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS,
-				true
-			);
-			
-			defaultValues.put(
-				Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER,
-				true
-			);
 			
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -282,11 +273,13 @@ public class StaticComponentContainer {
 				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
 				).getDeclaredConstructor().newInstance());
-			} else {
+				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+					Driver.init();
+				}
+			} else if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
-			}			
-			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
-				Driver.init();
+			} else {
+				Driver = io.github.toolfactory.jvm.Driver.Factory.getNewDynamic();
 			}			
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
@@ -295,12 +288,8 @@ public class StaticComponentContainer {
 			);
 			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
-				getName("BackgroundExecutor"),
-				ThreadSupplier,
-				ThreadSupplier, 
-				ThreadSupplier,
-				true,
-				true
+				"background-executor",
+				getAndAdjustConfigurationForBackgroundExecutor()
 			);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(
 				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer", 
@@ -344,22 +333,18 @@ public class StaticComponentContainer {
 							BackgroundExecutor.waitForTasksEnding(true, true);
 						});
 					};
-					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_ALL_COMPONENT_CONTAINERS))) {
-						closingOperations = closingOperations.andThen(() -> {
-							Executor.runAndIgnoreExceptions(() -> {
-								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
-								ComponentContainer.closeAll();
-							});
+					closingOperations = closingOperations.andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing all component containers");
+							ComponentContainer.closeAll();
 						});
-					}
-					if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.ON_CLOSE_CLOSE_FILE_SYSTEM_HELPER))) {
-						closingOperations = closingOperations.andThen(() -> {
-							Executor.runAndIgnoreExceptions(() -> {
-								ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
-								FileSystemHelper.close();
-							});
+					});
+					closingOperations = closingOperations.andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "Closing FileSystemHelper");
+							FileSystemHelper.close();
 						});
-					}
+					});
 					closingOperations = closingOperations.andThen(() -> {
 						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggersRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending before shutting down the BackgroundExecutor");
@@ -434,8 +419,51 @@ public class StaticComponentContainer {
 		
 	}
 
+	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
+		if (IterableObjectHelper.resolveStringValues(
+				ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+					key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")
+				).on(GlobalProperties)
+			).isEmpty()
+		) {
+			GlobalProperties.put("background-executor.queue-task-executor[0].priority", Thread.MIN_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[0].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[0].name", "Low priority tasks");
+			}			
+			GlobalProperties.put("background-executor.queue-task-executor[1].priority", Thread.NORM_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[1].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[1].name", "Normal priority tasks");
+			}
+			GlobalProperties.put("background-executor.queue-task-executor[2].priority", Thread.MAX_PRIORITY);
+			if (GlobalProperties.get("background-executor.queue-task-executor[2].name") == null) {
+				GlobalProperties.put("background-executor.queue-task-executor[2].name", "High priority tasks");
+			}
+		}
+		Map<String, Object> configuration = IterableObjectHelper.resolveValues(
+			ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+				key.startsWith("background-executor.")
+			).on(GlobalProperties)
+		);
+		configuration.put("background-executor.thread-supplier", ThreadSupplier);
+		configuration.put("background-executor.name", "BackgroundExecutor");
+		configuration.put("background-executor.daemon", true);
+		configuration.put("background-executor.undestroyable-from-external", true);
+		Map<String, Object> unvalidEntries = IterableObjectHelper.resolveValues(
+			ResolveConfig.forAllKeysThat((Predicate<String>)key ->
+				key.endsWith("].daemon")
+			).on(GlobalProperties)
+		);
+		Iterator<Map.Entry<String, Object>> unvalidEntriesItr = unvalidEntries.entrySet().iterator();
+		while (unvalidEntriesItr.hasNext()) {
+			String key = unvalidEntriesItr.next().getKey();
+			configuration.remove(key);
+			GlobalProperties.remove(key);
+		}
+		return configuration;
+	}
 
-	static  java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
+
+	private static java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
 		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
@@ -467,12 +495,12 @@ public class StaticComponentContainer {
 		);
 	};
 	
-	static void showBanner() throws IOException {
-		try (InputStream inputStream = Resources.getFirstFoundAsInputStreams(
+	private static void showBanner() throws IOException {
+		try (InputStream inputStream = Resources.getAsInputStream(
 			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
 			Component.class.getClassLoader(),
-			Thread.currentThread().getContextClassLoader()
-		)) {
+			Thread.currentThread().getContextClassLoader()			
+		).getValue()) {
 			List<String> bannerList = Arrays.asList(
 				Resources.getAsStringBuffer(
 					inputStream

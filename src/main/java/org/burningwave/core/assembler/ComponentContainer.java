@@ -68,10 +68,10 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -201,14 +201,14 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private ComponentContainer setAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.afterInitTask = BackgroundExecutor.createTask(() -> {
+				this.afterInitTask = BackgroundExecutor.createTask(task -> {
 					if (preAfterInitCall != null) {
 						preAfterInitCall.accept(this);
 					}				
 					Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
 					if (tasks != null) {
-						for (QueuedTasksExecutor.TaskAbst<?, ?> task : tasks) {
-							task.waitForFinish();
+						for (QueuedTasksExecutor.TaskAbst<?, ?> iteratedTask : tasks) {
+							iteratedTask.waitForFinish();
 						}
 					}
 				});
@@ -288,15 +288,17 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	public static ComponentContainer getInstance() {
-		return LazyHolder.getComponentContainerInstance();
+		return Holder.getComponentContainerInstance();
 	}
 	
 	public String getConfigProperty(String propertyName) {
-		return IterableObjectHelper.resolveStringValue(config, propertyName);
+		return IterableObjectHelper.resolveStringValue(ResolveConfig.forNamedKey(propertyName).on(config));
 	}
 	
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
-		return IterableObjectHelper.resolveStringValue(config, propertyName, defaultValues);
+		return IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(propertyName).on(config).withDefaultValues(defaultValues)
+		);
 	}
 	
 	public Object setConfigProperty(String propertyName, Object propertyValue) {
@@ -468,7 +470,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	public <T> T resolveProperty(java.util.Properties properties, String configKey, Map<?, ?> defaultValues) {
-		T object = IterableObjectHelper.resolveValue(properties, configKey, null, null, false, defaultValues);
+		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
 			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
 			.setPropertyName(configKey)
@@ -495,7 +497,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+			BackgroundExecutor.createTask(task ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
@@ -526,7 +528,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			instances.remove(this);
-			closeResources(() -> instanceId == null,  () -> {
+			closeResources(() -> instanceId == null, task -> {
 				unregister(GlobalProperties);
 				unregister(config);
 				clear();			
@@ -536,7 +538,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			Driver.throwException("Could not close singleton instance {}", LazyHolder.COMPONENT_CONTAINER_INSTANCE);
+			Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
 	
@@ -546,6 +548,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	static void closeAll() {
+		boolean clearCache = !instances.isEmpty();
 		for (ComponentContainer componentContainer : instances) {
 			try {
 				componentContainer.close(true);
@@ -553,7 +556,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
-		Cache.clear();
+		if (clearCache) {
+			Cache.clear();
+		}
 		System.gc();
 	}
 	
@@ -602,11 +607,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	
-	private static class LazyHolder {
-		private static final ComponentContainer COMPONENT_CONTAINER_INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
+	private static class Holder {
+		private static final ComponentContainer INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
 		
 		private static ComponentContainer getComponentContainerInstance() {
-			return COMPONENT_CONTAINER_INSTANCE;
+			return INSTANCE;
 		}
 	}
 

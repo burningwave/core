@@ -40,11 +40,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
@@ -61,14 +61,14 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -81,18 +81,24 @@ import org.burningwave.core.classes.Fields.NoSuchFieldException;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 
-import io.github.toolfactory.jvm.util.CleanableSupplier;
-
 @SuppressWarnings({"unchecked", "resource"})
 public class Classes implements MembersRetriever {
 	Field[] emtpyFieldsArray;
 	Method[] emptyMethodsArray;
 	Constructor<?>[] emptyConstructorsArray;
+	public final Class<?> java_util_concurrent_ConcurrentHashMap_CollectionViewClass;
+	
 	
 	private Classes() {
 		emtpyFieldsArray = new Field[]{};
 		emptyMethodsArray = new Method[]{};
 		emptyConstructorsArray = new Constructor<?>[]{};
+		java_util_concurrent_ConcurrentHashMap_CollectionViewClass = Driver.getClassByName(
+			"java.util.concurrent.ConcurrentHashMap$CollectionView",
+			false,
+			this.getClass().getClassLoader(),
+			this.getClass()
+		);
 	}
 	
 	public static Classes create() {
@@ -194,9 +200,21 @@ public class Classes implements MembersRetriever {
 		InputStream inputStream = clsLoader.getResourceAsStream(
 			cls.getName().replace(".", "/") + ".class"
 		);
-		return Streams.toByteBuffer(
-			java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
-		);
+		try {
+			return Streams.toByteBuffer(inputStream);
+		} catch (NullPointerException exc) {
+			if (inputStream == null) {
+				inputStream = Resources.getAsInputStream(
+					cls.getName().replace(".", "/") + ".class",
+					clsLoader,
+					false
+				).getValue();
+				return Streams.toByteBuffer(
+					java.util.Objects.requireNonNull(inputStream, "Could not acquire bytecode for class " + cls.getName())
+				);
+			}
+			return Driver.throwException(exc);			
+		}
 	}
 	
 	public <T> T newInstance(Constructor<T> ctor, Object... params) {
@@ -279,22 +297,54 @@ public class Classes implements MembersRetriever {
 	}
 	
 	public static class Loaders implements Closeable {
-		protected Map<ClassLoader, CleanableSupplier<Collection<Class<?>>>> classLoadersClasses;
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
 		protected Field builtinClassLoaderClassParentField;
+		protected Collection<NotificationListenerOfParentsChange> registeredNotificationListenerOfParentsChange;
+		
 		private Loaders() {
-			this.classLoadersClasses = new HashMap<>();
 			this.classLoadersPackages = new HashMap<>();
 			this.classLoadersMethods = new HashMap<>();
 			Class<?> builtinClassLoaderClass = Driver.getBuiltinClassLoaderClass();
 			if (builtinClassLoaderClass != null) {
 				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
 			}
+			registeredNotificationListenerOfParentsChange = ConcurrentHashMap.newKeySet();
+			
+			//Preload required for the setAsMaster method
+			@SuppressWarnings("unused")
+			Class<?> cls = ChangeParentsContext.class;
+			cls = ChangeParentsContext.Elements.class; 
 		}
 		
 		public static Loaders create() {
 			return new Loaders();
+		}
+		
+		public void registerNotificationListenerOfParentsChange(NotificationListenerOfParentsChange listener) {
+			synchronized (registeredNotificationListenerOfParentsChange) {
+				this.registeredNotificationListenerOfParentsChange.add(listener);
+			}
+		}
+		
+		private void notifyParentsChange(ChangeParentsContext context) {
+			Iterator<NotificationListenerOfParentsChange> itr = this.registeredNotificationListenerOfParentsChange.iterator();
+			while (itr.hasNext()) {
+				NotificationListenerOfParentsChange listener = itr.next();
+				try {
+					listener.receive(context);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(
+						getClass()::getName, "Could not notify parent change to listener {}", exc, listener
+					);
+				}
+			}
+		}
+		
+		public void unregisterNotificationListenerOfParentsChange(NotificationListenerOfParentsChange listener) {
+			synchronized (registeredNotificationListenerOfParentsChange) {
+				this.registeredNotificationListenerOfParentsChange.remove(listener);
+			}
 		}
 		
 		public Collection<ClassLoader> getAllParents(ClassLoader classLoader) {
@@ -321,21 +371,65 @@ public class Classes implements MembersRetriever {
 		}
 		
 		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader originalFutureParent) {
+			return setAsParent(target, originalFutureParent, true);
+		}
+		
+		public Function<Boolean, ClassLoader> setAsParent(ClassLoader target, ClassLoader newParent, boolean mantainHierarchy) {
+			if (target == newParent) {
+				throw new IllegalArgumentException("The target cannot be the same instance");
+			}
+			ClassLoader oldParent = getParent(target);
+			if (oldParent == newParent) {
+				throw new IllegalArgumentException("The new parent cannot be the same of the old parent");
+			}
+			if (mantainHierarchy) {
+				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
+				if (oldParent != null && newParent != null) {
+					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
+					if (masterClassLoaderOfOriginalFutureParent != newParent) {
+						resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
+					} else {
+						resetterOne.set(setAsParent0(newParent, oldParent));
+					}
+					
+				}
+				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
+				return resetterOne.get() != null ? (reset) -> {
+					ClassLoader targetExParent = resetterTwo.apply(reset);
+					resetterOne.get().apply(reset);
+					return targetExParent;
+				} : resetterTwo;
+			} else {
+				return setAsParent0(target, newParent);
+			}
+		}
+		
+		private Function<Boolean, ClassLoader> setAsParent0(ClassLoader target, ClassLoader originalFutureParent) {
 			if (Driver.isClassLoaderDelegate(target)) {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
 			ClassLoader futureParentTemp = originalFutureParent;
-			if (isBuiltinClassLoader(target)) {
+			if (isBuiltinClassLoader(target) && futureParentTemp != null) {
 				futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
 			}
 			ClassLoader targetExParent = Fields.get(target, "parent");
 			ClassLoader futureParent = futureParentTemp;
 			checkAndRegisterOrUnregisterMemoryClassLoaders(target, targetExParent, originalFutureParent);		
 			Fields.setDirect(target, "parent", futureParent);
+			notifyParentsChange(
+				new ChangeParentsContext(
+					target, futureParent, targetExParent
+				)
+			);
 			return (reset) -> {
 				if (reset) {
 					checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
 					Fields.setDirect(target, "parent", targetExParent);
+					notifyParentsChange(
+						new ChangeParentsContext(
+							target, targetExParent, futureParent
+						)
+					);
 				}
 				return targetExParent;
 			};
@@ -377,7 +471,7 @@ public class Classes implements MembersRetriever {
 						), classLoader.getClass()
 					);					
 					classLoader = (ClassLoader)Constructors.newInstanceOf(Driver.getClassLoaderDelegateClass(), null, classLoader, Methods.findDirectHandle(
-						methods.stream().skip(methods.size() - 1).findFirst().get()
+						methods.stream().findFirst().get()
 					));
 				} catch (Throwable exc) {
 					Driver.throwException(exc);
@@ -483,38 +577,6 @@ public class Classes implements MembersRetriever {
 				}
 			}
 			return method;
-		}
-		
-		private CleanableSupplier<Collection<Class<?>>> retrieveCleanableSupplier(ClassLoader classLoader) {
-			CleanableSupplier<Collection<Class<?>>> clenableSupplier = classLoadersClasses.get(classLoader);
-			if (clenableSupplier != null) {
-				return clenableSupplier;
-			} else {
-				synchronized (classLoadersClasses) {
-					if ((clenableSupplier = classLoadersClasses.get(classLoader)) == null) {
-						classLoadersClasses.put(classLoader, (clenableSupplier = Driver.getLoadedClassesRetriever(classLoader)));
-					}
-				}
-			}
-			return clenableSupplier;
-		}
-		
-		public Collection<Class<?>> retrieveLoadedClasses(ClassLoader classLoader) {
-			return retrieveCleanableSupplier(classLoader).get();
-		}
-		
-		public void clearLoadedClasses(ClassLoader classLoader) {
-			retrieveCleanableSupplier(classLoader).clear();
-		}
-		
-		public Collection<Class<?>> retrieveAllLoadedClasses(ClassLoader classLoader) {
-			Collection<Class<?>> allLoadedClasses = new LinkedHashSet<>();
-			allLoadedClasses.addAll(retrieveLoadedClasses(classLoader));
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				allLoadedClasses.addAll(retrieveAllLoadedClasses(parentClassLoader));
-			}
-			return allLoadedClasses;
 		}
 		
 		public Map<String, ?> retrieveLoadedPackages(ClassLoader classLoader) {
@@ -735,44 +797,7 @@ public class Classes implements MembersRetriever {
 				}	
 			}
 		}
-		
-		public <T> Class<T> retrieveLoadedClass(ClassLoader classLoader, String className) {
-			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
-			synchronized(definedClasses) {
-				Iterator<?> itr = definedClasses.iterator();
-				while(itr.hasNext()) {
-					Class<?> cls = (Class<?>)itr.next();
-					if (cls.getName().equals(className)) {
-						return (Class<T>) cls;
-					}
-				}
-			}
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				return retrieveLoadedClass(parentClassLoader, className);
-			}
-			return null;
-		}	
-		
-		public Set<Class<?>> retrieveLoadedClassesForPackage(ClassLoader classLoader, Predicate<Package> packagePredicate) {
-			Set<Class<?>> classesFound = new HashSet<>();
-			Collection<Class<?>> definedClasses = retrieveLoadedClasses(classLoader);
-			synchronized(definedClasses) {
-				Iterator<?> itr = definedClasses.iterator();
-				while(itr.hasNext()) {
-					Class<?> cls = (Class<?>)itr.next();
-					Package classPackage = cls.getPackage();
-					if (packagePredicate.test(classPackage)) {
-						classesFound.add(cls);
-					}
-				}
-			}
-			ClassLoader parentClassLoader = getParent(classLoader);
-			if (parentClassLoader != null) {
-				classesFound.addAll(retrieveLoadedClassesForPackage(parentClassLoader, packagePredicate));
-			}
-			return classesFound;
-		}
+
 		
 		public Package retrieveLoadedPackage(ClassLoader classLoader, String packageName) {
 			Map<String, ?> packages = retrieveLoadedPackages(classLoader);
@@ -946,41 +971,15 @@ public class Classes implements MembersRetriever {
 			}
 			return null;
 		}
-		
-		@SafeVarargs
-		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, String... paths) {
-			return getResources(classLoader, Arrays.asList(paths)); 
-		}	
-		
-		@SafeVarargs
-		public final Collection<FileSystemItem> getResources(ClassLoader classLoader, Collection<String>... pathCollections) {
-			Collection<FileSystemItem> paths = new HashSet<>();
-			for (Collection<String> pathCollection : pathCollections) {
-				for (String path : pathCollection) {
-					try {
-						paths.addAll(
-							Collections.list(classLoader.getResources(path)).stream().map(url ->
-								FileSystemItem.of(url)
-							).collect(Collectors.toSet())
-						);
-					} catch (IOException exc) {
-						Driver.throwException(exc);
-					}
-				}
-			}
-			return paths;
-		}
+
 		
 		public void unregister(ClassLoader classLoader) {
-			classLoadersClasses.remove(classLoader);
 			classLoadersPackages.remove(classLoader);
 		}
 		
 		@Override
 		public void close() {
 			if (this != StaticComponentContainer.ClassLoaders) {
-				this.classLoadersClasses.clear();
-				this.classLoadersClasses = null;
 				this.classLoadersMethods.clear();
 				this.classLoadersMethods = null;
 				this.classLoadersPackages.clear();
@@ -1002,7 +1001,41 @@ public class Classes implements MembersRetriever {
 			public UnsupportedException(String s, Throwable cause) {
 				super(s, cause);
 			}
-		}	
+		}
+		
+		public static interface NotificationListenerOfParentsChange {
+			
+			public void receive(ChangeParentsContext context);
+			
+		}
+		
+		public static class ChangeParentsContext extends org.burningwave.core.Context {
+			
+			private enum Elements {
+				TARGET,
+				NEW_PARENT,
+				OLD_PARENT
+			}
+			
+			private ChangeParentsContext(ClassLoader target, ClassLoader newParent, ClassLoader oldParent) {
+				put(Elements.TARGET, target);
+				put(Elements.NEW_PARENT, newParent);
+				put(Elements.OLD_PARENT, oldParent);
+			}
+			
+			public <C extends ClassLoader> C getTarget() {
+				return get(Elements.TARGET);
+			}
+			
+			public <C extends ClassLoader> C getNewParent() {
+				return get(Elements.NEW_PARENT);
+			}
+			
+			public <C extends ClassLoader> C getOldParent() {
+				return get(Elements.OLD_PARENT);
+			}
+		}
+		
 	}
 
 }

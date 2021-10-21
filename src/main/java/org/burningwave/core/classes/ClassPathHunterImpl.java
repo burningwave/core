@@ -81,7 +81,7 @@ class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, Cl
 	
 	@Override
 	public void close() {
-		closeResources(() -> this.pathHelper == null, () -> {
+		closeResources(() -> this.pathHelper == null, task -> {
 			super.close();
 		});
 	}

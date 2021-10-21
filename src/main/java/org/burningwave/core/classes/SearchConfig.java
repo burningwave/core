@@ -29,8 +29,8 @@
 package org.burningwave.core.classes;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -39,7 +39,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -63,7 +62,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	Boolean fileFiltersExtenallySet;
 	Function<FileSystemItem, FileSystemItem.Criteria> fileFilterSupplier;
 	Function<FileSystemItem, FileSystemItem.Criteria> additionalFileFilterSupplier;
-	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate;
 	ClassCriteria classCriteria;
 	
 	Supplier<Collection<FileSystemItem>> pathsRetriever;
@@ -77,6 +75,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	
 	
 	boolean waitForSearchEnding;
+	Integer priority;
 	boolean optimizePaths;
 	
 	SearchConfig() {
@@ -147,10 +146,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 			);
 		} else {
 			fileFiltersExtenallySet = Boolean.TRUE;
-		}
-		if (minimumCollectionSizeForParallelIterationPredicate == null) {
-			minimumCollectionSizeForParallelIterationPredicate = 
-				org.burningwave.core.iterable.IterableObjectHelper.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION_PREDICATE;
 		}
 		PathScannerClassLoader pathScannerClassLoader = this.pathScannerClassLoader;
 		PathScannerClassLoader defaultPathScannerClassLoader = classPathScanner.getDefaultPathScannerClassLoader(this);
@@ -240,7 +235,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		for (Collection<String> pathColl : pathColls) {
 			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
 				classLoaderAndPaths.getValue().addAll(
-					ClassLoaders.getResources(
+					Resources.getAsFileSystemItems(
 						classLoader != null? classLoader : classLoaderAndPaths.getKey(),
 						pathColl
 					)
@@ -264,6 +259,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	@SafeVarargs
 	public final SearchConfig addResources(Collection<String>... pathCollections) {
 		return addResources(null, pathCollections);
+	}
+	
+	public SearchConfig withPriority(Integer priority) {
+		this.priority = priority;
+		return this;
 	}
 	
 	public SearchConfig waitForSearchEnding(boolean waitForSearchEnding) {
@@ -355,11 +355,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return this;
 	}
 	
-	public SearchConfig setLinkedJavaClassPredicate(BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> linkedJavaClassPredicate) {
-		this.linkedJavaClassPredicate = linkedJavaClassPredicate;
-		return this;
-	}
-	
 	public SearchConfig useClassLoader(PathScannerClassLoader classLoader) {
 		if (classLoader == null)  {
 			Driver.throwException("Class loader could not be null");
@@ -432,11 +427,10 @@ public class SearchConfig implements Closeable, ManagedLogger {
 				this.minimumCollectionSizeForParallelIterationPredicate
 			);
 		}
+		if (fileFilter.getPriority() == null) {
+			fileFilter.withPriority(this.priority);
+		}
 		return fileFilter;
-	}
-	
-	BiPredicate<LinkedJavaClassContainer, LinkedJavaClass> getLinkedJavaClassPredicate() {
-		return linkedJavaClassPredicate;
 	}
 	
 	Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
@@ -447,12 +441,13 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		return fileFiltersExtenallySet;
 	}
 	
-	<I, C extends SearchContext<I>> C getSearchContext() {
-		return (C)searchContext;
-	}
-	
+
 	boolean isInitialized() {
 		return pathsRetriever != null && searchContext != null;
+	}
+	
+	<I, C extends SearchContext<I>> C getSearchContext() {
+		return (C)searchContext;
 	}
 	
 	public SearchConfig copyTo(SearchConfig destConfig) {
@@ -469,8 +464,8 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.pathScannerClassLoader = this.pathScannerClassLoader;
 		destConfig.useDefaultPathScannerClassLoaderAsParent = this.useDefaultPathScannerClassLoaderAsParent;
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
+		destConfig.priority = this.priority;
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
-		destConfig.linkedJavaClassPredicate = this.linkedJavaClassPredicate;
 		return destConfig;
 	}
 	
@@ -491,6 +486,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
 		this.minimumCollectionSizeForParallelIterationPredicate = null; 
-		this.linkedJavaClassPredicate = null; 
+		this.priority = null;
 	}
 }

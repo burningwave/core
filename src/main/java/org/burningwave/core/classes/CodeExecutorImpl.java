@@ -43,6 +43,7 @@ import org.burningwave.core.Executable;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 
 
@@ -138,10 +139,11 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			config.setSimpleName(executorSimpleName);
 		}
 		String code = IterableObjectHelper.resolveStringValue(
-			properties,
-			config.getPropertyName(), null,
-			Configuration.Value.CODE_LINE_SEPARATOR,
-			true, config.getDefaultValues()
+			ResolveConfig.forNamedKey(config.getPropertyName())
+			.on(properties)
+			.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
+			.deleteUnresolvedPlaceHolder(true)
+			.withDefaultValues(config.getDefaultValues())	
 		);
 		if (code.contains(";")) {
 			if (config.isIndentCodeActive()) {
@@ -172,12 +174,11 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 	private String retrieveValue(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
 		for (String suffix : suffixes) {
 			String value = IterableObjectHelper.resolveStringValue(
-				properties, 
-				config.getPropertyName() + suffix,
-				null,
-				Configuration.Value.CODE_LINE_SEPARATOR,
-				true,
-				config.getDefaultValues()
+				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)
+				.on(properties)
+				.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
+				.deleteUnresolvedPlaceHolder(true)
+				.withDefaultValues(config.getDefaultValues())		
 			);
 			if (value != null) {
 				return value;

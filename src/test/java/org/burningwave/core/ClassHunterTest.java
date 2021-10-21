@@ -15,7 +15,6 @@ import org.burningwave.core.bean.Complex;
 import org.burningwave.core.classes.ClassCriteria;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ConstructorCriteria;
-import org.burningwave.core.classes.LinkedJavaClass;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
@@ -91,29 +90,6 @@ public class ClassHunterTest extends BaseTest {
 					cls = itr.next();
 				}
 				return ((PathScannerClassLoader)cls.getClassLoader()).getResourceAsStream("META-INF/MANIFEST.MF");
-				
-			}
-		);
-	}
-	
-	@Test
-	public void getResourceAsStreamTestTwo() {
-		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.closeHuntersSearchResults();
-		testNotEmpty(
-			() -> componentSupplier.getClassHunter().findBy(
-				SearchConfig.forPaths(
-					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				)
-			),
-			(result) -> {
-				Collection<Class<?>> classes = result.getClasses();
-				Iterator<Class<?>> itr = classes.iterator();
-				Class<?> cls = itr.next();
-				while(cls.getClassLoader() == null || !(cls.getClassLoader() instanceof PathScannerClassLoader)) {
-					cls = itr.next();
-				}
-				return ((PathScannerClassLoader)cls.getClassLoader()).getResourcesAsStream("META-INF/MANIFEST.MF").values();
 				
 			}
 		);
@@ -202,12 +178,14 @@ public class ClassHunterTest extends BaseTest {
 					}
 					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
 				}
-			).setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
-				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
-				anotherClass.getSuperClass();
-				anotherClass.getInterfaces();
-				return true;
-			}).useDefaultPathScannerClassLoaderAsParent(true)
+			)
+//			.setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
+//				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
+//				anotherClass.getSuperClass();
+//				anotherClass.getInterfaces();
+//				return true;
+//			})
+			.useDefaultPathScannerClassLoaderAsParent(true)
 		);
 
 	}

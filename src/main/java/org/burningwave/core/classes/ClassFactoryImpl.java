@@ -29,9 +29,9 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -202,11 +202,11 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 	
 	@Override
 	public void close() {
-		closeResources(() -> this.classRetrievers == null, () -> {
+		closeResources(() -> this.classRetrievers == null, tsk -> {
 			this.defaultClassLoaderManager.close();
 			unregister(config);
 			closeClassRetrievers();
-			BackgroundExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(task -> {
 				this.classRetrievers = null;
 			}).submit();
 			pathHelper = null;

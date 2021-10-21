@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -56,10 +55,8 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
 	QueuedTasksExecutor.Task searchTask;
-	Collection<String> pathScannerClassLoaderScannedPaths;
 	Collection<T> itemsFound;
 	boolean requestToClosePathScannderClassLoaderOnClose;
-	LinkedJavaClassContainer linkedJavaClassContainer;
 	
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
@@ -72,7 +69,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.itemsFoundFlatMap = new ConcurrentHashMap<>();
 		this.itemsFoundMap = new ConcurrentHashMap<>();
 		this.skippedClassNames = ConcurrentHashMap.newKeySet();
-		this.pathScannerClassLoaderScannedPaths = new HashSet<>();
 		this.sharedPathScannerClassLoader = initContext.getSharedPathScannerClassLoader();
 		this.pathScannerClassLoader = initContext.getPathScannerClassLoader();
 		this.searchConfig = initContext.getSearchConfig();
@@ -88,12 +84,29 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 	
 	void executeSearch(Runnable searcher) {
+		Integer priority = searchConfig.priority;
+		Thread currentThread = Thread.currentThread();
+		int initialThreadPriority = currentThread.getPriority();
+		if (priority == null) {
+			priority = initialThreadPriority;
+		}
 		if (searchConfig.waitForSearchEnding) {
-			searcher.run();
-		} else {
-			searchTask = BackgroundExecutor.createTask(() -> {
+			try {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(priority);
+				}
 				searcher.run();
-			}).submit();
+			} finally {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(initialThreadPriority);
+				}
+			}
+		} else {
+			searchTask = BackgroundExecutor.createTask(task -> {
+					searcher.run();
+				},
+				priority
+			).submit();
 		}
 	}
 	
@@ -102,14 +115,15 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			QueuedTasksExecutor.Task searchTask = this.searchTask;
 			if (searchTask != null) {
 				searchTask.waitForFinish();
-				this.searchTask = null;
 			}
 		} catch (Throwable exc) {
 			Driver.throwException(exc);
 		}
 	}
 	
-	
+	QueuedTasksExecutor.Task getSearchTask() {
+		return this.searchTask;
+	}
 	
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
@@ -264,9 +278,6 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		skippedClassNames.clear();
 		skippedClassNames = null;
 		searchTask = null;
-		if (linkedJavaClassContainer != null) {
-			linkedJavaClassContainer.close();
-		}
 	}
 	
 	

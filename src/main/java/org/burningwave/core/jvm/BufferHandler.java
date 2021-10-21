@@ -47,6 +47,7 @@ import java.util.function.Function;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.io.ByteBufferOutputStream;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -106,7 +107,11 @@ public class BufferHandler implements Component {
 	}
 	
 	private void setDefaultByteBufferSize(java.util.Properties config) {
-		String defaultBufferSize = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BUFFER_SIZE, Configuration.DEFAULT_VALUES);
+		String defaultBufferSize = IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
+			.on(config)
+			.withDefaultValues(Configuration.DEFAULT_VALUES)
+		);
 		try {
 			this.defaultBufferSize = Integer.valueOf(defaultBufferSize);
 		} catch (Throwable exc) {
@@ -124,7 +129,11 @@ public class BufferHandler implements Component {
 	}
 	
 	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
-		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(config, Configuration.Key.BUFFER_ALLOCATION_MODE, Configuration.DEFAULT_VALUES);
+		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(
+			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
+			.on(config)
+			.withDefaultValues(Configuration.DEFAULT_VALUES)
+		);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocator = this::allocateInHeap;
 			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");

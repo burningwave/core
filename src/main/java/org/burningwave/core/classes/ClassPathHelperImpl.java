@@ -418,7 +418,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 							);
 							if (!classPath.refresh().exists()) {
 								pathsCreationTasks.add(
-									BackgroundExecutor.createTask(() -> {
+									BackgroundExecutor.createProducerTask(task -> {
 										FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 										File target = new File(classPath.getAbsolutePath());
 										new File(copy.getAbsolutePath()).renameTo(target);
@@ -447,7 +447,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	
 	@Override
 	public void close() {
-		closeResources(() -> classPathsBasePath == null,  () -> {
+		closeResources(() -> classPathsBasePath == null, task -> {
 			unregister(config);
 			FileSystemHelper.deleteOnExit(getOrCreateTemporaryFolder());
 			classPathsBasePath.destroy();

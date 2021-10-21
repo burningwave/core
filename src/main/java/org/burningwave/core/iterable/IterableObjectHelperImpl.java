@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -38,10 +39,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,32 +59,65 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingBiConsumer;
+import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener {
+	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
+
 	
-	IterableObjectHelperImpl(String defaultValuesSeparator, int maxThreadCountsForParallelIteration) {
-		if (defaultValuesSeparator == null || defaultValuesSeparator.isEmpty()) {
-			defaultValuesSeparator = (String)Configuration.DEFAULT_VALUES.get(Configuration.Key.DEFAULT_VALUES_SEPERATOR);
+	IterableObjectHelperImpl(Properties config) {
+		this.defaultValuesSeparator = resolveStringValue(
+			ResolveConfig.ForNamedKey.forNamedKey(
+				Configuration.Key.DEFAULT_VALUES_SEPERATOR
+			).on(config)
+		);
+		this.defaultMinimumCollectionSizeForParallelIterationPredicate =
+			buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
+		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+	}
+
+	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
+		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
+			resolveValue(
+				ResolveConfig.ForNamedKey.forNamedKey(
+					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+				).on(config)
+			)
+		);
+		if (defaultMinimumCollectionSizeForParallelIteration >= 0) {
+			return coll ->
+				coll.size() >= defaultMinimumCollectionSizeForParallelIteration;
+		} else {
+			 return coll -> false;
 		}
-		this.defaultValuesSeparator = defaultValuesSeparator;
-		this.maxThreadCountsForParallelIteration = maxThreadCountsForParallelIteration;
 	}
 
 	@Override
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator;
 	}
+	
 
-	static int computeMatxRuntimeThreadsCountThreshold(Properties config) {
+	@Override
+	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate() {
+		return defaultMinimumCollectionSizeForParallelIterationPredicate;
+	}
+
+	int computeMaxRuntimeThreadsCountThreshold(Properties config) {
 		try {
 			return Objects.toInt(
-				config.getProperty(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)
+				resolveValue(
+					ResolveConfig.ForNamedKey.forNamedKey(
+						Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD
+					).on(config)
+				)
 			);
 		} catch (Throwable exc) {
 			return Runtime.getRuntime().availableProcessors() * 12;
@@ -91,9 +125,16 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
+	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
 			this.defaultValuesSeparator = (String)newValue;
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION) && newValue != null) {
+			this.defaultMinimumCollectionSizeForParallelIterationPredicate =
+				buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
+			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 		}
 	}
 	
@@ -181,177 +222,129 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return retrieveStream(object).count();
 	}
 
-////////////////////	
+/////////////
 	
 	@Override
-	public <T> T resolveValue(Map<?,?> map, String key) {
-		return resolveValue(key, () -> resolve(map, key, null, null, false, null));
+	public <T> T resolveValue(ResolveConfig.ForNamedKey config) {
+		return resolveValue(
+			config.filter, () -> 
+			resolve(
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+				config.deleteUnresolvedPlaceHolder, config.defaultValues
+			)
+		);
 	}	
 	
 	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key) {
-		return resolve(map, key, null, null, false, null);
-	}	
-	
+	public <K, T> T resolveValue(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveValue(
+			config.filter, () -> 
+			resolve(
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+				config.deleteUnresolvedPlaceHolder, config.defaultValues
+			)
+		);
+	}
+		
 	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key) {
-		return resolveValues(map, key);
+	public String resolveStringValue(ResolveConfig.ForNamedKey config) {
+		return resolveValue(config);
 	}
 	
 	@Override
-	public String resolveStringValue(Map<?,?> map, String key) {
-		return resolveValue(map, key);
-	}
-
-////////////////////
-	
-	@Override
-	public <T> T resolveValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValue(key, () -> resolve(map, key, null, null, false, defaultValues));
-	}	
-	
-	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolve(map, key, null, null, false, defaultValues);
-	}
-	
-	@Override
-	public String resolveStringValue(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValue(map, key, defaultValues);
-	}
-	
-	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key, Map<String, ?> defaultValues) {
-		return resolveValues(map, key, defaultValues);
+	public <K> String resolveStringValue(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveValue(config);
 	}
 
-////////////////////
 	
 	@Override
-	public <T> T resolveValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, false, null));
-	}	
-	
-	@Override
-	public <T> Collection<T> resolveValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolve(map, key, valuesSeparator, null, false, null);
+	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
+		return resolve(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
 	@Override
-	public String resolveStringValue(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValue(map, key, valuesSeparator);
+	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
+		return (Map<K, V>) resolveForKeys(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
 	@Override
-	public Collection<String> resolveStringValues(Map<?,?> map, String key, String valuesSeparator) {
-		return resolveValues(map, key, valuesSeparator);
+	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
+		return resolve(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
-////////////////////
-
-	
 	@Override
-	public <T> T resolveValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null));
-	}
-
-	@Override
-	public <T> Collection<T> resolveValues(
-		Map<?,?> map, String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolve(map, key, valuesSeparator, null, deleteUnresolvedPlaceHolder, null);
-	}
-
-	@Override
-	public String resolveStringValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValue(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
-	}
-
-	@Override
-	public Collection<String> resolveStringValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		boolean deleteUnresolvedPlaceHolder
-	) {
-		return resolveValues(map, key, valuesSeparator, deleteUnresolvedPlaceHolder);
+	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveForKeys(
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.deleteUnresolvedPlaceHolder, config.defaultValues
+		);
 	}
 	
-////////////////////
-	@Override
-	public <T> T resolveValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValue(key, () -> resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues));
-	}
-
-	@Override
-	public <T> Collection<T> resolveValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolve(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
-	}
-
-	@Override
-	public String resolveStringValue(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValue(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
-	}
-
-	@Override
-	public Collection<String> resolveStringValues(
-		Map<?,?> map,
-		String key,
-		String valuesSeparator,
-		String defaultValuesSeparator,
-		boolean deleteUnresolvedPlaceHolder,
-		Map<?,?> defaultValues
-	) {
-		return resolveValues(map, key, valuesSeparator, defaultValuesSeparator, deleteUnresolvedPlaceHolder, defaultValues);
-	}
-	
-////////////////////	
-	
-	
-	private <T> T resolveValue(String key, Supplier<Object> valuesSupplier) {
+	private <T> T resolveValue(Object key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				Driver.throwException("Found more than one item under key {}", key);
+				Driver.throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
 			return (T)value;
 		}	
+	}
+	
+	private <K, V> Map<K, V> resolveForKeys(
+		Map<?,?> map,
+		Predicate<K> keyPredicate,
+		String valuesSeparator,
+		String defaultValueSeparator,
+		boolean deleteUnresolvedPlaceHolder,
+		Map<?,?> defaultValues
+	) {
+		Collection<K> keys = new LinkedHashSet<>();
+		for (Object key : map.keySet()) {
+			try {
+				if (keyPredicate.test((K) key)) {
+					keys.add((K)key);
+				}
+			} catch (ClassCastException exc) {
+				
+			}
+		}
+		if (defaultValues != null) {
+			for (Object key : defaultValues.keySet()) {
+				try {
+					if (keyPredicate.test((K) key)) {
+						keys.add((K)key);
+					}
+				} catch (ClassCastException exc) {
+					
+				}
+			}
+		}
+		Map<K, V> values = new HashMap<>();
+		for (K key : keys) {
+			values.put(
+				key,
+				resolve(
+					map, key,
+					valuesSeparator, 
+					defaultValueSeparator, 
+					deleteUnresolvedPlaceHolder,
+					defaultValues
+				)
+			);
+		}
+		return values;
 	}
 	
 	private <T> T resolve(
@@ -552,99 +545,105 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}		
 		return object != null && value != null && object.equals(value);
 	}
-	
-	@Override
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items, 		
-		Consumer<T> action,
-		Predicate<Collection<?>> predicate
-	) {
-		return iterateParallelIf(items, (item, outputItemCollector) -> action.accept(item), null, predicate);
-	}
-	
-	
-	@Override
-	public <T, O> Collection<O> iterateParallelIf(
-		Collection<T> items, 		
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection,
-		Predicate<Collection<?>> predicate
-	) {
-		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
-			return iterateParallel(items, action, outputCollection);
-		} else {
-			Consumer<O> outputItemCollector = outputCollection != null ? 
-				outputItem -> {
-					outputCollection.add(outputItem);
-				} 
-				: null;
-			for (T item : items) {
-				action.accept(item, outputItemCollector);
-			}
-			return outputCollection;
-		}		
-	}
-	
-	@Override
-	public <T, O> void iterateParallel(
-		Collection<T> items,
-		Consumer<T> action
-	) {
-		iterateParallel(
-			items, (item, outputItemCollector) -> 
-				action.accept(item), 
-			null
-		);
-	}
 
 	
 	@Override
-	public <T, O> Collection<O> iterateParallel(
-		Collection<T> items,
-		BiConsumer<T, Consumer<O>> action,
-		Collection<O> outputCollection
+	public <I, O> Collection<O> iterate(
+		IterationConfig<I, O> config
 	) {
-		Iterator<T> itemIterator = items.iterator();
-		Consumer<O> outputItemCollector =
-			outputCollection != null ? 
-				outputCollection instanceof ConcurrentHashMap.KeySetView ||
-				outputCollection instanceof CopyOnWriteArrayList ||
-				outputCollection instanceof CopyOnWriteArraySet ?	
-					outputItem -> {
-						outputCollection.add(outputItem);
-					} : 
-					outputItem -> {
-						synchronized (outputCollection) {
-							outputCollection.add(outputItem);
+		Predicate<Collection<?>> predicate = config.predicateForParallelIteration;
+		Collection<I> items = config.items;
+		Collection<O> outputCollection = config.outputCollection;
+		BiConsumer<I, Consumer<Consumer<Collection<O>>>> action = config.action;
+		Integer priority = config.priority;
+		Thread currentThread = Thread.currentThread();
+		int initialThreadPriority = currentThread.getPriority();
+		if (priority == null) {
+			priority = initialThreadPriority;
+		}
+		if (predicate == null) {
+			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
+		}
+		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
+			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
+				outputCollection != null ?
+					isConcurrent(outputCollection) ?
+						(outputCollectionConsumer) -> {
+							outputCollectionConsumer.accept(outputCollection);
+						} : 
+						(outputCollectionConsumer) -> {
+							synchronized (outputCollection) {
+								outputCollectionConsumer.accept(outputCollection);
+							}
 						}
+					: null;
+			Iterator<I> itemIterator = items.iterator();
+			ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
+				while (true) {
+					I item = null;
+					try {
+						synchronized (itemIterator) {
+							item = itemIterator.next();
+						}
+						action.accept(item, outputItemCollectionHandler);
+					} catch (Throwable exc) {
+						if (!itemIterator.hasNext()) {
+							break;
+						}
+						Driver.throwException(exc);
+					} 
+				}
+			};
+			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
+			ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
+				if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+					exceptionWrapper.set(exception);
+					return true;
+				}
+				return false;
+			};
+			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
+			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
+				tasks.add(
+					BackgroundExecutor.createTask(iterator, priority).setExceptionHandler(exceptionHandler).submit()
+				);
+			}
+			tasks.stream().forEach(task -> task.waitForFinish());
+		} else {
+			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
+				outputCollection != null ?
+					(outputCollectionConsumer) -> {
+						outputCollectionConsumer.accept(outputCollection);
 					}
 				: null;
-		Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
-		int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-		AtomicReference<IterableObjectHelper.TerminatedIterationException> terminatedIterationException = new AtomicReference<>();
-		for (int i = 0; i < taskCount && terminatedIterationException.get() == null; i++) {
-			tasks.add(
-				BackgroundExecutor.createTask(() -> {
-					while (terminatedIterationException.get() == null) {
-						T item = null;
-						try {
-							synchronized (itemIterator) {
-								item = itemIterator.next();
-							}
-							action.accept(item, outputItemCollector);
-						} catch (NoSuchElementException exc) {
-							terminatedIterationException.set(new TerminatedIterationException());
-						} catch (IterableObjectHelper.TerminatedIterationException exc) {
-							terminatedIterationException.set(exc);
-						}	
-					}					
-				}).submit()
-			);
+			if (initialThreadPriority != priority) {
+				currentThread.setPriority(priority);
+			}
+			try {
+				for (I item : items) {
+					action.accept(item, outputItemCollectionHandler);
+				}
+			} catch (IterableObjectHelper.TerminateIteration t) {} finally {
+				if (initialThreadPriority != priority) {
+					currentThread.setPriority(initialThreadPriority);
+				}
+			}			
 		}
-		tasks.stream().forEach(task -> task.waitForFinish());
 		return outputCollection;
 	}
 
+	
+	private boolean isConcurrent(Collection<?> coll) {
+		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView
+		return
+			coll instanceof ConcurrentHashMap ||
+			coll instanceof ConcurrentHashMap.KeySetView ||
+			coll instanceof CopyOnWriteArrayList ||
+			coll instanceof CopyOnWriteArraySet ||
+			Classes.java_util_concurrent_ConcurrentHashMap_CollectionViewClass.isAssignableFrom(coll.getClass()) ||
+			coll.getClass().getName().startsWith(ConcurrentHashMap.class.getName());
+	}
 	
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
@@ -678,4 +677,5 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		private static final long serialVersionUID = -8096435103182655041L;
 		
 	}
+
 }

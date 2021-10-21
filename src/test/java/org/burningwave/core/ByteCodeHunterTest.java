@@ -35,7 +35,7 @@ public class ByteCodeHunterTest extends BaseTest {
 					FileSystemItem.Criteria.forClassTypeFiles(
 						FileSystemItem.CheckingOption.FOR_NAME
 					)
-				)					
+				)
 			),
 			(result) -> result.getClasses()
 		);

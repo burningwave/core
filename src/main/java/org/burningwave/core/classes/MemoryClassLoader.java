@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -52,18 +53,19 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 
 @SuppressWarnings("unchecked")
-public class MemoryClassLoader extends ClassLoader implements Component {
+public class MemoryClassLoader extends ClassLoader implements Component, org.burningwave.core.classes.Classes.Loaders.NotificationListenerOfParentsChange {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
 	Collection<Object> clients;
 	protected boolean isClosed;
 	String instanceId;
-	
+	ClassLoader[] allParents;
 	
 	static {
         ClassLoader.registerAsParallelCapable();
@@ -80,6 +82,18 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		this.notLoadedByteCodes = new ConcurrentHashMap<>();
 		this.loadedByteCodes = new ConcurrentHashMap<>();
 		this.clients = new HashSet<>();
+		ClassLoaders.registerNotificationListenerOfParentsChange(this);
+		computeAllParents();
+	}
+
+	private void computeAllParents() {
+		Collection<ClassLoader> allParents = ClassLoaders.getAllParents(this);
+		this.allParents = allParents.toArray(new ClassLoader[allParents.size()]);
+	}	
+
+	@Override
+	public void receive(ChangeParentsContext context) {
+		computeAllParents();		
 	}
 	
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
@@ -254,11 +268,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
     
     @Override
     public InputStream getResourceAsStream(String name) {
-    	ClassLoader parentClassLoader = ClassLoaders.getParent(this);
-    	InputStream inputStream = null;
-    	if (parentClassLoader != null) {
-    		inputStream = parentClassLoader.getResourceAsStream(name);
-    	}
+    	InputStream inputStream = Resources.getAsInputStream(name, allParents).getValue();
     	if (inputStream == null && name.endsWith(".class")) {
     		inputStream = getByteCodeAsInputStream(name);
     	}
@@ -409,7 +419,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		BackgroundExecutor.createTask(() -> {
+		BackgroundExecutor.createTask(task -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
 		}, Thread.MIN_PRIORITY).submit();
@@ -418,6 +428,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	
 	protected void unregister() {
 		ClassLoaders.unregister(this);
+		ClassLoaders.unregisterNotificationListenerOfParentsChange(this);
 		Cache.classLoaderForConstructors.remove(this, true);
 		Cache.classLoaderForFields.remove(this, true);
 		Cache.classLoaderForMethods.remove(this, true);
@@ -455,7 +466,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 	}
 	
 	Task closeResources() {
-		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
+		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
 				Driver.throwException("Could not close {} because there are {} registered clients", this, clients.size());
@@ -468,7 +479,7 @@ public class MemoryClassLoader extends ClassLoader implements Component {
 			clear();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			ClassLoaders.clearLoadedClasses(this);
+			Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
 			this.clients.clear();
 			this.clients = null;

@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1347307771)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1366706647)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1347307771)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1366706647)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.3.1</version>
+    <version>12.10.0</version>
 </dependency>
 ```
 
@@ -210,7 +210,7 @@ public class SourceCodeExecutor {
                 .addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
                 .addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
                 .addCodeLine("Integer inputNumber = (Integer)parameter[0];")
-                .addCodeLine("return (T)new Integer(inputNumber + (Integer)parameter[1]);")
+                .addCodeLine("return Integer.valueOf(inputNumber + (Integer)parameter[1]);")
             ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
         );
         
@@ -418,10 +418,6 @@ public class Finder {
                 String packageName = javaClass.getPackageName();                       
                 return packageName != null && packageName.contains("springframework");
             })
-        ).by(
-            ClassCriteria.create().allThoseThatMatch((cls) -> {
-                return cls.getPackage().getName().matches(".*springframework.*");
-            })
         );
 
         try(ClassHunter.SearchResult searchResult = classHunter.findBy(searchConfig)) {
@@ -491,14 +487,13 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 public class TaskLauncher implements ManagedLogger {
     
     public void launch() {
-        
-        ProducerTask<Long> taskOne = BackgroundExecutor.createTask(() -> {
+        ProducerTask<Long> taskOne = BackgroundExecutor.createProducerTask(task -> {
             Long startTime = System.currentTimeMillis();
             logInfo("task one started");
             synchronized (this) {                
                 wait(5000);
             }
-            Task internalTask = BackgroundExecutor.createTask(() -> {
+            Task internalTask = BackgroundExecutor.createTask(tsk -> {
                 logInfo("internal task started");    
                 synchronized (this) {                
                     wait(5000);
@@ -509,22 +504,18 @@ public class TaskLauncher implements ManagedLogger {
             logInfo("task one finished");
             return startTime;
         }, Thread.MAX_PRIORITY).submit();
-
-        Task taskTwo = BackgroundExecutor.createTask(() -> {
+        Task taskTwo = BackgroundExecutor.createTask(task -> {
             logInfo("task two started and wait for task one finishing");
             taskOne.waitForFinish();
             logInfo("task two finished");    
         }, Thread.NORM_PRIORITY).submit();
-
-        ProducerTask<Long> taskThree = BackgroundExecutor.createTask(() -> {
+        ProducerTask<Long> taskThree = BackgroundExecutor.createProducerTask(task -> {
             logInfo("task three started and wait for task two finishing");
             taskTwo.waitForFinish();
-            logInfo("task three finished");
+            logInfo("task two finished");
             return System.currentTimeMillis();
         }, Thread.MIN_PRIORITY).submit();
-
         taskThree.waitForFinish();
-
         logInfo("Elapsed time: {}ms", taskThree.join() - taskOne.join());
     }
     
@@ -664,8 +655,6 @@ code-block-2=\
 ```
 **Java code**:
 ```java
-package org.burningwave.core.examples.iterableobjecthelper;
-
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 
 import java.io.IOException;
@@ -677,7 +666,9 @@ import java.util.Properties;
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
+@SuppressWarnings("unused")
 public class ItemFromMapRetriever {
     
     public void execute() throws IOException {
@@ -685,19 +676,29 @@ public class ItemFromMapRetriever {
         PathHelper pathHelper = componentSupplier.getPathHelper();
         Properties properties = new Properties();
         properties.load(pathHelper.getResourceAsStream("burningwave.properties"));
-        String code = IterableObjectHelper.resolveStringValue(properties, "code-block-1");        
-        
+        String code = IterableObjectHelper.resolveStringValue(
+            ResolveConfig.forNamedKey("code-block-1")
+            .on(properties)
+        );
+
         Map<Object, Object> map = new HashMap<>();
         map.put("class-loader-01", "${class-loader-02}");
         map.put("class-loader-02", "${class-loader-03}");
         map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-        ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(map, "class-loader-01");
+        ClassLoader parentClassLoader = IterableObjectHelper.resolveValue(
+            ResolveConfig.forNamedKey("class-loader-01")
+            .on(map)
+        );
         
         map.clear();
         map.put("class-loaders", "${class-loader-02};${class-loader-03};");
         map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
         map.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
-        Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(map, "class-loaders", ";");
+        Collection<ClassLoader> classLoaders = IterableObjectHelper.resolveValues(
+            ResolveConfig.forNamedKey("class-loaders")
+            .on(map)
+            .withValuesSeparator(";")
+        );
     }
     
     public static void main(String[] args) throws IOException {
@@ -1049,15 +1050,27 @@ background-executor.all-tasks-monitoring.logger.enabled=\
 	false
 background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked=\
 	300000
+#Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
+background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
+	log only
+background-executor.queue-task-executor[0].name=\
+	Low priority tasks
+background-executor.queue-task-executor[0].priority=\
+	1
+background-executor.queue-task-executor[1].name=\
+	Normal priority tasks
+background-executor.queue-task-executor[1].priority=\
+	5
+background-executor.queue-task-executor[2].name=\
+	High priority tasks
+background-executor.queue-task-executor[2].priority=\
+	10
+background-executor.task-creation-tracking.enabled=\
+	${background-executor.all-tasks-monitoring.enabled}
 banner.hide=\
 	false
 banner.file=\
 	org/burningwave/banner.bwb
-#Other possible values are: 'mark as probable dead locked', 'abort' or both comma separated
-background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
-	log only
-background-executor.task-creation-tracking.enabled=\
-	${background-executor.all-tasks-monitoring.enabled}
 buffer-handler.default-buffer-size=\
 	1024
 buffer-handler.default-allocation-mode=\
@@ -1066,14 +1079,14 @@ group-name-for-named-elements=\
 	Burningwave
 iterable-object-helper.default-values-separator=\
 	;
+iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size=\
+	2
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#This property is optional: if it is not provided then the org.burningwave.jvm.Driver.Factory.getNew is
-#used to retrieve a Driver instance
-#It is also possible to use a custom JVM Driver which implements the org.burningwave.jvm.Driver interface.
-#Other possible values are: org.burningwave.jvm.HybridDriver, org.burningwave.jvm.HybridDriver
+#This property is optional and it is possible to use a custom JVM Driver which implements the io.github.toolfactory.jvm.Driver interface.
+#Other possible values are: org.burningwave.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
-	org.burningwave.jvm.DefaultDriver
+	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
@@ -1093,10 +1106,6 @@ modules.export-all-to-all=\
 	true
 #mandatory if more burningwave.static.properties file are in the class paths
 priority-of-this-configuration-file=0
-static-component-container.on-close.close-all-component-containers=\
-	false
-static-component-container.on-close.close-file-system-helper=\
-	false
 synchronizer.all-threads-monitoring.enabled=\
 	false
 synchronizer.all-threads-monitoring.interval=\
@@ -1302,6 +1311,8 @@ paths.main-class-paths.extension=\
 	//${system.properties:java.home}/../lib//children:.*?\.jar;
 paths.main-class-repositories=\
 	//${system.properties:java.home}/jmods//children:.*?\.jmod;
+#mandatory if more burningwave.properties file are in the class paths
+priority-of-this-configuration-file=0
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
@@ -1311,7 +1322,9 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 ```
 [Here an example of a **burningwave.properties** file.](https://github.com/burningwave/core/blob/master/src/test/resources/burningwave.properties#L1)
 
-### <a name="Other-examples-of-using-some-components"></a>Other examples of using some components:
+<br/>
+
+# <a name="Other-examples-of-using-some-components"></a>Other examples of using some components:
 <details open>
 	<summary><b>BackgroundExecutor</b></summary>
 	<ul>

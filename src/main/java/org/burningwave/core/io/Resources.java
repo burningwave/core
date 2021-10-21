@@ -29,6 +29,7 @@
 package org.burningwave.core.io;
 
 
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
@@ -37,38 +38,162 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 
 public class Resources {
+	private final static Map.Entry<URL, InputStream> EMPTY_RESOURCE;
 	
-	
-	public Map<URL, InputStream> getAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
-		return Driver.getResourcesAsInputStreams(resourceRelativePath, resourceClassLoaders);
+	static {
+		EMPTY_RESOURCE = new AbstractMap.SimpleImmutableEntry<>(null, null);
 	}
 	
-	public InputStream getFirstFoundAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
-		Map<URL, InputStream> inputStreams = getAsInputStreams(resourceRelativePath, resourceClassLoaders);
-		if (!inputStreams.isEmpty()) {
-			return inputStreams.values().iterator().next();
+	public  Collection<URL> getAll(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
+		return Driver.getResources(
+			resourceRelativePath,
+			false,
+			onlyParents ? 
+				ClassLoaders.getAllParents(resourceClassLoader) : 
+				ClassLoaders.getHierarchy(resourceClassLoader)
+		);
+	}
+	
+	public Collection<URL> getAll(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
+		return Driver.getResources(resourceRelativePath, false, resourceClassLoaders);
+	}
+	
+	public URL get(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
+		Collection<URL> resourceURLs = Driver.getResources(resourceRelativePath, true, onlyParents ? 
+			ClassLoaders.getAllParents(resourceClassLoader) : 
+			ClassLoaders.getHierarchy(resourceClassLoader)
+		);
+		if (!resourceURLs.isEmpty()) {
+			return  resourceURLs.iterator().next();
 		}
 		return null;
+	}
+	
+	public URL get(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
+		Collection<URL> resourceURLs = Driver.getResources(resourceRelativePath, true, resourceClassLoaders);
+		if (!resourceURLs.isEmpty()) {
+			return  resourceURLs.iterator().next();
+		}
+		return null;
+	}
+	
+	public URL get(String resourceRelativePath, Collection<ClassLoader> resourceClassLoaders) {
+		Collection<URL> resourceURLs = Driver.getResources(resourceRelativePath, true, resourceClassLoaders);
+		if (!resourceURLs.isEmpty()) {
+			return  resourceURLs.iterator().next();
+		}
+		return null;
+	}
+	
+	public Map<URL, InputStream> getAsInputStreams(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
+		return getAsInputStreams(
+			resourceRelativePath, () ->
+			Driver.getResources(
+				resourceRelativePath,
+				false,
+				onlyParents ? 
+					ClassLoaders.getAllParents(resourceClassLoader) : 
+					ClassLoaders.getHierarchy(resourceClassLoader)
+			)
+		);
+	}
+	
+	public Map<URL, InputStream> getAsInputStreams(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
+		return getAsInputStreams(
+			resourceRelativePath,
+			() -> Driver.getResources(resourceRelativePath, false, resourceClassLoaders)
+		);
+	}
+	
+	private Map<URL, InputStream> getAsInputStreams(String resourceRelativePath, Supplier<Collection<URL>> resourceSupplier) {
+		Map<URL, InputStream> streams = new LinkedHashMap<>();
+		for (URL resourceURL : resourceSupplier.get() ) {
+			try {
+				streams.put(
+					resourceURL,
+					resourceURL.openStream()
+				);
+			} catch (Throwable exc) {
+				try {
+					streams.put(
+						resourceURL,
+						FileSystemItem.of(resourceURL).toInputStream()
+					);
+				} catch (Throwable exc2) {
+					return Driver.throwException(exc);
+				}
+			}
+		}
+		return streams;
+	}
+	
+	public Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) {
+		return getAsInputStream(
+			resourceRelativePath,() ->
+			Driver.getResources(resourceRelativePath, true, onlyParents ? 
+				ClassLoaders.getAllParents(resourceClassLoader) : 
+				ClassLoaders.getHierarchy(resourceClassLoader)
+			)
+		);
+	}
+	
+	public Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, ClassLoader... resourceClassLoaders) {
+		return getAsInputStream(
+			resourceRelativePath, () ->
+				Driver.getResources(resourceRelativePath, true, resourceClassLoaders)
+		);
+	}
+	
+	private Map.Entry<URL, InputStream> getAsInputStream(String resourceRelativePath, Supplier<Collection<URL>> resourceSupplier) {
+		Collection<URL> resourceURLs = resourceSupplier.get();
+		if (!resourceURLs.isEmpty()) {
+			URL resourceURL = resourceURLs.iterator().next();
+			try {
+				return new AbstractMap.SimpleImmutableEntry<>(
+					resourceURL,
+					resourceURL.openStream()
+				);
+			} catch (Throwable exc) {
+				try {
+					return new AbstractMap.SimpleImmutableEntry<>(
+						resourceURL,
+						FileSystemItem.of(resourceURL).toInputStream()
+					);
+				} catch (Throwable exc2) {
+					return Driver.throwException(exc);
+				}
+			}
+		}
+		return EMPTY_RESOURCE;
 	}
 
 	
 	public FileSystemItem get(Class<?> cls) {
-		return FileSystemItem.of(Classes.getClassLoader(cls).getResource(Classes.toPath(cls)));
+		return FileSystemItem.of(get(Classes.toPath(cls), Classes.getClassLoader(cls)));
 	}
 	
 	public FileSystemItem getClassPath(Class<?> cls) {
 		String classRelativePath = Classes.toPath(cls);
-		String classAbsolutePath = FileSystemItem.of(Classes.getClassLoader(cls).getResource(classRelativePath)).getAbsolutePath();
+		String classAbsolutePath = FileSystemItem.of(get(classRelativePath, Classes.getClassLoader(cls))).getAbsolutePath();
 		return FileSystemItem.ofPath(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf(classRelativePath) - 1) );
 	}
 	
 	
-	public StringBuffer getFirstFoundAsStringBuffer(String resourceRelativePath, ClassLoader... resourceClassLoaders) throws IOException {
-		return getAsStringBuffer(getFirstFoundAsInputStreams(resourceRelativePath, resourceClassLoaders));
+	public StringBuffer getAsStringBuffer(String resourceRelativePath, ClassLoader resourceClassLoader, boolean onlyParents) throws IOException {
+		try (InputStream inputSteram = getAsInputStream(resourceRelativePath, resourceClassLoader, onlyParents).getValue()) {
+			return getAsStringBuffer(inputSteram);
+		}
 	}
 	
 	
@@ -88,4 +213,23 @@ public class Resources {
 		}
 	}
 	
+	@SafeVarargs
+	public final Collection<FileSystemItem> getAsFileSystemItems(ClassLoader classLoader, String... paths) {
+		return getAsFileSystemItems(classLoader, Arrays.asList(paths)); 
+	}	
+	
+	@SafeVarargs
+	public final Collection<FileSystemItem> getAsFileSystemItems(ClassLoader classLoader, Collection<String>... pathCollections) {
+		Collection<FileSystemItem> paths = new HashSet<>();
+		for (Collection<String> pathCollection : pathCollections) {
+			for (String path : pathCollection) {
+				paths.addAll(
+					getAll(path, classLoader, false).stream().map(url ->
+						FileSystemItem.of(url)
+					).collect(Collectors.toSet())
+				);
+			}
+		}
+		return paths;
+	}
 }
