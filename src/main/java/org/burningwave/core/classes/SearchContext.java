@@ -102,7 +102,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 				}
 			}
 		} else {
-			searchTask = BackgroundExecutor.createTask(() -> {
+			searchTask = BackgroundExecutor.createTask(task -> {
 					searcher.run();
 				},
 				priority

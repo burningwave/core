@@ -63,7 +63,6 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
-import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
@@ -579,7 +578,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					: null;
 			Iterator<I> itemIterator = items.iterator();
-			ThrowingRunnable<?> iterator = () -> {
+			ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
 				while (true) {
 					I item = null;
 					try {

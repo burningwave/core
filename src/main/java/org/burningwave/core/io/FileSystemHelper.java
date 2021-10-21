@@ -373,7 +373,7 @@ public class FileSystemHelper implements Component {
 		public void close() {
 			closeResources(() -> 
 					burningwaveTemporaryFolder == null, 
-				() -> {
+				task -> {
 					stop();
 					burningwaveTemporaryFolder = null;
 					fileSystemHelper = null;

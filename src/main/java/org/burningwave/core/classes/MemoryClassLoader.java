@@ -419,7 +419,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		BackgroundExecutor.createTask(() -> {
+		BackgroundExecutor.createTask(task -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
 		}, Thread.MIN_PRIORITY).submit();
@@ -466,7 +466,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 	
 	Task closeResources() {
-		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, () -> {
+		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
 				Driver.throwException("Could not close {} because there are {} registered clients", this, clients.size());

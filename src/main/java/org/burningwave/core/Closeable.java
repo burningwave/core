@@ -32,8 +32,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 
 import java.util.function.Supplier;
 
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
-import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingConsumer;
 
 public interface Closeable extends AutoCloseable, Identifiable {
 	
@@ -42,19 +43,19 @@ public interface Closeable extends AutoCloseable, Identifiable {
 			
 	}
 	
-	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(objectId + "->" + "closeResources", isClosedPredicate);
 	}
 	
-	default public Task createCloseResoucesTask(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+	default public Task createCloseResoucesTask(Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return createCloseResoucesTask(getId(), isClosedPredicate, closingFunction);
 	}
 	
-	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return closeResources(getId(), isClosedPredicate, closingFunction);
 	}
 	
-	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingRunnable<?> closingFunction) {
+	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit();
 	}
 	

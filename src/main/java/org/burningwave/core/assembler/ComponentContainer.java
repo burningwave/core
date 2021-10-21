@@ -68,7 +68,6 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
@@ -202,14 +201,14 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private ComponentContainer setAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				this.afterInitTask = BackgroundExecutor.createTask(() -> {
+				this.afterInitTask = BackgroundExecutor.createTask(task -> {
 					if (preAfterInitCall != null) {
 						preAfterInitCall.accept(this);
 					}				
 					Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
 					if (tasks != null) {
-						for (QueuedTasksExecutor.TaskAbst<?, ?> task : tasks) {
-							task.waitForFinish();
+						for (QueuedTasksExecutor.TaskAbst<?, ?> iteratedTask : tasks) {
+							iteratedTask.waitForFinish();
 						}
 					}
 				});
@@ -498,7 +497,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
-			BackgroundExecutor.createTask((ThrowingRunnable<?>)() ->
+			BackgroundExecutor.createTask(task ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
 					try {
 						if (!(component instanceof PathScannerClassLoader)) {
@@ -529,7 +528,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			instances.remove(this);
-			closeResources(() -> instanceId == null,  () -> {
+			closeResources(() -> instanceId == null, task -> {
 				unregister(GlobalProperties);
 				unregister(config);
 				clear();			

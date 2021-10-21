@@ -177,7 +177,7 @@ public class Cache implements ManagedLogger {
 				resources = this.resources;
 				this.resources = new HashMap<>();
 			}
-			BackgroundExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(task -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
 					item.getValue().clear(destroyItems);
 				}
@@ -324,7 +324,7 @@ public class Cache implements ManagedLogger {
 			});
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.createTask(() -> 
+				BackgroundExecutor.createTask(task -> 
 					itemDestroyer.accept(finalPath, item),
 					Thread.MIN_PRIORITY
 				).submit();
@@ -357,7 +357,7 @@ public class Cache implements ManagedLogger {
 				partitions = this.resources;
 				this.resources = new HashMap<>();
 			}
-			BackgroundExecutor.createTask(() -> {
+			BackgroundExecutor.createTask(task -> {
 				clearResources(partitions, destroyItems);
 			}, Thread.MIN_PRIORITY).submit();
 			return this;

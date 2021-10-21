@@ -363,7 +363,7 @@ public interface ClassFactory {
 		
 		@Override
 		public void close() {
-			closeResources(() -> this.classLoader == null, () -> {
+			closeResources(() -> this.classLoader == null, task -> {
 				if (classLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)classLoader).unregister(this, true);
 				}

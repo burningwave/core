@@ -80,7 +80,7 @@ class PathHelperImpl implements Component, PathHelper {
 	}
 
 	private void launchAllPathsLoadingTask() {
-		initializerTask = BackgroundExecutor.createTask(() -> {
+		initializerTask = BackgroundExecutor.createTask(task -> {
 			try {
 				pathGroups = new ConcurrentHashMap<>();
 				allPaths = ConcurrentHashMap.newKeySet();			
@@ -511,7 +511,7 @@ class PathHelperImpl implements Component, PathHelper {
 	
 	@Override
 	public void close() {
-		closeResources(() -> pathGroups == null, () -> {
+		closeResources(() -> pathGroups == null, task -> {
 			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 			if (initializerTask != null) {	
 				initializerTask.abortOrWaitForFinish();
