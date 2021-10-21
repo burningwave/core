@@ -1091,7 +1091,8 @@ jvm.driver.type=\
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
-#the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
+#the SLF4JManagedLoggerRepository will be instantiated, otherwise
+#the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
 	autodetect
 #to increase performance set it to false
