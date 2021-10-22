@@ -589,6 +589,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							item = itemIterator.next();
 						}
 					} catch (NoSuchElementException exc) {
+						exceptionWrapper.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 						break;
 					} 
 					action.accept(item, outputItemCollectionHandler);
