@@ -43,6 +43,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -579,23 +580,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					: null;
 			Iterator<I> itemIterator = items.iterator();
+			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
 			ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
-				while (true) {
+				while (exceptionWrapper.get() == null) {
 					I item = null;
 					try {
 						synchronized (itemIterator) {
 							item = itemIterator.next();
 						}
-						action.accept(item, outputItemCollectionHandler);
-					} catch (Throwable exc) {
-						if (!itemIterator.hasNext()) {
-							break;
-						}
-						Driver.throwException(exc);
+					} catch (NoSuchElementException exc) {
+						break;
 					} 
+					action.accept(item, outputItemCollectionHandler);
 				}
 			};
-			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
 			ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
 				if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
 					exceptionWrapper.set(exception);
