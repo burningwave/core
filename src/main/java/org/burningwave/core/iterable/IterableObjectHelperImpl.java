@@ -43,6 +43,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,9 +61,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingBiConsumer;
-import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
@@ -579,35 +578,30 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					: null;
 			Iterator<I> itemIterator = items.iterator();
+			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
 			ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
-				while (true) {
-					I item = null;
-					try {
-						synchronized (itemIterator) {
-							item = itemIterator.next();
-						}
-						action.accept(item, outputItemCollectionHandler);
-					} catch (Throwable exc) {
-						if (!itemIterator.hasNext()) {
+				I item = null;
+				try {
+					while (exceptionWrapper.get() == null) {
+						try {
+							synchronized (itemIterator) {
+								item = itemIterator.next();
+							}
+						} catch (NoSuchElementException exc) {
+							exceptionWrapper.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 							break;
 						}
-						Driver.throwException(exc);
-					} 
+						action.accept(item, outputItemCollectionHandler);
+					}
+				} catch (IterableObjectHelper.TerminateIteration exc) {
+					exceptionWrapper.set(exc);
 				}
-			};
-			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
-			ThrowingBiPredicate<Task, Throwable, Throwable> exceptionHandler = (task, exception) -> {
-				if (exception == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
-					exceptionWrapper.set(exception);
-					return true;
-				}
-				return false;
 			};
 			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
 			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
 			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
 				tasks.add(
-					BackgroundExecutor.createTask(iterator, priority).setExceptionHandler(exceptionHandler).submit()
+					BackgroundExecutor.createTask(iterator, priority).submit()
 				);
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());

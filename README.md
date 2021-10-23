@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1366706647)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1373349869)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1366706647)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1373349869)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -27,7 +27,6 @@ Burningwave Core contains **AN EXTREMELY POWERFUL CLASSPATH SCANNER**: it’s po
 And now we will see:
 * [including Burningwave Core in your project](#Including-Burningwave-Core-in-your-project)
 * [generating classes at runtime and invoking their methods with and without the use of reflection](#Generating-classes-at-runtime-and-invoking-their-methods-with-and-without-the-use-of-reflection)
-* [executing stringified source code](#Executing-stringified-source-code)
 * [retrieving classes of runtime class paths or of other paths through the ClassHunter](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [finding where a class is loaded from](#Finding-where-a-class-is-loaded-from)
 * [performing tasks in parallel with different priorities](#Performing-tasks-in-parallel-with-different-priorities)
@@ -35,6 +34,7 @@ And now we will see:
 * [resolving, collecting or retrieving paths](#Resolving-collecting-or-retrieving-paths)
 * [retrieving placeholdered items from map and properties file](#Retrieving-placeholdered-items-from-map-and-properties-file)
 * [handling privates and all other members of an object](#Handling-privates-and-all-other-members-of-an-object)
+* [executing stringified source code](#Executing-stringified-source-code)
 * [getting and setting properties of a Java bean through path](#Getting-and-setting-properties-of-a-Java-bean-through-path)
 * [architectural overview and configuration](#Architectural-overview-and-configuration)
 * [other examples of using some components](#Other-examples-of-using-some-components)
@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.10.0</version>
+    <version>12.11.2</version>
 </dependency>
 ```
 
@@ -169,168 +169,6 @@ public class RuntimeClassExtender {
     }
 
     public static void main(String[] args) throws Throwable {
-        execute();
-    }
-}
-```
-
-<br/>
-
-# <a name="Executing-stringified-source-code"></a>Executing stringified source code
-It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
-* [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
-* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
-* [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
-
-<br/>
-
-## <a name="Executing-code-with-BodySourceGenerator"></a>Executing code with BodySourceGenerator
-For first way we must create a **ExecuteConfig** by using the within static method **`forBodySourceGenerator`** to which must be passed the **BodySourceGenerator** that contains the source code with the parameters used within: after that we must pass the created configuration to the **`execute`** method of CodeExecutor as shown below:
-```java
-package org.burningwave.core.examples.codeexecutor;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ExecuteConfig;
-import org.burningwave.core.classes.BodySourceGenerator;
-
-public class SourceCodeExecutor {
-    
-    public static Integer execute() {
-        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        return componentSupplier.getCodeExecutor().execute(
-            ExecuteConfig.forBodySourceGenerator(
-                BodySourceGenerator.createSimple().useType(ArrayList.class, List.class)
-                .addCodeLine("System.out.println(\"number to add: \" + parameter[0]);")
-                .addCodeLine("List<Integer> numbers = new ArrayList<>();")
-                .addCodeLine("numbers.add((Integer)parameter[0]);")
-                .addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
-                .addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
-                .addCodeLine("Integer inputNumber = (Integer)parameter[0];")
-                .addCodeLine("return Integer.valueOf(inputNumber + (Integer)parameter[1]);")
-            ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
-        );
-        
-    }
-    
-    public static void main(String[] args) {
-        System.out.println("Total is: " + execute());
-    }
-}
-```
-
-<br/>
-
-## <a name="Executing-code-of-a-property-located-in-Burningwave-configuration-file"></a>Executing code of a property located in Burningwave configuration file
-To execute code from Burningwave configuration file ([**burningwave.properties**](#configuration-1) or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
-```properties
-code-block-1=\
-    Date now= new Date();\
-    return (T)now;
-code-block-1.imports=java.util.Date;
-```
-It is also possible to include the code of a property in another property:
-```properties
-code-block-1=\
-    ${code-block-2}\
-    return (T)Date.from(zonedDateTime.toInstant());
-code-block-1.imports=\
-    ${code-block-2.imports}\
-    java.util.Date;
-code-block-2=\
-    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
-    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
-code-block-2.imports=\
-    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
-    java.time.LocalDateTime;\
-    java.time.ZonedDateTime;\
-    java.time.ZoneId;
-```
-After that, for executing the code of the property we must call the **executeProperty** method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
-```java
-package org.burningwave.core.examples.codeexecutor;
-
-import java.time.LocalDateTime;
-
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.assembler.ComponentSupplier;
-
-public class SourceCodeExecutor {
-    
-    public static void execute() {
-        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        System.out.println("Time is: " +
-            componentSupplier.getCodeExecutor().executeProperty("code-block-1", LocalDateTime.now())    
-        );
-    }
-    
-    public static void main(String[] args) {
-        execute();
-    }
-}
-```
-
-<br/>
-
-## <a name="Executing-code-of-a-property-located-in-a-custom-properties-file"></a>Executing code of a property located in a custom properties file
-To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
-```properties
-code-block-1=\
-    Date now= new Date();\
-    return (T)now;
-code-block-1.imports=java.util.Date;
-```
-It is also possible to include the code of a property in another property:
-```properties
-code-block-1=\
-    ${code-block-2}\
-    return (T)Date.from(zonedDateTime.toInstant());
-code-block-1.imports=\
-    ${code-block-2.imports}\
-    java.util.Date;
-code-block-2=\
-    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
-    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
-code-block-2.imports=\
-    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
-    java.time.LocalDateTime;\
-    java.time.ZonedDateTime;\
-    java.time.ZoneId;
-```
-After that, for executing the code of the property we must create an **ExecuteConfig** object and set on it:
-* the path (relative or absolute) of our custom properties file 
-* the property name to be executed 
-* the parameters used in the property code
-
-Then we must call the **execute** method of CodeExecutor with the created ExecuteConfig object:
-```java
-package org.burningwave.core.examples.codeexecutor;
-
-import java.time.LocalDateTime;
-
-import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ExecuteConfig;
-
-public class SourceCodeExecutor {
-    
-    public static void execute() {
-        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
-        System.out.println("Time is: " +
-            componentSupplier.getCodeExecutor().execute(
-                ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
-                //Uncomment the line below if the path you have supplied is an absolute path
-                //.setFilePathAsAbsolute(true)
-                .setPropertyName("code-block-1")
-                .withParameter(LocalDateTime.now())
-            )    
-        );
-    }
-    
-    public static void main(String[] args) {
         execute();
     }
 }
@@ -475,7 +313,9 @@ public class Finder {
 <br>
 
 # <a name="Performing-tasks-in-parallel-with-different-priorities"></a>Performing tasks in parallel with different priorities
-By using the **BackgroundExecutor** component you can launch different Runnables or Suppliers in a parallel way and wait for them starting or finishing. For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-threads-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-threads-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-threads-count' property for the quantity indicated by the `thread-supplier.max-detached-threads-count.increasing-step` property. Resetting the 'thread-supplier.max-detached-threads-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
+By using the **BackgroundExecutor** component you can launch different functional interfaces in parallel **by setting the priority of the thread they will be assigned to**. There is also the option to wait for them start or finish.
+
+For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-threads-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-threads-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-threads-count' property for the quantity indicated by the **`thread-supplier.max-detached-threads-count.increasing-step`** property. Resetting the 'thread-supplier.max-detached-threads-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 
@@ -849,7 +689,169 @@ public class ConstructorsHandler {
 }
 ```
 
-<br>
+<br/>
+
+# <a name="Executing-stringified-source-code"></a>Executing stringified source code
+It is possible to execute stringified source code by using the **CodeExecutor** in three three different ways:
+* [through **BodySourceGenerator**](#Executing-code-with-BodySourceGenerator)
+* [through a property located in Burningwave configuration file](#Executing-code-of-a-property-located-in-Burningwave-configuration-file)
+* [through a property located in a custom Properties file](#Executing-code-of-a-property-located-in-a-custom-properties-file)
+
+<br/>
+
+## <a name="Executing-code-with-BodySourceGenerator"></a>Executing code with BodySourceGenerator
+For first way we must create a **ExecuteConfig** by using the within static method **`forBodySourceGenerator`** to which must be passed the **BodySourceGenerator** that contains the source code with the parameters used within: after that we must pass the created configuration to the **`execute`** method of CodeExecutor as shown below:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ExecuteConfig;
+import org.burningwave.core.classes.BodySourceGenerator;
+
+public class SourceCodeExecutor {
+    
+    public static Integer execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        return componentSupplier.getCodeExecutor().execute(
+            ExecuteConfig.forBodySourceGenerator(
+                BodySourceGenerator.createSimple().useType(ArrayList.class, List.class)
+                .addCodeLine("System.out.println(\"number to add: \" + parameter[0]);")
+                .addCodeLine("List<Integer> numbers = new ArrayList<>();")
+                .addCodeLine("numbers.add((Integer)parameter[0]);")
+                .addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
+                .addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
+                .addCodeLine("Integer inputNumber = (Integer)parameter[0];")
+                .addCodeLine("return Integer.valueOf(inputNumber + (Integer)parameter[1]);")
+            ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
+        );
+        
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Total is: " + execute());
+    }
+}
+```
+
+<br/>
+
+## <a name="Executing-code-of-a-property-located-in-Burningwave-configuration-file"></a>Executing code of a property located in Burningwave configuration file
+To execute code from Burningwave configuration file ([**burningwave.properties**](#configuration-1) or other file that we have used to create the ComponentContainer: [**see architectural overview and configuration**](#Architectural-overview-and-configuration)) we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+```properties
+code-block-1=\
+    Date now= new Date();\
+    return (T)now;
+code-block-1.imports=java.util.Date;
+```
+It is also possible to include the code of a property in another property:
+```properties
+code-block-1=\
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
+code-block-1.imports=\
+    ${code-block-2.imports}\
+    java.util.Date;
+code-block-2=\
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+code-block-2.imports=\
+    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+    java.time.LocalDateTime;\
+    java.time.ZonedDateTime;\
+    java.time.ZoneId;
+```
+After that, for executing the code of the property we must call the **executeProperty** method of CodeExecutor and passing to it the property name to be executed and the parameters used in the property code:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.time.LocalDateTime;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+
+public class SourceCodeExecutor {
+    
+    public static void execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        System.out.println("Time is: " +
+            componentSupplier.getCodeExecutor().executeProperty("code-block-1", LocalDateTime.now())    
+        );
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+```
+
+<br/>
+
+## <a name="Executing-code-of-a-property-located-in-a-custom-properties-file"></a>Executing code of a property located in a custom properties file
+To execute code from a custom properties file we must add to it a  property that contains the code and, if it is necessary to import classes, we must add them to another property named as the property that contains the code plus the suffix **'imports'**. E.g:
+```properties
+code-block-1=\
+    Date now= new Date();\
+    return (T)now;
+code-block-1.imports=java.util.Date;
+```
+It is also possible to include the code of a property in another property:
+```properties
+code-block-1=\
+    ${code-block-2}\
+    return (T)Date.from(zonedDateTime.toInstant());
+code-block-1.imports=\
+    ${code-block-2.imports}\
+    java.util.Date;
+code-block-2=\
+    LocalDateTime localDateTime = (LocalDateTime)parameter[0];\
+    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
+code-block-2.imports=\
+    static org.burningwave.core.assembler.StaticComponentContainer.Strings;\
+    java.time.LocalDateTime;\
+    java.time.ZonedDateTime;\
+    java.time.ZoneId;
+```
+After that, for executing the code of the property we must create an **ExecuteConfig** object and set on it:
+* the path (relative or absolute) of our custom properties file 
+* the property name to be executed 
+* the parameters used in the property code
+
+Then we must call the **execute** method of CodeExecutor with the created ExecuteConfig object:
+```java
+package org.burningwave.core.examples.codeexecutor;
+
+import java.time.LocalDateTime;
+
+import org.burningwave.core.assembler.ComponentContainer;
+import org.burningwave.core.assembler.ComponentSupplier;
+import org.burningwave.core.classes.ExecuteConfig;
+
+public class SourceCodeExecutor {
+    
+    public static void execute() {
+        ComponentSupplier componentSupplier = ComponentContainer.getInstance();
+        System.out.println("Time is: " +
+            componentSupplier.getCodeExecutor().execute(
+                ExecuteConfig.forPropertiesFile("custom-folder/code.properties")
+                //Uncomment the line below if the path you have supplied is an absolute path
+                //.setFilePathAsAbsolute(true)
+                .setPropertyName("code-block-1")
+                .withParameter(LocalDateTime.now())
+            )    
+        );
+    }
+    
+    public static void main(String[] args) {
+        execute();
+    }
+}
+```
+
+<br/>
 
 # <a name="Getting-and-setting-properties-of-a-Java-bean-through-path"></a>Getting and setting properties of a Java bean through path
 Through **ByFieldOrByMethodPropertyAccessor** and **ByMethodOrByFieldPropertyAccessor** it is possible to get and set properties of a Java bean by using path. So for this example we will use these Java beans:
@@ -1084,14 +1086,16 @@ iterable-object-helper.parallel-iteration.applicability.default-minimum-collecti
 	2
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
-#This property is optional and it is possible to use a custom JVM Driver which implements the io.github.toolfactory.jvm.Driver interface.
-#Other possible values are: io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
+#This property is optional and it is possible to use a custom JVM Driver which implements
+#the io.github.toolfactory.jvm.Driver interface. Other possible values are: 
+#io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
 	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
-#the SLF4JManagedLoggerRepository will be instantiated, otherwise the SimpleManagedLoggerRepository will be instantiated
+#the SLF4JManagedLoggerRepository will be instantiated, otherwise
+#the SimpleManagedLoggerRepository will be instantiated
 managed-logger.repository=\
 	autodetect
 #to increase performance set it to false
