@@ -1173,7 +1173,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						});
 					}						
 				}
-				return getByPriority(priority);
+				queuedTasksExecutor = queuedTasksExecutors.get(priority);
 			}
 			if (queuedTasksExecutor == null) {
 				queuedTasksExecutor = queuedTasksExecutors.get(checkAndCorrectPriority(priority));
