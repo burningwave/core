@@ -899,7 +899,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return exc;
 		}
 		
-		public final <S> S submit() {
+		public final T submit() {
 			if (aborted) {
 				Driver.throwException(new TaskStateException(this, "is aborted"));
 			}
@@ -914,7 +914,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			} else {
 				Driver.throwException(new TaskStateException(this, "is already submitted"));
 			}
-			return (S)addToQueue();
+			return addToQueue();
 		}
 		
 		T addToQueue() {
