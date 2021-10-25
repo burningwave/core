@@ -1027,8 +1027,6 @@ public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSuppli
 
 ... That can be used within your application, simply adding a static import to your compilation unit, i.e.:
 ```java
-package org.burningwave.core.examples.staticcomponents;
-
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
@@ -1036,7 +1034,7 @@ public class UseOfStaticComponentsExample {
     
     public void yourMethod(){
         ManagedLoggersRepository.logInfo(
-            () -> UseOfStaticComponentsExample.class.getName(),
+            UseOfStaticComponentsExample.class::getName,
             "Master class loader is {}",
             ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader())
         );
@@ -1105,11 +1103,9 @@ managed-logger.repository=\
 managed-logger.repository.enabled=\
 	true
 managed-logger.repository.logging.warn.disabled-for=\
-	org.burningwave.core.classes.ClassHunter$SearchContext;\
-	org.burningwave.core.classes.ClassPathHunter$SearchContext;\
+	org.burningwave.core.assembler.ComponentContainer$PathScannerClassLoader;\
 	org.burningwave.core.classes.MemoryClassLoader;\
-	org.burningwave.core.classes.PathScannerClassLoader;\
-	org.burningwave.core.classes.SearchContext;
+	org.burningwave.core.classes.PathScannerClassLoader;
 modules.export-all-to-all=\
 	true
 #mandatory if more burningwave.static.properties file are in the class paths
