@@ -692,7 +692,6 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							JavaClass javaClass = child.javaClassWrapper.get();
 							if (javaClass != null) {
 								javaClass.close();
-								child.javaClassWrapper.set(null);
 							}				
 							child.javaClassWrapper = null;
 						}
@@ -713,7 +712,6 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				JavaClass javaClass = this.javaClassWrapper.get();
 				if (javaClass != null) {
 					javaClass.close();
-					this.javaClassWrapper.set(null);
 				}				
 				javaClass = null;
 			}
@@ -906,7 +904,22 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return this.javaClassWrapper.get();
 				}
 				try {
-					return (javaClassWrapper = new AtomicReference<>(JavaClass.create(this.toByteBuffer()))).get();
+					return (javaClassWrapper = new AtomicReference<>(new JavaClass(this.toByteBuffer()) {
+						
+						protected ByteBuffer getByteCode0() {
+							return FileSystemItem.this.toByteBuffer();
+						}
+						
+						protected void setByteCode0(ByteBuffer byteCode) {}
+						
+						@Override
+						public void close() {
+							Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
+								javaClassWrapper.set(null);
+							});
+						}
+						
+					})).get();
 				} catch (Throwable exc) {
 					return (javaClassWrapper = new AtomicReference<>(null)).get();
 				}

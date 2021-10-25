@@ -42,13 +42,13 @@ import org.burningwave.core.io.FileSystemItem;
 public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implements Closeable {
 	private ByteBuffer byteCode;
 
-	JavaClass(Class<?> cls) {
+	public JavaClass(Class<?> cls) {
 		this(Classes.getByteCode(cls));
 	}
 	
-	JavaClass(ByteBuffer byteCode) {
+	public JavaClass(ByteBuffer byteCode) {
 		super(byteCode);
-		this.byteCode = byteCode;
+		setByteCode0(byteCode);
 	}
 	
 	public static JavaClass create(Class<?> cls) {
@@ -69,6 +69,14 @@ public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implemen
 		try(JavaClass javaClass = JavaClass.create(byteCode)) {
 			return javaClassConsumer.apply(javaClass);
 		}
+	}
+	
+	protected ByteBuffer getByteCode0() {
+		return this.byteCode;
+	}
+	
+	protected void setByteCode0(ByteBuffer byteCode) {
+		this.byteCode = BufferHandler.duplicate(byteCode);
 	}
 	
 	public String getPackagePath() {
@@ -97,7 +105,7 @@ public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implemen
 	}
 	
 	public ByteBuffer getByteCode() {
-		return BufferHandler.duplicate(byteCode);
+		return BufferHandler.duplicate(getByteCode0());
 	}
 	
 	public byte[] toByteArray() {
@@ -109,7 +117,7 @@ public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implemen
 	}
 	
 	public JavaClass duplicate() {
-		return new JavaClass(byteCode);
+		return new JavaClass(getByteCode0());
 	}
 	
 	@Override

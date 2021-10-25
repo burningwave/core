@@ -417,14 +417,13 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 								classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 							);
 							if (!classPath.refresh().exists()) {
-								pathsCreationTasks.add(
-									BackgroundExecutor.createProducerTask(task -> {
-										FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
-										File target = new File(classPath.getAbsolutePath());
-										new File(copy.getAbsolutePath()).renameTo(target);
-										return Paths.clean(target.getAbsolutePath());
-									}).submit()
-								);
+								QueuedTasksExecutor.ProducerTask<String> tsk = BackgroundExecutor.createProducerTask(task -> {
+									FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
+									File target = new File(classPath.getAbsolutePath());
+									new File(copy.getAbsolutePath()).renameTo(target);
+									return Paths.clean(target.getAbsolutePath());
+								});
+								pathsCreationTasks.add(tsk.submit());
 							}
 							classPaths.put(
 								fsObject.getAbsolutePath(),

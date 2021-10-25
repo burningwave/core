@@ -675,11 +675,30 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public T waitForStarting() {
-			while(waitForStarting0(false));
+			return waitForStarting(false, 0);
+		}
+		
+		public T waitForStarting(long timeout) {
+			return waitForStarting(false, timeout);
+		}
+		
+		public T waitForStarting(boolean ignoreDeadLocked) {
+			return waitForStarting(ignoreDeadLocked, 0);
+		}
+		
+		public T waitForStarting(boolean ignoreDeadLocked, long timeout) {
+			if (timeout <= 0) {
+				while(waitForStarting0(ignoreDeadLocked, 0));
+				return (T)this;
+			}
+			long timeAtStartWaiting = System.currentTimeMillis();
+			while(waitForStarting0(ignoreDeadLocked, timeout) && 
+				System.currentTimeMillis() - timeAtStartWaiting < timeout
+			) {}
 			return (T)this;
 		}
 		
-		public boolean waitForStarting0(boolean ignoreDeadLocked) {
+		private boolean waitForStarting0(boolean ignoreDeadLocked, long timeout) {
 			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
@@ -698,7 +717,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								if (isAborted()) {
 									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
-								wait();
+								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
 								Driver.throwException(exc);
@@ -716,12 +735,27 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return waitForFinish(false);
 		}
 		
+		public T waitForFinish(long timeout) {
+			return waitForFinish(false, timeout);
+		}
+		
 		public T waitForFinish(boolean ignoreDeadLocked) {
-			while(waitForFinish0(ignoreDeadLocked));
+			return waitForFinish(ignoreDeadLocked, 0);
+		}
+		
+		public T waitForFinish(boolean ignoreDeadLocked, long timeout) {
+			if (timeout <= 0) {
+				while(waitForFinish0(ignoreDeadLocked, 0));
+				return (T)this;
+			}
+			long timeAtStartWaiting = System.currentTimeMillis();
+			while(waitForFinish0(ignoreDeadLocked, timeout) && 
+				System.currentTimeMillis() - timeAtStartWaiting < timeout
+			) {}
 			return (T)this;
 		}
 
-		private boolean waitForFinish0(boolean ignoreDeadLocked) {
+		private boolean waitForFinish0(boolean ignoreDeadLocked, long timeout) {
 			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
@@ -740,7 +774,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								if (isAborted()) {
 									Driver.throwException(new TaskStateException(this, "is aborted"));
 								}
-								wait();
+								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
 								Driver.throwException(exc);
@@ -865,7 +899,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return exc;
 		}
 		
-		public final <S> S submit() {
+		public final T submit() {
 			if (aborted) {
 				Driver.throwException(new TaskStateException(this, "is aborted"));
 			}
@@ -880,7 +914,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			} else {
 				Driver.throwException(new TaskStateException(this, "is already submitted"));
 			}
-			return (S)addToQueue();
+			return addToQueue();
 		}
 		
 		T addToQueue() {
@@ -1139,7 +1173,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						});
 					}						
 				}
-				return getByPriority(priority);
+				queuedTasksExecutor = queuedTasksExecutors.get(priority);
 			}
 			if (queuedTasksExecutor == null) {
 				queuedTasksExecutor = queuedTasksExecutors.get(checkAndCorrectPriority(priority));

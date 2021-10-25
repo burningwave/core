@@ -162,7 +162,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		boolean useTemporaryFolderForStoring,
 		Map<String, String> extraOptions
 	) {	
-		return BackgroundExecutor.createProducerTask(task -> {
+		ProducerTask<JavaMemoryCompiler.Compilation.Result> tsk = BackgroundExecutor.createProducerTask(task -> {
 			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
 			Collection<MemorySource> memorySources = new ArrayList<>();
 			sourcesToMemorySources(sources, memorySources);
@@ -196,7 +196,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					compiledFiles, new HashSet<>(context.classPaths)
 				);
 			}
-		}).submit();
+		});
+		return tsk.submit();
 	}
 
 

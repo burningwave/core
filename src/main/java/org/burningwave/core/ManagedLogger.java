@@ -131,12 +131,9 @@ public interface ManagedLogger {
 				defaultValues.put(Key.TYPE, "autodetect");
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-					ClassHunter.class.getName() + "Impl$SearchContext;" +
-					ClassPathHunter.class.getName() + "Impl$SearchContext;" +
 					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
-					PathScannerClassLoader.class.getName() + ";" +
-					ClassHunter.class.getPackage().getName() + ".SearchContext;"
+					PathScannerClassLoader.class.getName() + ";"
 				);				
 				
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

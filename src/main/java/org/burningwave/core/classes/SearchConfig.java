@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
 import java.util.AbstractMap;
@@ -175,6 +176,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		pathsRetriever = () -> {
 			Collection<FileSystemItem> pathsToBeScanned = pathsSupplier.apply(finalPathScannerClassLoader).getValue();
 			if (pathsToBeScanned.isEmpty()) {
+				ManagedLoggersRepository.logInfo(getClass()::getName, "The input paths are not present: the search will be performed on the default configured paths");
 				pathsToBeScanned.addAll(classPathScanner.pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS)
 					.stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
 			}
@@ -200,7 +202,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		for (Collection<String> pathColl : pathColls) {
 			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
 				for (String absolutePath : pathColl) {
-					classLoaderAndPaths.getValue().add(FileSystemItem.ofPath(absolutePath));
+					try {
+						classLoaderAndPaths.getValue().add(FileSystemItem.ofPath(absolutePath));
+					} catch (Throwable exc) {
+						throw new IllegalArgumentException("One or more of the input paths are incorrect", exc);
+					}
 				}
 				return classLoaderAndPaths;
 			});
@@ -234,12 +240,14 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	public final SearchConfig addResources(ClassLoader classLoader, Collection<String>... pathColls) {
 		for (Collection<String> pathColl : pathColls) {
 			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
-				classLoaderAndPaths.getValue().addAll(
-					Resources.getAsFileSystemItems(
-						classLoader != null? classLoader : classLoaderAndPaths.getKey(),
-						pathColl
-					)
+				Collection<FileSystemItem> resources = Resources.getAsFileSystemItems(
+					classLoader != null? classLoader : classLoaderAndPaths.getKey(),
+					pathColl
 				);
+				if (resources.isEmpty()) {
+					throw new IllegalArgumentException("One or more of the input resources are incorrect");
+				}
+				classLoaderAndPaths.getValue().addAll(resources	);
 				return classLoaderAndPaths;
 			});
 		}

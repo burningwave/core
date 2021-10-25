@@ -26,18 +26,21 @@ public class TaskLauncher implements ManagedLogger {
             internalTask.waitForFinish();
             logInfo("task one finished");
             return startTime;
-        }, Thread.MAX_PRIORITY).submit();
+        }, Thread.MAX_PRIORITY);
+        taskOne.submit();
         Task taskTwo = BackgroundExecutor.createTask(task -> {
             logInfo("task two started and wait for task one finishing");
             taskOne.waitForFinish();
             logInfo("task two finished");    
-        }, Thread.NORM_PRIORITY).submit();
+        }, Thread.NORM_PRIORITY);
+        taskTwo.submit();
         ProducerTask<Long> taskThree = BackgroundExecutor.createProducerTask(task -> {
             logInfo("task three started and wait for task two finishing");
             taskTwo.waitForFinish();
             logInfo("task two finished");
             return System.currentTimeMillis();
-        }, Thread.MIN_PRIORITY).submit();
+        }, Thread.MIN_PRIORITY);
+        taskThree.submit();
         taskThree.waitForFinish();
         logInfo("Elapsed time: {}ms", taskThree.join() - taskOne.join());
     }
