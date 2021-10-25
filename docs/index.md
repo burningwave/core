@@ -1182,7 +1182,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
 If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration files are found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
