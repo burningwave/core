@@ -1027,8 +1027,6 @@ public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSuppli
 
 ... That can be used within your application, simply adding a static import to your compilation unit, i.e.:
 ```java
-package org.burningwave.core.examples.staticcomponents;
-
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
@@ -1036,7 +1034,7 @@ public class UseOfStaticComponentsExample {
     
     public void yourMethod(){
         ManagedLoggersRepository.logInfo(
-            () -> UseOfStaticComponentsExample.class.getName(),
+            UseOfStaticComponentsExample.class::getName,
             "Master class loader is {}",
             ClassLoaders.getMaster(Thread.currentThread().getContextClassLoader())
         );
