@@ -692,8 +692,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							JavaClass javaClass = child.javaClassWrapper.get();
 							if (javaClass != null) {
 								javaClass.close();
-							}				
-							child.javaClassWrapper = null;
+							} else {			
+								child.javaClassWrapper = null;
+							}
 						}
 						if (removeLinkedResourcesFromCache) {
 							removeFromCache(child, removeFromCache);
@@ -712,8 +713,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				JavaClass javaClass = this.javaClassWrapper.get();
 				if (javaClass != null) {
 					javaClass.close();
-				}				
-				javaClass = null;
+				} else {			
+					this.javaClassWrapper = null;
+				}
 			}
 			if (removeLinkedResourcesFromCache) {
 				removeFromCache(this, removeFromCache);
@@ -891,40 +893,45 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 	}
 	
-	public ByteBuffer toByteBuffer() {
-		return Executor.get(this::toByteBuffer0, 2);
+	public FileSystemItem reloadContent() {
+		return reloadContent(false);
 	}
 	
-	public JavaClass toJavaClass() {
-		if (this.javaClassWrapper != null) {
-			return javaClassWrapper.get();
-		} else {
-			return Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
-				if (this.javaClassWrapper != null) {
-					return this.javaClassWrapper.get();
-				}
-				try {
-					return (javaClassWrapper = new AtomicReference<>(new JavaClass(this.toByteBuffer()) {
-						
-						protected ByteBuffer getByteCode0() {
-							return FileSystemItem.this.toByteBuffer();
-						}
-						
-						protected void setByteCode0(ByteBuffer byteCode) {}
-						
-						@Override
-						public void close() {
-							Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
-								javaClassWrapper.set(null);
-							});
-						}
-						
-					})).get();
-				} catch (Throwable exc) {
-					return (javaClassWrapper = new AtomicReference<>(null)).get();
-				}
-			});
+	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
+		String absolutePath = getAbsolutePath();
+		Synchronizer.execute(instanceId, () -> {
+			Cache.pathForContents.remove(absolutePath, true);
+			if (recomputeConventionedAbsolutePath) {
+				this.absolutePath.setValue(null);
+			}
+		});
+		if (exists() && !isFolder()) {
+			if (isCompressed()) {
+				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+				) {
+					iterableZipContainer.findFirst(
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
+						iteratedZipEntry -> 
+							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+					);
+				}		
+			} else {
+				Cache.pathForContents.getOrUploadIfAbsent(
+					absolutePath, () -> {
+						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+							return fIS.toByteBuffer();
+						}						
+					}
+				);
+			}
 		}
+		return this;
+	}
+	
+	public ByteBuffer toByteBuffer() {
+		return Executor.get(this::toByteBuffer0, 2);
 	}
 	
 	public byte[] toByteArray() {
@@ -975,6 +982,45 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return null;
 	}
 	
+	public InputStream toInputStream() {
+		return new ByteBufferInputStream(toByteBuffer());
+	}
+	
+	public JavaClass toJavaClass() {
+		if (this.javaClassWrapper != null) {
+			return javaClassWrapper.get();
+		} else {
+			return Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
+				if (this.javaClassWrapper != null) {
+					return this.javaClassWrapper.get();
+				}
+				try {
+					return (javaClassWrapper = new AtomicReference<>(new JavaClass(this.toByteBuffer()) {
+						
+						protected ByteBuffer getByteCode0() {
+							return FileSystemItem.this.toByteBuffer();
+						}
+						
+						protected void setByteCode0(ByteBuffer byteCode) {}
+						
+						@Override
+						public void close() {
+							Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
+								AtomicReference<JavaClass> javaClassWrapperRef =
+									FileSystemItem.this.javaClassWrapper;
+								FileSystemItem.this.javaClassWrapper = null;
+								javaClassWrapperRef.set(null);
+							});
+						}
+						
+					})).get();
+				} catch (Throwable exc) {
+					return (javaClassWrapper = new AtomicReference<>(null)).get();
+				}
+			});
+		}
+	}
+	
 	public <S extends Serializable> S toObject() {
 		try (InputStream inputStream = toInputStream()) {
 			return Objects.deserialize(inputStream);
@@ -982,48 +1028,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return Driver.throwException(exc);
 		}
 	}	
-
-	public FileSystemItem reloadContent() {
-		return reloadContent(false);
-	}
 	
-	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		String absolutePath = getAbsolutePath();
-		Synchronizer.execute(instanceId, () -> {
-			Cache.pathForContents.remove(absolutePath, true);
-			if (recomputeConventionedAbsolutePath) {
-				this.absolutePath.setValue(null);
-			}
-		});
-		if (exists() && !isFolder()) {
-			if (isCompressed()) {
-				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-				) {
-					iterableZipContainer.findFirst(
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath), 
-						iteratedZipEntry -> 
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
-					);
-				}		
-			} else {
-				Cache.pathForContents.getOrUploadIfAbsent(
-					absolutePath, () -> {
-						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-							return fIS.toByteBuffer();
-						}						
-					}
-				);
-			}
-		}
-		return this;
-	}
-
-	public InputStream toInputStream() {
-		return new ByteBufferInputStream(toByteBuffer());
-	}
-
 	@Override
 	public String toString() {
 		return absolutePath.getKey();

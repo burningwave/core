@@ -82,7 +82,6 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 	
 	public R find();
 	
-	//Not cached search
 	public R findBy(SearchConfig searchConfig);
 	
 	static abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
