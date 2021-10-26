@@ -41,8 +41,6 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.burningwave.core.assembler.ComponentContainer;
-import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.ClassPathHunter;
 import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
