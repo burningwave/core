@@ -805,8 +805,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	private synchronized String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes,
 			String zipInputStreamName, String relativePath1) {
-		IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);
-		try {
+		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
 			if (zIS == null) {
 				return Driver.throwException(
 					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
@@ -852,10 +851,6 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return Driver.throwException(
 					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 				);
-			}
-		} finally {
-			if (zIS != null) {
-				zIS.close();
 			}
 		}
 	}
