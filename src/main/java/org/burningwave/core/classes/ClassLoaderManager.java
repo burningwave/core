@@ -60,8 +60,7 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 		C classLoaderTemp = null;
 		Supplier<C> defaultClassLoaderSupplier = this.classLoaderSupplier;
 		if (defaultClassLoaderSupplier != null && (classLoaderTemp = defaultClassLoaderSupplier.get()) != classLoader) {
-			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
-			try {
+			try (Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));) {
 				synchronized(mutex) {
 					defaultClassLoaderSupplier = this.classLoaderSupplier;
 					if (defaultClassLoaderSupplier != null && (classLoaderTemp = defaultClassLoaderSupplier.get()) != classLoader) {
@@ -79,14 +78,11 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 						this.classLoader = classLoaderTemp;
 					}
 				}
-			} finally {
-				Synchronizer.removeIfUnused(mutex);
 			}
 			return classLoaderTemp;
 		}
 		if (classLoader == null) {
-			Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));
-			try {
+			try (Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));) {
 				synchronized(mutex) {
 					if (classLoader == null) {
 						Object defaultClassLoaderOrDefaultClassLoaderSupplier =
@@ -104,8 +100,6 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 						return classLoader;
 					}
 				}
-			} finally {
-				Synchronizer.removeIfUnused(mutex);
 			}
 		}
 		return classLoader;

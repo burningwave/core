@@ -118,7 +118,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
+			.withDefaultValues(defaultValues)
 		);
 	}
 	
@@ -127,7 +127,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
+			.withDefaultValues(defaultValues)
 		);
 	}
 	
@@ -136,7 +136,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
+			.withDefaultValues(defaultValues)
 		);
 	}
 	
@@ -145,7 +145,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
+			.withDefaultValues(defaultValues)
 		);
 	}
 

@@ -75,7 +75,7 @@ public class Synchronizer implements Closeable, ManagedLogger {
 	}
 	
 	public Mutex getMutex(String id) {
-		Mutex newMutex = new Mutex(id);
+		Mutex newMutex = this.new Mutex(id);
 		while (true) {			
 			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
 	        if (oldMutex == null) {
@@ -88,58 +88,36 @@ public class Synchronizer implements Closeable, ManagedLogger {
         	continue;
 		}
     }
-
-	public void removeIfUnused(Mutex mutex) {
-		try {
-			if (--mutex.clientsCount < 1) {
-				mutexes.remove(mutex.id);
-			}
-		} catch (Throwable exc) {
-
-		}
-	}
 	
 	public void execute(String id, Runnable executable) {
-		Mutex mutex = getMutex(id);
-		try {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
 			}			
-		} finally {
-			removeIfUnused(mutex);
 		}
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
-		Mutex mutex = getMutex(id);
-		try {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
 			}			
-		} finally {
-			removeIfUnused(mutex);
 		}	
 	}
 	
 	public <T> T execute(String id, Supplier<T> executable) {
-		Mutex mutex = getMutex(id);
-		try {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				return executable.get();
 			}			
-		} finally {
-			removeIfUnused(mutex);
 		}	
 	}
 	
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
-		Mutex mutex = getMutex(id);
-		try {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				return executable.get();
 			}			
-		} finally {
-			removeIfUnused(mutex);
 		}
 	}
 
@@ -221,12 +199,23 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		}		
 	}
 	
-	public static class Mutex {
+	public class Mutex implements java.io.Closeable {
 		Mutex(String id) {
 			this.id = id;
 		}
 		String id;
 		int clientsCount = 1;
+		
+		@Override
+		public void close() {
+			try {
+				if (--clientsCount < 1) {
+					Synchronizer.this.mutexes.remove(id);
+				}
+			} catch (Throwable exc) {
+
+			}
+		}
 	}
 	
 	static class ThreadsMonitorer implements Closeable {
