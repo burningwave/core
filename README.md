@@ -55,6 +55,12 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 ```xml
 <dependency>
     <groupId>org.burningwave</groupId>
+    <artifactId>jvm-driver</artifactId>
+    <version>6.2.4</version>
+</dependency>
+
+<dependency>
+    <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
     <version>12.13.1</version>
     <exclusions>
@@ -63,12 +69,6 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
             <artifactId>narcissus</artifactId>
         </exclusion>
     </exclusions>
-</dependency>
-
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>jvm-driver</artifactId>
-    <version>6.2.4</version>
 </dependency>
 ```
 
