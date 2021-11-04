@@ -51,6 +51,21 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 </dependency>
 ```
 
+By default Burningwave Core uses the io.github.toolfactory.jvm.DynamicDriver offered by the [ToolFactory JVM Driver library](https://toolfactory.github.io/jvm-driver/) but you can change the driver type through the property **`jvm.driver.type`** in the [burningwave.static.property](#static-components-configuration-file) file. It is also possible to switch to the drivers offered by [Burningwave JVM Driver](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies:
+```xml
+<dependency>
+	<groupId>io.github.toolfactory</groupId>
+	<artifactId>jvm-driver</artifactId>
+	<version>6.2.4</version>
+	<exclusions>
+		<exclusion>
+			<groupId>io.github.toolfactory</groupId>
+			<artifactId>narcissus</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+```
+
 ### Requiring the Burningwave Core module
 
 To use Burningwave Core as a Java module, add the following to your `module-info.java`: 
@@ -1086,10 +1101,14 @@ iterable-object-helper.parallel-iteration.applicability.default-minimum-collecti
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
 #This property is optional and it is possible to use a custom JVM Driver which implements
-#the io.github.toolfactory.jvm.Driver interface. Other possible values are: 
-#io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
+#the io.github.toolfactory.jvm.Driver interface.
+#If you are using the default jvm-driver library other possible values are:
+#io.github.toolfactory.jvm.DefaultDriver, io.github.toolfactory.jvm.HybridDriver, io.github.toolfactory.jvm.NativeDriver
+#If you are using the Burningwave JVM Driver library other possible values are:
+#io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.DynamicDriver, 
+#org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
-	org.burningwave.jvm.DynamicDriver
+	io.github.toolfactory.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
