@@ -47,7 +47,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.13.0</version>
+    <version>12.13.1</version>
 </dependency>
 ```
 
@@ -68,9 +68,17 @@ By default Burningwave Core uses the io.github.toolfactory.jvm.DynamicDriver off
 
 ### Requiring the Burningwave Core module
 
-To use Burningwave Core as a Java module, add the following to your `module-info.java`: 
+To use Burningwave Core as a Java module, if you are using the [default jvm driver library](https://toolfactory.github.io/jvm-driver/) add the following to your `module-info.java`: 
 
 ```
+requires io.github.toolfactory.narcissus;
+requires org.burningwave.core;
+```
+
+... Or add the following if you are going to use the [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/):
+
+```
+requires org.burningwave.jvm;
 requires org.burningwave.core;
 ```
 
