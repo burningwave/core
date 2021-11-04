@@ -82,7 +82,6 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 			return classLoaderTemp;
 		}
 		if (classLoader == null) {
-			
 			try (Mutex mutex = Synchronizer.getMutex(getOperationId("getDefaultClassLoader"));) {
 				synchronized(mutex) {
 					if (classLoader == null) {
