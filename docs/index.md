@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1420872151)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1421287587)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1420872151)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1421287587)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 </dependency>
 ```
 
-By default Burningwave Core uses the io.github.toolfactory.jvm.DynamicDriver offered by the [**ToolFactory JVM Driver library**](https://toolfactory.github.io/jvm-driver/) but you can change the driver type through the property **`jvm.driver.type`** in the [burningwave.static.properties](#static-components-configuration-file) file. It is also possible to switch to the drivers offered by [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies:
+By default Burningwave Core uses the dynamic driver supplied by the [**ToolFactory JVM Driver library**](https://toolfactory.github.io/jvm-driver/) but you can change it through the property **`jvm.driver.type`** in the [burningwave.static.properties](#static-components-configuration-file) file. It is also possible to switch to the drivers supplied by [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies:
 ```xml
 <dependency>
     <groupId>org.burningwave</groupId>
@@ -75,7 +75,7 @@ requires io.github.toolfactory.narcissus;
 requires org.burningwave.core;
 ```
 
-... Or add the following if you are going to use the [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/):
+... Or add the following if you are going to use the [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library:
 
 ```
 requires org.burningwave.jvm;
