@@ -90,7 +90,7 @@ public class Synchronizer implements Closeable, ManagedLogger {
     }
 	
 	public void execute(String id, Runnable executable) {
-		try (Mutex mutex = getMutex(id)) {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
 			}			
@@ -98,7 +98,7 @@ public class Synchronizer implements Closeable, ManagedLogger {
 	}
 	
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
-		try (Mutex mutex = getMutex(id)) {
+		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
 			}			
