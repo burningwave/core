@@ -51,7 +51,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 </dependency>
 ```
 
-By default Burningwave Core uses the io.github.toolfactory.jvm.DynamicDriver offered by the [ToolFactory JVM Driver library](https://toolfactory.github.io/jvm-driver/) but you can change the driver type through the properties **`jvm.driver.type`** in the [burningwave.static.property](#static-components-configuration-file) file. It is also possible to switch to the drivers offered by [Burningwave JVM Driver](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies:
+By default Burningwave Core uses the io.github.toolfactory.jvm.DynamicDriver offered by the [**ToolFactory JVM Driver library**](https://toolfactory.github.io/jvm-driver/) but you can change the driver type through the property **`jvm.driver.type`** in the [burningwave.static.properties](#static-components-configuration-file) file. It is also possible to switch to the drivers offered by [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies:
 ```xml
 <dependency>
     <groupId>io.github.toolfactory</groupId>
