@@ -109,7 +109,7 @@
 		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
 		<maven-scm-provider-gitexe.version>1.9.5</maven-scm-provider-gitexe.version>
-		<maven-surefire-plugin.version>2.21.0</maven-surefire-plugin.version>
+		<maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
 		<nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
 		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
@@ -140,17 +140,17 @@
 	<dependencies>
 		
 		<dependency>
+			<groupId>io.github.toolfactory</groupId>
+			<artifactId>jvm-driver</artifactId>
+			<version>${jvm-driver.version}</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>org.burningwave</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${bw-jvm-driver.version}</version>
 			<scope>compile</scope>
 			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.toolfactory</groupId>
-			<artifactId>jvm-driver</artifactId>
-			<version>${jvm-driver.version}</version>
 		</dependency>
 		
 		<dependency>
@@ -268,6 +268,7 @@
 					<includes>
 						<include>${project.test.includes}</include>
 					</includes>
+					<useModulePath>false</useModulePath>
 				</configuration>
 			</plugin>
 			<plugin>
