@@ -74,7 +74,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 
 ### Requiring the Burningwave Core module
 
-To use Burningwave Core as a Java module, if you are using the [default jvm driver library](https://toolfactory.github.io/jvm-driver/) add the following to your `module-info.java`: 
+To use Burningwave Core as a Java module, if you are using the [default jvm driver library](https://toolfactory.github.io/jvm-driver/) you need to add the following to your `module-info.java`: 
 
 ```java
 //Mandatory if you will not use the io.github.toolfactory.jvm.DefaultDriver
@@ -82,7 +82,7 @@ requires io.github.toolfactory.narcissus;
 requires org.burningwave.core;
 ```
 
-... Or add the following if you are going to use the [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library:
+... Instead if you are going to use the [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library you need add the following:
 
 ```java
 //Mandatory if you will not use the io.github.toolfactory.jvm.DefaultDriver
