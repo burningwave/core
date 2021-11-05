@@ -62,7 +62,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.13.1</version>
+    <version>12.13.2</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
