@@ -662,18 +662,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			probablyDeadLocked = true;
 		}
 
-		private void remove() {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this);
-			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(id);
-			}
-			if (executorIndex != null) {
-				executorIndex = null;
-				--queuedTasksExecutor.executorsIndex;
-			}
-		}
-
 		public T waitForStarting() {
 			return waitForStarting(false, 0);
 		}
@@ -789,17 +777,32 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		void execute() {
-			synchronized (this) {
-				if (aborted) {
-					notifyAll();
-					clear();
+			try {
+				try {
+					synchronized (this) {
+						if (aborted) {
+							notifyAll();
+							clear();
+							return;
+						}
+					}
+					preparingToExecute();
+					synchronized (this) {
+						notifyAll();
+					}
+				} catch (Throwable exc) {
+					this.exc = exc;
+					startTime = null;
+					if (exceptionHandler == null || !exceptionHandler.test((T)this, exc)) {
+						throw exc;
+					}
+					forceAbort();
 					return;
-				}
-
-			}
-			preparingToExecute();
-			synchronized (this) {
-				notifyAll();
+				}	
+			} catch (Throwable exc) {
+				logException(exc);
+				forceAbort();
+				return;
 			}
 			try {
 				try {
@@ -815,6 +818,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			} finally {
 				markAsFinished();
 			}
+		}
+
+		private synchronized void forceAbort() {
+			aborted = true;
+			notifyAll();
+			clear();
 		}
 
 		String getInfoAsString() {
@@ -857,6 +866,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			executable = null;
 			executor = null;
 			queuedTasksExecutor = null;
+		}
+		
+		private void remove() {
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			queuedTasksExecutor.tasksInExecution.remove(this);
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(id);
+			}
+			if (executorIndex != null) {
+				executorIndex = null;
+				--queuedTasksExecutor.executorsIndex;
+			}
 		}
 
 		void markAsFinished() {
@@ -1015,7 +1036,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					)
 				);
 				queuedTasksExecutorGroup.name = name;
-				queuedTasksExecutorGroup.queuedTasksExecutors = new HashMap<>();
+				Map<Integer, QueuedTasksExecutor> queuedTasksExecutors = new HashMap<>();
 				for (int i = 0;  i < java.lang.Thread.MAX_PRIORITY; i++) {
 					Object priorityAsObject = IterableObjectHelper.resolveValue(
 						ResolveConfig.forNamedKey("queue-task-executor[" + i + "].priority")
@@ -1056,7 +1077,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								isQueuedTasksExecutorDaemonAsObject
 							);
 						}
-						queuedTasksExecutorGroup.queuedTasksExecutors.put(
+						queuedTasksExecutors.put(
 							priority,
 							createQueuedTasksExecutor(
 								name + " - " + queuedTasksExecutorName,
@@ -1067,9 +1088,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						);
 					}
 				}
-				definedPriorites = queuedTasksExecutorGroup.queuedTasksExecutors.keySet().toArray(
-					definedPriorites = new Integer[queuedTasksExecutorGroup.queuedTasksExecutors.size()]
+				definedPriorites = queuedTasksExecutors.keySet().toArray(
+					definedPriorites = new Integer[queuedTasksExecutors.size()]
 				);
+				this.queuedTasksExecutors = queuedTasksExecutors;
 			};
 		}
 
@@ -1166,8 +1188,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			try {
 				queuedTasksExecutor = queuedTasksExecutors.get(priority);
-			} catch (Exception e) {
-				if (queuedTasksExecutor == null) {
+			} catch (NullPointerException exc) {
+				if (queuedTasksExecutors == null) {
 					if (initializator != null) {
 						Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
 							if (initializator != null) {
