@@ -771,13 +771,15 @@ public class Classes implements MembersRetriever {
 		) throws IllegalArgumentException {
 	    	return Executor.get(() -> {
 	    		try {
-	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
-	    				implVersion, implVendor, sealBase);
+	    			return (Package) definePackageMethod.invoke(
+	    				classLoader, name, specTitle, specVersion, specVendor,
+	    				implTitle, implVersion, implVendor, sealBase
+	    			);
 	    		} catch (IllegalArgumentException exc) {
 	    			ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
 	    			return retrieveLoadedPackage(classLoader, name);
 	    		}
-			});
+	    	});
 	    }
 
 		private void definePackageFor(Class<?> cls,
