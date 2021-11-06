@@ -712,12 +712,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	private void clearJavaClassWrapper(FileSystemItem fileSystemItem) {
 		if (fileSystemItem.javaClassWrapper != null) {
-			JavaClass javaClass = fileSystemItem.javaClassWrapper.get();
-			if (javaClass != null) {
-				javaClass.close();
-			} else {
-				fileSystemItem.javaClassWrapper = null;
-			}
+			Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
+				if (fileSystemItem.javaClassWrapper != null) {
+					JavaClass javaClass = fileSystemItem.javaClassWrapper.get();
+					if (javaClass != null) {
+						javaClass.close();
+					} else {
+						fileSystemItem.javaClassWrapper = null;
+					}
+				}
+			});
 		}
 	}
 
