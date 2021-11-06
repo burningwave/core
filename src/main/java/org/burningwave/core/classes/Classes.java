@@ -796,7 +796,7 @@ public class Classes implements MembersRetriever {
 			    			definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
 			    		}
 			    	});
-				}
+			    }
 			}
 		}
 
