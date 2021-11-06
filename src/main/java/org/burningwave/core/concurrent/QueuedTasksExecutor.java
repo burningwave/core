@@ -856,8 +856,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		void markAsFinished() {
-			finished = true;
 			synchronized(this) {
+				finished = true;
 				queuedTasksExecutor.tasksInExecution.remove(this);
 				++queuedTasksExecutor.executedTasksCount;
 				notifyAll();
