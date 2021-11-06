@@ -1118,7 +1118,7 @@ iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-coun
 #the io.github.toolfactory.jvm.Driver interface.
 #If you are using the default jvm-driver library other possible values are:
 #io.github.toolfactory.jvm.DefaultDriver, io.github.toolfactory.jvm.HybridDriver, io.github.toolfactory.jvm.NativeDriver
-#If you are using the Burningwave JVM Driver library other possible values are:
+#If you are using the Burningwave JVM Driver library all the possible values are:
 #io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.DynamicDriver, 
 #org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
