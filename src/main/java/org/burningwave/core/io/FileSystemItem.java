@@ -711,17 +711,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	private void clearJavaClassWrapper(FileSystemItem fileSystemItem) {
-		if (fileSystemItem.javaClassWrapper != null) {
-			Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
-				if (fileSystemItem.javaClassWrapper != null) {
-					JavaClass javaClass = fileSystemItem.javaClassWrapper.get();
-					if (javaClass != null) {
-						javaClass.close();
-					} else {
-						fileSystemItem.javaClassWrapper = null;
-					}
-				}
-			});
+		AtomicReference<JavaClass> javaClassWrapper = fileSystemItem.javaClassWrapper;
+		if (javaClassWrapper != null) {
+			JavaClass javaClass = javaClassWrapper.get();
+			if (javaClass != null) {
+				javaClass.close();
+			} else {
+				Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
+					fileSystemItem.javaClassWrapper = null;
+				});
+			}
 		}
 	}
 
@@ -983,15 +982,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public JavaClass toJavaClass() {
-		if (this.javaClassWrapper != null) {
+		AtomicReference<JavaClass> javaClassWrapper = this.javaClassWrapper;
+		if (javaClassWrapper != null) {
 			return javaClassWrapper.get();
 		} else {
 			return Synchronizer.execute(instanceId + "_loadJavaClass", () -> {
-				if (this.javaClassWrapper != null) {
-					return this.javaClassWrapper.get();
+				AtomicReference<JavaClass> javaClassWrapperInternalRef = this.javaClassWrapper;
+				if (javaClassWrapperInternalRef != null) {
+					return javaClassWrapperInternalRef.get();
 				}
 				try {
-					return (javaClassWrapper = new AtomicReference<>(new JavaClass(this.toByteBuffer()) {
+					return (this.javaClassWrapper = new AtomicReference<>(new JavaClass(this.toByteBuffer()) {
 
 						@Override
 						protected ByteBuffer getByteCode0() {
@@ -1013,7 +1014,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 					})).get();
 				} catch (Throwable exc) {
-					return (javaClassWrapper = new AtomicReference<>(null)).get();
+					return (this.javaClassWrapper = new AtomicReference<>(null)).get();
 				}
 			});
 		}
