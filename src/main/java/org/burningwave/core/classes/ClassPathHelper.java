@@ -39,33 +39,33 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.iterable.Properties;
 
 public interface ClassPathHelper {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
-			
+
 			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-path-helper.class-path-hunter.search-config.check-file-option";
 
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			defaultValues.put(
 				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
 		return new ClassPathHelperImpl(classPathHunter, config);
 	}
-	
+
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories);
 
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories,
@@ -80,7 +80,7 @@ public interface ClassPathHelper {
 
 	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories,
 			ClassCriteria otherClassCriteria);
-	
+
 	@SuppressWarnings("unchecked")
 	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria,  Collection<String>... pathColls);
 

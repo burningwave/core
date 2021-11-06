@@ -37,26 +37,26 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.function.ThrowingConsumer;
 
 public interface Closeable extends AutoCloseable, Identifiable {
-	
+
 	@Override
 	default public void close() {
-			
+
 	}
-	
+
 	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return BackgroundExecutor.createTask(closingFunction, Thread.MIN_PRIORITY).runOnlyOnce(objectId + "->" + "closeResources", isClosedPredicate);
 	}
-	
+
 	default public Task createCloseResoucesTask(Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return createCloseResoucesTask(getId(), isClosedPredicate, closingFunction);
 	}
-	
+
 	default public Task closeResources(Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return closeResources(getId(), isClosedPredicate, closingFunction);
 	}
-	
+
 	default public Task closeResources(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
 		return createCloseResoucesTask(objectId, isClosedPredicate, closingFunction).submit();
 	}
-	
+
 }

@@ -41,22 +41,22 @@ import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
-	
+
 	public SimpleManagedLoggerRepository(Properties properties) {
 		super(properties);
 	}
-	
-	
+
+
 	@Override
 	void initSpecificElements(Properties properties) {
 		loggers = new HashMap<>();
 	}
-	
+
 	@Override
 	void resetSpecificElements() {
-		loggers.clear();		
+		loggers.clear();
 	}
-	
+
 	private LoggingLevel.Mutable getLoggerEnabledFlag(String clientName) {
 		LoggingLevel.Mutable loggerEnabledFlag = loggers.get(clientName);
 		if (loggerEnabledFlag == null) {
@@ -70,7 +70,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		}
 		return loggerEnabledFlag;
 	}
-	
+
 	@Override
 	public void setLoggingLevelFlags(Class<?> cls, Integer flags) {
 		getLoggerEnabledFlag(cls.getName()).set(flags);
@@ -80,28 +80,28 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	public Integer getLoggingLevelFlags(Class<?> cls) {
 		return getLoggerEnabledFlag(cls.getName()).flags;
 	}
-	
+
 	@Override
 	public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEnabledFlag(className).add(logLevel.flags);
-		}		
+		}
 	}
 
 	@Override
 	public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEnabledFlag(className).remove(logLevel.flags);
-		}	
+		}
 	}
-	
+
 	@Override
 	public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEnabledFlag(className).set(logLevel.flags);
 		}
 	}
-	
+
 	private void setLoggerEnabledFlag(String client, LoggingLevel level) {
 		loggers.put(client, new LoggingLevel.Mutable(level.flags));
 	}
@@ -123,7 +123,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 			}
 		}
 	}
-	
+
 	@Override
 	public void disableLogging(String clientName) {
 		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_DISABLED));
@@ -132,62 +132,62 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	public void enableLogging(String clientName) {
 		setLoggerEnabledFlag(clientName, new LoggingLevel.Mutable(LoggingLevel.ALL_LEVEL_ENABLED));
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, System.err, "Exception occurred", exc);
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), exc);		
+		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), exc);
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, System.err, message, exc);
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), null);		
+		log(clientNameSupplier, LoggingLevel.ERROR, System.err, Strings.compile(message, arguments), null);
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.ERROR, System.err, message, null);
 	}
-	
+
 	@Override
 	public void logDebug(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, System.out, message, null);
 	}
-	
+
 	@Override
 	public void logDebug(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, System.out, Strings.compile(message, arguments), null);
 	}
-	
+
 	@Override
 	public void logInfo(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.INFO, System.out, message, null);
 	}
-	
+
 	@Override
 	public void logInfo(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.INFO, System.out, Strings.compile(message, arguments), null);
 	}
-	
+
 	@Override
 	public void logWarn(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.WARN, System.out, message, null);
 	}
-	
+
 	@Override
 	public void logWarn(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.WARN, System.out, Strings.compile(message, arguments), null);
 	}
-	
+
 	@Override
 	public void logTrace(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.TRACE, System.out, message, null);
@@ -197,7 +197,7 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 	public void logTrace(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.TRACE, System.out, Strings.compile(message, arguments), null);
 	}
-	
+
 	@Override
 	public void close() {
 		this.loggers.clear();

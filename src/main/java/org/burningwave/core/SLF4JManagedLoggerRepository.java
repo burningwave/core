@@ -41,22 +41,22 @@ import java.util.function.Supplier;
 
 public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst {
 	private Map<String, Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable>> loggers;
-	
-	
+
+
 	public SLF4JManagedLoggerRepository(Properties properties) {
 		super(properties);
 	}
-	
+
 	@Override
 	void initSpecificElements(Properties properties) {
-		loggers = new HashMap<>();		
+		loggers = new HashMap<>();
 	}
-	
+
 	@Override
 	void resetSpecificElements() {
-		loggers.clear();		
+		loggers.clear();
 	}
-	
+
 	@Override
 	public void setLoggingLevelFlags(Class<?> cls, Integer flags) {
 		getLoggerEntry(cls.getName()).getValue().set(flags);
@@ -66,28 +66,28 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	public Integer getLoggingLevelFlags(Class<?> cls) {
 		return getLoggerEntry(cls.getName()).getValue().flags;
 	}
-	
+
 	@Override
 	public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEntry(className).getValue().add(logLevel.flags);
-		}		
+		}
 	}
 
 	@Override
 	public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEntry(className).getValue().remove(logLevel.flags);
-		}	
+		}
 	}
-	
+
 	@Override
 	public void setLoggingLevelFor(LoggingLevel level, String... classNames) {
 		for (String className : classNames) {
 			getLoggerEntry(className).getValue().set(level.flags);
 		}
 	}
-	
+
 	private Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> getLoggerEntry(String clientName) {
 		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = loggers.get(clientName);
 		if (loggerEntry == null) {
@@ -113,87 +113,87 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 		String clientName = clientNameSupplier.get();
 		Optional.ofNullable(getLogger(clientName, loggingLevel)).ifPresent(logger -> loggerConsumer.accept(logger, stackTraceElement));
 	}
-	
+
 	private org.slf4j.Logger getLogger(String clientName, LoggingLevel loggingLevel) {
 		Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable> loggerEntry = getLoggerEntry(clientName);
 		return loggerEntry.getValue().partialyMatch(loggingLevel)? loggerEntry.getKey() : null;
-	}	
-	
+	}
+
 	@Override
 	public boolean isEnabled() {
 		return isEnabled;
 	}
-	
+
 	@Override
 	public void disableLogging() {
-		isEnabled = false;	
+		isEnabled = false;
 	}
 
 	@Override
 	public void enableLogging() {
-		isEnabled = true;		
+		isEnabled = true;
 	}
-	
+
 	@Override
 	public void disableLogging(String clientName) {
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_DISABLED);
 	}
-	
+
 	@Override
 	public void enableLogging(String clientName) {
 		getLoggerEntry(clientName).getValue().set(LoggingLevel.ALL_LEVEL_ENABLED);
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(Strings.compile(message, arguments), stackTraceElement), exc));		
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(Strings.compile(message, arguments), stackTraceElement), exc));
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(message, stackTraceElement), exc));
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message, Object... arguments) {
-		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(Strings.compile(message, arguments), stackTraceElement)));	
+		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(Strings.compile(message, arguments), stackTraceElement)));
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, Throwable exc) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage("Exception occurred", stackTraceElement), exc));
 	}
-	
+
 	@Override
 	public void logError(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.ERROR, (logger, stackTraceElement) -> logger.error(addDetailsToMessage(message, stackTraceElement)));
 	}
-	
+
 	@Override
 	public void logDebug(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, (logger, stackTraceElement) -> logger.debug(addDetailsToMessage(message, stackTraceElement)));
 	}
-	
+
 	@Override
 	public void logDebug(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.DEBUG, (logger, stackTraceElement) -> logger.debug(addDetailsToMessage(message, stackTraceElement), arguments));
 	}
-	
+
 	@Override
 	public void logInfo(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.INFO, (logger, stackTraceElement) -> logger.info(addDetailsToMessage(message, stackTraceElement)));
 	}
-	
+
 	@Override
 	public void logInfo(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.INFO, (logger, stackTraceElement) -> logger.info(addDetailsToMessage(message, stackTraceElement), arguments));
 	}
-	
+
 	@Override
 	public void logWarn(Supplier<String> clientNameSupplier, String message) {
 		log(clientNameSupplier, LoggingLevel.WARN, (logger, stackTraceElement) -> logger.warn(addDetailsToMessage(message, stackTraceElement)));
 	}
-	
+
 	@Override
 	public void logWarn(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.WARN, (logger, stackTraceElement) -> logger.warn(addDetailsToMessage(message, stackTraceElement), arguments));
@@ -201,14 +201,14 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 
 	@Override
 	public void logTrace(Supplier<String> clientNameSupplier, String message) {
-		log(clientNameSupplier, LoggingLevel.TRACE, (logger, stackTraceElement) -> logger.trace(addDetailsToMessage(message, stackTraceElement)));		
+		log(clientNameSupplier, LoggingLevel.TRACE, (logger, stackTraceElement) -> logger.trace(addDetailsToMessage(message, stackTraceElement)));
 	}
 
 	@Override
 	public void logTrace(Supplier<String> clientNameSupplier, String message, Object... arguments) {
 		log(clientNameSupplier, LoggingLevel.TRACE, (logger, stackTraceElement) -> logger.trace(message, arguments));
 	}
-	
+
 	@Override
 	public void close() {
 		this.loggers.clear();

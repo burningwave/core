@@ -55,30 +55,30 @@ import org.burningwave.core.io.FileSystemItem.Criteria;
 
 @SuppressWarnings({"resource", "unchecked"})
 public class SearchConfig implements Closeable, ManagedLogger {
-	
+
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	Function<FileSystemItem, FileSystemItem.Find> findFunctionSupplier;
 	Predicate<FileSystemItem> refreshPathIf;
-	
+
 	Boolean fileFiltersExtenallySet;
 	Function<FileSystemItem, FileSystemItem.Criteria> fileFilterSupplier;
 	Function<FileSystemItem, FileSystemItem.Criteria> additionalFileFilterSupplier;
 	ClassCriteria classCriteria;
-	
+
 	Supplier<Collection<FileSystemItem>> pathsRetriever;
 	SearchContext<?> searchContext;
-	
+
 	boolean useDefaultPathScannerClassLoader;
 	boolean useDefaultPathScannerClassLoaderAsParent;
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
-	
-	
+
+
 	boolean waitForSearchEnding;
 	Integer priority;
 	boolean optimizePaths;
-	
+
 	SearchConfig() {
 		pathsSupplier = classLoader -> {
 			return new AbstractMap.SimpleEntry<>(classLoader, ConcurrentHashMap.newKeySet());
@@ -88,21 +88,21 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		classCriteria = ClassCriteria.create();
 		findFunctionSupplier = fileSystemItem -> FileSystemItem.Find.IN_ALL_CHILDREN;
 	}
-	
+
 	public static SearchConfig create() {
-		return new SearchConfig(); 
+		return new SearchConfig();
 	}
-	
+
 	@SafeVarargs
 	public static SearchConfig forPaths(Collection<String>... pathsColl) {
 		return new SearchConfig().addPaths(pathsColl);
 	}
-	
+
 	@SafeVarargs
 	public static SearchConfig forFileSystemItems(Collection<FileSystemItem>... pathsColl) {
 		return new SearchConfig().addFileSystemItems(pathsColl);
 	}
-	
+
 	@SafeVarargs
 	public static SearchConfig forPaths(String... paths) {
 		return SearchConfig.forPaths((Collection<String>)Stream.of(paths).collect(Collectors.toCollection(HashSet::new)));
@@ -111,32 +111,32 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	public static SearchConfig forResources(String... paths) {
 		return forResources(null, paths);
 	}
-	
+
 	@SafeVarargs
 	public static SearchConfig forResources(ClassLoader classLoader, String... paths) {
-		return forResources(classLoader, Arrays.asList(paths)); 
-	}	
-	
+		return forResources(classLoader, Arrays.asList(paths));
+	}
+
 	@SafeVarargs
 	public static SearchConfig forResources(Collection<String>... pathCollections) {
 		return forResources(null, pathCollections);
 	}
-	
+
 	@SafeVarargs
 	public static SearchConfig forResources(ClassLoader classLoader, Collection<String>... pathCollections) {
 		return new SearchConfig().addResources(classLoader, pathCollections);
 	}
-	
+
 	public static SearchConfig byCriteria(ClassCriteria classCriteria) {
 		return forPaths(new HashSet<>()).by(classCriteria);
 	}
-	
-	
+
+
 	public SearchConfig by(ClassCriteria classCriteria) {
 		this.classCriteria = classCriteria;
 		return this;
 	}
-	
+
 	<I, C extends SearchContext<I>> C init(ClassPathScanner.Abst<I, C, ?> classPathScanner) {
 		if (fileFilterSupplier == null) {
 			fileFiltersExtenallySet = additionalFileFilterSupplier != null;
@@ -157,9 +157,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 			pathScannerClassLoader = useDefaultPathScannerClassLoader ?
 				defaultPathScannerClassLoader :
 				PathScannerClassLoader.create(
-					parentClassLoaderForPathScannerClassLoader, 
+					parentClassLoaderForPathScannerClassLoader,
 					classPathScanner.pathHelper,
-					null						
+					null
 				);
 		}
 		C context = classPathScanner.contextSupplier.apply(
@@ -167,7 +167,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 				defaultPathScannerClassLoader,
 				pathScannerClassLoader,
 				this
-			)		
+			)
 		);
 		if (classCriteria != null) {
 			classCriteria.init(context.pathScannerClassLoader);
@@ -181,7 +181,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 					.stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
 			}
 			if (optimizePaths && findFunctionSupplier != FileSystemItem.Find.FunctionSupplier.OF_IN_CHILDREN && !fileFiltersExtenallySet) {
-				if (findFunctionSupplier != FileSystemItem.Find.FunctionSupplier.OF_IN_ALL_CHILDREN  && 
+				if (findFunctionSupplier != FileSystemItem.Find.FunctionSupplier.OF_IN_ALL_CHILDREN  &&
 					findFunctionSupplier != FileSystemItem.Find.FunctionSupplier.OF_RECURSIVE_IN_CHILDREN) {
 					throw new IllegalArgumentException("Could not optimize paths with custom find function supplier");
 				}
@@ -196,7 +196,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		defaultPathScannerClassLoader.unregister(this, true);
 		return context;
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addPaths(Collection<String>... pathColls) {
 		for (Collection<String> pathColl : pathColls) {
@@ -213,11 +213,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		return this;
 	}
-	
+
 	public SearchConfig addPaths(String... paths) {
 		return addPaths(Arrays.asList(paths));
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addFileSystemItems(Collection<FileSystemItem>... pathColls) {
 		for (Collection<FileSystemItem> pathColl : pathColls) {
@@ -230,12 +230,12 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		return this;
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addFileSystemItems(FileSystemItem... paths) {
 		return addFileSystemItems(Arrays.asList(paths));
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addResources(ClassLoader classLoader, Collection<String>... pathColls) {
 		for (Collection<String> pathColl : pathColls) {
@@ -253,32 +253,32 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		return this;
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addResources(ClassLoader classLoader, String... paths) {
 		return addResources(classLoader, Arrays.asList(paths));
 	}
-	
+
 	@SafeVarargs
 	public final SearchConfig addResources(String... paths) {
-		return addResources(Arrays.asList(paths)); 
-	}	
-	
+		return addResources(Arrays.asList(paths));
+	}
+
 	@SafeVarargs
 	public final SearchConfig addResources(Collection<String>... pathCollections) {
 		return addResources(null, pathCollections);
 	}
-	
+
 	public SearchConfig withPriority(Integer priority) {
 		this.priority = priority;
 		return this;
 	}
-	
+
 	public SearchConfig waitForSearchEnding(boolean waitForSearchEnding) {
 		this.waitForSearchEnding = waitForSearchEnding;
 		return this;
 	}
-	
+
 	public SearchConfig checkForAddedClassesForAllPathThat(Predicate<FileSystemItem> refreshIf) {
 		if (refreshPathIf == null) {
 			refreshPathIf = refreshIf;
@@ -287,57 +287,57 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		return this;
 	}
-	
+
 	public SearchConfig checkForAddedClasses() {
 		this.refreshPathIf = FileSystemItem -> true;
 		return this;
 	}
-	
+
 	public SearchConfig optimizePaths(boolean flag) {
 		this.optimizePaths = flag;
 		return this;
 	}
-	
+
 	public SearchConfig setFindFunction(Function<FileSystemItem, FileSystemItem.Find> findInFunction) {
 		this.findFunctionSupplier = findInFunction;
 		return this;
 	}
-	
+
 	public SearchConfig findInChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_IN_CHILDREN;
 		return this;
 	}
-	
+
 	public SearchConfig findRecursiveInChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_RECURSIVE_IN_CHILDREN;
 		return this;
-	}	
-	
+	}
+
 	public SearchConfig findInAllChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_IN_ALL_CHILDREN;
 		return this;
 	}
-	
+
 	public SearchConfig findFirstInAllChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_ALL_CHILDREN;
 		return this;
 	}
-	
+
 	public SearchConfig findFirstInChildren() {
 		findFunctionSupplier = FileSystemItem.Find.FunctionSupplier.OF_FIRST_IN_CHILDREN;
 		return this;
 	}
-	
+
 	public SearchConfig setFileFilter(Function<FileSystemItem, FileSystemItem.Criteria> filterSupplier) {
 		this.fileFilterSupplier = filterSupplier;
 		return this;
 	}
-	
+
 	public SearchConfig setFileFilter(FileSystemItem.Criteria filter) {
 		this.fileFilterSupplier = fileSystemItem -> filter;
 		return this;
 	}
-	
+
 	public SearchConfig addFileFilter(Function<FileSystemItem, FileSystemItem.Criteria> filterSupplier) {
 		if (additionalFileFilterSupplier == null) {
 			additionalFileFilterSupplier = filterSupplier;
@@ -347,7 +347,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		additionalFileFilterSupplier = fileSystemItem -> previousAdditionalFileFilterSupplier.apply(fileSystemItem).and(filterSupplier.apply(fileSystemItem));
 		return this;
 	}
-	
+
 	public SearchConfig addFileFilter(FileSystemItem.Criteria filter) {
 		if (additionalFileFilterSupplier == null) {
 			additionalFileFilterSupplier = fileSystemItem -> filter;
@@ -357,12 +357,12 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		additionalFileFilterSupplier = fileSystemItem -> previousAdditionalFileFilterSupplier.apply(fileSystemItem).and(filter);
 		return this;
 	}
-	
+
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;
 		return this;
 	}
-	
+
 	public SearchConfig useClassLoader(PathScannerClassLoader classLoader) {
 		if (classLoader == null)  {
 			Driver.throwException("Class loader could not be null");
@@ -373,7 +373,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		pathScannerClassLoader = classLoader;
 		return this;
 	}
-	
+
 	public SearchConfig useDefaultPathScannerClassLoader(boolean value) {
 		useDefaultPathScannerClassLoader = value;
 		useDefaultPathScannerClassLoaderAsParent = !useDefaultPathScannerClassLoader;
@@ -381,7 +381,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		pathScannerClassLoader = null;
 		return this;
 	}
-	
+
 	public SearchConfig useAsParentClassLoader(ClassLoader classLoader) {
 		if (classLoader == null)  {
 			Driver.throwException("Parent class loader could not be null");
@@ -392,39 +392,39 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		pathScannerClassLoader = null;
 		return this;
 	}
-	
+
 	public SearchConfig useDefaultPathScannerClassLoaderAsParent(boolean value) {
 		useDefaultPathScannerClassLoaderAsParent = value;
-		useDefaultPathScannerClassLoader = !useDefaultPathScannerClassLoaderAsParent;		
+		useDefaultPathScannerClassLoader = !useDefaultPathScannerClassLoaderAsParent;
 		parentClassLoaderForPathScannerClassLoader = null;
 		pathScannerClassLoader = null;
 		return this;
 	}
-	
+
 	public SearchConfig useNewIsolatedClassLoader() {
 		useDefaultPathScannerClassLoaderAsParent = false;
-		useDefaultPathScannerClassLoader = false;		
+		useDefaultPathScannerClassLoader = false;
 		parentClassLoaderForPathScannerClassLoader = null;
 		pathScannerClassLoader = null;
 		return this;
 	}
-		
+
 	ClassCriteria getClassCriteria() {
 		return this.classCriteria;
 	}
-	
+
 	Collection<FileSystemItem> getPathsToBeScanned() {
 		return pathsRetriever.get();
 	}
-	
+
 	BiFunction<FileSystemItem, Criteria, Collection<FileSystemItem>> getFindFunction(FileSystemItem fileSystemItem) {
 		return findFunctionSupplier.apply(fileSystemItem);
 	}
-	
+
 	Predicate<FileSystemItem> getRefreshPathIf() {
 		return this.refreshPathIf;
 	}
-	
+
 	FileSystemItem.Criteria getAllFileFilters(FileSystemItem currentScannedPath){
 		if (additionalFileFilterSupplier != null) {
 			return fileFilterSupplier.apply(currentScannedPath).and(additionalFileFilterSupplier.apply(currentScannedPath));
@@ -440,7 +440,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		return fileFilter;
 	}
-	
+
 	Predicate<Collection<?>> getMinimumCollectionSizeForParallelIterationPredicate() {
 		return minimumCollectionSizeForParallelIterationPredicate;
 	}
@@ -448,16 +448,16 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	boolean isFileFilterExternallySet() {
 		return fileFiltersExtenallySet;
 	}
-	
+
 
 	boolean isInitialized() {
 		return pathsRetriever != null && searchContext != null;
 	}
-	
+
 	<I, C extends SearchContext<I>> C getSearchContext() {
 		return (C)searchContext;
 	}
-	
+
 	public SearchConfig copyTo(SearchConfig destConfig) {
 		destConfig.classCriteria = this.classCriteria.createCopy();
 		destConfig.pathsRetriever = this.pathsRetriever;
@@ -476,11 +476,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 		return destConfig;
 	}
-	
+
 	public SearchConfig createCopy() {
 		return copyTo(new SearchConfig());
 	}
-	
+
 	@Override
 	public void close() {
 		this.classCriteria.close();
@@ -493,7 +493,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.additionalFileFilterSupplier = null;
 		this.parentClassLoaderForPathScannerClassLoader = null;
 		this.pathScannerClassLoader = null;
-		this.minimumCollectionSizeForParallelIterationPredicate = null; 
+		this.minimumCollectionSizeForParallelIterationPredicate = null;
 		this.priority = null;
 	}
 }

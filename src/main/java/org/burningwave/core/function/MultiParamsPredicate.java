@@ -32,9 +32,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public interface MultiParamsPredicate {
-	
-	public boolean test(Object... objects); 
-	
+
+	public boolean test(Object... objects);
+
     default Predicate<Object[]> and(Predicate<Object[]> other) {
         Objects.requireNonNull(other);
         return objects -> test(objects) && other.test(objects);

@@ -49,35 +49,35 @@ public class ByteCodeHunterImpl extends ClassPathScanner.Abst<JavaClass, SearchC
 			config
 		);
 	}
-	
+
 	@Override
 	String getNameInConfigProperties() {
 		return ByteCodeHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
 		return ByteCodeHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
 		return ByteCodeHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
-	
+
 	@Override
 	ClassCriteria.TestContext testClassCriteria(SearchContext<JavaClass> context, JavaClass javaClass) {
 		return context.getSearchConfig().getClassCriteria().hasNoPredicate() ?
 			context.getSearchConfig().getClassCriteria().testWithTrueResultForNullEntityOrTrueResultForNullPredicate(null) :
 			super.testClassCriteria(context, javaClass);
 	}
-	
-	
+
+
 	@Override
 	void addToContext(SearchContext<JavaClass> context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
 	) {
-		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());		
+		context.addItemFound(basePath, fileSystemItem.getAbsolutePath(), javaClass.duplicate());
 	}
 
 }

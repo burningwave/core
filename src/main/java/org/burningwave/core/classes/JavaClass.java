@@ -45,49 +45,49 @@ public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implemen
 	public JavaClass(Class<?> cls) {
 		this(Classes.getByteCode(cls));
 	}
-	
+
 	public JavaClass(ByteBuffer byteCode) {
 		super(byteCode);
 		setByteCode0(byteCode);
 	}
-	
+
 	public static JavaClass create(Class<?> cls) {
-		return new JavaClass(cls); 
+		return new JavaClass(cls);
 	}
-	
+
 	public static JavaClass create(ByteBuffer byteCode) {
 		return new JavaClass(byteCode);
 	}
-	
+
 	public static void use(ByteBuffer byteCode, Consumer<JavaClass> javaClassConsumer) {
 		try(JavaClass javaClass = JavaClass.create(byteCode)) {
 			javaClassConsumer.accept(javaClass);
 		}
 	}
-	
+
 	public static <T, E extends Throwable> T extractByUsing(ByteBuffer byteCode, ThrowingFunction<JavaClass, T, E> javaClassConsumer) throws E {
 		try(JavaClass javaClass = JavaClass.create(byteCode)) {
 			return javaClassConsumer.apply(javaClass);
 		}
 	}
-	
+
 	protected ByteBuffer getByteCode0() {
 		return this.byteCode;
 	}
-	
+
 	protected void setByteCode0(ByteBuffer byteCode) {
 		this.byteCode = BufferHandler.duplicate(byteCode);
 	}
-	
+
 	public String getPackagePath() {
 		return packageName != null? packageName.replace(".", "/") + "/" : null;
 	}
-	
+
 	public String getClassFileName() {
 		return simpleName.replace(".", "$") + ".class";
 	}
-	
-	
+
+
 	public String getPath() {
 		String packagePath = getPackagePath();
 		String classFileName = getClassFileName();
@@ -103,34 +103,34 @@ public class JavaClass extends io.github.toolfactory.jvm.util.JavaClass implemen
 		}
 		return path;
 	}
-	
+
 	public ByteBuffer getByteCode() {
 		return BufferHandler.duplicate(getByteCode0());
 	}
-	
+
 	public byte[] toByteArray() {
 		return BufferHandler.toByteArray(getByteCode());
 	}
-	
+
 	public FileSystemItem storeToClassPath(String classPathFolder) {
 		return Streams.store(classPathFolder + "/" + getPath(), getByteCode());
 	}
-	
+
 	public JavaClass duplicate() {
 		return new JavaClass(getByteCode0());
 	}
-	
+
 	@Override
 	public String toString() {
 		return getName();
 	}
-	
+
 	protected static class Criteria extends org.burningwave.core.Criteria<JavaClass, Criteria, org.burningwave.core.Criteria.TestContext<JavaClass, Criteria>>{
-		
+
 		public static Criteria create() {
 			return new Criteria();
 		}
-		
+
 	}
 
 	@Override

@@ -41,7 +41,7 @@ public class ByteBufferOutputStream extends OutputStream {
     private Integer initialCapacity;
     private Integer initialPosition;
     private ByteBuffer buffer;
-    
+
     public ByteBufferOutputStream(ByteBuffer buffer) {
         this.buffer = buffer;
         this.initialPosition = BufferHandler.position(buffer);
@@ -51,7 +51,7 @@ public class ByteBufferOutputStream extends OutputStream {
     public ByteBufferOutputStream(int initialCapacity) {
         this(BufferHandler.allocate(initialCapacity));
     }
-    
+
     @Override
 	public void write(int b) {
     	buffer = BufferHandler.ensureRemaining(buffer, 1, initialPosition);
@@ -88,12 +88,12 @@ public class ByteBufferOutputStream extends OutputStream {
 
     public int initialCapacity() {
         return initialCapacity;
-    }  
-    
+    }
+
     InputStream toBufferedInputStream() {
         return new ByteBufferInputStream(buffer);
     }
-    
+
 	public ByteBuffer toByteBuffer() {
 		return BufferHandler.shareContent(buffer);
 	}
@@ -101,7 +101,7 @@ public class ByteBufferOutputStream extends OutputStream {
 	public byte[] toByteArray() {
 		return BufferHandler.toByteArray(toByteBuffer());
 	}
-    
+
     @Override
     public void close() {
     	this.initialCapacity = null;

@@ -38,7 +38,7 @@ import java.util.HashSet;
 import java.util.function.Predicate;
 
 public interface MembersRetriever {
-	
+
 	public default Field getDeclaredField(Class<?> cls, Predicate<Field> predicate) {
 		Collection<Field> members = getDeclaredFields(cls, predicate);
 		if (members.size() > 1) {
@@ -46,7 +46,7 @@ public interface MembersRetriever {
 		}
 		return members.stream().findFirst().orElse(null);
 	}
-	
+
 	public default Method getDeclaredMethod(Class<?> cls, Predicate<Method> predicate) {
 		Collection<Method> members = getDeclaredMethods(cls, predicate);
 		if (members.size() > 1) {
@@ -54,7 +54,7 @@ public interface MembersRetriever {
 		}
 		return members.stream().findFirst().orElse(null);
 	}
-	
+
 	public default <T> Constructor<T> getDeclaredConstructor(Class<T> cls, Predicate<Constructor<T>> predicate) {
 		Collection<Constructor<T>> members = getDeclaredConstructors(cls, predicate);
 		if (members.size() > 1) {
@@ -62,7 +62,7 @@ public interface MembersRetriever {
 		}
 		return members.stream().findFirst().orElse(null);
 	}
-	
+
 	public default Collection<Field> getDeclaredFields(Class<?> cls, Predicate<Field> memberPredicate) {
 		Collection<Field> members = new HashSet<>();
 		for (Field member : getDeclaredFields(cls)) {
@@ -72,8 +72,8 @@ public interface MembersRetriever {
 		}
 		return members;
 	}
-	
-	
+
+
 
 	public default <T> Collection<Constructor<T>> getDeclaredConstructors(Class<T> cls, Predicate<Constructor<T>> predicate) {
 		Collection<Constructor<T>> members = new HashSet<>();
@@ -84,8 +84,8 @@ public interface MembersRetriever {
 		}
 		return members;
 	}
-	
-	
+
+
 
 	public default Collection<Method> getDeclaredMethods(Class<?> cls, Predicate<Method> memberPredicate) {
 		Collection<Method> members = new HashSet<>();
@@ -96,11 +96,11 @@ public interface MembersRetriever {
 		}
 		return members;
 	}
-	
+
 	public Field[] getDeclaredFields(Class<?> cls);
-	
+
 	public <T> Constructor<T>[] getDeclaredConstructors(Class<T> cls);
-	
+
 	public Method[] getDeclaredMethods(Class<?> cls);
-	
+
 }

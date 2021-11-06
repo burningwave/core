@@ -37,7 +37,7 @@ import java.util.Optional;
 public class FunctionSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -701718231919943913L;
-	
+
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
@@ -49,66 +49,66 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 	private String name;
 	private Collection<VariableSourceGenerator> parameters;
 	private BodySourceGenerator body;
-	
+
 	private FunctionSourceGenerator(String name) {
 		this.name = name;
 	}
-	
+
 	public static FunctionSourceGenerator create(String name) {
 		return new FunctionSourceGenerator(name);
 	}
-	
+
 	public static FunctionSourceGenerator create() {
 		return new FunctionSourceGenerator(null);
 	}
-	
+
 	FunctionSourceGenerator setName(String name) {
 		this.name = name;
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addModifier(Integer modifier) {
 		if (this.modifier == null) {
 			this.modifier = modifier;
 		} else {
-			this.modifier |= modifier; 
+			this.modifier |= modifier;
 		}
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator setDefault() {
 		this.defaultFunction = true;
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator setTypeDeclaration(TypeDeclarationSourceGenerator typesDeclaration) {
 		this.typesDeclaration = typesDeclaration;
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator setReturnType(String name) {
 		this.returnType = TypeDeclarationSourceGenerator.create(name);
 		return this;
 	}
-	
+
 	TypeDeclarationSourceGenerator getReturnType() {
 		return returnType;
-	}	
-	
+	}
+
 	public FunctionSourceGenerator setReturnType(TypeDeclarationSourceGenerator returnType) {
 		this.returnType = returnType;
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator setReturnType(GenericSourceGenerator returnType) {
 		return setReturnType(TypeDeclarationSourceGenerator.create(returnType.getName()));
 	}
-	
+
 	public FunctionSourceGenerator setReturnType(java.lang.Class<?> returnType) {
 		this.returnType = TypeDeclarationSourceGenerator.create(returnType);
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addParameter(VariableSourceGenerator... parameters) {
 		Optional.ofNullable(this.parameters).orElseGet(() -> this.parameters = new ArrayList<>());
 		for (VariableSourceGenerator parameter : parameters) {
@@ -116,7 +116,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addThrowable(TypeDeclarationSourceGenerator... throwables) {
 		Optional.ofNullable(this.throwables).orElseGet(() -> this.throwables = new ArrayList<>());
 		for (TypeDeclarationSourceGenerator throwable : throwables) {
@@ -124,11 +124,11 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	Collection<VariableSourceGenerator> getParameters() {
 		return this.parameters;
 	}
-	
+
 	public FunctionSourceGenerator addOuterCodeLine(String... codes) {
 		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
 		for (String code : codes) {
@@ -140,7 +140,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
 		Optional.ofNullable(this.annotations).orElseGet(() -> this.annotations = new ArrayList<>());
 		for (AnnotationSourceGenerator annotation : annotations) {
@@ -148,24 +148,24 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator setBody(BodySourceGenerator body) {
 		this.body = body.setDelimiters("{\n", "\n}").setElementPrefix("\t");
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addBodyCode(String... codes) {
 		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		this.body.addCode(codes);
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addBodyCodeLine(String... code) {
 		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		this.body.addCodeLine(code);
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator addBodyElement(SourceGenerator... generators) {
 		Optional.ofNullable(this.body).orElseGet(() -> this.body = BodySourceGenerator.create());
 		for (SourceGenerator generator : generators) {
@@ -173,13 +173,13 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public FunctionSourceGenerator useType(java.lang.Class<?>... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (Class<?> cls : classes) {
 			usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
-		return this;		
+		return this;
 	}
 
 	private String getParametersCode() {
@@ -199,7 +199,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return paramsCode + ")";
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> {
@@ -231,15 +231,15 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	private String getAnnotations() {
 		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
-	
+
 	private String getThrowables() {
 		return Optional.ofNullable(throwables).map(thrws -> "throws "  + getOrEmpty(thrws, ", ")).orElseGet(() -> null);
 	}
-	
+
 	private String getModifier() {
 		return Optional.ofNullable(modifier).map(mod -> Modifier.toString(this.modifier)).orElseGet(() -> null);
 	}
@@ -249,7 +249,7 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 			getOrEmpty(outerCode) + "\n"
 		).orElseGet(() -> null);
 	}
-	
+
 	@Override
 	public String make() {
 		return getOrEmpty(

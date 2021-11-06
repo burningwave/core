@@ -40,13 +40,13 @@ import org.burningwave.core.Component;
 
 
 public class SourceCodeHandler implements Component {
-	
+
 	private SourceCodeHandler() {}
-	
+
 	public static SourceCodeHandler create() {
 		return new SourceCodeHandler();
 	}
-	
+
 	public String extractClassName(String classCode) {
 		return
 			Optional.ofNullable(
@@ -60,7 +60,7 @@ public class SourceCodeHandler implements Component {
 				Pattern.compile("(?<=\\n|\\A)(?:public\\s*)?(class|interface|enum)\\s*([^\\n\\s<]*)"), classCode
 			).get(2).get(0);
 	}
-	
+
 	public Collection<String> extractImports(String classCode) {
 		Collection<String> imports = Strings.extractAllGroups(
 			Pattern.compile("import\\s+(.*?)\\s*;"), classCode
@@ -73,14 +73,14 @@ public class SourceCodeHandler implements Component {
 			}
 			finalImports.add(className);
 		}
-		
+
 		return finalImports;
 	}
-	
+
 	public Collection<String> addLineCounter(Collection<String> sources) {
 		return sources.stream().map(source -> addLineCounter(source)).collect(Collectors.toList());
 	}
-	
+
 	public String addLineCounter(String source) {
 		StringBuffer newSource = new StringBuffer();
 		String[] lines = source.split("\n");
@@ -88,15 +88,15 @@ public class SourceCodeHandler implements Component {
 		int temp = lines.length;
 		while(temp > 0) {
 			temp = temp / 10;
-			++maxDigitCount; 
+			++maxDigitCount;
 		}
 		for (int lineCounter = 1; lineCounter <= lines.length; lineCounter++) {
 			newSource.append(String.format(" %0" + maxDigitCount + "d", lineCounter) + " | \t" + lines[lineCounter - 1] + "\n");
-		}		
+		}
 		return newSource.substring(0, newSource.length() -1);
 	}
-	
-	
+
+
 	@Override
 	public void close() {}
 }

@@ -31,13 +31,13 @@ package org.burningwave.core;
 @SuppressWarnings("unchecked")
 @FunctionalInterface
 public interface Executable {
-	
-    
+
+
 	public default <T> T executeAndCast(Object... parameters) throws Throwable {
     	return (T)execute(parameters);
     }
-	
+
     public Object execute(Object... parameters) throws Throwable;
-    
-      
+
+
 }

@@ -50,19 +50,19 @@ import org.burningwave.core.io.FileSystemItem;
 public class UnitSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -954913599817628229L;
-	
+
 	private String packageName;
 	private Collection<String> imports;
-	private Collection<ClassSourceGenerator> classes;	
-	
+	private Collection<ClassSourceGenerator> classes;
+
 	private UnitSourceGenerator(String packageName) {
 		this.packageName = packageName;
 	}
-	
+
 	public static UnitSourceGenerator create(String packageName) {
 		return new UnitSourceGenerator(packageName);
 	}
-	
+
 	public UnitSourceGenerator addImport(String... imports) {
 		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
@@ -70,14 +70,14 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public UnitSourceGenerator addStaticImport(java.lang.Class<?> cls, String... innerElements) {
 		for (String innerElement : innerElements) {
 			addStaticImport(normalize(cls.getName()) + "." + innerElement);
 		}
 		return this;
 	}
-	
+
 	public UnitSourceGenerator addStaticImport(String... imports) {
 		Optional.ofNullable(this.imports).orElseGet(() -> this.imports = new ArrayList<>());
 		for (String imprt : imports) {
@@ -85,7 +85,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public UnitSourceGenerator addImport(java.lang.Class<?>... classes) {
 		for (java.lang.Class<?> cls : classes) {
 			if (Modifier.isPublic(cls.getModifiers())) {
@@ -96,7 +96,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public UnitSourceGenerator addClass(ClassSourceGenerator... clazzes) {
 		Optional.ofNullable(this.classes).orElseGet(() -> this.classes = new ArrayList<>());
 		for (ClassSourceGenerator cls : clazzes) {
@@ -112,11 +112,11 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 				imports.add("import " + normalize(imprt.replace("$", ".")) + ";");
 			});
 		});
-		
+
 		getTypeDeclarations().forEach(typeDeclaration -> {
 			Boolean isPublic = typeDeclaration.isPublic();
 			String className = typeDeclaration.getName();
-			if (isPublic == null || isPublic) {	
+			if (isPublic == null || isPublic) {
 				boolean useFullyQualifiedName = typeDeclaration.useFullyQualifiedName();
 				if (!useFullyQualifiedName) {
 					Optional.ofNullable(className).ifPresent(clsName -> {
@@ -130,7 +130,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		Collections.sort(imports);
 		return new LinkedHashSet<>(imports);
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(classes).ifPresent(clazzes -> {
@@ -140,7 +140,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	Map<String, ClassSourceGenerator> getAllClasses() {
 		Map<String, ClassSourceGenerator> allClasses = new HashMap<>();
 		Optional.ofNullable(classes).ifPresent(classes -> {
@@ -153,34 +153,34 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		});
 		return allClasses;
 	}
-	
+
 	UnitSourceGenerator setPackageName(String packageName) {
 		this.packageName = packageName;
 		return this;
 	}
-	
+
 	String getPackageName() {
 		return this.packageName;
 	}
-	
+
 	ClassSourceGenerator getClass(String className) {
 		return getAllClasses().get(className);
 	}
-	
+
 	private String normalize(String imprt) {
 		if (imprt.contains("[")) {
 			imprt = imprt.replace("[L", "").replace("[", "").replace("]", "").replace(";", "");
 		}
 		return imprt;
 	}
-	
+
 	@Override
 	public String make() {
 		return getOrEmpty(
-			Arrays.asList("package " + packageName + ";", "\n", getImports(), "\n", getOrEmpty(classes, "\n\n")), "\n"	
+			Arrays.asList("package " + packageName + ";", "\n", getImports(), "\n", getOrEmpty(classes, "\n\n")), "\n"
 		);
 	}
-	
+
 	public FileSystemItem storeToClassPath(String classPathFolder) {
 		classPathFolder = Paths.clean(classPathFolder);
 		String classRelativePath = packageName != null? packageName.replace(".", "/") : "";

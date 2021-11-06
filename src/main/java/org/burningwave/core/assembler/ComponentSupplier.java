@@ -45,39 +45,39 @@ import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.io.PathHelper;
 
 public interface ComponentSupplier extends Cleanable, Closeable {
-	
+
 	public static ComponentSupplier getInstance() {
 		return ComponentContainer.getInstance();
 	}
 
 	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
-	
+
 	public ByteCodeHunter getByteCodeHunter();
 
 	public ClassFactory getClassFactory();
-	
+
 	public CodeExecutor getCodeExecutor();
-	
+
 	public ClassHunter getClassHunter();
 
 	public ClassPathHunter getClassPathHunter();
-	
+
 	public ClassPathHelper getClassPathHelper();
 
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory();
 
 	public JavaMemoryCompiler getJavaMemoryCompiler();
-		
+
 	public PathHelper getPathHelper();
-	
+
 	public PathScannerClassLoader getPathScannerClassLoader();
-	
+
 	public void closeHuntersSearchResults();
-	
+
 	public void clearCache(boolean closeSearchResults, boolean closeClassRetrievers);
-	
+
 	public default void clearCache() {
 		clearCache(false, false);
 	}
-	
+
 }

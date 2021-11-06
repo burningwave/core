@@ -41,15 +41,15 @@ import org.burningwave.core.io.FileSystemItem;
 
 @SuppressWarnings("unchecked")
 public class Objects {
-	
+
 	public static Objects create() {
 		return new Objects();
 	}
-	
+
 	public String getId(Object target) {
 		return target.getClass().getName() + "@" +  System.identityHashCode(target);
-	}	
-	
+	}
+
 	public String getStandardId(Object target) {
 		return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
 	}
@@ -57,11 +57,11 @@ public class Objects {
 	public String getCurrentId(Object target) {
 		return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
 	}
-	
+
 	public String getClassId(Class<?> targetClass) {
 		return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
 	}
-	
+
 	public int toInt(Object object) {
 		return object instanceof Integer ?
 			(int)object
@@ -69,7 +69,7 @@ public class Objects {
 				object.toString()
 			);
 	}
-	
+
 	public long toLong(Object object) {
 		return object instanceof Long ?
 			(Long)object
@@ -77,7 +77,7 @@ public class Objects {
 				object.toString()
 			);
 	}
-	
+
 	public boolean toBoolean(Object object) {
 		return object instanceof Boolean ?
 			(Boolean)object
@@ -85,24 +85,24 @@ public class Objects {
 				object.toString()
 			);
 	}
-	
+
 	public <S> void serialize(S object, OutputStream outputStream) {
 		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
-	        out.writeObject(object);          
+	        out.writeObject(object);
 		} catch (Throwable exc) {
 			Driver.throwException(exc);
 		}
 	}
-	
+
 	public <S extends Serializable> S deserialize(InputStream inputStream) {
 		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
-            return (S) in.readObject();           
+            return (S) in.readObject();
 		} catch (Throwable exc) {
 			return Driver.throwException(exc);
 		}
 	}
-	
-	public <S extends Serializable> FileSystemItem serializeToPath(S object, String absolutePath) { 
+
+	public <S extends Serializable> FileSystemItem serializeToPath(S object, String absolutePath) {
 		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
 			serialize(object, outputStream);
 		} catch (Throwable exc) {
@@ -110,8 +110,8 @@ public class Objects {
 		}
 		return FileSystemItem.ofPath(absolutePath);
 	}
-	
-	public <S extends Serializable> S deserializeFromPath(String absolutePath) { 
+
+	public <S extends Serializable> S deserializeFromPath(String absolutePath) {
 		return FileSystemItem.ofPath(absolutePath).toObject();
 	}
 }

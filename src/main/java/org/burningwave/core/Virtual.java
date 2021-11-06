@@ -35,28 +35,28 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 public interface Virtual {
-	
+
 	default <T> T getValueOf(String fieldName) {
 		return Fields.get(this, fieldName);
 	}
-	
+
 	default <T> T getDirectValueOf(String fieldName) {
 		return Fields.getDirect(this, fieldName);
 	}
-	
+
 	default <T> T invoke(String methodName, Object... parameters) {
 		return Methods.invoke(this, methodName, parameters);
 	}
-	
+
 	default <T> T invokeDirect(String methodName, Object... parameters) {
 		return Methods.invokeDirect(this, methodName, parameters);
 	}
-	
+
 	default Map<Field, ?> getAllValues() {
 		return Fields.getAll(this);
 	}
-	
+
 	default Map<Field, ?> getAllDirectValues() {
 		return Fields.getAllDirect(this);
-	}	
+	}
 }

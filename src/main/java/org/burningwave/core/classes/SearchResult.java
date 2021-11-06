@@ -46,25 +46,25 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 public class SearchResult<E> implements Closeable, ManagedLogger {
 	SearchContext<E> context;
 	ClassPathScanner.Abst<E, ?, ?> classPathScanner;
-	
+
 	SearchResult(SearchContext<E> context) {
 		this.context = context;
 	}
-	
+
 	void setClassPathScanner(ClassPathScanner.Abst<E, ?, ?> classPathScanner) {
 		this.classPathScanner = classPathScanner;
 		classPathScanner.register(this);
 	}
-	
+
 	Collection<E> getItemsFound() {
 		return context.getItemsFound();
 	}
-	
+
 	Map<String, E> getItemsFoundFlatMap() {
 		return context.getItemsFoundFlatMap();
 	}
-	
-	
+
+
 	<C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> C createCriteriaCopy(C criteria) {
 		C criteriaCopy = criteria.createCopy().init(
 			context.getSearchConfig().getClassCriteria().getClassSupplier(),
@@ -73,7 +73,7 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 		Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
 		return criteriaCopy;
 	}
-	
+
 	<M extends Member, C extends MemberCriteria<M, C, T>, T extends Criteria.TestContext<M, C>> C createCriteriaCopy(C criteria) {
 		C criteriaCopy = criteria.createCopy().init(
 			context.getSearchConfig().getClassCriteria().getClassSupplier(),
@@ -82,12 +82,12 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 		Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
 		return criteriaCopy;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	<C extends ClassLoader> C getUsedClassLoader() {
 		return (C) context.pathScannerClassLoader;
 	}
-	
+
 	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends CriteriaWithClassElementsSupplyingSupport.TestContext<E, C>> Map<String, E> getClasses(C criteria) {
 		try (C criteriaCopy = createCriteriaCopy(criteria)) {
 			Map<String, E> itemsFound = new HashMap<>();
@@ -99,7 +99,7 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 			return itemsFound;
 		}
 	}
-	
+
 	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
 		Map<String, E> itemsFound = getClasses(criteria);
 		if (itemsFound.size() > 1) {
@@ -107,24 +107,24 @@ public class SearchResult<E> implements Closeable, ManagedLogger {
 		}
 		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}
-	
-	
+
+
 	public void waitForSearchEnding() {
 		context.waitForSearchEnding();
 	}
-	
+
 	public Collection<String> getSkippedClassNames() {
 		return context.getSkippedClassNames();
 	}
-	
+
 	public QueuedTasksExecutor.Task getSearchTask() {
 		return context.getSearchTask();
 	}
-	
+
 	public void setRequestToClosePathScannerClassLoaderOnClose(boolean flag) {
 		context.setrequestToClosePathScannderClassLoaderOnClose(flag);
 	}
-	
+
 	@Override
 	public void close() {
 		context.close();

@@ -57,38 +57,38 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	Map<String, Boolean> loadedPaths;
 	PathHelper pathHelper;
 	FileSystemItem.Criteria classFileCriteriaAndConsumer;
-	
+
 	public static class Configuration {
 		public static class Key {
-			
+
 			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
 			public final static String SEARCH_CONFIG_CHECK_FILE_OPTION = "path-scanner-class-loader.search-config.check-file-option";
-			
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			defaultValues = new HashMap<>();
 			defaultValues.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.PARENT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" +  CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR				
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
+				"${"+ Configuration.Key.PARENT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" +  CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".ParentClassLoaderRetrieverForPathScannerClassLoader");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			defaultValues.put(Key.SEARCH_CONFIG_CHECK_FILE_OPTION, FileSystemItem.CheckingOption.FOR_NAME.getLabel());
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	static {
         ClassLoader.registerAsParallelCapable();
     }
-	
+
 	protected PathScannerClassLoader(
 		ClassLoader parentClassLoader,
 		PathHelper pathHelper,
@@ -105,7 +105,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	void setFileFilter(FileSystemItem.Criteria scanFileCriteria) {
 		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
 			JavaClass javaClass = child.toJavaClass();
-			addByteCode0(javaClass.getName(), javaClass.getByteCode());		
+			addByteCode0(javaClass.getName(), javaClass.getByteCode());
 			return true;
 		}).setExceptionHandler((exc, childAndPath) -> {
 			if (!isClosed) {
@@ -116,15 +116,15 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			return false;
 		});
 	}
-	
+
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
-	
+
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
 	}
-	
+
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
@@ -158,12 +158,12 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return scannedPaths;
 	}
 
-	
+
 	public URL[] getURLs() {
 		Collection<URL> urls = loadedPaths.keySet().stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath).getURL()).collect(Collectors.toSet());
 		return urls.toArray(new URL[urls.size()]);
 	}
-	
+
 	@Override
 	public URL getResource(String name) {
 		URL url = Resources.get(name, this.allParents);
@@ -186,7 +186,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
 		Collection<URL> resourcesFound = Resources.getAll(name, this.allParents);
@@ -203,7 +203,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return Collections.enumeration(resourcesFound);
 	}
 
-	
+
 	@Override
 	public InputStream getResourceAsStream(String name) {
 		InputStream inputStream = super.getResourceAsStream(name);
@@ -227,7 +227,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return null;
 	}
 
-	
+
 	public boolean hasBeenCompletelyLoaded(String path) {
 		Boolean hasBeenCompletelyLoaded = loadedPaths.get(path);
 		if (hasBeenCompletelyLoaded != null && hasBeenCompletelyLoaded) {
@@ -242,7 +242,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void close() {
 		closeResources(() -> this.loadedPaths == null, task -> {

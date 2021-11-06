@@ -29,9 +29,9 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -53,16 +53,16 @@ public abstract class PropertyAccessor implements Component {
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> propertyRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> propertySetters;
 
-	
+
 	PropertyAccessor() {
 		this.propertyRetrievers = getPropertyRetrievers();
 		this.propertySetters= getPropertySetters();
 	}
-	
+
 	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getPropertySetters();
 
 	abstract List<ThrowingBiFunction<Object, String, Object, Throwable>> getPropertyRetrievers();
-	
+
 	@SuppressWarnings("unchecked")
 	public <T> T get(Object obj, String propertyPath) {
 		String[] propertyAddress = propertyPath.split("\\.");
@@ -73,7 +73,7 @@ public abstract class PropertyAccessor implements Component {
 		}
 		return (T)objToReturn;
 	}
-	
+
 	private Object getProperty(Object obj, String property) {
 		Object objToReturn = null;
 		Matcher matcher = Pattern.compile(REG_EXP_FOR_JAVA_PROPERTIES).matcher(property);
@@ -99,7 +99,7 @@ public abstract class PropertyAccessor implements Component {
 		if (exceptions.size() > 0) {
 			String message = "";
 			for (Throwable exception : exceptions) {
-				message += exception.getMessage() + "\n";	
+				message += exception.getMessage() + "\n";
 			}
 			message = message.substring(0, message.length() - 1);
 			if (exceptions.size() == propertyRetrievers.size()) {
@@ -109,9 +109,9 @@ public abstract class PropertyAccessor implements Component {
 			}
 		}
 	}
-	
+
 	public void set(Object obj, String propertyPath, Object value) {
-		Object target = 
+		Object target =
 			propertyPath.contains(".")?
 				get(obj, propertyPath.substring(0, propertyPath.lastIndexOf("."))) :
 				obj;
@@ -121,7 +121,7 @@ public abstract class PropertyAccessor implements Component {
 				propertyPath;
 		setProperty(target, targetPropertyName, value);
 	}
-	
+
 	private void setProperty(Object target, String property,
 			Object value) {
 		List<Throwable> exceptions = new ArrayList<>();
@@ -152,7 +152,7 @@ public abstract class PropertyAccessor implements Component {
 				return Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
-					propertyRetriever.get(), 
+					propertyRetriever.get(),
 				indexes.substring(matcher.end(), indexes.length())
 			);
 		}
@@ -166,7 +166,7 @@ public abstract class PropertyAccessor implements Component {
 	Object retrievePropertyByGetterMethod(Object obj, String propertyName) {
 		Object objToReturn;
 		objToReturn = Methods.invokeDirect(
-			obj, 
+			obj,
 			Methods.createGetterMethodNameByPropertyName(propertyName)
 		);
 		return objToReturn;
@@ -220,13 +220,13 @@ public abstract class PropertyAccessor implements Component {
 		}
 		return Boolean.TRUE;
 	}
-	
+
 	public static class ByFieldOrByMethod extends PropertyAccessor {
 
 		private ByFieldOrByMethod() {
 			super();
 		}
-		
+
 		public static ByFieldOrByMethod create() {
 			return new ByFieldOrByMethod();
 		}
@@ -245,16 +245,16 @@ public abstract class PropertyAccessor implements Component {
 			propertySetters.add(objects -> setPropertyByField(objects[0], (String)objects[1], objects[2]));
 			propertySetters.add(objects -> setPropertyByMethod(objects[0], (String)objects[1], objects[2]));
 			return propertySetters;
-		}		
+		}
 	}
-	
-	
+
+
 	public static class ByMethodOrByField extends PropertyAccessor {
 
 		private ByMethodOrByField() {
 			super();
 		}
-		
+
 		public static ByMethodOrByField create() {
 			return new ByMethodOrByField();
 		}
@@ -273,6 +273,6 @@ public abstract class PropertyAccessor implements Component {
 			propertySetters.add(objects -> setPropertyByMethod(objects[0], (String)objects[1], objects[2]));
 			propertySetters.add(objects -> setPropertyByField(objects[0], (String)objects[1], objects[2]));
 			return propertySetters;
-		}		
+		}
 	}
 }

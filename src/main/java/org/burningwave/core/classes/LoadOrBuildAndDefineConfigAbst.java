@@ -40,20 +40,20 @@ import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 
 @SuppressWarnings("unchecked")
 class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>> {
-	
+
 	Collection<UnitSourceGenerator> unitSourceGenerators;
 	private Function<Compilation.Config, Compilation.Config> compilationConfigSupplier;
 	private Collection<String> classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	private Collection<String> additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
-	
+
 	private ClassLoader classLoader;
 	private boolean useOneShotJavaCompiler;
 	private boolean virtualizeClasses;
-		
+
 	@SafeVarargs LoadOrBuildAndDefineConfigAbst(UnitSourceGenerator... unitsCode) {
 		this(Arrays.asList(unitsCode));
 	}
-	
+
 	@SafeVarargs
 	LoadOrBuildAndDefineConfigAbst(Collection<UnitSourceGenerator>... unitCodeCollections) {
 		virtualizeClasses = true;
@@ -72,12 +72,12 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 			return Compilation.Config.forUnitSourceGenerators(unitSourceGenerators);
 		};
 	}
-	
+
 	public L virtualizeClasses(boolean flag) {
 		this.virtualizeClasses = flag;
 		return (L)this;
 	}
-	
+
 	public L modifyCompilationConfig(Consumer<Compilation.Config> compilationConfigModifier) {
 		compilationConfigSupplier = compilationConfigSupplier.andThen((compileConfig) -> {
 			compilationConfigModifier.accept(compileConfig);
@@ -86,13 +86,13 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return (L)this;
 	}
 
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L setClassRepository(String... classPaths) {
 		return setClassRepositories(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L setClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompilationConfig(compileConfig ->
@@ -100,28 +100,28 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		);
 		return setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L addClassRepository(String... classPaths) {
 		return addClassRepositories(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L addClassRepositories(Collection<String>... classPathCollections) {
 		modifyCompilationConfig(compileConfig ->
 			compileConfig.addClassRepositories(classPathCollections)
 		);
 		return addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
-	}	
-	
+	}
+
 ////////////////////
-	
+
 	@SafeVarargs
 	public final L setClassPaths(String... classPaths) {
 		return setClassPaths(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L setClassPaths(Collection<String>... classPathCollections) {
 		modifyCompilationConfig(compileConfig ->
@@ -129,13 +129,13 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		);
 		return setClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L addClassPaths(String... classPaths) {
 		return addClassPaths(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L addClassPaths(Collection<String>... classPathCollections) {
 		modifyCompilationConfig(compileConfig ->
@@ -144,39 +144,39 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return addClassRepositoriesWhereToSearchNotFoundClasses(classPathCollections);
 	}
 
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L setClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
-		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));		
+		return setClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L setClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
 		return modifyCompilationConfig(compileConfig -> compileConfig.setClassRepositories(classRepositoryCollections))
-			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
+			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);
 	}
 
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L addClassRepositoryWhereToSearchNotFoundClasses(String... classPaths) {
 		return addClassRepositoriesWhereToSearchNotFoundClasses(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L addClassRepositoriesWhereToSearchNotFoundClasses(Collection<String>... classRepositoryCollections) {
 		return modifyCompilationConfig(compileConfig -> compileConfig.addClassRepositories(classRepositoryCollections))
-			.addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);		
+			.addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(classRepositoryCollections);
 	}
 
 ////////////////////
-	
+
 	@SafeVarargs
 	public final L setClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
 		return setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
 		if (classRepositoriesWhereToSearchNotFoundClassesDuringLoading == null) {
@@ -188,13 +188,13 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		return (L)this;
 	}
 
-////////////////////	
-	
+////////////////////
+
 	@SafeVarargs
 	public final L addClassRepositoryWhereToSearchNotFoundClassesDuringLoading(String... classPaths) {
 		return addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Arrays.asList(classPaths));
 	}
-	
+
 	@SafeVarargs
 	public final L addClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(Collection<String>... classPathCollections) {
 		if (additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading == null) {
@@ -212,7 +212,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		this.classLoader = classLoader;
 		return (L)this;
 	}
-	
+
 	public L useOneShotJavaCompiler(boolean flag) {
 		this.useOneShotJavaCompiler = flag;
 		return (L)this;
@@ -221,11 +221,11 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	Collection<String> getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading() {
 		return classRepositoriesWhereToSearchNotFoundClassesDuringLoading;
 	}
-	
+
 	Collection<String> getAdditionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading() {
 		return additionalClassRepositoriesWhereToSearchNotFoundClassesDuringLoading;
-	}	
-	
+	}
+
 	ClassLoader getClassLoader() {
 		return classLoader;
 	}
@@ -233,7 +233,7 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 	boolean isUseOneShotJavaCompilerEnabled() {
 		return useOneShotJavaCompiler;
 	}
-	
+
 	Collection<String> getClassesName() {
 		Collection<String> classesName = new HashSet<>();
 		unitSourceGenerators.stream().forEach(unitCode -> {
@@ -243,11 +243,11 @@ class LoadOrBuildAndDefineConfigAbst<L extends LoadOrBuildAndDefineConfigAbst<L>
 		});
 		return classesName;
 	}
-	
+
 	Supplier<Compilation.Config> getCompileConfigSupplier() {
 		return () -> compilationConfigSupplier.apply(null);
 	}
-	
+
 	boolean isVirtualizeClassesEnabled() {
 		return virtualizeClasses;
 	}

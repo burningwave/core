@@ -39,18 +39,18 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.MultiParamsPredicate;
 
 public class FunctionalInterfaceSourceGenerator {
-	
+
 
 	public static FunctionalInterfaceSourceGenerator create() {
 		return new FunctionalInterfaceSourceGenerator();
-	}	
-	
+	}
+
 	public ClassSourceGenerator generateExecutor(String className, BodySourceGenerator body) {
 		if (className.contains("$")) {
 			Driver.throwException("{} code executor could not be a inner class", className);
 		}
 		String classSimpleName = Classes.retrieveSimpleName(className);
-		
+
 		FunctionSourceGenerator executeMethod = FunctionSourceGenerator.create("execute").setReturnType(
 			Object.class
 		).addModifier(
@@ -70,8 +70,8 @@ public class FunctionalInterfaceSourceGenerator {
 			executeMethod
 		);
 		return cls;
-	};
-	
+	}
+
 	public ClassSourceGenerator generateConsumer(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
@@ -107,8 +107,8 @@ public class FunctionalInterfaceSourceGenerator {
 			varArgsAcceptMethod
 		).addOuterCodeLine("@FunctionalInterface");
 		return cls;
-	};
-	
+	}
+
 	public ClassSourceGenerator generatePredicate(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
@@ -144,8 +144,8 @@ public class FunctionalInterfaceSourceGenerator {
 			varArgsTestMethod
 		).addOuterCodeLine("@FunctionalInterface");
 		return cls;
-	};
-	
+	}
+
 	public ClassSourceGenerator generateFunction(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
@@ -170,7 +170,7 @@ public class FunctionalInterfaceSourceGenerator {
 		}
 		varArgsApplyMethod.addBodyElement(applyMethodCodeOne);
 		varArgsApplyMethod.addBodyCode(");");
-		typeDeclaration.addGeneric(returnType);		
+		typeDeclaration.addGeneric(returnType);
 		ClassSourceGenerator cls = ClassSourceGenerator.createInterface(
 			typeDeclaration
 		).addModifier(
@@ -184,5 +184,5 @@ public class FunctionalInterfaceSourceGenerator {
 		).addOuterCodeLine("@FunctionalInterface");
 		return cls;
 	}
-	
+
 }

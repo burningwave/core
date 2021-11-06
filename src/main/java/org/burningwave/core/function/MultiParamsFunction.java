@@ -32,11 +32,11 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public interface MultiParamsFunction<R> {
-	
-	public R apply(Object... objects); 
-	
+
+	public R apply(Object... objects);
+
     default <V> Function<Object[], V> andThen(Function<? super R, ? extends V> after) {
-    	Objects.requireNonNull(after);    	
+    	Objects.requireNonNull(after);
     	return (objects) -> after.apply(apply(objects));
     }
 }

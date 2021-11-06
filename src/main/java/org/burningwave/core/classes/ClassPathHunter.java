@@ -42,44 +42,44 @@ import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
-public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, ClassPathHunter.SearchResult> { 
-	
+public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, ClassPathHunter.SearchResult> {
+
 	public static class Configuration {
-		
+
 		public static class Key {
-			
+
 			public final static String NAME_IN_CONFIG_PROPERTIES = "class-path-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
 			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = NAME_IN_CONFIG_PROPERTIES + ".new-isolated-path-scanner-class-loader.search-config.check-file-option";
-				
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY +".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				PathScannerClassLoader.class.getName() + ";"
 			);
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(
-				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER, 
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) -> 
+				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
+				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
 			);
 			defaultValues.put(
 				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	public static ClassPathHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
@@ -91,14 +91,14 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 			config
 		);
 	}
-	
+
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Collection<Class<?>>> {
 		Collection<FileSystemItem> classPaths;
-		
+
 		SearchResult(ClassPathHunterImpl.SearchContext context) {
 			super(context);
 		}
-		
+
 		public Collection<FileSystemItem> getClassPaths(ClassCriteria criteria) {
 			ClassCriteria criteriaCopy = criteria.createCopy().init(
 				context.getSearchConfig().getClassCriteria().getClassSupplier(),
@@ -117,13 +117,13 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 			criteriaCopy.close();
 			return itemsFound.keySet().stream().map(absolutePath -> FileSystemItem.ofPath(absolutePath)).collect(Collectors.toCollection(HashSet::new));
 		}
-		
+
 		public Collection<FileSystemItem> getClassPaths() {
 			if (classPaths == null) {
 				Map<String, Collection<Class<?>>> itemsFoundFlatMaps = context.getItemsFoundFlatMap();
 				synchronized (itemsFoundFlatMaps) {
 					if (classPaths == null) {
-						classPaths = itemsFoundFlatMaps.keySet().stream().map(path -> 
+						classPaths = itemsFoundFlatMaps.keySet().stream().map(path ->
 							FileSystemItem.ofPath(path)
 						).collect(
 							Collectors.toCollection(
@@ -135,7 +135,7 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 			}
 			return classPaths;
 		}
-		
+
 		@Override
 		public void close() {
 			classPaths = null;

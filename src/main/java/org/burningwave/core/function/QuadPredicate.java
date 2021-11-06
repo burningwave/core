@@ -50,5 +50,5 @@ public interface QuadPredicate<P0, P1, P2, P3> {
         Objects.requireNonNull(other);
         return (P0 p0, P1 p1, P2 p2, P3 p3) -> test(p0, p1, p2, p3) || other.test(p0, p1, p2, p3);
     }
-    
+
 }

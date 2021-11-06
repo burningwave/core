@@ -45,83 +45,83 @@ import io.github.toolfactory.jvm.util.Strings;
 
 @SuppressWarnings("unchecked")
 public class Fields extends Members.Handler<Field, FieldCriteria> {
-	
+
 	public static Fields create() {
 		return new Fields();
 	}
-	
+
 	public <T> T getStatic(Field field) {
 		return Executor.get(() -> (T)field.get(null));
 	}
-	
+
 	public <T> T get(Object target, Field field) {
 		return Executor.get(() -> (T)field.get(target));
 	}
-	
+
 	public <T> T getStatic(Class<?> targetClass, String fieldName) {
 		return getStatic(findFirstAndMakeItAccessible(targetClass, fieldName, null));
 	}
-	
+
 	public <T> T get(Object target, String fieldName) {
 		return get(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
-	}	
-	
+	}
+
 	public <T> T getStaticDirect(Field field) {
 		return Executor.get(() -> (T)Driver.getFieldValue(null, field));
 	}
-	
+
 	public <T> T getDirect(Object target, Field field) {
 		return Executor.get(() -> (T)Driver.getFieldValue(target, field));
 	}
-	
+
 	public <T> T getStaticDirect(Class<?> targetClass, String fieldName) {
 		return getStaticDirect(findFirstAndMakeItAccessible(targetClass, fieldName, null));
 	}
-	
+
 	public <T> T getDirect(Object target, String fieldName) {
 		return getDirect(target, findFirstAndMakeItAccessible(Classes.retrieveFrom(target), fieldName, null));
 	}
-	
+
 	private void set(Class<?> targetClass, Object target, String fieldName, Object value) {
 		set(target, findFirstAndMakeItAccessible(targetClass, fieldName, Classes.retrieveFrom(value)), value);
 	}
-	
+
 	public void set(Object target, Field field, Object value) {
 		Executor.run(() -> field.set(target, value));
 	}
-	
+
 	public void setStatic(Class<?> targetClass, String fieldName, Object value) {
 		set(targetClass, null, fieldName, value);
 	}
-	
+
 	public void set(Object target, String fieldName, Object value) {
 		set(Classes.retrieveFrom(target), target, fieldName, value);
 	}
-	
+
 	public void setDirect(Object target, Field field, Object value) {
 		Driver.setFieldValue(target, field, value);
 	}
-	
+
 	private void setDirect(Class<?> targetClass, Object target, String fieldName, Object value) {
 		setDirect(target, findFirstAndMakeItAccessible(targetClass, fieldName, Classes.retrieveFrom(value)), value);
 	}
-	
+
 	public void setStaticDirect(Class<?> targetClass, String fieldName, Object value) {
 		setDirect(targetClass, null, fieldName, value);
 	}
-	
+
 	public void setDirect(Object target, String fieldName, Object value) {
 		setDirect(Classes.retrieveFrom(target), target, fieldName, value);
 	}
-	
+
 	public Map<Field, ?> getAllStatic(Class<?> targetClass) {
 		return getAll(() -> findAllAndMakeThemAccessible(targetClass), null);
 	}
-	
+
 	public Map<Field, ?> getAll(Object target) {
 		return getAll(() -> findAllAndMakeThemAccessible(Classes.retrieveFrom(target)), target);
 	}
-	
+
 	public Map<Field, ?> getAll(FieldCriteria criteria, Object target) {
 		return getAll(() -> findAllAndMakeThemAccessible(criteria, Classes.retrieveFrom(target)), target);
 	}
@@ -148,23 +148,23 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 							field.get(null)
 					)
 				);
-			}			
+			}
 		}
 		return fieldValues;
 	}
-	
+
 	public Map<Field, ?> getAllStaticDirect(Class<?> targetClass) {
 		return getAllDirect(() -> findAllAndMakeThemAccessible(targetClass), null);
 	}
-	
+
 	public Map<Field, ?> getAllDirect(Object target) {
 		return getAllDirect(() -> findAllAndMakeThemAccessible(Classes.retrieveFrom(target)), target);
 	}
-	
+
 	public Map<Field, ?> getAllDirect(FieldCriteria criteria, Object target) {
 		return getAllDirect(() -> findAllAndMakeThemAccessible(criteria, Classes.retrieveFrom(target)), target);
 	}
-	
+
 	private Map<Field, ?> getAllDirect(Supplier<Collection<Field>> fieldsSupplier, Object target) {
 		Map<Field, ?> fieldValues = new HashMap<>();
 		for (Field field : fieldsSupplier.get()) {
@@ -175,7 +175,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		}
 		return fieldValues;
 	}
-	
+
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
@@ -187,7 +187,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		}
 		return members.stream().findFirst().get();
 	}
-	
+
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
@@ -199,25 +199,25 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		}
 		return members.stream().findFirst().get();
 	}
-	
+
 	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Class<?> targetClass,
 		String fieldName
 	) {
 		return findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, null);
 	}
-	
+
 	public Collection<Field> findAllByExactNameAndMakeThemAccessible(
 		Class<?> targetClass,
-		String fieldName, 
+		String fieldName,
 		Class<?> valueType
-	) {	
+	) {
 		String cacheKey = getCacheKey(targetClass, "equals " + fieldName, valueType);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
 			targetClassClassLoader,
-			cacheKey, 
-			() -> 
+			cacheKey,
+			() ->
 				findAllAndMakeThemAccessible(
 					FieldCriteria.forEntireClassHierarchy().allThoseThatMatch(field -> {
 						if (valueType == null) {
@@ -229,22 +229,22 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 				)
 		);
 	}
-	
+
 	public Collection<Field> findAllAndMakeThemAccessible(
 		Class<?> targetClass
-	) {	
+	) {
 		String cacheKey = getCacheKey(targetClass, "all fields", (Class<?>[])null);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForFields.getOrUploadIfAbsent(
-			targetClassClassLoader, 
-			cacheKey, 
-			() -> 
+			targetClassClassLoader,
+			cacheKey,
+			() ->
 				findAllAndMakeThemAccessible(
 					FieldCriteria.forEntireClassHierarchy(), targetClass
-				)			
+				)
 		);
 	}
-	
+
 	public static class NoSuchFieldException extends RuntimeException {
 
 		private static final long serialVersionUID = 3656790511956737635L;
@@ -252,6 +252,6 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		public NoSuchFieldException(String message) {
 			super(message);
 		}
-		
+
 	}
 }

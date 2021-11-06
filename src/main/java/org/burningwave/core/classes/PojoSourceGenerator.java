@@ -29,8 +29,8 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -53,12 +53,12 @@ public class PojoSourceGenerator {
 	public static int ALL_OPTIONS_DISABLED = 0b00000000;
 	public static int BUILDING_METHODS_CREATION_ENABLED = 0b00000001;
 	public static int USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED = 0b00000010;
-	
+
 	private TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder;
 	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder;
 	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> getterMethodsBodyBuilder;
 	private PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, Class<?>, Collection<Class<?>>, Integer> extraElementsBuilder;
-	
+
 	private PojoSourceGenerator(
 		TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder,
 		PentaConsumer<PojoSourceGenerator, ClassSourceGenerator, FunctionSourceGenerator, Method, Integer> setterMethodsBodyBuilder,
@@ -70,7 +70,7 @@ public class PojoSourceGenerator {
 		this.getterMethodsBodyBuilder = getterMethodsBodyBuilder;
 		this.extraElementsBuilder = extraElementsBuilder;
 	}
-	
+
 	public static PojoSourceGenerator create() {
 		return new PojoSourceGenerator(
 			(pSG, cls, fieldsMap) -> {
@@ -87,7 +87,7 @@ public class PojoSourceGenerator {
 			}, null
 		);
 	}
-	
+
 	public PojoSourceGenerator setFieldsBuilder(TriConsumer<PojoSourceGenerator, ClassSourceGenerator, Map<String, VariableSourceGenerator>> fieldsBuilder) {
 		this.fieldsBuilder = fieldsBuilder;
 		return this;
@@ -109,11 +109,11 @@ public class PojoSourceGenerator {
 		this.extraElementsBuilder = extraElementsBuilder;
 		return this;
 	}
-	
+
 	public ClassSourceGenerator generate(String className, Class<?>... superClasses) {
 		return generate(className, ALL_OPTIONS_DISABLED, superClasses);
 	}
-	
+
 	public ClassSourceGenerator generate(String className, int options, Class<?>... superClasses) {
 		if (className.contains("$")) {
 			Driver.throwException("{} Pojo could not be a inner class", className);
@@ -140,14 +140,14 @@ public class PojoSourceGenerator {
 		}
 		if (superClass != null) {
 			String superClassPackage = Optional.ofNullable(superClass.getPackage()).map(pckg -> pckg.getName()).orElseGet(() -> "");
-			Predicate<Executable> modifierTester = 
+			Predicate<Executable> modifierTester =
 				Strings.areEquals(packageName, superClassPackage) ?
 					executable ->
 						!Modifier.isPrivate(executable.getModifiers()) :
 					executable ->
 						Modifier.isPublic(executable.getModifiers()) ||
-						Modifier.isProtected(executable.getModifiers());						
-			for (Constructor<?> constructor : Classes.getDeclaredConstructors(superClass, constructor -> 
+						Modifier.isProtected(executable.getModifiers());
+			for (Constructor<?> constructor : Classes.getDeclaredConstructors(superClass, constructor ->
 				modifierTester.test(constructor))
 			) {
 				Integer modifiers = constructor.getModifiers();
@@ -176,7 +176,7 @@ public class PojoSourceGenerator {
 		}
 		Map<String, VariableSourceGenerator> fieldsMap = new HashMap<>();
 		for (Class<?> interf : interfaces) {
-			for (Method method : Classes.getDeclaredMethods(interf, method -> 
+			for (Method method : Classes.getDeclaredMethods(interf, method ->
 				method.getName().startsWith("set") || method.getName().startsWith("get") || method.getName().startsWith("is")
 			)) {
 				Integer modifiers = method.getModifiers();
@@ -212,15 +212,15 @@ public class PojoSourceGenerator {
 		}
 		return cls;
 	}
-	
+
 	public boolean isUseFullyQualifiedClassNamesEnabled(int options) {
 		return (options & USE_OF_FULLY_QUALIFIED_CLASS_NAMES_ENABLED) != 0;
 	}
-	
+
 	public boolean isBuildingMethodsCreationEnabled(int options) {
 		return (options & BUILDING_METHODS_CREATION_ENABLED) != 0;
 	}
-	
+
 	TypeDeclarationSourceGenerator createTypeDeclaration(boolean useFullyQualifiedNames,
 			Class<?> cls) {
 		if (useFullyQualifiedNames) {
@@ -228,8 +228,8 @@ public class PojoSourceGenerator {
 		} else {
 			return TypeDeclarationSourceGenerator.create(cls);
 		}
-	};
-	
+	}
+
 	private FunctionSourceGenerator create(
 		String functionName,
 		Executable executable,

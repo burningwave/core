@@ -30,9 +30,9 @@ package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.InputStream;
@@ -48,25 +48,25 @@ import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public interface IterableZipContainer extends Closeable, ManagedLogger {
-	
+
 	public final static String PATH_SUFFIX = "///";
-	
+
 	public static IterableZipContainer create(FileInputStream file) {
 		return create(file.getAbsolutePath(), file);
 	}
-	
+
 	public static IterableZipContainer create(File file) {
 		return create(file.getAbsolutePath(), FileInputStream.create(file));
 	}
-	
+
 	public static IterableZipContainer create(Entry zipEntry) {
 		return create(zipEntry.getAbsolutePath(), zipEntry.toByteBuffer());
 	}
-	
+
 	public static IterableZipContainer create(String absolutePath) {
 		return create(absolutePath, FileSystemItem.ofPath(absolutePath).toByteBuffer());
 	}
-	
+
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, ByteBuffer bytes) {
 		if (Streams.isJModArchive(bytes)) {
@@ -95,7 +95,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 			return Cache.pathForIterableZipContainers.get(absolutePath).duplicate();
 		}
 	}
-	
+
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, InputStream inputStream) {
 		ByteBufferInputStream iS;
@@ -114,18 +114,18 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		}
 		return null;
 	}
-	
+
 	public default <T> Set<T> findAllAndConvert(
-		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		return findAllAndConvert(HashSet::new, zipEntryPredicate, tSupplier, loadZipEntryData);
 	}
-	
+
 	public default <T> Set<T> findAllAndConvert(
-		Supplier<Set<T>> supplier, 
-		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 
+		Supplier<Set<T>> supplier,
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
@@ -149,31 +149,31 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		}
 		return collection;
 	}
-	
+
 	public String getConventionedAbsolutePath();
-	
+
 	public String getAbsolutePath();
-	
+
 	public IterableZipContainer getParent();
-	
+
 	public ByteBuffer toByteBuffer();
-	
+
 	public <Z extends Entry> Z getNextEntry();
-	
+
 	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData);
-	
+
 	public default IterableZipContainer duplicate() {
 		return IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
 	}
-	
+
 	public Entry getCurrentZipEntry();
-	
+
 	public Function<Entry, Entry> getEntrySupplier();
-	
+
 	public void closeEntry();
-	
+
 	public default <T> T findFirstAndConvert(
-		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
@@ -190,7 +190,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
-				
+
 				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
 				return toRet;
@@ -202,7 +202,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 	public default <T> T findOneAndConvert(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Function<IterableZipContainer.Entry, T> tSupplier, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		Set<T> entriesFound = findAllAndConvert(
 			zipEntryPredicate,
-			tSupplier, 
+			tSupplier,
 			loadZipEntryData
 		);
 		if (entriesFound.size() > 1) {
@@ -210,77 +210,77 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		}
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}
-	
+
 	public default IterableZipContainer.Entry findOne(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findOneAndConvert(
 			zipEntryPredicate,
 			getEntrySupplier(),
-			loadZipEntryData		
+			loadZipEntryData
 		);
 	}
-	
+
 	public default IterableZipContainer.Entry findFirst(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findFirstAndConvert(
 			zipEntryPredicate,
 			getEntrySupplier(),
-			loadZipEntryData		
+			loadZipEntryData
 		);
 	}
-	
+
 	public default Set<IterableZipContainer.Entry> findAll(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findAll(HashSet::new, zipEntryPredicate, loadZipEntryData);
 	}
-	
+
 	public default Set<IterableZipContainer.Entry> findAll(
-		Supplier<Set<IterableZipContainer.Entry>> setSupplier, 
-		Predicate<IterableZipContainer.Entry> zipEntryPredicate, 
+		Supplier<Set<IterableZipContainer.Entry>> setSupplier,
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findAllAndConvert(
 			setSupplier,
 			zipEntryPredicate,
 			getEntrySupplier(),
-			loadZipEntryData		
+			loadZipEntryData
 		);
 	}
-	
+
 	public default void destroy(boolean removeFromCache) {
 		if (removeFromCache) {
 			Cache.pathForIterableZipContainers.remove(getAbsolutePath(), true);
 		}
 	}
-	
+
 	public default void destroy() {
 		destroy(true);
 	}
-	
+
 	public static interface Entry extends Component{
-		
+
 		public <C extends IterableZipContainer> C getParentContainer();
-		
+
 		public default String getConventionedAbsolutePath() {
 			return getParentContainer().getConventionedAbsolutePath() + getCleanedName();
 		}
-		
+
 		public String getCleanedName();
-		
+
 		public String getName();
-		
+
 		public String getAbsolutePath();
-		
+
 		public boolean isDirectory();
-		
+
 		public ByteBuffer toByteBuffer();
-		
+
 		default public byte[] toByteArray() {
 			return BufferHandler.toByteArray(toByteBuffer());
 		}
-		
+
 		public boolean isArchive();
-		
+
 		default public InputStream toInputStream() {
 			return new ByteBufferInputStream(toByteBuffer());
 		}
-		
+
 	}
 }
 

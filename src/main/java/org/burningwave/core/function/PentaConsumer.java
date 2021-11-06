@@ -31,10 +31,10 @@ package org.burningwave.core.function;
 import java.util.Objects;
 
 @FunctionalInterface
-public interface PentaConsumer<P0, P1, P2, P3, P4> { 
+public interface PentaConsumer<P0, P1, P2, P3, P4> {
 
 	public abstract void accept(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4);
-	
+
     default PentaConsumer<P0, P1, P2, P3, P4> andThen(PentaConsumer<? super P0, ? super P1, ? super P2, ? super P3, ? super P4> after) {
         Objects.requireNonNull(after);
         return (p0, p1, p2, p3, p4) -> {

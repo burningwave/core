@@ -42,59 +42,59 @@ import java.util.Optional;
 import org.burningwave.core.io.FileSystemItem;
 
 public interface SourceGenerator extends Serializable {
-	
+
 	public String make();
-	
+
 	public default <F> String _toString() {
 		return make();
 	}
-	
-	public default FileSystemItem serializeToPath(String absolutePath) { 
+
+	public default FileSystemItem serializeToPath(String absolutePath) {
 		return Objects.serializeToPath(this, absolutePath);
 	}
-	
-	public static <S extends SourceGenerator> S deserializeFromPath(String absolutePath) { 
+
+	public static <S extends SourceGenerator> S deserializeFromPath(String absolutePath) {
 		return Objects.deserializeFromPath(absolutePath);
 	}
-		
+
 	public default void serialize(OutputStream outputStream) {
 		Objects.serialize(this, outputStream);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static <S extends SourceGenerator> S deserialize(InputStream inputStream) {
 		return (S)Objects.deserialize(inputStream);
 	}
-	
+
 	static abstract class Abst implements SourceGenerator {
 
 		private static final long serialVersionUID = -6189371616365377165L;
-		
+
 		static final String EMPTY_SPACE = " ";
 		static final String COMMA = ",";
 		static final String SEMICOLON = ";";
-		
+
 		@Override
 		public String toString() {
 			return make();
 		}
-		
+
 		String getOrEmpty(SourceGenerator value) {
 			return Optional.ofNullable(value.make()).orElseGet(() -> "");
 		}
-		
+
 		String getOrEmpty(String value) {
 			return Optional.ofNullable(value).orElseGet(() -> "");
 		}
-		
+
 		String getOrEmpty(Object... values) {
 			return getOrEmpty(Arrays.asList(values));
 		}
-		
+
 		String getOrEmpty(Collection<?> objects) {
 			return getOrEmpty(objects, EMPTY_SPACE);
 		}
-		
+
 		String getOrEmpty(Collection<?> objects, String separator) {
 			String value = "";
 			objects = Optional.ofNullable(objects).map(objs -> new ArrayList<>(objs)).orElseGet(ArrayList::new);
@@ -115,6 +115,6 @@ public interface SourceGenerator extends Serializable {
 				}
 			}
 			return value;
-		}		
+		}
 	}
 }

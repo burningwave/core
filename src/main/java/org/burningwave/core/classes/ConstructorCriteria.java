@@ -45,26 +45,26 @@ public class ConstructorCriteria extends ExecutableMemberCriteria<
 	private ConstructorCriteria() {
 		super();
 	}
-	
+
 	public static ConstructorCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });
 	}
-	
+
 	public static ConstructorCriteria forEntireClassHierarchy() {
 		return new ConstructorCriteria();
 	}
-	
+
 	@Override
 	Function<Class<?>, Constructor<?>[]> getMembersSupplierFunction() {
 		return Classes::getDeclaredConstructors;
 	}
-	
+
 	public static ConstructorCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
 		return new ConstructorCriteria().scanUpTo(predicate);
 	}
-	
+
 	public static ConstructorCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
 		return new ConstructorCriteria().scanUpTo(predicate);
 	}

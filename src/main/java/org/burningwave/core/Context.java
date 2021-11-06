@@ -38,11 +38,11 @@ public class Context implements Closeable {
 	protected Context() {
 		context = new ConcurrentHashMap<>();
 	}
-	
+
 	public static Context create() {
 		return new Context();
 	}
-	
+
 	public Context put(Enum<?> name, Object parameter) {
 		if (parameter != null) {
 			context.put(name, parameter);
@@ -51,11 +51,11 @@ public class Context implements Closeable {
 		}
 		return this;
 	}
-	
+
 	public <T> T get(Enum<?> name) {
 		return ((T)context.get(name));
 	}
-	
+
 	@Override
 	public void close() {
 		context.clear();

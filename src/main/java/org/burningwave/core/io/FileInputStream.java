@@ -29,9 +29,9 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,7 +41,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.Executor;
 
 public class FileInputStream extends java.io.FileInputStream implements Component {
-	
+
 	private File file;
 	private String absolutePath;
 
@@ -51,11 +51,11 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 		this.file = file;
 		this.absolutePath = Paths.clean(file.getAbsolutePath());
 	}
-	
+
 	private FileInputStream(String absolutePath) throws FileNotFoundException {
 		this(absolutePath != null ? new File(absolutePath) : null);
 	}
-	
+
 	public static FileInputStream create(File file) {
 		try {
 			return new FileInputStream(file);
@@ -63,7 +63,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 			return Driver.throwException(new FileSystemItemNotFoundException(exc));
 		}
 	}
-	
+
 	public static FileInputStream create(String absolutePath) {
 		try {
 			return new FileInputStream(absolutePath);
@@ -71,11 +71,11 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 			return Driver.throwException(new FileSystemItemNotFoundException(exc));
 		}
 	}
-	
+
 	public File getFile() {
 		return this.file;
 	}
-	
+
 	@Override
 	public void close() {
 		Executor.run(() -> super.close());
@@ -86,14 +86,14 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 	public String getAbsolutePath() {
 		return this.absolutePath;
 	}
-	
+
 	public byte[] toByteArray() {
 		return Streams.toByteArray(this);
 	}
 
 	public ByteBuffer toByteBuffer() {
 		return Cache.pathForContents.getOrUploadIfAbsent(
-			file.getAbsolutePath(), () -> 
+			file.getAbsolutePath(), () ->
 			Streams.toByteBuffer(this)
 		);
 	}

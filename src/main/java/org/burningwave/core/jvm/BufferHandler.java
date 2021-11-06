@@ -53,36 +53,36 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class BufferHandler implements Component {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
-		
+
 			static final String BUFFER_SIZE = "buffer-handler.default-buffer-size";
 			static final String BUFFER_ALLOCATION_MODE = "buffer-handler.default-allocation-mode";
-		
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			defaultValues.put(Key.BUFFER_SIZE, "1024");
 			defaultValues.put(
 				Key.BUFFER_ALLOCATION_MODE,
 				"ByteBuffer::allocateDirect"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	Field directAllocatedByteBufferAddressField;
 	int defaultBufferSize;
 	Function<Integer, ByteBuffer> defaultByteBufferAllocator;
     final static float reallocationFactor = 1.1f;
-	
+
 	public BufferHandler(java.util.Properties config) {
 		init(config);
 	}
@@ -93,7 +93,7 @@ public class BufferHandler implements Component {
 		if (config instanceof Properties) {
 			listenTo((Properties)config);
 		}
-		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();		
+		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();
 		mainCycle:
 		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
 			for (Field field : Driver.getDeclaredFields(directByteBufferClass)) {
@@ -105,7 +105,7 @@ public class BufferHandler implements Component {
 			directByteBufferClass = directByteBufferClass.getSuperclass();
 		}
 	}
-	
+
 	private void setDefaultByteBufferSize(java.util.Properties config) {
 		String defaultBufferSize = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
@@ -123,11 +123,11 @@ public class BufferHandler implements Component {
 				this.defaultBufferSize = new BigDecimal(value).multiply(new BigDecimal(1024 * 1024)).intValue();
 			} else {
 				this.defaultBufferSize = Integer.valueOf(value);
-			};
+			}
 		}
 		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
 	}
-	
+
 	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
 		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
@@ -142,7 +142,7 @@ public class BufferHandler implements Component {
 			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}
-	
+
 	@Override
 	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name())) {
@@ -156,39 +156,39 @@ public class BufferHandler implements Component {
 			}
 		}
 	}
-	
+
 	public int getDefaultBufferSize() {
 		return defaultBufferSize;
 	}
-	
+
 	public static BufferHandler create(java.util.Properties config) {
 		return new BufferHandler(config);
 	}
-	
+
 	public ByteBuffer allocate(int capacity) {
 		return defaultByteBufferAllocator.apply(capacity);
 	}
-	
+
 	public ByteBuffer allocateInHeap(int capacity) {
 		return ByteBuffer.allocate(capacity);
 	}
-	
+
 	public ByteBuffer allocateDirect(int capacity) {
 		return ByteBuffer.allocateDirect(capacity);
 	}
-	
+
 	public ByteBuffer duplicate(ByteBuffer buffer) {
 		return buffer.duplicate();
 	}
-	
+
 	public <T extends Buffer> int limit(T buffer) {
 		return ((Buffer)buffer).limit();
 	}
-	
+
 	public <T extends Buffer> int position(T buffer) {
 		return ((Buffer)buffer).position();
 	}
-	
+
 	public <T extends Buffer> T limit(T buffer, int newLimit) {
 		return (T)((Buffer)buffer).limit(newLimit);
 	}
@@ -196,59 +196,59 @@ public class BufferHandler implements Component {
 	public <T extends Buffer> T position(T buffer, int newPosition) {
 		return (T)((Buffer)buffer).position(newPosition);
 	}
-	
+
 	public <T extends Buffer> T flip(T buffer) {
 		return (T)((Buffer)buffer).flip();
 	}
-	
+
 	public <T extends Buffer> int capacity(T buffer) {
 		return ((Buffer)buffer).capacity();
 	}
-	
+
 	public <T extends Buffer> int remaining(T buffer) {
 		return ((Buffer)buffer).remaining();
 	}
-	
+
 	public ByteBuffer put(ByteBuffer byteBuffer, byte[] heapBuffer) {
 		return put(byteBuffer, heapBuffer, heapBuffer.length);
 	}
-	
+
 	public ByteBuffer put(ByteBuffer byteBuffer, byte[] heapBuffer, int bytesToWrite) {
 		return put(byteBuffer, heapBuffer, bytesToWrite, 0);
 	}
-	
+
 	public ByteBuffer shareContent(ByteBuffer byteBuffer) {
 		ByteBuffer duplicated = duplicate(byteBuffer);
 		if (position(byteBuffer) > 0) {
 			flip(duplicated);
-		}		
+		}
 		return duplicated;
 	}
-	
+
 	public ByteBuffer put(ByteBuffer byteBuffer, byte[] heapBuffer, int bytesToWrite, int initialPosition) {
 		byteBuffer = ensureRemaining(byteBuffer, bytesToWrite, initialPosition);
 		byteBuffer.put(heapBuffer, 0, bytesToWrite);
 		return byteBuffer;
 	}
-	
+
 	public byte[] toByteArray(ByteBuffer byteBuffer) {
     	byteBuffer = shareContent(byteBuffer);
     	byte[] result = new byte[limit(byteBuffer)];
     	byteBuffer.get(result, 0, result.length);
         return result;
 	}
-	
+
     public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes) {
         return ensureRemaining(byteBuffer, requiredBytes, 0);
-    } 
-	
+    }
+
     public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes, int initialPosition) {
         if (requiredBytes > remaining(byteBuffer)) {
         	return expandBuffer(byteBuffer, requiredBytes, initialPosition);
         }
         return byteBuffer;
-    }  
-	
+    }
+
 	public ByteBuffer expandBuffer(ByteBuffer byteBuffer, int requiredBytes) {
 		return expandBuffer(byteBuffer, requiredBytes, 0);
 	}
@@ -260,9 +260,9 @@ public class BufferHandler implements Component {
 		newBuffer.put(byteBuffer);
         limit(byteBuffer, limit);
         position(byteBuffer, initialPosition);
-        return newBuffer;        
+        return newBuffer;
 	}
-	
+
 	public <T extends Buffer> long getAddress(T buffer) {
 		try {
 			return (long)Driver.getFieldValue(buffer, directAllocatedByteBufferAddressField);
@@ -270,7 +270,7 @@ public class BufferHandler implements Component {
 			return (long)Driver.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
 		}
 	}
-	
+
 	private Field getDirectAllocatedByteBufferAddressField() {
 		if (directAllocatedByteBufferAddressField == null) {
 			synchronized (this) {
@@ -297,7 +297,7 @@ public class BufferHandler implements Component {
 			return true;
 		}
 	}
-	
+
 	private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			if (buffer != null) {
@@ -311,7 +311,7 @@ public class BufferHandler implements Component {
 		}
 		return null;
 	}
-	
+
 	private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			Object cleaner = getInternalCleaner(buffer, findInAttachments);
@@ -321,7 +321,7 @@ public class BufferHandler implements Component {
 		}
 		return null;
 	}
-	
+
 	private <T extends Buffer> Collection<T> getAllLinkedBuffers(T buffer) {
 		Collection<T> allLinkedBuffers = new ArrayList<>();
 		allLinkedBuffers.add(buffer);
@@ -330,48 +330,48 @@ public class BufferHandler implements Component {
 		}
 		return allLinkedBuffers;
 	}
-	
+
 	public ByteBuffer newByteBufferWithDefaultSize() {
 		return allocate(defaultBufferSize);
 	}
-	
+
 	public ByteBuffer newByteBuffer(int size) {
 		return allocate(size > -1? size : defaultBufferSize);
 	}
-	
+
 	public ByteBufferOutputStream newByteBufferOutputStreamWithDefaultSize() {
 		return new ByteBufferOutputStream(defaultBufferSize);
 	}
-	
+
 	public ByteBufferOutputStream newByteBufferOutputStream(int size) {
 		return new ByteBufferOutputStream(size > -1? size : defaultBufferSize);
 	}
-	
+
 	public byte[] newByteArrayWithDefaultSize() {
 		return new byte[defaultBufferSize];
 	}
-	
+
 	public byte[] newByteArray(int size) {
 		return new byte[size > -1? size : defaultBufferSize];
 	}
-	
+
 	public  <T extends Buffer> BufferHandler.Cleaner getCleaner(T buffer, boolean findInAttachments) {
 		Object cleaner;
 		if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
 			return new Cleaner () {
-				
+
 				@Override
 				public boolean clean() {
 					if (getAddress() != 0) {
 						Methods.invokeDirect(cleaner, "clean");
 						getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
 							Fields.setDirect(linkedBuffer, "address", 0L)
-						);							
+						);
 						return true;
 					}
 					return false;
 				}
-				
+
 				long getAddress() {
 					return Long.valueOf((long)Fields.getDirect(Fields.getDirect(cleaner, "thunk"), "address"));
 				}
@@ -380,25 +380,25 @@ public class BufferHandler implements Component {
 				public boolean cleaningHasBeenPerformed() {
 					return getAddress() == 0;
 				}
-				
+
 			};
 		}
 		return null;
 	}
-	
+
 	public <T extends Buffer> BufferHandler.Deallocator getDeallocator(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			Object deallocator;
 			if ((deallocator = getInternalDeallocator(buffer, findInAttachments)) != null) {
 				return new Deallocator() {
-					
+
 					@Override
 					public boolean freeMemory() {
 						if (getAddress() != 0) {
 							Methods.invokeDirect(deallocator, "run");
 							getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
 								Fields.setDirect(linkedBuffer, "address", 0L)
-							);	
+							);
 							return true;
 						} else {
 							return false;
@@ -413,27 +413,27 @@ public class BufferHandler implements Component {
 					public boolean memoryHasBeenReleased() {
 						return getAddress() == 0;
 					}
-					
+
 				};
 			}
 		}
 		return null;
 	}
-	
+
 	public static interface Deallocator {
-		
+
 		public boolean freeMemory();
-		
+
 		boolean memoryHasBeenReleased();
-		
+
 	}
-	
+
 	public static interface Cleaner {
-		
+
 		public boolean clean();
-		
+
 		public boolean cleaningHasBeenPerformed();
-		
+
 	}
 
 }

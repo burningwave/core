@@ -42,9 +42,9 @@ import org.burningwave.core.iterable.Properties;
 
 
 public interface PathHelper {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
 			public static String PATHS_PREFIX = "paths.";
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
@@ -52,36 +52,36 @@ public interface PathHelper {
 			public static String MAIN_CLASS_PATHS_EXTENSION = MAIN_CLASS_PATHS + ".extension";
 			public static String MAIN_CLASS_REPOSITORIES = PATHS_PREFIX + "main-class-repositories";
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			defaultValues.put(
-				Key.MAIN_CLASS_PATHS_EXTENSION, 
+				Key.MAIN_CLASS_PATHS_EXTENSION,
 				"//${system.properties:java.home}/lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
 				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator() +
 				"//${system.properties:java.home}/../lib//children:.*?\\.jar" + PathHelper.Configuration.getPathsSeparator()
 			);
 			defaultValues.put(
-				Key.MAIN_CLASS_REPOSITORIES, 
+				Key.MAIN_CLASS_REPOSITORIES,
 				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + PathHelper.Configuration.getPathsSeparator()
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
-		
+
 		public static String getPathsSeparator() {
 			return IterableObjectHelper.getDefaultValuesSeparator();
 		}
-	}	
-	
+	}
+
 	public static PathHelper create(Properties config) {
 		return new PathHelperImpl(config);
 	}
-	
+
 	String getBurningwaveRuntimeClassPath();
 
 	public Collection<String> getMainClassPaths();
@@ -119,9 +119,9 @@ public interface PathHelper {
 	public Collection<String> optimize(String... paths);
 
 	public Collection<String> optimize(Collection<String> paths);
-	
+
 	public Collection<FileSystemItem> optimizeFileSystemItems(FileSystemItem... paths);
-	
+
 	public Collection<FileSystemItem> optimizeFileSystemItems(Collection<FileSystemItem> paths);
 
 	public Collection<String> getPaths(Predicate<String> pathPredicate);

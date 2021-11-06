@@ -52,12 +52,12 @@ public class Synchronizer implements Closeable, ManagedLogger {
 	Map<String, Mutex> mutexes;
 	String name;
 	ThreadsMonitorer allThreadsMonitorer;
-	
+
 	private Synchronizer(String name) {
 		this.name = name;
 		mutexes = new ConcurrentHashMap<>();
 	}
-	
+
 	public static Synchronizer create(String name, boolean undestroyable) {
 		if (undestroyable) {
 			return new Synchronizer(name) {
@@ -73,10 +73,10 @@ public class Synchronizer implements Closeable, ManagedLogger {
 			return new Synchronizer(name);
 		}
 	}
-	
+
 	public Mutex getMutex(String id) {
 		Mutex newMutex = this.new Mutex(id);
-		while (true) {			
+		while (true) {
 			Mutex oldMutex = mutexes.putIfAbsent(id, newMutex);
 	        if (oldMutex == null) {
 		        return newMutex;
@@ -88,43 +88,43 @@ public class Synchronizer implements Closeable, ManagedLogger {
         	continue;
 		}
     }
-	
+
 	public void execute(String id, Runnable executable) {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
-			}			
+			}
 		}
 	}
-	
+
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
-			}			
-		}	
+			}
+		}
 	}
-	
+
 	public <T> T execute(String id, Supplier<T> executable) {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				return executable.get();
-			}			
-		}	
+			}
+		}
 	}
-	
+
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingSupplier<T, E> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				return executable.get();
-			}			
+			}
 		}
 	}
 
 	public void clear() {
 		mutexes.clear();
 	}
-	
+
 	@Override
 	public void close() {
 		if (this.allThreadsMonitorer != null) {
@@ -170,11 +170,11 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		log.append("\n");
 		return log.toString();
 	}
-	
+
 	public Set<java.lang.Thread> getAllThreads() {
-		return Thread.getAllStackTraces().keySet();
+		return java.lang.Thread.getAllStackTraces().keySet();
 	}
-	
+
 	public void startAllThreadsMonitoring(Long interval) {
 		ThreadsMonitorer allThreadsMonitorer = this.allThreadsMonitorer;
 		if (allThreadsMonitorer == null) {
@@ -187,25 +187,25 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		}
 		this.allThreadsMonitorer.start(interval);
 	}
-	
+
 	public void stopAllThreadsMonitoring() {
 		stopAllThreadsMonitoring(false);
 	}
-	
+
 	public void stopAllThreadsMonitoring(boolean waitThreadToFinish) {
 		ThreadsMonitorer allThreadsMonitorer = this.allThreadsMonitorer;
 		if (allThreadsMonitorer != null) {
 			allThreadsMonitorer.stop(waitThreadToFinish);
-		}		
+		}
 	}
-	
+
 	public class Mutex implements java.io.Closeable {
 		Mutex(String id) {
 			this.id = id;
 		}
 		String id;
 		int clientsCount = 1;
-		
+
 		@Override
 		public void close() {
 			try {
@@ -217,14 +217,14 @@ public class Synchronizer implements Closeable, ManagedLogger {
 			}
 		}
 	}
-	
+
 	static class ThreadsMonitorer implements Closeable {
 		Synchronizer synchronizer;
-		
+
 		ThreadsMonitorer(Synchronizer synchronizer) {
 			this.synchronizer = synchronizer;
 		}
-		
+
 		public ThreadsMonitorer start(Long interval) {
 			ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
 				thread.waitFor(interval);
@@ -234,20 +234,20 @@ public class Synchronizer implements Closeable, ManagedLogger {
 			});
 			return this;
 		}
-		
+
 		private String getName() {
 			return Optional.ofNullable(synchronizer.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All threads state logger";
 		}
-		
+
 		public void stop(boolean waitThreadToFinish) {
 			ThreadHolder.stop(getName());
 		}
-		
+
 		@Override
 		public void close() {
 			close(false);
 		}
-		
+
 		public void close(boolean waitForTasksTermination) {
 			stop(waitForTasksTermination);
 			synchronizer = null;

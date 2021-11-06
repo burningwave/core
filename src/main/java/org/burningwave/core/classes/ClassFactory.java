@@ -55,29 +55,29 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 public interface ClassFactory {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
-			
+
 			public static final String DEFAULT_CLASS_LOADER = "class-factory.default-class-loader";
 
 			public static final String CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER = PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader.class-repositories";
 			public static final String ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER =
 				PathHelper.Configuration.Key.PATHS_PREFIX + "class-factory.default-class-loader." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-class-repositories";
 			public static final String BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-factory.byte-code-hunter.search-config.check-file-option";
-					
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-	
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-			
+
 			//DEFAULT_VALUES.put(Key.DEFAULT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
-				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
+				"${"+ Configuration.Key.DEFAULT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				PathScannerClassLoader.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(Configuration.Key.DEFAULT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassFactory.class.getPackage().getName() + ".DefaultClassLoaderRetrieverForClassFactory");
@@ -89,19 +89,19 @@ public interface ClassFactory {
 			);
 			defaultValues.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"				
-			);			
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.getPathsSeparator() +
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() +
+				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"
+			);
 			defaultValues.put(
 				Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
 				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	public static ClassFactory create(
 		ByteCodeHunter byteCodeHunter,
 		Supplier<ClassPathHunter> classPathHunterSupplier,
@@ -114,14 +114,14 @@ public interface ClassFactory {
 		return new ClassFactoryImpl(
 			byteCodeHunter,
 			classPathHunterSupplier,
-			javaMemoryCompiler, 
+			javaMemoryCompiler,
 			pathHelper,
 			classPathHelper,
 			defaultClassLoaderSupplier,
 			config
 		);
 	}
-	
+
 	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode);
 
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config);
@@ -129,7 +129,7 @@ public interface ClassFactory {
 	public void closeClassRetrievers();
 
 	public void reset(boolean closeClassRetrievers);
-	
+
 	public static class ClassRetriever implements Closeable, ManagedLogger {
 		ClassLoader classLoader;
 		ClassFactory classFactory;
@@ -146,7 +146,7 @@ public interface ClassFactory {
 		boolean useOneShotJavaCompiler;
 		ClassPathHelper classPathHelper;
 		JavaMemoryCompiler compiler;
-		
+
 		ClassRetriever (
 			ClassFactory classFactory,
 			Function<ClassRetriever, ClassLoader> classLoaderSupplier,
@@ -167,7 +167,7 @@ public interface ClassFactory {
 			this.compilationConfigSupplier = compileConfigSupplier;
 			this.useOneShotJavaCompiler = useOneShotJavaCompiler;
 		}
-		
+
 		public Class<?> get(String className) {
 			try {
 				try {
@@ -188,7 +188,7 @@ public interface ClassFactory {
 										compilationResult.getClassPath().getAbsolutePath()
 									);
 									return get(className);
-								}								
+								}
 							} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 								Compilation.Result compilationResult = getCompilationResult();
 								Map<String, ByteBuffer> compiledClasses = new HashMap<>(compilationResult.getCompiledFiles());
@@ -210,7 +210,7 @@ public interface ClassFactory {
 							whereToFind.add(absolutePathOfCompiledFilesClassPath);
 							classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
 							if (!classPathHelper.computeAndAddAllToClassLoader(
-								classLoader, whereToFind, 
+								classLoader, whereToFind,
 								Arrays.asList(absolutePathOfCompiledFilesClassPath),
 								className,
 								notFoundClasses
@@ -234,7 +234,7 @@ public interface ClassFactory {
 							String compilationResultAbsolutePath = compilationResult.getClassPath().getAbsolutePath();
 							classPaths.add(compilationResultAbsolutePath);
 							classPathsToBeRefreshed.add(compilationResultAbsolutePath);
-						}										
+						}
 						classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
 						if (!classPathHelper.computeAndAddAllToClassLoader(
 							classLoader, classPaths, classPathsToBeRefreshed, className, notFoundClasses
@@ -244,7 +244,7 @@ public interface ClassFactory {
 						throw exc;
 					}
 				} catch (ClassNotFoundException | NoClassDefFoundError | Classes.Loaders.UnsupportedException exc) {
-					return ClassLoaders.loadOrDefineByByteCode(className, 
+					return ClassLoaders.loadOrDefineByByteCode(className,
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,
 							getCompilationResult().getCompiledFiles(),
@@ -254,7 +254,7 @@ public interface ClassFactory {
 				}
 			} catch (ClassNotFoundException | NoClassDefFoundError exc) {
 				return Executor.get(() -> {
-					return ClassLoaders.loadOrDefineByByteCode(className, 
+					return ClassLoaders.loadOrDefineByByteCode(className,
 						loadBytecodesFromClassPaths(
 							this.byteCodesWrapper,
 							getCompilationResult().getCompiledFiles(),
@@ -274,7 +274,7 @@ public interface ClassFactory {
 							((ClassFactoryImpl)this.classFactory).getClassPathHunter(),
 							((ClassFactoryImpl)this.classFactory).config
 						);
-					
+
 						compiler = !useOneShotJavaCompiler ?
 							((ClassFactoryImpl)this.classFactory).javaMemoryCompiler :
 							JavaMemoryCompiler.create(
@@ -288,7 +288,7 @@ public interface ClassFactory {
 			}
 			return this.compilationTask;
 		}
-		
+
 		private Compilation.Result getCompilationResult() {
 			Compilation.Result compilationResult = getCompilationTask().join();
 			if (getCompilationTask().getException() != null) {
@@ -306,9 +306,9 @@ public interface ClassFactory {
 				}
 			}
 			return compilationConfig;
-			
+
 		}
-		
+
 		@SafeVarargs
 		private final AtomicReference<Map<String, ByteBuffer>> loadBytecodesFromClassPaths(
 			AtomicReference<Map<String, ByteBuffer>> retrievedBytecodes,
@@ -344,7 +344,7 @@ public interface ClassFactory {
 			}
 			return retrievedBytecodes;
 		}
-		
+
 		public Collection<Class<?>> getAllCompiledClasses() {
 			Collection<Class<?>> classes = new HashSet<>();
 			for(String className : uSGClassNames) {
@@ -352,7 +352,7 @@ public interface ClassFactory {
 			}
 			return classes;
 		}
-		
+
 		public Collection<Class<?>> get(String... classesName) {
 			Collection<Class<?>> classes = new HashSet<>();
 			for(String className : classesName) {
@@ -360,7 +360,7 @@ public interface ClassFactory {
 			}
 			return classes;
 		}
-		
+
 		@Override
 		public void close() {
 			closeResources(() -> this.classLoader == null, task -> {
@@ -398,7 +398,7 @@ public interface ClassFactory {
 				classesSearchedInCompilationDependenciesPaths.clear();
 				classesSearchedInCompilationDependenciesPaths = null;
 				additionalClassRepositoriesForClassLoader.clear();
-				additionalClassRepositoriesForClassLoader = null; 
+				additionalClassRepositoriesForClassLoader = null;
  				try {
  					((ClassFactoryImpl)this.classFactory).unregister(this);
 				} catch (NullPointerException exc) {
@@ -412,7 +412,7 @@ public interface ClassFactory {
 	public static class PojoSubTypeRetriever {
 		private ClassFactory classFactory;
 		private PojoSourceGenerator sourceGenerator;
-		
+
 		private PojoSubTypeRetriever(
 			ClassFactory classFactory,
 			PojoSourceGenerator sourceGenerator
@@ -420,7 +420,7 @@ public interface ClassFactory {
 			this.classFactory = classFactory;
 			this.sourceGenerator = sourceGenerator;
 		}
-		
+
 		public static PojoSubTypeRetriever create(ClassFactory classFactory, PojoSourceGenerator sourceGenerator) {
 			return new PojoSubTypeRetriever(classFactory, sourceGenerator) ;
 		}
@@ -428,20 +428,20 @@ public interface ClassFactory {
 		public static PojoSubTypeRetriever createDefault(ClassFactory classFactory) {
 			return new PojoSubTypeRetriever(classFactory, PojoSourceGenerator.createDefault());
 		}
-		
+
 		public <T> Class<T> loadOrBuildAndDefine(
 				ClassLoader classLoader,
 			String className,
 			Class<?>... superClasses
 		) {
 			return loadOrBuildAndDefine(classLoader, className, PojoSourceGenerator.ALL_OPTIONS_DISABLED, superClasses);
-		}	
-		
+		}
+
 		public <T> Class<T> loadOrBuildAndDefine(
 			String className,
-			int options, 
+			int options,
 			Class<?>... superClasses
-		) {	
+		) {
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 					sourceGenerator.generate(className, options, superClasses)
@@ -451,13 +451,13 @@ public interface ClassFactory {
 			classRetriever.close();
 			return cls;
 		}
-		
+
 		public <T> Class<T> loadOrBuildAndDefine(
 			ClassLoader classLoader,
 			String className,
-			int options, 
+			int options,
 			Class<?>... superClasses
-		) {	
+		) {
 			ClassRetriever classRetriever = classFactory.loadOrBuildAndDefine(
 				LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 					sourceGenerator.generate(className, options, superClasses)
@@ -467,6 +467,6 @@ public interface ClassFactory {
 			classRetriever.close();
 			return cls;
 		}
-			
+
 	}*/
 }

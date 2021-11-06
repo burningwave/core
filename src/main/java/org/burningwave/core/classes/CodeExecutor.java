@@ -43,9 +43,9 @@ import org.burningwave.core.iterable.Properties;
 
 
 public interface CodeExecutor {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
 			public static final String COMMON_IMPORTS = "code-executor.common.imports";
 			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
@@ -60,15 +60,15 @@ public interface CodeExecutor {
 			public static final String PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX = ".simple-name";
 			public static final String PROPERTIES_FILE_SUPPLIER_SIMPLE_NAME_SUFFIX = "." + PROPERTIES_FILE_SUPPLIER_KEY + PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX;
 			public static final String PROPERTIES_FILE_EXECUTOR_SIMPLE_NAME_SUFFIX = "." + PROPERTIES_FILE_EXECUTOR_KEY + PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX;
-			
+
 		}
-		
+
 		public static class Value {
 			public static final String CODE_LINE_SEPARATOR = ";";
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 
@@ -84,12 +84,12 @@ public interface CodeExecutor {
 				QueuedTasksExecutor.Task.class.getName() + Value.CODE_LINE_SEPARATOR +
 				Supplier.class.getName() + Value.CODE_LINE_SEPARATOR
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
-		
+
 	}
-	
+
 	public static CodeExecutor create(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
@@ -101,7 +101,7 @@ public interface CodeExecutor {
 			config
 		);
 	}
-	
+
 	public <T> T executeProperty(String propertyName, Object... params);
 
 	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config);

@@ -29,12 +29,12 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,13 +64,13 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	java.util.zip.ZipFile originalZipFile;
 	Boolean isDestroyed;
 	Supplier<ByteBuffer> contentSupplier;
-	
+
 	static {
 		classId = Objects.getClassId(ZipFile.class);
 	}
-	
+
 	ZipFile(String absolutePath, ByteBuffer content) {
-		isDestroyed = Boolean.FALSE;				
+		isDestroyed = Boolean.FALSE;
 		this.absolutePath = Paths.clean(absolutePath);
 		entries = ConcurrentHashMap.newKeySet();
 		this.contentSupplier = () -> content;
@@ -80,7 +80,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 				ZipEntry zipEntry = entriesIterator.nextElement();
 				entries.add(
 					new Entry(
-						this, 
+						this,
 						zipEntry.getName(), () -> {
 							return buildZipEntry(absolutePath, content, zipEntry, true);
 						}
@@ -110,12 +110,12 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public String getTemporaryFolderPrefix() {
 		return classId;
 	}
-	
+
 	private java.util.zip.ZipFile retrieveFile(String absolutePath, ByteBuffer content) {
 		java.util.zip.ZipFile originalZipFile = this.originalZipFile;
 		if (originalZipFile == null) {
@@ -145,24 +145,24 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		}
 		return originalZipFile;
 	}
-	
+
 	private ZipFile(String absolutePath, Collection<Entry> entries, Supplier<ByteBuffer> contentSupplier) {
 		this.absolutePath = absolutePath;
 		this.entries = entries;
 		this.entriesIterator = entries.iterator();
 		this.contentSupplier = contentSupplier;
 	}
-	
+
 	@Override
 	public IterableZipContainer duplicate() {
 		return new ZipFile(absolutePath, entries, contentSupplier);
 	}
-	
+
 	@Override
 	public String getAbsolutePath() {
 		return absolutePath;
 	}
-	
+
 
 	@Override
 	public String getConventionedAbsolutePath() {
@@ -184,7 +184,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		}
 		return conventionedAbsolutePath;
 	}
-	
+
 	@Override
 	public IterableZipContainer getParent() {
 		if (conventionedAbsolutePath == null) {
@@ -222,7 +222,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	public void closeEntry() {
 		currentZipEntry = null;
 	}
-	
+
 	@Override
 	public void close() {
 		closeEntry();
@@ -238,7 +238,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		this.entriesIterator = null;
 		this.entries = null;
 	}
-	
+
 	@Override
 	public void destroy(boolean removeFromCache) {
 		boolean destroy = false;
@@ -249,7 +249,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		}
 		if (destroy) {
 			contentSupplier = null;
-			IterableZipContainer.super.destroy(removeFromCache);		
+			IterableZipContainer.super.destroy(removeFromCache);
 			for (Entry entry : entries) {
 				entry.destroy();
 			}
@@ -258,11 +258,11 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			Runnable temporaryFileDeleter = this.temporaryFileDeleter;
 			if (temporaryFileDeleter != null) {
 				this.temporaryFileDeleter = null;
-				temporaryFileDeleter.run();			
+				temporaryFileDeleter.run();
 			}
 		}
 	}
-	
+
 	public static class Entry implements IterableZipContainer.Entry {
 		private ZipFile zipMemoryContainer;
 		private String cleanedName;
@@ -277,7 +277,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
 			this.zipEntryContentSupplier = zipEntryContentSupplier;
 		}
-		
+
 		@Override
 		public boolean isArchive() {
 			if (archive != null) {
@@ -286,12 +286,12 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			ByteBuffer content = toByteBuffer();
 			return archive = content != null ? Streams.isArchive(content) : false;
 		}
-		
+
 		@Override
 		public <C extends IterableZipContainer> C getParentContainer() {
 			return (C) zipMemoryContainer;
 		}
-		
+
 		@Override
 		public String getCleanedName() {
 			if (cleanedName != null) {
@@ -309,7 +309,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			}
 			return this.cleanedName;
 		}
-		
+
 		@Override
 		public String getName() {
 			return name;
@@ -329,7 +329,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		public ByteBuffer toByteBuffer() {
 			return Cache.pathForContents.getOrUploadIfAbsent(getAbsolutePath(), zipEntryContentSupplier);
 		}
-		
+
 		public void destroy() {
 			this.absolutePath = null;
 			this.name = null;

@@ -47,72 +47,72 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties.Event;
 
 
-public interface ManagedLogger {	
-	
+public interface ManagedLogger {
+
 	default void logTrace(String message) {
 		ManagedLoggersRepository.logTrace(getClass()::getName, message);
 	}
-	
+
 	default void logTrace(String message, Object... arguments) {
 		ManagedLoggersRepository.logTrace(getClass()::getName, message, arguments);
 	}
-	
+
 	default void logDebug(String message) {
 		ManagedLoggersRepository.logDebug(getClass()::getName, message);
 	}
-	
+
 	default void logDebug(String message, Object... arguments) {
 		ManagedLoggersRepository.logDebug(getClass()::getName, message, arguments);
 	}
-	
+
 	default void logInfo(String message) {
 		ManagedLoggersRepository.logInfo(getClass()::getName, message);
 	}
-	
+
 	default void logInfo(String message, Object... arguments) {
 		ManagedLoggersRepository.logInfo(getClass()::getName, message, arguments);
 	}
-	
+
 	default void logWarn(String message) {
 		ManagedLoggersRepository.logWarn(getClass()::getName, message);
 	}
-	
+
 	default void logWarn(String message, Object... arguments) {
 		ManagedLoggersRepository.logWarn(getClass()::getName, message, arguments);
 	}
-	
+
 	default void logError(String message, Throwable exc, Object... arguments) {
 		ManagedLoggersRepository.logError(getClass()::getName, message, exc, arguments);
 	}
-	
+
 	default void logError(String message, Object... arguments) {
 		ManagedLoggersRepository.logError(getClass()::getName, message, arguments);
 	}
-	
+
 	default void logError(String message, Throwable exc) {
 		ManagedLoggersRepository.logError(getClass()::getName, message, exc);
 	}
-	
+
 	default void logError(String message) {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message);
 	}
-	
+
 	default void logError(Throwable exc) {
 		ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 	}
-	
-	
+
+
 	public static interface Repository extends Closeable {
-		public static class Configuration {			
-			
+		public static class Configuration {
+
 			public static class Key {
-				
+
 				public static final String TYPE = "managed-logger.repository";
 				public static final String ENABLED_FLAG = "managed-logger.repository.enabled";
-				
+
 				private static final String LOGGING_LEVEL_FLAG_PREFIX = "managed-logger.repository.logging";
 				private static final String LOGGING_LEVEL_DISABLED_FLAG_SUFFIX = "disabled-for";
-				
+
 				public static final String ALL_LOGGING_LEVEL_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".all-levels." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 				public static final String TRACE_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".trace." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 				public static final String DEBUG_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".debug." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
@@ -120,24 +120,24 @@ public interface ManagedLogger {
 				public static final String WARN_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".warn." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 				public static final String ERROR_LOGGING_DISABLED_FOR = LOGGING_LEVEL_FLAG_PREFIX + ".error." + LOGGING_LEVEL_DISABLED_FLAG_SUFFIX;
 			}
-			
+
 			public final static Map<String, Object> DEFAULT_VALUES;
-			
+
 			static {
 				Map<String, Object> defaultValues = new HashMap<>();
-				
+
 				defaultValues.put(Key.TYPE, "autodetect");
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
 					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
 					PathScannerClassLoader.class.getName() + ";"
-				);				
-				
+				);
+
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
 		}
-		
+
 		public static org.burningwave.core.ManagedLogger.Repository create(
 			org.burningwave.core.iterable.Properties config
 		) {
@@ -163,59 +163,59 @@ public interface ManagedLogger {
 							ManagedLogger.Repository.class
 						).getConstructor(java.util.Properties.class).newInstance(config);
 				}
-				
+
 			} catch (Throwable exc) {
 				exc.printStackTrace();
 				return Driver.throwException(exc);
 			}
 		}
-		
+
 		public void setLoggingLevelFor(LoggingLevel logLevel, String... classNames);
-		
+
 		public void setLoggingLevelFlags(Class<?> cls, Integer flag);
 
 		public Integer getLoggingLevelFlags(Class<?> cls);
 
 		public void addLoggingLevelFor(LoggingLevel logLevel, String... classNames);
-		
+
 		public void removeLoggingLevelFor(LoggingLevel logLevel, String... classNames);
-		
+
 		public boolean isEnabled();
-		
+
 		public void disableLogging();
-		
+
 		public void enableLogging();
-		
+
 		public void disableLogging(String clientName);
-		
+
 		public void enableLogging(String clientName);
-		
+
 		public void logError(Supplier<String> clientNameSupplier, String message, Object... arguments);
-		
+
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc, Object... arguments);
-		
+
 		public void logError(Supplier<String> clientNameSupplier, String message, Throwable exc);
-		
+
 		public void logError(Supplier<String> clientNameSupplier, String message);
-		
+
 		public void logError(Supplier<String> clientNameSupplier, Throwable exc);
-		
+
 		public void logDebug(Supplier<String> clientNameSupplier, String message);
-		
+
 		public void logDebug(Supplier<String> clientNameSupplier, String message, Object... arguments);
-		
+
 		public void logInfo(Supplier<String> clientNameSupplier, String message);
-		
+
 		public void logInfo(Supplier<String> clientNameSupplier, String message, Object... arguments);
-		
+
 		public void logWarn(Supplier<String> clientNameSupplier, String message);
-		
+
 		public void logWarn(Supplier<String> clientNameSupplier, String message, Object... arguments);
-		
+
 		public void logTrace(Supplier<String> clientNameSupplier, String message);
-		
+
 		public void logTrace(Supplier<String> clientNameSupplier, String message, Object... arguments);
-		
+
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
 			String instanceId;
@@ -227,16 +227,16 @@ public interface ManagedLogger {
 				if (getEnabledLoggingFlag(config)) {
 					enableLogging();
 				}
-				removeLoggingLevels(config);			
+				removeLoggingLevels(config);
 				if (config instanceof org.burningwave.core.iterable.Properties) {
 					listenTo((org.burningwave.core.iterable.Properties)config);
 				}
 			}
-			
+
 			abstract void initSpecificElements(Properties properties);
-			
+
 			abstract void resetSpecificElements();
-			
+
 			boolean getEnabledLoggingFlag(Properties properties) {
 				return Objects.toBoolean(
 					IterableObjectHelper.resolveStringValue(
@@ -245,7 +245,7 @@ public interface ManagedLogger {
 					)
 				);
 			}
-			
+
 			@Override
 			public <K, V> void processChangeNotification(org.burningwave.core.iterable.Properties properties, Event event,
 					K key, V newValue, V oldValue) {
@@ -273,7 +273,7 @@ public interface ManagedLogger {
 					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
 				);
 			}
-			
+
 			protected void removeLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
 				String loggerDisabledFor = properties.getProperty(configKey);
 				if (loggerDisabledFor != null) {
@@ -282,7 +282,7 @@ public interface ManagedLogger {
 					}
 				}
 			}
-			
+
 			protected void addLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
 				String loggerEnabledFor = properties.getProperty(configKey);
 				if (loggerEnabledFor != null) {
@@ -291,26 +291,26 @@ public interface ManagedLogger {
 					}
 				}
 			}
-			
+
 			@Override
 			public boolean isEnabled() {
 				return isEnabled;
 			}
-			
+
 			@Override
 			public void disableLogging() {
-				isEnabled = false;	
+				isEnabled = false;
 			}
 
 			@Override
 			public void enableLogging() {
-				isEnabled = true;		
+				isEnabled = true;
 			}
-			
+
 			public String addDetailsToMessage(String message, StackTraceElement stackTraceElement) {
 				return "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber() + ") - " + message;
 			}
-			
+
 			@Override
 			public void close() {
 				if (config instanceof org.burningwave.core.iterable.Properties) {

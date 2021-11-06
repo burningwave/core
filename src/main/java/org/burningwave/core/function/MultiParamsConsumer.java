@@ -32,7 +32,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public interface MultiParamsConsumer {
-	
+
 	void accept(Object... objects);
 
     default Consumer<Object[]> andThen(Consumer<Object[]> after) {

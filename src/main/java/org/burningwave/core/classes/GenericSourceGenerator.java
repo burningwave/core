@@ -35,32 +35,32 @@ import java.util.Optional;
 public class GenericSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -7508101348682677540L;
-	
+
 	private Collection<String> outerCode;
 	private Collection<AnnotationSourceGenerator> annotations;
 	private TypeDeclarationSourceGenerator type;
 	private String name;
 	private String hirearchyOperator;
 	private Collection<TypeDeclarationSourceGenerator> hirearchyElements;
-	
+
 	private GenericSourceGenerator(String name) {
 		this.name = name;
 	}
-	
+
 	public static GenericSourceGenerator create(String name) {
-		return new GenericSourceGenerator(name);		
-	}	
+		return new GenericSourceGenerator(name);
+	}
 
 	public static GenericSourceGenerator create(Class<?> cls) {
 		GenericSourceGenerator generic = new GenericSourceGenerator(cls.getSimpleName());
 		generic.type = TypeDeclarationSourceGenerator.create(cls);
 		return generic;
 	}
-	
+
 	public String getName() {
 		return name;
-	}	
-	
+	}
+
 	public GenericSourceGenerator addOuterCode(String... codes) {
 		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
 		for (String code : codes) {
@@ -68,7 +68,7 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public GenericSourceGenerator addAnnotation(AnnotationSourceGenerator... annotations) {
 		Optional.ofNullable(this.annotations).orElseGet(() -> this.annotations = new ArrayList<>());
 		for (AnnotationSourceGenerator annotation : annotations) {
@@ -76,7 +76,7 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public GenericSourceGenerator expands(TypeDeclarationSourceGenerator... hirearchyElements) {
 		hirearchyOperator = "extends";
 		this.hirearchyElements = Optional.ofNullable(this.hirearchyElements).orElseGet(ArrayList::new);
@@ -85,21 +85,21 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public GenericSourceGenerator parentOf(TypeDeclarationSourceGenerator hirearchyElement) {
 		hirearchyOperator = "super";
 		this.hirearchyElements = Optional.ofNullable(this.hirearchyElements).orElseGet(ArrayList::new);
 		this.hirearchyElements.add(hirearchyElement);
 		return this;
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
 				types.addAll(annotation.getTypeDeclarations());
 			}
-		});	
+		});
 		Optional.ofNullable(hirearchyElements).ifPresent(hirearchyElements -> {
 			hirearchyElements.forEach(hirearchyElement -> {
 				types.addAll(hirearchyElement.getTypeDeclarations());
@@ -110,11 +110,11 @@ public class GenericSourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	private String getAnnotations() {
 		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts)).orElseGet(() -> null);
 	}
-	
+
 	@Override
 	public String make() {
 		return getOrEmpty(outerCode, getAnnotations(), name, hirearchyOperator, getOrEmpty(hirearchyElements, " & "));

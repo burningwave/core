@@ -37,7 +37,7 @@ import java.util.Optional;
 public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -7814557670243517814L;
-	
+
 	private boolean isVarArgs;
 	private boolean useFullyQualifiedName;
 	private Boolean publicFlag;
@@ -45,12 +45,12 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	private String simpleName;
 	private Collection<GenericSourceGenerator> generics;
 	private BodySourceGenerator parameters;
-	
+
 	private TypeDeclarationSourceGenerator(String name, String simpleName) {
 		this.name = name;
 		this.simpleName = simpleName;
 	}
-	
+
 	private TypeDeclarationSourceGenerator(Class<?> clazz) {
 		if (!clazz.isPrimitive()) {
 			this.name = clazz.getName();
@@ -58,25 +58,25 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		publicFlag = Modifier.isPublic(clazz.getModifiers());
 		this.simpleName = clazz.getSimpleName();
 	}
-	
+
 	private TypeDeclarationSourceGenerator() {}
-	
+
 	public static TypeDeclarationSourceGenerator create(String name, String simpleName) {
 		return new TypeDeclarationSourceGenerator(name, simpleName);
 	}
-	
+
 	public static TypeDeclarationSourceGenerator create(String simpleName) {
 		return new TypeDeclarationSourceGenerator(null, simpleName);
 	}
-	
+
 	public static TypeDeclarationSourceGenerator create(java.lang.Class<?> cls) {
 		return new TypeDeclarationSourceGenerator(cls);
 	}
-	
+
 	public static TypeDeclarationSourceGenerator create(GenericSourceGenerator... generics) {
 		return new TypeDeclarationSourceGenerator().addGeneric(generics);
 	}
-	
+
 	public TypeDeclarationSourceGenerator setAsParameterizable(boolean flag) {
 		if (flag) {
 			if (parameters == null) {
@@ -87,24 +87,24 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public TypeDeclarationSourceGenerator setAsVarArgs(boolean flag) {
 		this.isVarArgs = flag;
 		return this;
 	}
-	
+
 	boolean isParameterizable() {
 		return parameters != null;
 	}
-	
+
 	public TypeDeclarationSourceGenerator addParameter(String... parameters) {
 		if (this.parameters == null) {
 			setAsParameterizable(true);
 		}
-		this.parameters.addCode(String.join(", ", parameters));		
+		this.parameters.addCode(String.join(", ", parameters));
 		return this;
 	}
-	
+
 	public TypeDeclarationSourceGenerator addParameter(SourceGenerator ... parameters) {
 		if (this.parameters == null) {
 			setAsParameterizable(true);
@@ -114,17 +114,17 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public TypeDeclarationSourceGenerator setSimpleName(String simpleName) {
 		this.simpleName = simpleName;
 		return this;
 	}
-	
+
 	public TypeDeclarationSourceGenerator useFullyQualifiedName(boolean flag) {
 		this.useFullyQualifiedName = flag;
 		return this;
 	}
-	
+
 	String getName() {
 		return name;
 	}
@@ -132,13 +132,13 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	String getSimpleName() {
 		return simpleName;
 	}
-	
+
 	public TypeDeclarationSourceGenerator addGeneric(GenericSourceGenerator... generics) {
 		Optional.ofNullable(this.generics).orElseGet(() -> this.generics = new ArrayList<>());
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		types.add(this);
@@ -152,28 +152,28 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	Boolean isPublic() {
 		return publicFlag;
 	}
-	
+
 	boolean useFullyQualifiedName() {
 		return this.useFullyQualifiedName;
 	}
-	
+
 	private String getParametersCode() {
 		if (parameters != null && parameters.isEmpty()) {
 			parameters.setDelimiters("(", ")");
 		}
 		return Optional.ofNullable(parameters).map(BodySourceGenerator::make).orElseGet(() -> "");
 	}
-	
+
 	boolean isArray() {
 		return
 			(this.name != null && this.name.contains("[")) ||
 			(this.simpleName != null && this.simpleName.contains("["));
 	}
-	
+
 	@Override
 	public String make() {
 		boolean usingFullyQualifiedName = useFullyQualifiedName && this.name != null;
@@ -191,12 +191,12 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			}
 			name = name.replace("[L", "").replace("[", "").replace("]", "").replace(";", "");
 		}
-		return name + 
-			Optional.ofNullable(generics).map(generics -> 
+		return name +
+			Optional.ofNullable(generics).map(generics ->
 				"<" + getOrEmpty(generics, COMMA + EMPTY_SPACE) + ">"
 			).orElseGet(() -> "") +
 			getParametersCode() +
 			arraysDelimiters +
 			(isVarArgs ? "..." : "");
-	}	
+	}
 }

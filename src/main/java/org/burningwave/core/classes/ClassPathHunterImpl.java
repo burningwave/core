@@ -38,13 +38,13 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, ClassPathHunterImpl.SearchContext, ClassPathHunter.SearchResult> implements ClassPathHunter {
-	
+
 	ClassPathHunterImpl(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
 		Properties config
 	) {
-		super(	
+		super(
 			pathHelper,
 			(initContext) -> SearchContext._create(initContext),
 			(context) -> new ClassPathHunter.SearchResult(context),
@@ -53,22 +53,22 @@ class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, Cl
 		);
 	}
 
-	
+
 	@Override
 	String getNameInConfigProperties() {
 		return ClassPathHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
 		return ClassPathHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
 		return ClassPathHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
-	
+
 
 	@Override
 	void addToContext(ClassPathHunterImpl.SearchContext context, TestContext criteriaTestContext,
@@ -76,27 +76,27 @@ class ClassPathHunterImpl extends ClassPathScanner.Abst<Collection<Class<?>>, Cl
 	) {
 		String classPath = fileSystemItem.getAbsolutePath();
 		FileSystemItem classPathAsFIS = FileSystemItem.ofPath(classPath.substring(0, classPath.lastIndexOf(javaClass.getPath())));
-		context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));		
+		context.addItemFound(basePath, classPathAsFIS.getAbsolutePath(), context.loadClass(javaClass.getName()));
 	}
-	
+
 	@Override
 	public void close() {
 		closeResources(() -> this.pathHelper == null, task -> {
 			super.close();
 		});
 	}
-	
+
 	static class SearchContext extends org.burningwave.core.classes.SearchContext<Collection<Class<?>>> {
-		
+
 		SearchContext(InitContext initContext) {
 			super(initContext);
-		}		
+		}
 
 		static ClassPathHunterImpl.SearchContext _create(InitContext initContext) {
 			return new SearchContext(initContext);
 		}
 
-		
+
 		void addItemFound(String basePathAsString, String classPathAsFile, Class<?> testedClass) {
 			Map<String, Collection<Class<?>>> testedClassesForClassPathMap = retrieveCollectionForPath(
 				itemsFoundMap,
