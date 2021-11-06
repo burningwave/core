@@ -1218,7 +1218,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 				@Override
 				<T> Function<ThrowingFunction<QueuedTasksExecutor.ProducerTask<T>, T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
-					return executable -> new QueuedTasksExecutor.ProducerTask<>(executable, taskCreationTrackingEnabled) {
+					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 
 						@Override
 						QueuedTasksExecutor getQueuedTasksExecutor() {
