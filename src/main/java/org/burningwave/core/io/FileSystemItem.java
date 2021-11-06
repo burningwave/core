@@ -688,14 +688,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						child.parent = null;
 						child.allChildren = null;
 						child.children = null;
-						if (child.javaClassWrapper != null) {
-							JavaClass javaClass = child.javaClassWrapper.get();
-							if (javaClass != null) {
-								javaClass.close();
-							} else {
-								child.javaClassWrapper = null;
-							}
-						}
+						clearJavaClassWrapper(child);
 						if (removeLinkedResourcesFromCache) {
 							removeFromCache(child, removeFromCache);
 						}
@@ -709,19 +702,23 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			absolutePath.setValue(null);
 			parentContainer = null;
 			parent = null;
-			if (javaClassWrapper != null) {
-				JavaClass javaClass = this.javaClassWrapper.get();
-				if (javaClass != null) {
-					javaClass.close();
-				} else {
-					this.javaClassWrapper = null;
-				}
-			}
+			clearJavaClassWrapper(this);
 			if (removeLinkedResourcesFromCache) {
 				removeFromCache(this, removeFromCache);
 			}
 			return removeFromCache ? null : this;
 		});
+	}
+
+	private void clearJavaClassWrapper(FileSystemItem fileSystemItem) {
+		if (fileSystemItem.javaClassWrapper != null) {
+			JavaClass javaClass = fileSystemItem.javaClassWrapper.get();
+			if (javaClass != null) {
+				javaClass.close();
+			} else {
+				fileSystemItem.javaClassWrapper = null;
+			}
+		}
 	}
 
 	private Set<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier,
@@ -895,6 +892,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		String absolutePath = getAbsolutePath();
 		Synchronizer.execute(instanceId, () -> {
 			Cache.pathForContents.remove(absolutePath, true);
+			clearJavaClassWrapper(this);
 			if (recomputeConventionedAbsolutePath) {
 				this.absolutePath.setValue(null);
 			}
