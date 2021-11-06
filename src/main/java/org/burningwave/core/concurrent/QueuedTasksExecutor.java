@@ -828,13 +828,17 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 			return "";
 		}
-
-		void logInfo() {
+		
+		public void logInfo() {
 			if (this.getCreatorInfos() != null) {
 				ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
 			}
 		}
-
+		
+		public void logException() {
+			logException(exc);
+		}
+		
 		private void logException(Throwable exc) {
 			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
 				"Exception occurred while executing {}: \n{}: {}{}{}",
