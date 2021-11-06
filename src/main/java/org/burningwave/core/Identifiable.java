@@ -31,13 +31,13 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 public interface Identifiable {
-	
+
 	default public String getId() {
 		return Objects.getId(this);
 	}
-	
+
 	default public String getOperationId(String operation) {
 		return Objects.getId(this) + "_" + operation;
 	}
-	
+
 }

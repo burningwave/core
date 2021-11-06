@@ -46,15 +46,15 @@ import org.burningwave.core.function.Executor;
 
 @SuppressWarnings("unchecked")
 public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, ConstructorCriteria>  {
-	
+
 	public static Constructors create() {
 		return new Constructors();
-	}	
-	
+	}
+
 	public <T> T newInstanceOf(
 		Class<?> targetClass,
 		Object... arguments
-	) {	
+	) {
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
 		if (ctor == null) {
 			Driver.throwException("Constructor not found in {}", targetClass.getName());
@@ -65,13 +65,13 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				getArgumentArray(
 					ctor,
 					this::getArgumentListWithArrayForVarArgs,
-					ArrayList::new, 
+					ArrayList::new,
 					arguments
 				)
 			);
 		});
 	}
-	
+
 	public <T> T newInstanceDirectOf(
 		Class<?> targetClass,
 		Object... arguments
@@ -102,9 +102,9 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				targetClass.getName()
 			);
 		}
-		return null; 
+		return null;
 	}
-	
+
 	public Constructor<?> findFirstAndMakeItAccessible(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
 		Collection<Constructor<?>> members = findAllAndMakeThemAccessible(targetClass, inputParameterTypesOrSubTypes);
 		if (members.size() == 1) {
@@ -118,11 +118,11 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		}
 		return null;
 	}
-	
+
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
 		Class<?> targetClass,
 		Class<?>... inputParameterTypesOrSubTypes
-	) {	
+	) {
 		String cacheKey = getCacheKey(targetClass, "all constructors by input parameters assignable from", inputParameterTypesOrSubTypes);
 		ClassLoader targetClassClassLoader = Classes.getClassLoader(targetClass);
 		return Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(targetClassClassLoader, cacheKey, () -> {
@@ -131,14 +131,14 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 				criteria.or().parameter((parameters, idx) -> parameters.length == 1 && parameters[0].isVarArgs());
 			}
 			return findAllAndApply(
-				criteria, 
+				criteria,
 				targetClass,
-				(member) -> 
+				(member) ->
 					setAccessible(member, true)
 			);
 		});
 	}
-	
+
 	public Collection<Constructor<?>> findAllAndMakeThemAccessible(
 		Class<?> targetClass
 	) {
@@ -147,18 +147,18 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 		Collection<Constructor<?>> members = Cache.uniqueKeyForConstructors.getOrUploadIfAbsent(
 			targetClassClassLoader, cacheKey, () -> {
 				return findAllAndApply(
-					ConstructorCriteria.withoutConsideringParentClasses(), targetClass, (member) -> 
+					ConstructorCriteria.withoutConsideringParentClasses(), targetClass, (member) ->
 					setAccessible(member, true)
 				);
 			}
 		);
 		return members;
 	}
-	
+
 	public MethodHandle findDirectHandle(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
 		return findDirectHandleBox(targetClass, inputParameterTypesOrSubTypes).getHandler();
 	}
-	
+
 	private Members.Handler.OfExecutable.Box<Constructor<?>> findDirectHandleBox(Class<?> targetClass, Class<?>... inputParameterTypesOrSubTypes) {
 		String nameForCaching = retrieveNameForCaching(targetClass);
 		String cacheKey = getCacheKey(targetClass, "equals " + nameForCaching, inputParameterTypesOrSubTypes);
@@ -172,8 +172,8 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			);
 		}
 		return entry;
-	}	
-	
+	}
+
 	@Override
 	MethodHandle retrieveMethodHandle(MethodHandles.Lookup consulter, Constructor<?> constructor) throws NoSuchMethodException, IllegalAccessException {
 		return consulter.findConstructor(
@@ -181,12 +181,12 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			MethodType.methodType(void.class, constructor.getParameterTypes())
 		);
 	}
-	
+
 	@Override
 	String retrieveNameForCaching(Constructor<?> constructor) {
 		return retrieveNameForCaching(constructor.getDeclaringClass());
 	}
-	
+
 	String retrieveNameForCaching(Class<?> cls) {
 		return Classes.retrieveSimpleName(cls.getName());
 	}

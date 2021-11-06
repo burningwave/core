@@ -42,20 +42,20 @@ public final class ByteBufferInputStream extends InputStream {
         this.buffer = BufferHandler.shareContent(buffer);
         this.bufferCopy = BufferHandler.shareContent(buffer);
     }
-    
+
     public ByteBuffer getBuffer() {
     	return buffer;
     }
-    
+
     public ByteBuffer toByteBuffer() {
 		return BufferHandler.duplicate(bufferCopy);
 	}
-    
+
     @Override
     public synchronized void reset() throws IOException {
     	buffer = BufferHandler.duplicate(toByteBuffer());
     }
-    
+
     @Override
 	public int read() {
         if (!buffer.hasRemaining()) {
@@ -74,7 +74,7 @@ public final class ByteBufferInputStream extends InputStream {
         buffer.get(bytes, off, len);
         return len;
     }
-    
+
     @Override
     public void close() throws IOException {
     	this.buffer = null;

@@ -53,38 +53,38 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 	private PathHelper pathHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
 	private Properties config;
-	
+
 	CodeExecutorImpl(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
 		Properties config
-	) {	
+	) {
 		this.classFactorySupplier = classFactorySupplier;
 		this.pathHelper = pathHelper;
 		this.config = config;
 		listenTo(config);
 	}
-	
+
 	private ClassFactory getClassFactory() {
 		return classFactory != null? classFactory :
 			(classFactory = classFactorySupplier.get());
 	}
-	
+
 	@Override
 	public <T> T executeProperty(String propertyName, Object... params) {
 		return execute(ExecuteConfig.forProperty(propertyName).withParameter(params));
 	}
-	
+
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config) {
 		java.util.Properties properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
-				properties = this.config; 
+				properties = this.config;
 			} else {
 				Properties tempProperties = new Properties();
 				if (config.isAbsoluteFilePath()) {
-					Executor.run(() -> 
+					Executor.run(() ->
 						tempProperties.load(FileSystemItem.ofPath(config.getFilePath()).toInputStream())
 					);
 				} else {
@@ -94,9 +94,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 				properties = tempProperties;
 			}
-			
+
 		}
-		
+
 		BodySourceGenerator body = config.getBody();
 		if (config.getParams() != null && config.getParams().length > 0) {
 			for (Object param : config.getParams()) {
@@ -143,7 +143,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			.on(properties)
 			.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
 			.deleteUnresolvedPlaceHolder(true)
-			.withDefaultValues(config.getDefaultValues())	
+			.withDefaultValues(config.getDefaultValues())
 		);
 		if (code.contains(";")) {
 			if (config.isIndentCodeActive()) {
@@ -178,24 +178,24 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				.on(properties)
 				.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
 				.deleteUnresolvedPlaceHolder(true)
-				.withDefaultValues(config.getDefaultValues())		
+				.withDefaultValues(config.getDefaultValues())
 			);
 			if (value != null) {
 				return value;
 			}
 		}
 		return null;
-	}		
-	
+	}
+
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {
 		return execute((E)ExecuteConfig.forBodySourceGenerator(body));
 	}
-	
+
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(
 		E config
-	) {	
+	) {
 		Object executeClient = new Object() {};
 		ClassLoader defaultClassLoader = null;
 		ClassLoader parentClassLoader = config.getParentClassLoader();
@@ -246,11 +246,11 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			}
 		}
 	}
-	
+
 	@Override
 	public <E extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<E>, T extends Executable> Class<T> loadOrBuildAndDefineExecutorSubType(
 		E config
-	) {	
+	) {
 		ClassFactory.ClassRetriever classRetriever = getClassFactory().loadOrBuildAndDefine(
 			config
 		);
@@ -260,7 +260,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		classRetriever.close();
 		return executableClass;
 	}
-	
+
 	@Override
 	public void close() {
 		unregister(config);

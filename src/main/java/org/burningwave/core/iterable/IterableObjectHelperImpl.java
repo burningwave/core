@@ -71,7 +71,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
 
-	
+
 	IterableObjectHelperImpl(Properties config) {
 		this.defaultValuesSeparator = resolveStringValue(
 			ResolveConfig.ForNamedKey.forNamedKey(
@@ -103,7 +103,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator;
 	}
-	
+
 
 	@Override
 	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate() {
@@ -123,7 +123,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			return Runtime.getRuntime().availableProcessors() * 12;
 		}
 	}
-	
+
 	@Override
 	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
@@ -137,7 +137,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 		}
 	}
-	
+
 	@Override
 	public <K, V> void deepClear(Map<K,V> map) {
 		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
@@ -146,7 +146,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			itr.remove();
 		}
 	}
-	
+
 	@Override
 	public <K, V, E extends Throwable> void deepClear(Map<K,V> map, ThrowingBiConsumer<K, V, E> itemDestroyer) throws E {
 		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
@@ -156,7 +156,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			itemDestroyer.accept(entry.getKey(), entry.getValue());
 		}
 	}
-	
+
 	@Override
 	public <V> void deepClear(Collection<V> map) {
 		Iterator<V> itr = map.iterator();
@@ -165,7 +165,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			itr.remove();
 		}
 	}
-	
+
 	@Override
 	public <V, E extends Throwable > void deepClear(Collection<V> map, ThrowingConsumer<V, E> itemDestroyer) throws E {
 		Iterator<V> itr = map.iterator();
@@ -174,7 +174,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			itemDestroyer.accept(itr.next());
 		}
 	}
-	
+
 	@Override
 	public <T> Collection<T> merge(
 		Supplier<Collection<T>> baseCollectionSupplier,
@@ -192,7 +192,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return mergedCollection;
 	}
-	
+
 	@Override
 	public <T> T getRandom(Collection<T> coll) {
 		int num = (int) (Math.random() * coll.size());
@@ -201,7 +201,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	    }
 	    return null;
 	}
-	
+
 	@Override
 	public <T> Stream<T> retrieveStream(Object object) {
 		Stream<T> stream = null;
@@ -223,72 +223,72 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 
 /////////////
-	
+
 	@Override
 	public <T> T resolveValue(ResolveConfig.ForNamedKey config) {
 		return resolveValue(
-			config.filter, () -> 
+			config.filter, () ->
 			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
-				config.deleteUnresolvedPlaceHolder, config.defaultValues
-			)
-		);
-	}	
-	
-	@Override
-	public <K, T> T resolveValue(ResolveConfig.ForAllKeysThat<K> config) {
-		return resolveValue(
-			config.filter, () -> 
-			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
 		);
 	}
-		
+
+	@Override
+	public <K, T> T resolveValue(ResolveConfig.ForAllKeysThat<K> config) {
+		return resolveValue(
+			config.filter, () ->
+			resolve(
+				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+				config.deleteUnresolvedPlaceHolder, config.defaultValues
+			)
+		);
+	}
+
 	@Override
 	public String resolveStringValue(ResolveConfig.ForNamedKey config) {
 		return resolveValue(config);
 	}
-	
+
 	@Override
 	public <K> String resolveStringValue(ResolveConfig.ForAllKeysThat<K> config) {
 		return resolveValue(config);
 	}
 
-	
+
 	@Override
 	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
-	
+
 	@Override
 	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return (Map<K, V>) resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
-	
+
 	@Override
 	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
-	
+
 	@Override
 	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator, 
+			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
-	
+
 	private <T> T resolveValue(Object key, Supplier<Object> valuesSupplier) {
 		Object value = valuesSupplier.get();
 		if (value instanceof Collection) {
@@ -299,9 +299,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
 			return (T)value;
-		}	
+		}
 	}
-	
+
 	private <K, V> Map<K, V> resolveForKeys(
 		Map<?,?> map,
 		Predicate<K> keyPredicate,
@@ -317,7 +317,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					keys.add((K)key);
 				}
 			} catch (ClassCastException exc) {
-				
+
 			}
 		}
 		if (defaultValues != null) {
@@ -327,7 +327,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						keys.add((K)key);
 					}
 				} catch (ClassCastException exc) {
-					
+
 				}
 			}
 		}
@@ -337,8 +337,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				key,
 				resolve(
 					map, key,
-					valuesSeparator, 
-					defaultValueSeparator, 
+					valuesSeparator,
+					defaultValueSeparator,
 					deleteUnresolvedPlaceHolder,
 					defaultValues
 				)
@@ -346,7 +346,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return values;
 	}
-	
+
 	private <T> T resolve(
 		Map<?,?> map,
 		Object key,
@@ -354,7 +354,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		String defaultValueSeparator,
 		boolean deleteUnresolvedPlaceHolder,
 		Map<?,?> defaultValues
-	) {	
+	) {
 		String valuesSeparatorForSplitting = valuesSeparator != null ? valuesSeparator : defaultValueSeparator != null ? defaultValueSeparator : defaultValuesSeparator;
 		T value = (T) map.get(key);
 		if (value == null && defaultValues != null) {
@@ -364,7 +364,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			String stringValue = (String)value;
 			Collection<Object> values = new IterableObjectHelperImpl.ArrayList<>();
 			if (!Strings.isEmpty(stringValue)) {
-				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
+				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 						for (String placeHolder : entry.getValue()) {
@@ -398,9 +398,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								regExpPattern = "(.*?"+ Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
 							}
 							Map<Integer, List<String>> placeHolderedValues = Strings.extractAllGroups(
-								Pattern.compile(regExpPattern), stringValue 
-							);					
-							for (Map.Entry<Integer, List<String>> placeHolderedValuesEntry : placeHolderedValues.entrySet()) {												
+								Pattern.compile(regExpPattern), stringValue
+							);
+							for (Map.Entry<Integer, List<String>> placeHolderedValuesEntry : placeHolderedValues.entrySet()) {
 								for (String placeHolderedValue : placeHolderedValuesEntry.getValue()) {
 									String newReplacement = "";
 									for (Object valueObject : replacements) {
@@ -419,7 +419,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										}
 									}
 									stringValue = stringValue.replace(placeHolderedValue, newReplacement);
-								}										
+								}
 							}
 						}
 					}
@@ -446,18 +446,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		} else {
 			return value;
 		}
-		
+
 	}
-	
+
 	@Override
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map) {
 		return getAllPlaceHolders(map, object -> true);
 	}
-	
+
 	@Override
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter) {
 		Collection<String> placeHolders = new HashSet<>();
-		for (Map.Entry<?, ?> entry : map.entrySet().stream().filter(entry -> 
+		for (Map.Entry<?, ?> entry : map.entrySet().stream().filter(entry ->
 				(entry.getValue() == null || entry.getValue() instanceof String) && (entry.getKey() instanceof String && propertyFilter.test((String)entry.getKey()))
 			).collect(Collectors.toSet())) {
 			String value = (String)entry.getValue();
@@ -467,7 +467,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return placeHolders;
 	}
-	
+
 	@Override
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName) {
 		Collection<String> placeHolders = getAllPlaceHolders(map);
@@ -479,12 +479,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return placeHolders;
 	}
-	
+
 	@Override
 	public boolean containsValue(Map<?, ?> map, String key, Object object) {
-		return containsValue(map, key, object, null);		
+		return containsValue(map, key, object, null);
 	}
-	
+
 	@Override
 	public <K, V> void refresh(Map<K, V> source, Map<K, V> newValues) {
 		Collection<K> keyToBeRemoved = new HashSet<>();
@@ -499,20 +499,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				}
 			} else {
 				keyToBeRemoved.add(key);
-			}			
+			}
 		}
-		
+
 		for(Map.Entry<K, V> keyAndValue : newValues.entrySet()) {
 			K key = keyAndValue.getKey();
 			if (!source.containsKey(key)) {
 				keyAndValuesToBePut.put(key, keyAndValue.getValue());
 			}
 		}
-		
+
 		source.keySet().removeAll(keyToBeRemoved);
 		source.putAll(keyAndValuesToBePut);
 	}
-	
+
 	@Override
 	public boolean containsValue(Map<?, ?> map, String key, Object object, Map<?, ?> defaultValues) {
 		Object value = map.get(key);
@@ -532,7 +532,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							return true;
 						}
 					}
-					Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);		
+					Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);
 					if (!subProperties.isEmpty()) {
 						for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
 							for (String propName : entry.getValue()) {
@@ -542,11 +542,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					}
 				}
 			}
-		}		
+		}
 		return object != null && value != null && object.equals(value);
 	}
 
-	
+
 	@Override
 	public <I, O> Collection<O> iterate(
 		IterationConfig<I, O> config
@@ -570,7 +570,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					isConcurrent(outputCollection) ?
 						(outputCollectionConsumer) -> {
 							outputCollectionConsumer.accept(outputCollection);
-						} : 
+						} :
 						(outputCollectionConsumer) -> {
 							synchronized (outputCollection) {
 								outputCollectionConsumer.accept(outputCollection);
@@ -623,12 +623,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				if (initialThreadPriority != priority) {
 					currentThread.setPriority(initialThreadPriority);
 				}
-			}			
+			}
 		}
 		return outputCollection;
 	}
 
-	
+
 	private boolean isConcurrent(Collection<?> coll) {
 		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView
 		return
@@ -639,38 +639,38 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			Classes.java_util_concurrent_ConcurrentHashMap_CollectionViewClass.isAssignableFrom(coll.getClass()) ||
 			coll.getClass().getName().startsWith(ConcurrentHashMap.class.getName());
 	}
-	
+
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
 		String keyValueLabel = margin + entry.getKey() + "=\\\n" + margin + "\t" + entry.getValue().toString().replace(valuesSeparator, valuesSeparator + "\\\n" + margin +"\t");
 		keyValueLabel = keyValueLabel.endsWith(valuesSeparator + "\\\n" + margin +"\t")? keyValueLabel.substring(0, keyValueLabel.lastIndexOf("\\\n" + margin + "\t")) : keyValueLabel;
 		return keyValueLabel;
 	}
-	
+
 	@Override
 	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount) {
 		TreeMap<?, ?> allValues = map instanceof TreeMap ? (TreeMap<?, ?>)map : new TreeMap<>(map);
 		return allValues.entrySet().stream().map(entry -> toPrettyKeyValueLabel(entry, valuesSeparator, marginTabCount)).collect(Collectors.joining("\n"));
-	}	
-	
+	}
+
 	@Override
 	public <K, V> String toString(Map<K, V> map, int marginTabCount) {
 		return toString(map, key -> key.toString(), value -> value.toString(), marginTabCount);
 	}
-	
+
 	@Override
 	public <K, V> String toString(Map<K, V> map, Function<K, String> keyTransformer, Function<V,String> valueTransformer,int marginTabCount) {
 		TreeMap<K, V> allValues = map instanceof TreeMap ? (TreeMap<K, V>)map : new TreeMap<>(map);
 		String margin = new String(new char[marginTabCount]).replace('\0', '\t');
-		return allValues.entrySet().stream().map(entry -> 
+		return allValues.entrySet().stream().map(entry ->
 			margin + keyTransformer.apply(entry.getKey()) + "=" + Optional.ofNullable(entry.getValue()).map(value -> valueTransformer.apply(value)).orElseGet(() -> "null")
 		).collect(Collectors.joining("\n"));
 	}
-	
+
 	private class ArrayList<E> extends java.util.ArrayList<E> {
 
 		private static final long serialVersionUID = -8096435103182655041L;
-		
+
 	}
 
 }

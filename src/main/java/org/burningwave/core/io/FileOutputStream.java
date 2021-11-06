@@ -38,7 +38,7 @@ import org.burningwave.core.function.Executor;
 public class FileOutputStream extends java.io.FileOutputStream implements Serializable, Component{
 
 	private static final long serialVersionUID = -5546948914644351678L;
-	
+
 	private File file;
 
 
@@ -46,37 +46,37 @@ public class FileOutputStream extends java.io.FileOutputStream implements Serial
 		this(file, false);
 	}
 
-	
+
 	private FileOutputStream(File file, boolean append)
 			throws FileNotFoundException {
 		super(file, append);
 		this.file = file;
 	}
-	
+
 	public static FileOutputStream create(File file, boolean append) {
 		return Executor.get(() -> new FileOutputStream(file, append));
 	}
-	
+
 	public static FileOutputStream create(File file) {
 		return Executor.get(() -> new FileOutputStream(file));
 	}
-	
+
 	public static FileOutputStream create(String absolutePath, boolean append)
 			throws FileNotFoundException {
 		return new FileOutputStream(absolutePath != null ? new File(absolutePath) : null, append);
 	}
 
-	
+
 	public static FileOutputStream create(String absolutePath) throws FileNotFoundException {
 		return new FileOutputStream(absolutePath != null ? new File(absolutePath) : null, false);
 	}
-	
+
 	@Override
 	public void close() {
 		Executor.run(() -> super.close());
 		file = null;
 	}
-	
+
 	public File getFile() {
 		return this.file;
 	}

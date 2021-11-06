@@ -59,20 +59,20 @@ public class FileSystemHelper implements Component {
 	private File mainTemporaryFolder;
 	private String id;
 	private Scavenger scavenger;
-	
+
 	private FileSystemHelper(String name) {
 		this.name = name;
 		id = UUID.randomUUID().toString() + "_" + System.currentTimeMillis();
 	}
-	
+
 	public static FileSystemHelper create(String name) {
 		return new FileSystemHelper(name);
 	}
-	
+
 	public void clearBurningwaveTemporaryFolder() {
 		delete(Arrays.asList(getOrCreateBurningwaveTemporaryFolder().listFiles()));
 	}
-	
+
 	public void clearMainTemporaryFolder() {
 		if (this.mainTemporaryFolder != null) {
 			synchronized(this) {
@@ -80,14 +80,14 @@ public class FileSystemHelper implements Component {
 				if (mainTemporaryFolder != null) {
 					delete(mainTemporaryFolder);
 				}
-			};
+			}
 		}
 	}
-	
+
 	public File getOrCreateBurningwaveTemporaryFolder() {
 		return getOrCreateMainTemporaryFolder().getParentFile();
 	}
-	
+
 	public File getOrCreateMainTemporaryFolder() {
 		if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 			return mainTemporaryFolder;
@@ -95,7 +95,7 @@ public class FileSystemHelper implements Component {
 		synchronized(this) {
 			if (mainTemporaryFolder != null && mainTemporaryFolder.exists()) {
 				return mainTemporaryFolder;
-			}			
+			}
 			if (mainTemporaryFolder != null && !mainTemporaryFolder.exists()) {
 				mainTemporaryFolder.mkdirs();
 				return mainTemporaryFolder;
@@ -115,7 +115,7 @@ public class FileSystemHelper implements Component {
 			return mainTemporaryFolder;
 		}
 	}
-	
+
 	public File getOrCreatePingFile() {
 		File pingFile = new File(Paths.clean(getOrCreateBurningwaveTemporaryFolder() .getAbsolutePath() + "/" + id + ".ping"));
 		if (!pingFile.exists()) {
@@ -124,7 +124,7 @@ public class FileSystemHelper implements Component {
 		}
 		return pingFile;
 	}
-	
+
 	public File createTemporaryFolder(String folderName) {
 		return Executor.get(() -> {
 			File tempFolder = new File(getOrCreateMainTemporaryFolder().getAbsolutePath() + "/" + folderName);
@@ -135,7 +135,7 @@ public class FileSystemHelper implements Component {
 			return tempFolder;
 		});
 	}
-	
+
 	@Override
 	public File getOrCreateTemporaryFolder(String folderName) {
 		return Executor.get(() -> {
@@ -146,7 +146,7 @@ public class FileSystemHelper implements Component {
 			return tempFolder;
 		});
 	}
-	
+
 	public void delete(Collection<File> files) {
 		if (files != null) {
 			Iterator<File> itr = files.iterator();
@@ -154,11 +154,11 @@ public class FileSystemHelper implements Component {
 				File file = itr.next();
 				if (file.exists()) {
 					delete(file);
-				};
+				}
 			}
 		}
 	}
-	
+
 	public boolean delete(File file) {
 		if (file.isDirectory()) {
 		    File[] files = file.listFiles();
@@ -174,7 +174,7 @@ public class FileSystemHelper implements Component {
     	}
 		return true;
 	}
-	
+
 	public void deleteOnExit(File file) {
 		if (file.isDirectory()) {
 		    File[] files = file.listFiles();
@@ -186,15 +186,15 @@ public class FileSystemHelper implements Component {
 		}
 		file.deleteOnExit();
 	}
-	
+
 	public boolean delete(String absolutePath) {
-		return delete(new File(absolutePath));	
+		return delete(new File(absolutePath));
 	}
-	
+
 	public void deleteOnExit(String absolutePath) {
-		deleteOnExit(new File(absolutePath));	
+		deleteOnExit(new File(absolutePath));
 	}
-	
+
 	public void startSweeping() {
 		if (scavenger == null) {
 			synchronized(this) {
@@ -205,23 +205,23 @@ public class FileSystemHelper implements Component {
 		}
 		scavenger.start();
 	}
-	
+
 	public void stopSweeping() {
 		if (scavenger != null) {
 			scavenger.stop();
 		}
 	}
-	
+
 	private String getTemporaryFileScavengerThreadName() {
 		return Optional.ofNullable(name).map(nm -> nm + " - ").orElseGet(() -> "") + "Temporary file scavenger";
 	}
-	
+
 
 	@Override
 	public void close() {
-		if (this != StaticComponentContainer.FileSystemHelper || 
+		if (this != StaticComponentContainer.FileSystemHelper ||
 			Methods.retrieveExternalCallerInfo().getClassName().equals(StaticComponentContainer.class.getName())
-		) {	
+		) {
 			Scavenger scavenger = this.scavenger;
 			if (scavenger != null) {
 				scavenger.close();
@@ -233,12 +233,12 @@ public class FileSystemHelper implements Component {
 					id = null;
 					mainTemporaryFolder = null;
 				}
-			};
+			}
 		} else {
 			Driver.throwException("Could not close singleton instance {}", this);
 		}
 	}
-	
+
 	public static class Scavenger implements ManagedLogger, Closeable {
 		private String name;
 		private FileSystemHelper fileSystemHelper;
@@ -246,7 +246,7 @@ public class FileSystemHelper implements Component {
 		private long waitInterval;
 		private File burningwaveTemporaryFolder;
 		long lastDeletionStartTime;
-		
+
 		private Scavenger(FileSystemHelper fileSystemHelper, String name, long deletingInterval, long waitInterval) {
 			this.fileSystemHelper = fileSystemHelper;
 			this.deletingInterval = deletingInterval;
@@ -272,7 +272,7 @@ public class FileSystemHelper implements Component {
 				for (File fileSystemItem : burningwaveTemporaryFolder.listFiles()) {
 					try {
 						if (!fileSystemItem.getName().equals(fileSystemHelper.getOrCreateMainTemporaryFolder().getName()) &&
-							!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName()) 
+							!fileSystemItem.getName().equals(fileSystemHelper.getOrCreatePingFile().getName())
 						) {
 							try {
 								try {
@@ -286,7 +286,7 @@ public class FileSystemHelper implements Component {
 										}
 										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
 											delete(fileSystemItem);
-										}							
+										}
 									} else if (fileSystemItem.getName().endsWith("ping")) {
 										long pingTime = getOrSetPingTime(fileSystemItem);
 										if (System.currentTimeMillis() - pingTime >= deletingInterval) {
@@ -310,12 +310,12 @@ public class FileSystemHelper implements Component {
 					} catch (Throwable exc) {
 						if (fileSystemHelper != null) {
 							ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
-						}						
+						}
 					}
 				}
 			}
 		}
-		
+
 		public void start() {
 			lastDeletionStartTime = -1;
 			ThreadHolder.startLooping(name, true, Thread.MIN_PRIORITY, thread -> {
@@ -337,12 +337,12 @@ public class FileSystemHelper implements Component {
 			}
 			return pingTime;
 		}
-		
+
 		long setPingTime(String absolutePath) throws IOException {
 			long pingTime = System.currentTimeMillis();
 			Files.write(
 				java.nio.file.Paths.get(absolutePath),
-				(String.valueOf(pingTime) + ";").getBytes(), 
+				(String.valueOf(pingTime) + ";").getBytes(),
 				StandardOpenOption.TRUNCATE_EXISTING
 			);
 			return getPingTime(new File(absolutePath));
@@ -364,23 +364,23 @@ public class FileSystemHelper implements Component {
 			}
 			return pingTime;
 		}
-		
+
 		public void stop() {
 			ThreadHolder.stop(name);
 		}
-		
+
 		@Override
 		public void close() {
-			closeResources(() -> 
-					burningwaveTemporaryFolder == null, 
+			closeResources(() ->
+					burningwaveTemporaryFolder == null,
 				task -> {
 					stop();
 					burningwaveTemporaryFolder = null;
 					fileSystemHelper = null;
 				}
 			);
-		}	
-		
+		}
+
 	}
-	
+
 }

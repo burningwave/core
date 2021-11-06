@@ -72,20 +72,20 @@ class PathHelperImpl implements Component, PathHelper {
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
 	private String pathsSeparator;
-	
+
 	PathHelperImpl(Properties config) {
 		this.config = config;
 		pathsSeparator = Configuration.getPathsSeparator();
 		listenTo(config);
-		launchAllPathsLoadingTask();		
+		launchAllPathsLoadingTask();
 	}
 
 	private void launchAllPathsLoadingTask() {
 		initializerTask = BackgroundExecutor.createTask(task -> {
 			try {
 				pathGroups = new ConcurrentHashMap<>();
-				allPaths = ConcurrentHashMap.newKeySet();			
-				loadMainClassPaths();	
+				allPaths = ConcurrentHashMap.newKeySet();
+				loadMainClassPaths();
 				loadAllPaths();
 			} finally {
 				initializerTask = null;
@@ -93,7 +93,7 @@ class PathHelperImpl implements Component, PathHelper {
 		}, Thread.MAX_PRIORITY);
 		initializerTask.submit();
 	}
-	
+
 	@Override
 	public <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V oldValue) {
 		if (key instanceof String) {
@@ -106,9 +106,9 @@ class PathHelperImpl implements Component, PathHelper {
 				}
 			}
 		}
-		
+
 	}
-	
+
 	private void loadMainClassPaths() {
 		Collection<String> placeHolders = config.getAllPlaceHolders(Configuration.Key.MAIN_CLASS_PATHS);
 		if (placeHolders.contains("${system.properties:java.class.path}")) {
@@ -119,7 +119,7 @@ class PathHelperImpl implements Component, PathHelper {
 			);
 		}
 	}
-	
+
 	private void loadAllPaths() {
 		for (Object pathGroupNameObject : config.keySet()) {
 			String pathGroupName = (String) pathGroupNameObject;
@@ -128,29 +128,29 @@ class PathHelperImpl implements Component, PathHelper {
 			}
 		}
 	}
-	
+
 	@Override
 	public String getBurningwaveRuntimeClassPath() {
 		return Resources.getClassPath(this.getClass()).getAbsolutePath();
 	}
-	
+
 	@Override
 	public Collection<String> getMainClassPaths() {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS);
 	}
-	
+
 	@Override
 	public Collection<String> getAllMainClassPaths() {
 		return getPaths(Configuration.Key.MAIN_CLASS_PATHS, Configuration.Key.MAIN_CLASS_PATHS_EXTENSION);
 	}
-	
+
 	private void waitForInitialization() {
 		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
 			initializerTask.waitForFinish();
 		}
 	}
-	
+
 	@Override
 	public Collection<String> getAllPaths() {
 		waitForInitialization();
@@ -158,7 +158,7 @@ class PathHelperImpl implements Component, PathHelper {
 		allPaths.addAll(this.allPaths);
 		return allPaths;
 	}
-	
+
 	@Override
 	public Collection<String> getPaths(String... names) {
 		waitForInitialization();
@@ -178,12 +178,12 @@ class PathHelperImpl implements Component, PathHelper {
 						pathGroup.addAll(pathsFound);
 					}
 				}
-				
+
 			}
 		}
 		return pathGroup;
 	}
-	
+
 	private Collection<String> getOrCreatePathGroup(String groupName) {
 		groupName = groupName.startsWith(Configuration.Key.PATHS_PREFIX) ?
 			groupName.substring(Configuration.Key.PATHS_PREFIX.length()):
@@ -199,7 +199,7 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return classPathsGroup;
 	}
-	
+
 	@Override
 	public Collection<String> loadAndMapPaths(String pathGroupName, String paths) {
 		waitForInitialization();
@@ -238,11 +238,11 @@ class PathHelperImpl implements Component, PathHelper {
 					}
 					for (String placeHolderPath : placeHolderPaths) {
 						defaultValues.put(placeHolderName,
-						Optional.ofNullable(defaultValues.get(placeHolderName)).map(pHP -> 
-							pHP + 
+						Optional.ofNullable(defaultValues.get(placeHolderName)).map(pHP ->
+							pHP +
 							(pHP.endsWith(pathsSeparator)?
 								"" : pathsSeparator) +
-							placeHolderPath + 
+							placeHolderPath +
 							(placeHolderPath.endsWith(pathsSeparator)?
 								"" : pathsSeparator)
 						).orElseGet(() -> {
@@ -261,8 +261,8 @@ class PathHelperImpl implements Component, PathHelper {
 			}
 		}
 		return groupPaths;
-	}	
-	
+	}
+
 	private Collection<String> addPaths(String groupName, Collection<String> paths) {
 		if (paths != null) {
 			Collection<String> pathGroup = getOrCreatePathGroup(groupName);
@@ -310,7 +310,7 @@ class PathHelperImpl implements Component, PathHelper {
 			return Driver.throwException("classPaths parameter is null");
 		}
 	}
-	
+
 	@Override
 	public Collection<FileSystemItem> findResources(Predicate<String> absolutePathPredicate) {
 		Collection<FileSystemItem> resources = new HashSet<>();
@@ -320,12 +320,12 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return resources;
 	}
-	
+
 	@Override
 	public Collection<String> getAbsolutePathsOfResources(Predicate<String> absolutePathPredicate) {
 		return findResources(absolutePathPredicate).stream().map(fSI -> fSI.getAbsolutePath()).collect(Collectors.toSet());
 	}
-	
+
 	@Override
 	public String getAbsolutePathOfResource(String resourceRelativePath) {
 		return Optional.ofNullable(
@@ -337,25 +337,25 @@ class PathHelperImpl implements Component, PathHelper {
 			return null;
 		});
 	}
-	
+
 	@Override
 	public Collection<String> getAbsolutePathsOfResource(String... resourceRelativePath) {
 		return getResources(resourceRelativePath).stream().map(fSI -> fSI.getAbsolutePath()).collect(Collectors.toSet());
 	}
-	
+
 	@Override
 	public Collection<FileSystemItem> getResources(String... resourcesRelativePaths) {
 		return getResources((coll, file) -> coll.add(file), resourcesRelativePaths);
 	}
-	
+
 	@Override
 	public FileSystemItem getResource(String resourceRelativePath) {
 		return getResource(
-				(coll, file) -> 
+				(coll, file) ->
 					coll.add(file), resourceRelativePath);
 	}
-	
-	
+
+
 	@Override
 	public <T> Collection<T> getResources(
 		BiConsumer<Collection<T>, FileSystemItem> fileConsumer,
@@ -374,8 +374,8 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return files;
 	}
-	
-	
+
+
 	@Override
 	public <T> T getResource(BiConsumer<Collection<T>, FileSystemItem> fileConsumer, String resourceRelativePath) {
 		Collection<T> files = getResources(fileConsumer, resourceRelativePath);
@@ -399,24 +399,24 @@ class PathHelperImpl implements Component, PathHelper {
 					System.identityHashCode(fileSystemItem) + ": " + fileSystemItem.getAbsolutePath() + "\twill be assumed\n"
 				);
 				return (T)fileSystemItem;
-			}			
+			}
 		}
 		return files.stream().findFirst().orElse(null);
 	}
-	
+
 	@Override
 	public Collection<InputStream> getResourcesAsStreams(String... resourcesRelativePaths) {
 		return getResources((coll, fileSystemItem) -> coll.add(fileSystemItem.toInputStream()), resourcesRelativePaths);
 	}
-	
+
 	@Override
 	public InputStream getResourceAsStream(String resourceRelativePath) {
 		return getResource((coll, fileSystemItem) ->
-			coll.add(fileSystemItem.toInputStream()), 
+			coll.add(fileSystemItem.toInputStream()),
 			resourceRelativePath
 		);
 	}
-	
+
 	@Override
 	public StringBuffer getResourceAsStringBuffer(String resourceRelativePath) {
 		return Executor.get(() -> {
@@ -430,12 +430,12 @@ class PathHelperImpl implements Component, PathHelper {
 			}
 		});
 	}
-	
+
 	@Override
 	public Collection<String> optimize(String... paths) {
 		return optimize(Arrays.asList(paths));
 	}
-	
+
 	@Override
 	public Collection<String> optimize(Collection<String> paths) {
 		Collection<String> copyOfPaths = new HashSet<>();
@@ -464,14 +464,14 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return paths;
 	}
-	
-	
+
+
 	@Override
 	public Collection<FileSystemItem> optimizeFileSystemItems(FileSystemItem... paths) {
 		return optimizeFileSystemItems(Arrays.asList(paths));
 	}
-	
-	
+
+
 	@Override
 	public Collection<FileSystemItem> optimizeFileSystemItems(Collection<FileSystemItem> paths) {
 		Collection<FileSystemItem> copyOfPaths = new HashSet<>(paths);
@@ -494,13 +494,13 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return paths;
 	}
-	
-	
+
+
 	@Override
 	public Collection<String> getPaths(Predicate<String> pathPredicate) {
 		return getAllPaths().stream().filter(pathPredicate).collect(Collectors.toSet());
 	}
-	
+
 	@Override
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
@@ -509,12 +509,12 @@ class PathHelperImpl implements Component, PathHelper {
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}
-	
+
 	@Override
 	public void close() {
 		closeResources(() -> pathGroups == null, task -> {
 			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
-			if (initializerTask != null) {	
+			if (initializerTask != null) {
 				initializerTask.abortOrWaitForFinish();
 			}
 			unregister(config);
@@ -528,6 +528,6 @@ class PathHelperImpl implements Component, PathHelper {
 			allPaths = null;
 			pathsSeparator = null;
 			config = null;
-		});		
+		});
 	}
 }

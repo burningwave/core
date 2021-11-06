@@ -51,39 +51,39 @@ import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
-	
+
 	public static class Configuration {
 		public static class Key {
-			
-			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-option";		
+
+			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-option";
 			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";
-						
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-	
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
-	
+
 			defaultValues.put(
-				Key.DEFAULT_SEARCH_CONFIG_PATHS, 
+				Key.DEFAULT_SEARCH_CONFIG_PATHS,
 				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() + 
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() +
 				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
 			);
 			defaultValues.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,
 				"${" + PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION + "}"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	public R find();
-	
+
 	public R findBy(SearchConfig searchConfig);
-	
+
 	static abstract class Abst<I, C extends SearchContext<I>, R extends SearchResult<I>> implements Component {
 
 		PathHelper pathHelper;
@@ -93,7 +93,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		Collection<SearchResult<I>> searchResults;
 		String instanceId;
 		ClassLoaderManager<PathScannerClassLoader> defaultPathScannerClassLoaderManager;
-		
+
 		Abst(
 			PathHelper pathHelper,
 			Function<InitContext, C> contextSupplier,
@@ -112,7 +112,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			);
 			listenTo(config);
 		}
-		
+
 		@Override
 		public <K, V> void processChangeNotification(
 			Properties properties, Event event, K key, V newValue,
@@ -126,22 +126,22 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 					}
 				}
 			}
-		}	
-		
+		}
+
 		abstract String getNameInConfigProperties();
-		
+
 		abstract String getDefaultPathScannerClassLoaderNameInConfigProperties();
-		
+
 		abstract String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties();
 
 		PathScannerClassLoader getDefaultPathScannerClassLoader(Object client) {
 			return defaultPathScannerClassLoaderManager.get(client);
 		}
-		
+
 		public R find() {
 			return findBy(SearchConfig.create());
 		}
-		
+
 		//Not cached search
 		public R findBy(SearchConfig input) {
 			SearchConfig searchConfig = input.isInitialized() ? input : input.createCopy();
@@ -164,7 +164,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
 					).withPriority(
 						searchConfig.priority
-					)				
+					)
 				);
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
@@ -177,7 +177,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
 					).withPriority(
 						searchConfig.priority
-					)	
+					)
 				);
 				Collection<String> skippedClassesNames = context.getSkippedClassNames();
 				if (!skippedClassesNames.isEmpty()) {
@@ -212,7 +212,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 				return Synchronizer.execute(pathScannerClassLoader.instanceId + "_" + currentScannedPath.getAbsolutePath(), () -> {
 					Boolean loadPathCompletely = null;
 					FileSystemItem.Criteria allFileFiltersInternal = allFileFilters;
-					if (searchConfig.getRefreshPathIf().test(currentScannedPath) || 
+					if (searchConfig.getRefreshPathIf().test(currentScannedPath) ||
 						!pathScannerClassLoader.hasBeenCompletelyLoaded(currentScannedPath.getAbsolutePath())) {
 						if (!searchConfig.isFileFilterExternallySet() &&
 							searchConfig.getFindFunction(currentScannedPath) != FileSystemItem.Find.IN_CHILDREN) {
@@ -229,7 +229,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							currentScannedPath
 						) ? currentScannedPath.refresh() : currentScannedPath,
 						allFileFiltersInternal
-					); 
+					);
 					if (loadPathCompletely != null) {
 						pathScannerClassLoader.loadedPaths.put(currentScannedPath.getAbsolutePath(), loadPathCompletely);
 					}
@@ -237,7 +237,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 				});
 			}
 		}
-		
+
 
 		FileSystemItem.Criteria getPathScannerClassLoaderFiller(
 			C context,
@@ -255,13 +255,13 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 				} catch (NullPointerException exc) {
 					if (javaClass != null) {
 						throw exc;
-					}					
+					}
 				}
 				return true;
 			});
 		}
 
-		
+
 		void testClassCriteriaAndAddItemsToContext(
 			C context,
 			Map.Entry<FileSystemItem, Collection<FileSystemItem>> currentScannedPathAndChildren
@@ -287,21 +287,21 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 								throw exc;
 							}
 						}
-					}		
+					}
 				).parallelIf(
 					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()
 				).withPriority(
 					allFileFilters.getPriority()
-				)				
+				)
 			);
 		}
 
-		
+
 		ClassCriteria.TestContext testClassCriteria(C context, JavaClass javaClass) {
 			return context.test(context.loadClass(javaClass.getName()));
 		}
-		
-		
+
+
 		abstract void addToContext(
 			C context,
 			ClassCriteria.TestContext criteriaTestContext,
@@ -309,28 +309,28 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			FileSystemItem currentIteratedFile,
 			JavaClass javaClass
 		);
-		
+
 		boolean register(SearchResult<I> searchResult) {
 			searchResults.add(searchResult);
 			return true;
 		}
-		
+
 		boolean unregister(SearchResult<I> searchResult) {
 			searchResults.remove(searchResult);
 			return true;
 		}
-		
+
 		public synchronized void closeSearchResults() {
 			Collection<SearchResult<I>> searchResults = this.searchResults;
 			if (searchResults != null) {
-				Iterator<SearchResult<I>> searchResultsIterator = searchResults.iterator();		
+				Iterator<SearchResult<I>> searchResultsIterator = searchResults.iterator();
 				while(searchResultsIterator.hasNext()) {
 					SearchResult<I> searchResult = searchResultsIterator.next();
 					searchResult.close();
 				}
 			}
 		}
-		
+
 		@Override
 		public void close() {
 			unregister(config);

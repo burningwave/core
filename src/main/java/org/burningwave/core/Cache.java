@@ -67,16 +67,16 @@ public class Cache implements ManagedLogger {
 	public final ObjectAndPathForResources<ClassLoader, Collection<Method>> uniqueKeyForMethods;
 	public final ObjectAndPathForResources<ClassLoader, Object> bindedFunctionalInterfaces;
 	public final ObjectAndPathForResources<ClassLoader, Members.Handler.OfExecutable.Box<?>> uniqueKeyForExecutableAndMethodHandle;
-	
+
 	private Cache() {
 		ManagedLoggersRepository.logInfo(getClass()::getName, "Building cache");
 		pathForContents = new PathForResources<>(BufferHandler::shareContent);
 		pathForFileSystemItems = new PathForResources<>(
-			(path, fileSystemItem) -> 
+			(path, fileSystemItem) ->
 				fileSystemItem.destroy()
 		);
 		pathForIterableZipContainers = new PathForResources<>(
-			(path, zipFileContainer) -> 
+			(path, zipFileContainer) ->
 				zipFileContainer.destroy()
 		);
 		classLoaderForFields = new ObjectAndPathForResources<>();
@@ -85,31 +85,31 @@ public class Cache implements ManagedLogger {
 		uniqueKeyForMethods = new ObjectAndPathForResources<>();
 		uniqueKeyForConstructors = new ObjectAndPathForResources<>();
 		classLoaderForConstructors = new ObjectAndPathForResources<>();
-		bindedFunctionalInterfaces = new ObjectAndPathForResources<>();	
+		bindedFunctionalInterfaces = new ObjectAndPathForResources<>();
 		uniqueKeyForExecutableAndMethodHandle = new ObjectAndPathForResources<>();
 	}
-	
+
 	public static Cache create() {
 		return new Cache();
 	}
-	
+
 	public static class ObjectAndPathForResources<T, R> implements Component {
 		Map<T, PathForResources<R>> resources;
 		Supplier<PathForResources<R>> pathForResourcesSupplier;
 		String instanceId;
-		
+
 		public ObjectAndPathForResources() {
 			this(1L, item -> item, null );
 		}
-		
+
 		public ObjectAndPathForResources(Long partitionStartLevel) {
 			this(partitionStartLevel, item -> item, null);
 		}
-		
+
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this(partitionStartLevel, sharer, null);
 		}
-		
+
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.resources = new HashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer, itemDestroyer);
@@ -130,7 +130,7 @@ public class Cache implements ManagedLogger {
 			}
 			return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 		}
-		
+
 		public R get(T object, String path) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
@@ -145,7 +145,7 @@ public class Cache implements ManagedLogger {
 			}
 			return pathForResources.get(path);
 		}
-		
+
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
@@ -153,11 +153,11 @@ public class Cache implements ManagedLogger {
 			}
 			return pathForResources;
 		}
-		
+
 		public R removePath(T object, String path) {
 			return removePath(object, path, false);
 		}
-		
+
 		public R removePath(T object, String path, boolean destroyItem) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources != null) {
@@ -165,15 +165,15 @@ public class Cache implements ManagedLogger {
 			}
 			return null;
 		}
-		
+
 		@Override
 		public ObjectAndPathForResources<T, R> clear() {
 			return clear(false);
 		}
-		
+
 		public ObjectAndPathForResources<T, R> clear(boolean destroyItems) {
 			Map<T, PathForResources<R>> resources;
-			synchronized (this.resources) {	
+			synchronized (this.resources) {
 				resources = this.resources;
 				this.resources = new HashMap<>();
 			}
@@ -182,46 +182,46 @@ public class Cache implements ManagedLogger {
 					item.getValue().clear(destroyItems);
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY).submit();		
+			}, Thread.MIN_PRIORITY).submit();
 			return this;
 		}
 	}
-	
+
 	public static class PathForResources<R> implements Component  {
-		Map<Long, Map<String, Map<String, R>>> resources;	
+		Map<Long, Map<String, Map<String, R>>> resources;
 		Long partitionStartLevel;
 		Function<R, R> sharer;
 		BiConsumer<String, R> itemDestroyer;
 		String instanceId;
-		
+
 		private PathForResources() {
 			this(1L, item -> item, null);
 		}
-		
+
 		private PathForResources(Long partitionStartLevel) {
 			this(partitionStartLevel, item -> item, null);
 		}
-		
+
 		private PathForResources(Function<R, R> sharer) {
 			this(1L, sharer, null);
 		}
-		
+
 		private PathForResources(BiConsumer<String, R> itemDestroyer) {
 			this(1L, item -> item, itemDestroyer);
 		}
-		
+
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer) {
 			this(partitionStartLevel, sharer, null);
 		}
-		
+
 		private PathForResources(Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this(1L, item -> item, itemDestroyer);
 		}
-		
+
 		private PathForResources(Long partitionStartLevel, BiConsumer<String, R> itemDestroyer) {
 			this(partitionStartLevel, item -> item, itemDestroyer);
 		}
-		
+
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
@@ -229,7 +229,7 @@ public class Cache implements ManagedLogger {
 			this.itemDestroyer = itemDestroyer;
 			this.instanceId = this.toString();
 		}
-		
+
 		Map<String, R> retrievePartition(Map<String, Map<String, R>> partion, Long partitionIndex, String path) {
 			String partitionKey = "/";
 			if (partitionIndex > 1) {
@@ -249,7 +249,7 @@ public class Cache implements ManagedLogger {
 			}
 			return innerPartion;
 		}
-		
+
 		R getOrUploadIfAbsent(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier) {
 			R resource = loadedResources.get(path);
 			if (resource == null) {
@@ -264,11 +264,11 @@ public class Cache implements ManagedLogger {
 					return resourceTemp;
 				});
 			}
-			return resource != null? 
+			return resource != null?
 				sharer.apply(resource) :
 				resource;
 		}
-		
+
 		public R upload(Map<String, R> loadedResources, String path, Supplier<R> resourceSupplier, boolean destroy) {
 			R oldResource = remove(path, destroy);
 			Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
@@ -279,7 +279,7 @@ public class Cache implements ManagedLogger {
 			});
 			return oldResource;
 		}
-		
+
 		Map<String, Map<String, R>> retrievePartition(Map<Long, Map<String, Map<String, R>>> partitionedResources, Long partitionIndex) {
 			Map<String, Map<String, R>> resources = partitionedResources.get(partitionIndex);
 			if (resources == null) {
@@ -293,7 +293,7 @@ public class Cache implements ManagedLogger {
 			}
 			return resources;
 		}
-		
+
 		public R upload(String path, Supplier<R> resourceSupplier, boolean destroy) {
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
@@ -301,7 +301,7 @@ public class Cache implements ManagedLogger {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			return upload(nestedPartition, path, resourceSupplier, destroy);
 		}
-		
+
 		public R getOrUploadIfAbsent(String path, Supplier<R> resourceSupplier) {
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
@@ -309,11 +309,11 @@ public class Cache implements ManagedLogger {
 			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
 			return getOrUploadIfAbsent(nestedPartition, path, resourceSupplier);
 		}
-		
+
 		public R get(String path) {
 			return getOrUploadIfAbsent(path, null);
 		}
-		
+
 		public R remove(String path, boolean destroy) {
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
@@ -324,18 +324,18 @@ public class Cache implements ManagedLogger {
 			});
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.createTask(task -> 
+				BackgroundExecutor.createTask(task ->
 					itemDestroyer.accept(finalPath, item),
 					Thread.MIN_PRIORITY
 				).submit();
 			}
 			return item;
 		}
-		
+
 		public int getLoadedResourcesCount() {
 			return getLoadedResourcesCount(resources);
 		}
-		
+
 		private int getLoadedResourcesCount(Map<Long, Map<String, Map<String, R>>> resources) {
 			int count = 0;
 			for (Map.Entry<Long, Map<String, Map<String, R>>> partition : resources.entrySet()) {
@@ -345,15 +345,15 @@ public class Cache implements ManagedLogger {
 			}
 			return count;
 		}
-		
+
 		@Override
 		public PathForResources<R> clear() {
 			return clear(false);
 		}
-		
+
 		public PathForResources<R> clear(boolean destroyItems) {
 			Map<Long, Map<String, Map<String, R>>> partitions;
-			synchronized (this.resources) {	
+			synchronized (this.resources) {
 				partitions = this.resources;
 				this.resources = new HashMap<>();
 			}
@@ -367,7 +367,7 @@ public class Cache implements ManagedLogger {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
 					if (itemDestroyer != null && destroyItems) {
-						IterableObjectHelper.deepClear(nestedPartition.getValue(), (path, resource) -> { 
+						IterableObjectHelper.deepClear(nestedPartition.getValue(), (path, resource) -> {
 							this.itemDestroyer.accept(path, resource);
 						});
 					} else {
@@ -378,13 +378,13 @@ public class Cache implements ManagedLogger {
 			}
 			partitions.clear();
 		}
-		
+
 	}
-	
+
 	public void clear(Cleanable... excluded) {
 		clear(false, excluded);
 	}
-	
+
 	public void clear(boolean destroyItems, Cleanable... excluded) {
 		Set<Cleanable> toBeExcluded = excluded != null && excluded.length > 0 ?
 			new HashSet<>(Arrays.asList(excluded)) :

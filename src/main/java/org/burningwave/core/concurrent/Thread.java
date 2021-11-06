@@ -49,7 +49,7 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public class Thread extends java.lang.Thread implements ManagedLogger {
-	
+
 	Consumer<Thread> originalExecutable;
 	Consumer<Thread> executable;
 	boolean looper;
@@ -57,33 +57,33 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	private final long index;
 	boolean alive;
 	Supplier supplier;
-	
+
 	private Thread(Supplier pool, long index) {
 		super(pool.name + " - executor " + index);
 		this.index = index;
 		this.supplier = pool;
 		setDaemon(pool.daemon);
 	}
-	
+
 	public void setIndexedName() {
 		setIndexedName(null);
 	}
-	
+
 	public void setIndexedName(String prefix) {
 		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - executor") + " " + index);
 	}
-	
+
 	public Thread setExecutable(Consumer<Thread> executable) {
 		this.originalExecutable = executable;
 		return setExecutable(executable, false);
 	}
-	
+
 	public Thread setExecutable(Consumer<Thread> executable, boolean isLooper) {
 		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
 	}
-	
+
 	@Override
 	public synchronized void start() {
 		if (!looper) {
@@ -105,18 +105,18 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			super.start();
 		}
 	}
-	
+
 	public void stopLooping() {
 		looping = false;
 		synchronized (this) {
 			notifyAll();
 		}
 	}
-	
+
 	public boolean isLooping() {
 		return looping;
 	}
-	
+
 	public void waitFor(long millis) {
 		synchronized (this) {
 			try {
@@ -126,23 +126,23 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 	}
-	
+
 	void shutDown() {
 		shutDown(false);
 	}
-	
+
 	void shutDown(boolean waitForFinish) {
 		alive = false;
 		stopLooping();
 		if (waitForFinish) {
-			try {				
+			try {
 				join();
 			} catch (InterruptedException exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, exc);
 			}
 		}
-	}	
-	
+	}
+
 	public static class Supplier {
 		public static class Configuration {
 			public static class Key {
@@ -151,49 +151,49 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
 				public static final String MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
-				public static final String MAX_DETACHED_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-detached-threads-count.increasing-step";                        
-				
+				public static final String MAX_DETACHED_THREADS_COUNT_INCREASING_STEP = "thread-supplier.max-detached-threads-count.increasing-step";
+
 			}
-			
+
 			public final static Map<String, Object> DEFAULT_VALUES;
-			
+
 			static {
-				Map<String, Object> defaultValues =  new HashMap<>(); 
-				
+				Map<String, Object> defaultValues =  new HashMap<>();
+
 				defaultValues.put(
 					Key.MAX_POOLABLE_THREADS_COUNT,
 					"autodetect"
 				);
-				
+
 				defaultValues.put(
 					Key.MAX_DETACHED_THREADS_COUNT,
 					"autodetect"
 				);
-				
+
 				defaultValues.put(
 					Key.POOLABLE_THREAD_REQUEST_TIMEOUT,
 					6000
 				);
-				
+
 				defaultValues.put(
 					Key.DEFAULT_DAEMON_FLAG_VALUE,
 					true
-				);				
-				
+				);
+
 				defaultValues.put(
 					Key.MAX_DETACHED_THREADS_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
 					30000
 				);
-				
+
 				defaultValues.put(
 					Key.MAX_DETACHED_THREADS_COUNT_INCREASING_STEP,
 					8
 				);
-				
+
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
-		}		
-		
+		}
+
 		private String name;
 		private volatile long threadsCount;
 		private volatile long poolableThreadsCount;
@@ -207,11 +207,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private Collection<Thread> poolableSleepingThreads;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
-		
+
 		Supplier (
 			String name,
 			Properties config
-		) {			
+		) {
 			this.name = name;
 			this.daemon = Objects.toBoolean(
 				IterableObjectHelper.resolveValue(
@@ -221,7 +221,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
-			
+
 			int maxPoolableThreadsCountAsInt;
 			double multiplier = 3;
 			try {
@@ -229,16 +229,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					IterableObjectHelper.resolveValue(
 						ResolveConfig.forNamedKey(Configuration.Key.MAX_POOLABLE_THREADS_COUNT)
 						.on(config)
-					)						
+					)
 				);
 			} catch (Throwable exc) {
 				maxPoolableThreadsCountAsInt = (int)(Runtime.getRuntime().availableProcessors() * multiplier);
-			}			
+			}
 			if (maxPoolableThreadsCountAsInt <= 0) {
 				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
 			}
-			
-			int maxDetachedThreadsCountAsInt;			
+
+			int maxDetachedThreadsCountAsInt;
 			try {
 				maxDetachedThreadsCountAsInt = Objects.toInt(
 					IterableObjectHelper.resolveValue(
@@ -247,10 +247,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxDetachedThreadsCountAsInt = 
-					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) - 
+				maxDetachedThreadsCountAsInt =
+					((int)(Runtime.getRuntime().availableProcessors() * 3 * multiplier)) -
 					((int)(Runtime.getRuntime().availableProcessors() * multiplier));
-			}			
+			}
 			if (maxDetachedThreadsCountAsInt < 0) {
 				maxDetachedThreadsCountAsInt = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
 			}
@@ -282,21 +282,21 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
 		}
-		
+
 		public Thread getOrCreate(String name) {
 			Thread thread = getOrCreate();
 			thread.setName(name);
 			return thread;
 		}
-		
+
 		public final Thread getOrCreate() {
 			return getOrCreate(1);
 		}
-		
+
 		public final Thread getOrCreate(int requestCount) {
 			return getOrCreate(requestCount, requestCount);
 		}
-		
+
 		final Thread getOrCreate(int initialValue, int requestCount) {
 			Thread thread = get();
 			if (thread != null) {
@@ -319,13 +319,13 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < poolableThreadRequestTimeout) {
 								if (inititialMaxThreadsCount < maxThreadsCount &&
-									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxDetachedThreadsCount) > 
+									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxDetachedThreadsCount) >
 										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount
 								) {
 									maxThreadsCount -= (maxDetachedThreadsCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
-										() -> this.getClass().getName(), 
-										"{}: decreasing maxTemporarilyThreadsCount to {}", 
+										() -> this.getClass().getName(),
+										"{}: decreasing maxTemporarilyThreadsCount to {}",
 										java.lang.Thread.currentThread(), (maxThreadsCount - maxPoolableThreadsCount)
 									);
 									timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
@@ -335,7 +335,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								timeOfLastIncreaseOfMaxDetachedThreadsCount = System.currentTimeMillis();
 								maxThreadsCount += maxDetachedThreadsCountIncreasingStep;
 								ManagedLoggersRepository.logInfo(
-									() -> this.getClass().getName(), 
+									() -> this.getClass().getName(),
 									"{} waited for {}ms: maxTemporarilyThreadsCount will be temporarily increased to {} for preventing dead lock",
 									java.lang.Thread.currentThread(), waitElapsedTime, (maxThreadsCount - maxPoolableThreadsCount)
 								);
@@ -350,7 +350,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				if (threadsCount < maxThreadsCount) {
 					return createDetachedThread();
 				} else {
-					return getOrCreate(initialValue, initialValue);					
+					return getOrCreate(initialValue, initialValue);
 				}
 			}
 			synchronized (poolableSleepingThreads) {
@@ -364,7 +364,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
 			return new Thread(this, ++threadsCount) {
-				
+
 				@Override
 				public void run() {
 					while (alive) {
@@ -375,7 +375,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							executable.accept(this);
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-						}				
+						}
 						try {
 							synchronized (this) {
 								runningThreads.remove(this);
@@ -407,7 +407,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						notifyAll();
 					}
 				}
-				
+
 				@Override
 				public void interrupt() {
 					shutDown();
@@ -431,8 +431,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					synchronized(this) {
 						notifyAll();
 					}
-				};
-				
+				}
+
 			};
 		}
 
@@ -458,7 +458,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						notifyAll();
 					}
 				}
-				
+
 				@Override
 				public void interrupt() {
 					shutDown();
@@ -478,7 +478,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					synchronized(this) {
 						notifyAll();
 					}
-				};
+				}
 			};
 		}
 
@@ -489,7 +489,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				runningThreads.size(), poolableSleepingThreads.size(), threadsCount
 			);
 		}
-		
+
 		private Thread get() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
@@ -500,14 +500,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			return null;
 		}
-		
+
 		public void shutDownAllPoolableSleeping() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
 				itr.next().shutDown();
 			}
 		}
-		
+
 		public void shutDownAll() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
@@ -526,7 +526,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		) {
 			if (undestroyable) {
 				return new Supplier(name, config) {
-					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();					
+					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					@Override
 					public void shutDownAll() {
 						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
@@ -539,36 +539,36 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 	}
-	
+
 	public static class Holder implements Closeable, ManagedLogger {
 		private Supplier threadSupplier;
 		private Map<String, Thread> threads;
-		
+
 		public Holder() {
 			this(org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier);
 		}
-		
+
 		public Holder(Supplier threadSupplier) {
 			this.threadSupplier = threadSupplier;
 			this.threads = new ConcurrentHashMap<>();
 		}
-		
+
 		public String startLooping(boolean isDaemon, int priority, Consumer<Thread> executable) {
 			return start(null, true, isDaemon, priority, executable).getName();
 		}
-		
+
 		public String start(boolean isDaemon, int priority, Consumer<Thread> executable) {
 			return start(null, false, isDaemon, priority, executable).getName();
 		}
-		
+
 		public void startLooping(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
 			start(threadName, true, isDaemon, priority, executable);
 		}
-		
+
 		public void start(String threadName, boolean isDaemon, int priority, Consumer<Thread> executable) {
 			start(threadName, false, isDaemon, priority, executable);
 		}
-		
+
 		private Thread start(String threadName, boolean isLooper, boolean isDaemon, int priority, Consumer<Thread> executable) {
 			return Synchronizer.execute(threadName, () -> {
 				Thread thr = threads.get(threadName);
@@ -592,11 +592,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return thr;
 			});
 		}
-		
+
 		public void stop(String threadName) {
 			stop(threadName, false);
 		}
-		
+
 		public void stop(String threadName, boolean waitThreadToFinish) {
 			Synchronizer.execute(threadName, () -> {
 				Thread thr = threads.get(threadName);
@@ -608,7 +608,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				thr = null;
 			});
 		}
-		
+
 		public void join(String threadName) {
 			Thread thr = threads.get(threadName);
 			if (thr != null) {
@@ -619,7 +619,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 			}
 		}
-		
+
 		public boolean isAlive(String threadName) {
 			Thread thr = threads.get(threadName);
 			if (thr != null) {
@@ -627,7 +627,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			return false;
 		}
-		
+
 		@Override
 		public void close() {
 			threads.forEach((threadName, thread) -> {

@@ -57,11 +57,11 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	QueuedTasksExecutor.Task searchTask;
 	Collection<T> itemsFound;
 	boolean requestToClosePathScannderClassLoaderOnClose;
-	
+
 	Collection<String> getSkippedClassNames() {
 		return skippedClassNames;
 	}
-	
+
 
 	SearchContext(
 		InitContext initContext
@@ -76,13 +76,13 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		this.sharedPathScannerClassLoader.register(this);
 		this.requestToClosePathScannderClassLoaderOnClose = true;
 	}
-	
+
 	public static <T> SearchContext<T> create(
 		InitContext initContext
 	) {
 		return new SearchContext<>(initContext);
 	}
-	
+
 	void executeSearch(Runnable searcher) {
 		Integer priority = searchConfig.priority;
 		Thread currentThread = Thread.currentThread();
@@ -109,7 +109,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			).submit();
 		}
 	}
-	
+
 	void waitForSearchEnding() {
 		try {
 			QueuedTasksExecutor.Task searchTask = this.searchTask;
@@ -120,11 +120,11 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			Driver.throwException(exc);
 		}
 	}
-	
+
 	QueuedTasksExecutor.Task getSearchTask() {
 		return this.searchTask;
 	}
-	
+
 	void addItemFound(String path, String key, T item) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
@@ -132,9 +132,9 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		).put(key, item);
 		synchronized(itemsFoundFlatMap) {
 			itemsFoundFlatMap.put(key, item);
-		}		
+		}
 	}
-	
+
 	void addAllItemsFound(String path, Map<String, T> items) {
 		retrieveCollectionForPath(
 			itemsFoundMap,
@@ -146,7 +146,7 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			}
 		}
 	}
-	
+
 	 Map<String, T> retrieveCollectionForPath(Map<String, Map<String, T>> allItems, Supplier<Map<String, T>> mapForPathSupplier, String path) {
 		Map<String, T> items = null;
 		if (mapForPathSupplier != null) {
@@ -167,16 +167,16 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		}
 		return items;
 	}
-	
+
 
 	SearchConfig getSearchConfig() {
 		return searchConfig;
 	}
-	
+
 	Map<String, T> getItemsFoundFlatMap() {
 		return this.itemsFoundFlatMap;
 	}
-	
+
 	Collection<T> getItemsFound() {
 		if (itemsFound == null) {
 			synchronized(itemsFoundFlatMap) {
@@ -188,20 +188,20 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		}
 		return itemsFound;
 	}
-	
+
 	void setrequestToClosePathScannderClassLoaderOnClose(boolean flag) {
 		this.requestToClosePathScannderClassLoaderOnClose = flag;
 	}
-	
+
 	Map<String, T> getItemsFound(String path) {
 		return this.itemsFoundMap.get(path);
 	}
-			
-	
+
+
 	void addByteCodeClassesToClassLoader(String className, ByteBuffer byteCode) {
-		pathScannerClassLoader.addByteCode(className, byteCode);			
+		pathScannerClassLoader.addByteCode(className, byteCode);
 	}
-	
+
 	<O> O execute(ThrowingSupplier<O, Throwable> supplier, Supplier<O> defaultValueSupplier, Supplier<String> classNameSupplier) {
 		return Executor.get(() -> {
 			try {
@@ -217,51 +217,51 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 			return defaultValueSupplier.get();
 		});
 	}
-	
+
 	void addToSkippedClassNames(String className) {
 		if (className != null) {
 			skippedClassNames.add(className);
 		}
 	}
-	
+
 	Class<?> loadClass(String className) {
 		return execute(
-			() -> pathScannerClassLoader.loadClass(className), 
-			() -> null, 
+			() -> pathScannerClassLoader.loadClass(className),
+			() -> null,
 			() -> className
 		);
 	}
-	
+
 	Class<?> loadClass(Class<?> cls) {
 		return execute(
-			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
-			() -> null, 
+			() -> pathScannerClassLoader.loadOrDefineClass(cls),
+			() -> null,
 			() -> cls.getName()
 		);
 	}
-	
+
 	Class<?> loadClass(JavaClass cls) {
 		return execute(
-			() -> pathScannerClassLoader.loadOrDefineClass(cls), 
-			() -> null, 
+			() -> pathScannerClassLoader.loadOrDefineClass(cls),
+			() -> null,
 			() -> cls.getName()
 		);
 	}
-	
+
 	Class<?> retrieveClass(Class<?> cls) {
 		return Classes.isLoadedBy(cls, pathScannerClassLoader) ?
-			cls : 
+			cls :
 			loadClass(cls.getName());
 	}
-	
+
 	ClassCriteria.TestContext test(Class<?> cls) {
 		return execute(
-			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls), 
-			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrFalseResultForNullPredicate(null), 
+			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrTrueResultForNullPredicate(cls),
+			() -> searchConfig.getClassCriteria().testWithFalseResultForNullEntityOrFalseResultForNullPredicate(null),
 			() -> cls.getName()
 		);
 	}
-	
+
 	@Override
 	public void close() {
 		pathScannerClassLoader.unregister(this, true);
@@ -279,43 +279,43 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 		skippedClassNames = null;
 		searchTask = null;
 	}
-	
-	
+
+
 	static class InitContext extends Context {
 		enum Elements {
 			SHARED_PATH_SCANNER_CLASS_LOADER,
 			PATH_SCANNER_CLASS_LOADER,
 			SEARCH_CONFIG;
 		}
-		
+
 		InitContext(
-			PathScannerClassLoader sharedPathMemoryClassLoader, 
+			PathScannerClassLoader sharedPathMemoryClassLoader,
 			PathScannerClassLoader pathScannerClassLoader,
 			SearchConfig searchConfig
 		) {
 			super();
 			put(Elements.SHARED_PATH_SCANNER_CLASS_LOADER, sharedPathMemoryClassLoader);
 			put(Elements.PATH_SCANNER_CLASS_LOADER, pathScannerClassLoader);
-			put(Elements.SEARCH_CONFIG, searchConfig);			
+			put(Elements.SEARCH_CONFIG, searchConfig);
 		}
-		
+
 		static InitContext create(
-			PathScannerClassLoader sharedPathMemoryClassLoader, 
+			PathScannerClassLoader sharedPathMemoryClassLoader,
 			PathScannerClassLoader pathScannerClassLoader,
 			SearchConfig searchConfig
 		) {
 			return new InitContext(sharedPathMemoryClassLoader, pathScannerClassLoader, searchConfig);
 		}
-		
+
 		PathScannerClassLoader getSharedPathScannerClassLoader() {
 			return get(Elements.SHARED_PATH_SCANNER_CLASS_LOADER);
 		}
-		
+
 		PathScannerClassLoader getPathScannerClassLoader() {
 			return get(Elements.PATH_SCANNER_CLASS_LOADER);
 		}
-		
-		
+
+
 		SearchConfig getSearchConfig() {
 			return get(Elements.SEARCH_CONFIG);
 		}

@@ -41,7 +41,7 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.SearchContext, ClassHunter.SearchResult> implements ClassHunter {
-	
+
 	ClassHunterImpl(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
@@ -57,22 +57,22 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 			config
 		);
 	}
-	
+
 	@Override
 	String getNameInConfigProperties() {
 		return ClassHunter.Configuration.Key.NAME_IN_CONFIG_PROPERTIES;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderNameInConfigProperties() {
 		return ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER;
 	}
-	
+
 	@Override
 	String getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties() {
 		return ClassHunter.Configuration.Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS;
 	}
-	
+
 	@Override
 	void addToContext(ClassHunterImpl.SearchContext context, TestContext criteriaTestContext,
 		String basePath, FileSystemItem fileSystemItem, JavaClass javaClass
@@ -84,7 +84,7 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 		);
 	}
 
-	
+
 	@Override
 	public void close() {
 		closeResources(() -> this.pathHelper == null, task -> {
@@ -93,32 +93,32 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 			this.defaultPathScannerClassLoaderManager = null;
 		});
 	}
-	
+
 	static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
-		
+
 		static ClassHunterImpl.SearchContext _create(InitContext initContext) {
 			return new SearchContext(initContext);
 		}
-		
+
 		SearchContext(InitContext initContext) {
 			super(initContext);
 		}
-		
+
 		void addAllMembersFound(Class<?> cls, Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFound) {
 			this.membersFound.put(cls, membersFound);
 			this.membersFoundFlatMap.putAll(membersFound);
 		}
-		
-		
+
+
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> getMembersFound() {
 			if (membersFound == null) {
 				loadMemberMaps();
 			}
 			return membersFound;
 		}
-		
+
 		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFoundFlatMap() {
 			if (membersFoundFlatMap == null) {
 				loadMemberMaps();
@@ -140,7 +140,7 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 							membersFound.put(testContext.getEntity(), membersForCriteria);
 							membersForCriteria.forEach((criteria, memberList) -> {
 								Collection<Member> coll = membersFoundFlatMap.get(criteria);
-								if (coll == null) {								
+								if (coll == null) {
 									coll = new CopyOnWriteArrayList<>();
 									membersFoundFlatMap.put(criteria, coll);
 								}
@@ -153,11 +153,11 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 				}
 			}
 		}
-		
+
 		@Override
 		public void close() {
 			membersFound = null;
-			membersFoundFlatMap = null;		
+			membersFoundFlatMap = null;
 			super.close();
 		}
 	}

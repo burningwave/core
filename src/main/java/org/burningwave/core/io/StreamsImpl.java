@@ -29,8 +29,8 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -51,60 +51,60 @@ import org.burningwave.core.iterable.Properties;
 class StreamsImpl implements Streams, Identifiable, Properties.Listener, ManagedLogger {
 
 	String instanceId;
-	
+
 	StreamsImpl() {
 		instanceId = getId();
 	}
-	
+
 	@Override
 	public boolean isArchive(File file) throws IOException {
 		return is(file, this::isArchive);
 	}
-	
+
 	@Override
 	public boolean isJModArchive(File file) throws IOException {
 		return is(file, this::isJModArchive);
 	}
-	
+
 	@Override
 	public boolean isClass(File file) throws IOException {
 		return is(file, this::isClass);
 	}
-	
+
 	@Override
 	public boolean isArchive(ByteBuffer bytes) {
 		return is(bytes, this::isArchive);
 	}
-	
+
 	@Override
 	public boolean isJModArchive(ByteBuffer bytes) {
 		return is(bytes, this::isJModArchive);
 	}
-	
+
 	@Override
 	public boolean isClass(ByteBuffer bytes) {
 		return is(bytes, this::isClass);
 	}
-	
+
 	@Override
 	public boolean is(File file, Predicate<Integer> predicate) throws IOException {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")){
 			return raf.length() > 4 && predicate.test(raf.readInt());
 	    }
 	}
-	
+
 	private boolean is(ByteBuffer bytes, Predicate<Integer> predicate) {
 		return bytes.capacity() > 4 && bytes.limit() > 4 && predicate.test(BufferHandler.duplicate(bytes).getInt());
 	}
-	
+
 	private boolean isArchive(int fileSignature) {
 		return fileSignature == 0x504B0304 || fileSignature == 0x504B0506 || fileSignature == 0x504B0708 || isJModArchive(fileSignature);
 	}
-	
+
 	private boolean isJModArchive(int fileSignature) {
 		return fileSignature == 0x4A4D0100 || fileSignature == 0x4A4D0000;
 	}
-	
+
 	private boolean isClass(int fileSignature) {
 		return fileSignature == 0xCAFEBABE;
 	}
@@ -118,7 +118,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	@Override
 	public ByteBuffer toByteBuffer(InputStream inputStream, int streamSize) {
 		/*try (ByteBufferOutputStream outputStream = ByteBufferHandler.newByteBufferOutputStream(streamSize)) {
@@ -137,12 +137,12 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	@Override
 	public ByteBuffer toByteBuffer(InputStream inputStream) {
 		return toByteBuffer(inputStream, -1);
 	}
-	
+
 	@Override
 	public StringBuffer getAsStringBuffer(InputStream inputStream) {
 		return Executor.get(() -> {
@@ -161,7 +161,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			}
 		});
 	}
-	
+
 	@Override
 	public void copy(InputStream input, OutputStream output) {
 		Executor.run(() -> {
@@ -172,12 +172,12 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			}
 		});
 	}
-	
+
 	@Override
 	public FileSystemItem store(String fileAbsolutePath, byte[] bytes) {
 		return store(fileAbsolutePath, BufferHandler.allocate(bytes.length).put(bytes, 0, bytes.length));
 	}
-	
+
 	@Override
 	public FileSystemItem store(String fileAbsolutePath, ByteBuffer bytes) {
 		ByteBuffer content = BufferHandler.shareContent(bytes);
@@ -188,7 +188,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 			} else {
 				file.delete();
 			}
-			Executor.run(() -> {					
+			Executor.run(() -> {
 				try(ByteBufferInputStream inputStream = new ByteBufferInputStream(content); FileOutputStream fileOutputStream = FileOutputStream.create(file, true)) {
 					copy(inputStream, fileOutputStream);
 				}

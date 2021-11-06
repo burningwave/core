@@ -33,13 +33,13 @@ import java.util.function.Predicate;
 import org.burningwave.core.Criteria;
 
 public class ZipContainerEntryCriteria extends Criteria<IterableZipContainer.Entry, ZipContainerEntryCriteria, Criteria.TestContext<IterableZipContainer.Entry, ZipContainerEntryCriteria>>{
-	
+
 	private ZipContainerEntryCriteria() {}
-	
+
 	public static ZipContainerEntryCriteria create() {
 		return new ZipContainerEntryCriteria();
 	}
-	
+
 	public ZipContainerEntryCriteria absolutePath(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -47,8 +47,8 @@ public class ZipContainerEntryCriteria extends Criteria<IterableZipContainer.Ent
 		);
 		return this;
 	}
-	
-	
+
+
 	public ZipContainerEntryCriteria name(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -56,5 +56,5 @@ public class ZipContainerEntryCriteria extends Criteria<IterableZipContainer.Ent
 		);
 		return this;
 	}
-	
+
 }

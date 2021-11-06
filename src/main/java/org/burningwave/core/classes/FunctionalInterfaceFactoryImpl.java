@@ -61,15 +61,15 @@ import org.burningwave.core.function.MultiParamsFunction;
 import org.burningwave.core.function.ThrowingSupplier;
 
 @SuppressWarnings("unchecked")
-class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Component { 
+class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Component {
 	private ClassFactory classFactory;
 	private FunctionalInterfaceSourceGenerator sourceCodeGenerator;
-	
+
 	FunctionalInterfaceFactoryImpl(ClassFactory classFactory) {
 		this.classFactory = classFactory;
 		this.sourceCodeGenerator = FunctionalInterfaceSourceGenerator.create();
 	}
-	
+
 	@Override
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
 		Constructor<?> ctor = Constructors.findFirstAndMakeItAccessible(targetClass, argumentTypes);
@@ -79,35 +79,35 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
 			);
-		}		
+		}
 		return getOrCreate(ctor);
 	}
-	
+
 	@Override
 	public <T> T getOrCreateFunction(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		return getOrCreateBindedFunction(retrieveMethod(targetClass, methodName, argumentTypes));
 	}
-	
+
 	@Override
 	public <T> T getOrCreateSupplier(Class<?> targetClass, String methodName) {
 		return getOrCreateBindedSupplier(retrieveMethod(targetClass, methodName));
 	}
-	
+
 	@Override
 	public <T> T getOrCreatePredicate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		return getOrCreateBindedPredicate(retrieveMethod(targetClass, methodName, argumentTypes));
 	}
-	
+
 	@Override
 	public <T> T getOrCreateConsumer(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		return getOrCreateBindedConsumer(retrieveMethod(targetClass, methodName, argumentTypes));
 	}
-	
+
 	@Override
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		return getOrCreate(retrieveMethod(targetClass, methodName, argumentTypes));
 	}
-	
+
 	private Method retrieveMethod(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
@@ -120,14 +120,14 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		}
 		return method;
 	}
-	
+
 	@Override
 	public <F> F getOrCreate(Executable executable) {
 		if (executable instanceof Method) {
 			Method targetMethod = (Method)executable;
 			if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
 				return getOrCreateBindedRunnable(targetMethod);
-			} else if ((targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) && 
+			} else if ((targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) &&
 				(targetMethod.getParameterTypes().length > 0 || (targetMethod.getParameterTypes().length == 0 && !Modifier.isStatic(targetMethod.getModifiers())))
 			) {
 				return getOrCreateBindedPredicate(targetMethod);
@@ -151,15 +151,15 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 
 	<F> F getOrCreateBindedRunnable(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
-			Classes.getClassLoader(executable.getDeclaringClass()), 
-			getCacheKey(executable), () -> 
+			Classes.getClassLoader(executable.getDeclaringClass()),
+			getCacheKey(executable), () ->
 			Executor.get(() -> {
-				Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier = 
-					executable instanceof Constructor ?	
+				Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier =
+					executable instanceof Constructor ?
 						() -> Constructors.findDirectHandleBox((Constructor<?>)executable) :
 						() -> Methods.findDirectHandleBox((Method)executable);
 				return bindTo(
-					methodHandleBoxSupplier, () -> 
+					methodHandleBoxSupplier, () ->
 					Modifier.isStatic(executable.getModifiers()) || executable instanceof Constructor ?
 						new AbstractMap.SimpleEntry<>(Runnable.class, "run") :
 						new AbstractMap.SimpleEntry<>(Consumer.class, "accept"),
@@ -172,15 +172,15 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 
 	<F> F getOrCreateBindedSupplier(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
-			Classes.getClassLoader(executable.getDeclaringClass()),	
-			getCacheKey(executable), () -> 
+			Classes.getClassLoader(executable.getDeclaringClass()),
+			getCacheKey(executable), () ->
 			Executor.get(() -> {
-				Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier = 
-					executable instanceof Constructor ?	
+				Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier =
+					executable instanceof Constructor ?
 						() -> Constructors.findDirectHandleBox((Constructor<?>)executable) :
 						() -> Methods.findDirectHandleBox((Method)executable);
 				return bindTo(
-					methodHandleBoxSupplier, () -> 
+					methodHandleBoxSupplier, () ->
 					Modifier.isStatic(executable.getModifiers()) || executable instanceof Constructor ?
 						new AbstractMap.SimpleEntry<>(Supplier.class, "get") :
 						new AbstractMap.SimpleEntry<>(Function.class, "apply"),
@@ -194,25 +194,25 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	<F> F getOrCreateBindedFunction(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),
-			getCacheKey(executable), () -> 
+			getCacheKey(executable), () ->
 				Executor.get(() -> {
-					Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier = 
-						executable instanceof Constructor ?	
+					Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier =
+						executable instanceof Constructor ?
 							() -> Constructors.findDirectHandleBox((Constructor<?>)executable) :
 							() -> Methods.findDirectHandleBox((Method)executable);
 					return bindTo(
-						methodHandleBoxSupplier, () -> 
+						methodHandleBoxSupplier, () ->
 						new AbstractMap.SimpleEntry<>(
 							retrieveClass(
 								Function.class,
-								(parameterCount) -> 
+								(parameterCount) ->
 									loadOrBuildAndDefineFunctionSubType(
 										executable.getDeclaringClass().getClassLoader(), parameterCount
 									),
 								Modifier.isStatic(executable.getModifiers()) || executable instanceof Constructor ?
-									executable.getParameterCount() : 
+									executable.getParameterCount() :
 									executable.getParameterCount() + 1
-							), 
+							),
 							"apply"
 						),
 						methodHandle ->
@@ -225,19 +225,19 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	<F> F getOrCreateBindedConsumer(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
-			getCacheKey(targetMethod), () -> 
+			getCacheKey(targetMethod), () ->
 			Executor.get(() ->
-				bindTo(() -> 
-					Methods.findDirectHandleBox(targetMethod), () -> 
+				bindTo(() ->
+					Methods.findDirectHandleBox(targetMethod), () ->
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(
 							Consumer.class,
 							(parameterCount) ->
 								loadOrBuildAndDefineConsumerSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
-								targetMethod.getParameterCount() : 
+								targetMethod.getParameterCount() :
 								targetMethod.getParameterCount() + 1
-						), 
+						),
 						"accept"
 					),
 					methodHandle ->
@@ -250,18 +250,18 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	<F> F getOrCreateBindedPredicate(Method targetMethod) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(targetMethod.getDeclaringClass()),
-			getCacheKey(targetMethod), () -> 
-			Executor.get(() -> bindTo(() -> 
-					Methods.findDirectHandleBox(targetMethod), () -> 
+			getCacheKey(targetMethod), () ->
+			Executor.get(() -> bindTo(() ->
+					Methods.findDirectHandleBox(targetMethod), () ->
 					new AbstractMap.SimpleEntry<>(
 						retrieveClass(
 							Predicate.class,
 							(parameterCount) ->
 								loadOrBuildAndDefinePredicateSubType(targetMethod.getDeclaringClass().getClassLoader(), parameterCount),
 							Modifier.isStatic(targetMethod.getModifiers()) ?
-								targetMethod.getParameterCount() : 
+								targetMethod.getParameterCount() :
 								targetMethod.getParameterCount() + 1
-						), 
+						),
 						"test"
 					),
 					methodHandle ->
@@ -270,13 +270,13 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			)
 		);
 	}
-	
-	
+
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount) {
 		return loadOrBuildAndDefineFunctionSubType(null, parametersCount);
 	}
-	
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
@@ -284,12 +284,12 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateFunction(className, paramsL))
 		);
 	}
-	
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(int parametersCount) {
 		return loadOrBuildAndDefineConsumerSubType(null, parametersCount);
 	}
-	
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefineConsumerSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
@@ -297,23 +297,23 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generateConsumer(className, paramsL))
 		);
 	}
-	
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(int parametersLength) {
 		return loadOrBuildAndDefinePredicateSubType(null, parametersLength);
 	}
-	
+
 	@Override
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength) {
 		return loadOrBuildAndDefineFunctionInterfaceSubType(
 			classLoader, "PredicateFor", "Parameters", parametersLength,
 			(className, paramsL) -> UnitSourceGenerator.create(Classes.retrievePackageName(className)).addClass(sourceCodeGenerator.generatePredicate(className, paramsL))
 		);
-	}	
-	
+	}
+
 	private <T> Class<T> loadOrBuildAndDefineFunctionInterfaceSubType(
 		ClassLoader classLoader,
-		String classNamePrefix, 
+		String classNamePrefix,
 		String classNameSuffix,
 		int parametersLength,
 		BiFunction<String, Integer, UnitSourceGenerator> unitSourceGeneratorSupplier
@@ -331,9 +331,9 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			return (Class<T>)classRetriever.get(className);
 		}
 	}
-	
+
 	private <F> F bindTo(
-		Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier, 
+		Supplier<Members.Handler.OfExecutable.Box<? extends Executable>> methodHandleBoxSupplier,
 		ThrowingSupplier<Map.Entry<Class<?>, String>, Throwable> functionalInterfaceBagSupplier,
 		Function<MethodHandle, MethodType> functionalInterfaceSignatureSupplier
 	) throws Throwable {
@@ -345,22 +345,22 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 			functionalInterfaceBag.getValue(),
 		    MethodType.methodType(functionalInterfaceBag.getKey()),
 		    functionalInterfaceSignatureSupplier.apply(methodHandle),
-		    methodHandle, 
+		    methodHandle,
 		    methodHandle.type()
 		).getTarget().invoke();
 	}
-	
+
 	Class<?> retrieveClass(Class<?> cls, Function<Integer, Class<?>> classRetriever, int parametersCount) throws ClassNotFoundException {
 		if (parametersCount < 3) {
 			String className = parametersCount == 2 ?
 				Optional.ofNullable(cls.getPackage()).map(pkg -> pkg.getName() + ".").orElse("") + "Bi" + cls.getSimpleName() :
 				cls.getName();
 			return Driver.getClassByName(
-				className, 
+				className,
 				true,
 				Classes.getClassLoader(cls),
 				this.getClass()
-			);	
+			);
 		} else {
 			return classRetriever.apply(parametersCount);
 		}
@@ -379,7 +379,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		String cacheKey = "/" + targetMethodDeclaringClass.getName() + "@" + targetMethodDeclaringClass.hashCode() +
 			"/" + executable.getName() +
 			argumentsKey;
-		return cacheKey;		
+		return cacheKey;
 	}
 
 }

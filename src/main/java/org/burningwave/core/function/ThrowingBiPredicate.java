@@ -33,7 +33,7 @@ import java.util.Objects;
 @FunctionalInterface
 public interface ThrowingBiPredicate<T, U, E extends Throwable> {
 
-    
+
     boolean test(T t, U u) throws E;
 
     default ThrowingBiPredicate<T, U, E> and(ThrowingBiPredicate<? super T, ? super U, ? extends E> other) {

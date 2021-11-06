@@ -35,27 +35,27 @@ import java.util.Optional;
 public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -6466348844734237149L;
-	
-	
+
+
 	private TypeDeclarationSourceGenerator type;
 	private String name;
 	private BodySourceGenerator body;
-	
+
 	public AnnotationSourceGenerator(String simpleName) {
 		this.name = simpleName;
 	}
 
 
 	public static AnnotationSourceGenerator create(String name) {
-		return new AnnotationSourceGenerator(name);		
-	}	
+		return new AnnotationSourceGenerator(name);
+	}
 
 	public static AnnotationSourceGenerator create(Class<?> cls) {
 		AnnotationSourceGenerator annotation = new AnnotationSourceGenerator(cls.getSimpleName());
 		annotation.type = TypeDeclarationSourceGenerator.create(cls);
 		return annotation;
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(body).ifPresent(hirearchyElements -> {
@@ -66,15 +66,15 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(VariableSourceGenerator... parameters) {
 		return addParameter(null, parameters);
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(String name, VariableSourceGenerator... parameters) {
 		return addParameter(name, false, parameters);
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(String name, boolean isArray, VariableSourceGenerator... parameters) {
 		Optional.ofNullable(this.body).orElseGet(() ->
 			this.body =BodySourceGenerator.createSimple().setDelimiters("(\n", "\n)").setBodyElementSeparator(",\n").setElementPrefix("\t")
@@ -97,19 +97,19 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		this.body.addElement(innBody);
 		return this;
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(AnnotationSourceGenerator... parameters) {
 		return addParameter(null, false, parameters);
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(boolean isArray, AnnotationSourceGenerator... parameters) {
 		return addParameter(null, isArray, parameters);
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(String name, AnnotationSourceGenerator... parameters) {
 		return addParameter(name, false, parameters);
 	}
-	
+
 	public AnnotationSourceGenerator addParameter(String name, boolean isArray, AnnotationSourceGenerator... parameters) {
 		Optional.ofNullable(this.body).orElseGet(() ->
 			this.body =BodySourceGenerator.createSimple().setDelimiters("(\n", "\n)").setBodyElementSeparator(",\n").setElementPrefix("\t")
@@ -132,15 +132,15 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		this.body.addElement(innBody);
 		return this;
 	}
-	
+
 	public AnnotationSourceGenerator useType(java.lang.Class<?>... classes) {
 		Optional.ofNullable(this.body).orElseGet(() ->
 			this.body =BodySourceGenerator.createSimple().setDelimiters("(\n", "\n)").setBodyElementSeparator(",\n").setElementPrefix("\t")
 		);
 		body.useType(classes);
-		return this;	
+		return this;
 	}
-	
+
 	@Override
 	public String make() {
 		return getOrEmpty("@" + name, body);

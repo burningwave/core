@@ -59,7 +59,7 @@ import io.github.toolfactory.jvm.Driver;
 public class StaticComponentContainer {
 	public static class Configuration {
 		public static class Key {
-			
+
 			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
 			private static final String BANNER_HIDE = "banner.hide";
 			private static final String BANNER_FILE = "banner.file";
@@ -75,37 +75,37 @@ public class StaticComponentContainer {
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
-			Map<String, Object> defaultValues =  new HashMap<>(); 
-			
+			Map<String, Object> defaultValues =  new HashMap<>();
+
 			defaultValues.put(
-				Key.GROUP_NAME_FOR_NAMED_ELEMENTS, 
+				Key.GROUP_NAME_FOR_NAMED_ELEMENTS,
 				"Burningwave"
 			);
-			
+
 			defaultValues.put(Key.BANNER_HIDE, false);
-			
+
 			defaultValues.put(Key.BANNER_FILE, "org/burningwave/banner.bwb");
-			
+
 			defaultValues.put(
-				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED, 
+				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED,
 				false
 			);
-			
+
 			defaultValues.put(
 				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
 				90000
 			);
-			
+
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED,
 				true
 			);
-			
-			
+
+
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED,
 				300000
@@ -114,39 +114,39 @@ public class StaticComponentContainer {
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL,
 				30000
-			);	
-			
+			);
+
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
 				"log only"
-			);	
-			
+			);
+
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
 				"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED +"}"
 			);
-			
+
 			defaultValues.put(
 				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED,
 				false
 			);
-			
+
 			if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
 				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 			}
-			
+
 			defaultValues.put(
 				Key.JVM_DRIVER_INIT,
 				false
-			);			
-			
+			);
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
-	
+
 	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
@@ -177,7 +177,7 @@ public class StaticComponentContainer {
 	public static final java.util.Map<String, String> SystemProperties;
 	public static final org.burningwave.core.concurrent.Thread.Holder ThreadHolder;
 	public static final org.burningwave.core.concurrent.Thread.Supplier ThreadSupplier;
-	
+
 	static {
 		try {
 			long startTime = System.nanoTime();
@@ -199,11 +199,11 @@ public class StaticComponentContainer {
 			String configFileName = "burningwave.static.properties";
 			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
 			properties.putAll(propertiesFromConfigurationFile);
-	
+
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
-					
+
 					if (key instanceof String) {
 						String keyAsString = (String)key;
 						if (event.name().equals(Event.PUT.name())) {
@@ -269,13 +269,13 @@ public class StaticComponentContainer {
 							}
 						}
 					}
-					
-				}				
+
+				}
 			}.listenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = GlobalProperties.resolveValue(
 				Configuration.Key.JVM_DRIVER_TYPE
-			);			
+			);
 			if (driverClassName != null) {
 				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
@@ -287,7 +287,7 @@ public class StaticComponentContainer {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
 			} else {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNewDynamic();
-			}			
+			}
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
 				getName("Thread supplier"),
 				GlobalProperties,
@@ -299,13 +299,13 @@ public class StaticComponentContainer {
 				getAndAdjustConfigurationForBackgroundExecutor()
 			);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(
-				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer", 
+				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer",
 				true
 			);
 			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
-			}		
-			
+			}
+
 			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BANNER_HIDE))) {
 				showBanner();
 			}
@@ -322,7 +322,7 @@ public class StaticComponentContainer {
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
 			BufferHandler = org.burningwave.core.jvm.BufferHandler.create(GlobalProperties);
 			Streams = org.burningwave.core.io.Streams.create();
-			Classes = org.burningwave.core.classes.Classes.create();			
+			Classes = org.burningwave.core.classes.Classes.create();
 			Cache = org.burningwave.core.Cache.create();
 			Members = org.burningwave.core.classes.Members.create();
 			Fields = org.burningwave.core.classes.Fields.create();
@@ -379,13 +379,13 @@ public class StaticComponentContainer {
 							ThreadSupplier.shutDownAll();
 						});
 					});
-					
+
 					Executor.runAndIgnoreExceptions(closingOperations);
 
 				})
 			);
 			ManagedLoggersRepository.logInfo(
-				StaticComponentContainer.class::getName, 
+				StaticComponentContainer.class::getName,
 				"{} initialized in {} seconds",
 				StaticComponentContainer.class.getName(),
 				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
@@ -406,11 +406,11 @@ public class StaticComponentContainer {
 					retrieveAllTasksMonitoringConfig()
 				);
 			}
-			
+
 			if (JVMInfo.getVersion() > 8) {
 				Modules = org.burningwave.core.classes.Modules.create();
 				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
-					try { 
+					try {
 						Modules.exportAllToAll();
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(StaticComponentContainer.class::getName, "Unable to export all modules to all modules", exc);
@@ -422,8 +422,8 @@ public class StaticComponentContainer {
 		} catch (Throwable exc){
 			exc.printStackTrace();
 			throw new RuntimeException(exc);
-		} 
-		
+		}
+
 	}
 
 	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
@@ -436,7 +436,7 @@ public class StaticComponentContainer {
 			GlobalProperties.put("background-executor.queue-task-executor[0].priority", Thread.MIN_PRIORITY);
 			if (GlobalProperties.get("background-executor.queue-task-executor[0].name") == null) {
 				GlobalProperties.put("background-executor.queue-task-executor[0].name", "Low priority tasks");
-			}			
+			}
 			GlobalProperties.put("background-executor.queue-task-executor[1].priority", Thread.NORM_PRIORITY);
 			if (GlobalProperties.get("background-executor.queue-task-executor[1].name") == null) {
 				GlobalProperties.put("background-executor.queue-task-executor[1].name", "Normal priority tasks");
@@ -471,7 +471,7 @@ public class StaticComponentContainer {
 
 
 	private static java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
-		Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+		Set<ClassLoader> classLoaders = new HashSet<>();
 		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
 
@@ -481,12 +481,12 @@ public class StaticComponentContainer {
 			classLoaders.toArray(new ClassLoader[classLoaders.size()])
 		);
 	}
-	
-	
+
+
 	private static String getName(String simpleName) {
 		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
-	
+
 	private static final QueuedTasksExecutor.Group.TasksMonitorer.Config retrieveAllTasksMonitoringConfig() {
 		String probablyDeadLockedThreadsHandlingPolicy = GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY);
 		return new QueuedTasksExecutor.Group.TasksMonitorer.Config().setAllTasksLoggerEnabled(
@@ -495,27 +495,27 @@ public class StaticComponentContainer {
 			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL))
 		).setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
 			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED))
-		).setMarkAsProbableDeadLocked(	
+		).setMarkAsProbableDeadLocked(
 			probablyDeadLockedThreadsHandlingPolicy.toLowerCase().contains("mark as probable dead locked")
 		).setKillProbableDeadLockedTasks(
 			probablyDeadLockedThreadsHandlingPolicy.toLowerCase().contains("abort")
 		);
-	};
-	
+	}
+
 	private static void showBanner() throws IOException {
 		try (InputStream inputStream = Resources.getAsInputStream(
 			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
 			Component.class.getClassLoader(),
-			Thread.currentThread().getContextClassLoader()			
+			Thread.currentThread().getContextClassLoader()
 		).getValue()) {
 			List<String> bannerList = Arrays.asList(
 				Resources.getAsStringBuffer(
 					inputStream
-				).toString().split("-------------------------------------------------------------------------------------------------------------")	
+				).toString().split("-------------------------------------------------------------------------------------------------------------")
 			);
 			Collections.shuffle(bannerList);
 			System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
 		}
 	}
-	
+
 }

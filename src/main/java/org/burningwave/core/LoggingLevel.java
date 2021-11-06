@@ -36,32 +36,32 @@ public class LoggingLevel {
 	public final static int INFO_ENABLED = 0b00100;
 	public final static int WARN_ENABLED = 0b01000;
 	public final static int ERROR_ENABLED = 0b10000;
-	
+
 	public final static LoggingLevel TRACE = new LoggingLevel(TRACE_ENABLED);
 	public final static LoggingLevel DEBUG = new LoggingLevel(DEBUG_ENABLED);
 	public final static LoggingLevel INFO = new LoggingLevel(INFO_ENABLED);
 	public final static LoggingLevel WARN = new LoggingLevel(WARN_ENABLED);
 	public final static LoggingLevel ERROR = new LoggingLevel(ERROR_ENABLED);
 	private final static LoggingLevel ALL_LEVEL = new LoggingLevel(ALL_LEVEL_ENABLED);
-	
+
 	public static enum Label {
 		TRACE, DEBUG, INFO, WARN, ERROR
 	}
-	
+
 	Integer flags;
-	
+
 	LoggingLevel(int flags){
 		this.flags = flags;
 	}
-	
+
 	boolean matchPartialy(Integer flags) {
 		return (this.flags & flags) != 0;
 	}
-	
+
 	boolean partialyMatch(LoggingLevel level) {
 		return matchPartialy(level.flags);
 	}
-	
+
 	static LoggingLevel fromLabel(String label) {
 		if (label.toLowerCase().contains(Label.TRACE.name().toLowerCase())) {
 			return TRACE;
@@ -78,25 +78,25 @@ public class LoggingLevel {
 		}
 		return null;
 	}
-	
+
 	static class Mutable extends LoggingLevel{
 
 		Mutable(int flags) {
 			super(flags);
 		}
-		
+
 		void add(Integer flags) {
 			this.flags |= flags;
 		}
-		
+
 		void remove(Integer flags) {
 			this.flags &= ALL_LEVEL_ENABLED ^ flags;
 		}
-		
+
 		void set(Integer flags) {
 			this.flags = flags;
 		}
 	}
-	
-	
+
+
 }

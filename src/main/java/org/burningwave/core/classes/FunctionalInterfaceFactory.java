@@ -31,25 +31,25 @@ package org.burningwave.core.classes;
 import java.lang.reflect.Executable;
 
 public interface FunctionalInterfaceFactory {
-	
+
 	public static FunctionalInterfaceFactory create(ClassFactory classFactory) {
 		return new FunctionalInterfaceFactoryImpl(classFactory);
 	}
-	
+
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes);
-	
+
 	public <T> T getOrCreate(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
-	
+
 	public <F> F getOrCreate(Executable executable);
 
 	public <T> T getOrCreateFunction(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
 
 	public <T> T getOrCreatePredicate(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
-	
+
 	public <T> T getOrCreateConsumer(Class<?> targetClass, String methodName, Class<?>... argumentTypes);
-	
+
 	public <T> T getOrCreateSupplier(Class<?> targetClass, String methodName);
-	
+
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(int parametersCount);
 
 	public <T> Class<T> loadOrBuildAndDefineFunctionSubType(ClassLoader classLoader, int parametersLength);
@@ -62,5 +62,5 @@ public interface FunctionalInterfaceFactory {
 
 	public <T> Class<T> loadOrBuildAndDefinePredicateSubType(ClassLoader classLoader, int parametersLength);
 
-	
+
 }

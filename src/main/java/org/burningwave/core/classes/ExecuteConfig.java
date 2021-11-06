@@ -32,10 +32,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.burningwave.core.Executable;
-import java.util.Properties;
 
 @SuppressWarnings("unchecked")
 public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBuildAndDefineConfig.ForCodeExecutorAbst<C> {
@@ -43,23 +43,23 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	List<Object> params;
 	boolean useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled;
-	
+
 	ExecuteConfig(String name, BodySourceGenerator bodySG) {
 		super(name, bodySG);
 		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = true;
 	}
-	
+
 	public C useAsParentClassLoader(ClassLoader parentClassLoader) {
 		this.parentClassLoader = parentClassLoader;
 		return (C)this;
 	}
-	
+
 	public C useDefaultClassLoaderAsParent(boolean flag) {
 		this.useDefaultClassLoaderAsParentIfParentClassLoaderIsNull = flag;
 		useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled = true;
-		return (C)this; 
+		return (C)this;
 	}
-	
+
 	public C withParameter(Object... parameters) {
 		if (params == null) {
 			params = new ArrayList<>();
@@ -72,8 +72,8 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			params.add(null);
 		}
 		return (C)this;
-	}		
-	
+	}
+
 	ClassLoader getParentClassLoader() {
 		return parentClassLoader;
 	}
@@ -81,7 +81,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 	boolean isUseDefaultClassLoaderAsParentIfParentClassLoaderIsNull() {
 		return useDefaultClassLoaderAsParentIfParentClassLoaderIsNull;
 	}
-	
+
 	@Override
 	public C useClassLoader(ClassLoader classLoader) {
 		if (!useDefaultClassLoaderAsParentIfParentClassLoaderIsNullHasBeenCalled) {
@@ -92,41 +92,41 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 
 	Object[] getParams() {
 		return params != null ?
-			params.toArray(new Object[params.size()]) : 
+			params.toArray(new Object[params.size()]) :
 			null;
 	}
-	
+
 	public static ExecuteConfig.ForProperties fromDefaultProperties() {
 		return new ForProperties();
 	}
-	
+
 	public static ExecuteConfig.ForProperties forProperties(Properties properties) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.properties = properties;
 		return fromProperties;
 	}
-	
+
 	public static ExecuteConfig.ForProperties forProperty(String propertyName) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.propertyName = propertyName;
 		return fromProperties;
 	}
-	
+
 	public static ExecuteConfig.ForProperties forPropertiesFile(String filePath) {
 		ExecuteConfig.ForProperties fromProperties = new ForProperties();
 		fromProperties.filePath = filePath;
 		return fromProperties;
 	}
-	
+
 	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator() {
 		return forBodySourceGenerator(BodySourceGenerator.createSimple());
 	}
-	
+
 	public static ExecuteConfig.ForBodySourceGenerator forBodySourceGenerator(BodySourceGenerator body) {
 		return new ForBodySourceGenerator(body);
 	}
-	
-	
+
+
 	public static class ForProperties extends ExecuteConfig<ExecuteConfig.ForProperties> {
 		private Properties properties;
 		private String propertyName;
@@ -134,7 +134,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		private boolean isAbsoluteFilePath;
 		private boolean indentCodeActive;
 		private Map<Object, Object> defaultValues;
-		    		
+
 		private ForProperties() {
 			super(
 				Executable.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
@@ -144,18 +144,18 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			indentCodeActive = true;
 			virtualizeClasses(false);
 		}
-		
-		
+
+
 		public ExecuteConfig.ForProperties setPropertyName(String propertyName) {
 			this.propertyName = propertyName;
 			return this;
 		}
-		
+
 		public ExecuteConfig.ForProperties setFilePathAsAbsolute(boolean flag) {
 			this.isAbsoluteFilePath = flag;
 			return this;
 		}
-		
+
 		public ExecuteConfig.ForProperties withDefaultPropertyValue(String key, String value) {
 			if (defaultValues == null) {
 				defaultValues = new HashMap<>();
@@ -163,7 +163,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			defaultValues.put(key, value);
 			return this;
 		}
-		
+
 		public ExecuteConfig.ForProperties withDefaultPropertyValues(Map<?, ?> defaultValues) {
 			if (this.defaultValues == null && defaultValues != null) {
 				this.defaultValues = new HashMap<>();
@@ -200,34 +200,34 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			this.indentCodeActive = flag;
 			return this;
 		}
-		
+
 		boolean isIndentCodeActive() {
 			return indentCodeActive;
-		}   		
-		
+		}
+
 	}
-	
-	
+
+
 	public static class ForBodySourceGenerator extends ExecuteConfig<ExecuteConfig.ForBodySourceGenerator> {
-	
+
 		private ForBodySourceGenerator(BodySourceGenerator body) {
 			super(
 				Executable.class.getPackage().getName() + ".CodeExecutor_" + UUID.randomUUID().toString().replaceAll("-", ""),
-				body			
+				body
 			);
 			virtualizeClasses(false);
 		}
-		
+
 		public ExecuteConfig.ForBodySourceGenerator addCodeLine(String... lineOfCode) {
 			body.addCodeLine(lineOfCode);
 			return this;
 		}
-		
+
 		public ExecuteConfig.ForBodySourceGenerator addCode(String... code) {
 			body.addCode(code);
 			return this;
 		}
-		
+
 		public ExecuteConfig.ForBodySourceGenerator addCode(SourceGenerator... generators) {
 			body.addElement(generators);
 			return this;

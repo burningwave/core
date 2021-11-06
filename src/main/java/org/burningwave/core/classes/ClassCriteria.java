@@ -55,12 +55,12 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 	Map<String, MemberCriteria<?, ?, ?>> memberCriterias;
 	PentaPredicate<ClassCriteria, TestContext, MemberCriteria<?, ?, ?>, String, Class<?>> membersPredicate;
 	private boolean collectMembers;
-	
+
 	private ClassCriteria() {
 		super();
 		memberCriterias = new HashMap<>();
 	}
-	
+
 	void init(ClassLoader classSupplier) {
 		this.classSupplier = cls -> {
 			try {
@@ -90,7 +90,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			membersPredicate = this::testMembers;
 		}
 	}
-	
+
 	public ClassCriteria allThoseThatHaveAMatchInHierarchy(BiPredicate<TestContext, Class<?>> predicate) {
 		return super.allThoseThatMatch((testContext, cls) -> {
             while (cls != null) {
@@ -102,7 +102,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
             return false;
         });
 	}
-	
+
 	public ClassCriteria allThoseThatHaveAMatchInHierarchy(Predicate<Class<?>> predicate) {
 		return super.allThoseThatMatch((cls) -> {
             while (cls != null) {
@@ -114,7 +114,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
             return false;
         });
 	}
-	
+
 	public ClassCriteria byClassesThatHaveAMatchInHierarchy(BiPredicate<Map<Class<?>, Class<?>>, Class<?>> predicate) {
 		return byClassesThatMatch((uploadedClasses, cls) -> {
             while (cls != null) {
@@ -126,7 +126,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
             return false;
         });
 	}
-	
+
 	public ClassCriteria byClassesThatMatch(BiPredicate<Map<Class<?>, Class<?>>, Class<?>> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -136,7 +136,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		);
 		return this;
 	}
-	
+
 	public static ClassCriteria create() {
 		return new ClassCriteria();
 	}
@@ -161,8 +161,8 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		);
 		targetCriteria.collectMembers = leftCriteria.collectMembers || rightCriteria.collectMembers;
 		return super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
-	}	
-	
+	}
+
 	public ClassCriteria packageName(final Predicate<String> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -175,7 +175,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		);
 		return this;
 	}
-	
+
 
 	public ClassCriteria className(final Predicate<String> predicate) {
 		this.predicate = concat(
@@ -185,7 +185,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		return this;
 	}
 
-	
+
 	public ClassCriteria byBytecode(Predicate<byte[]> predicate) {
 		this.predicate = concat(
 			this.predicate,
@@ -196,24 +196,24 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		);
 		return this;
 	}
-	
+
 	public ClassCriteria byBytecode(BiPredicate<Map<Class<?>, byte[]>, byte[]> predicate) {
 		this.predicate = concat(
 			this.predicate,
 			(context, cls) -> {
 				ClassCriteria criteria = context.getCriteria();
 				return predicate.test(
-					criteria.getLoadedBytecode(), 
+					criteria.getLoadedBytecode(),
 					BufferHandler.toByteArray(criteria.byteCodeSupplier.apply(cls))
 				);
 			}
 		);
 		return this;
 	}
-	
+
 	public <M extends Member> ClassCriteria byMembers(MemberCriteria<?, ?, ?> memberCriteria) {
 		final String key = UUID.randomUUID().toString();
-		this.memberCriterias.put(key, memberCriteria);		
+		this.memberCriterias.put(key, memberCriteria);
 		this.predicate = concat(
 			this.predicate,
 			(context, cls) -> {
@@ -224,29 +224,29 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		this.collectMembers = true;
 		return this;
 	}
-	
+
 	private boolean testMembers(
 		ClassCriteria criteria,
 		TestContext context,
 		MemberCriteria<?, ?, ?> memberCriteria,
-		String key, 
+		String key,
 		Class<?> cls
 	) {
 		return Members.match(criteria.memberCriterias.get(key), cls);
 	}
-	
-	private boolean testAndCollectMembers( 
+
+	private boolean testAndCollectMembers(
 		ClassCriteria criteria,
 		TestContext context,
 		MemberCriteria<?, ?, ?> memberCriteria,
-		String key, 
+		String key,
 		Class<?> cls
 	) {
 		Collection<Member> members = (Collection<Member>)Members.findAll(criteria.memberCriterias.get(key), cls);
 		context.addMembersFound(memberCriteria, members);
 		return !members.isEmpty();
 	}
-	
+
 	@Override
 	public ClassCriteria createCopy() {
 		ClassCriteria copy = super.createCopy();
@@ -259,8 +259,8 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		copy.collectMembers = this.collectMembers;
 		return copy;
 	}
-	
-	
+
+
 	@Override
 	protected TestContext createTestContext() {
 		return TestContext.create(this);
@@ -271,28 +271,28 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 		private enum Elements {
 			MEMBERS_FOUND
 		}
-		
+
 		protected TestContext(ClassCriteria criteria) {
 			super(criteria);
 			if (criteria.collectMembers) {
 				put(Elements.MEMBERS_FOUND, new ConcurrentHashMap<MemberCriteria<?, ?, ?>, Collection<Member>>());
 			}
 		}
-		
+
 		public static TestContext create(ClassCriteria criteria) {
 			return new TestContext(criteria);
 		}
-		
+
 		public Map<MemberCriteria<?, ?, ?>, Collection<Member>> getMembersFound() {
 			return get(Elements.MEMBERS_FOUND);
 		}
-		
+
 		void addMembersFound(MemberCriteria<?, ?, ?> criteria, Collection<Member> members) {
 			getMembersFound().put(criteria, members);
 		}
 	}
-	
-	
+
+
 	@Override
 	public void close() {
 		this.memberCriterias.clear();

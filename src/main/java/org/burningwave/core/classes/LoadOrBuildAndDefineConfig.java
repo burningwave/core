@@ -34,7 +34,7 @@ import java.util.Collection;
 
 @SuppressWarnings("unchecked")
 public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<LoadOrBuildAndDefineConfig> {
-	
+
 	public LoadOrBuildAndDefineConfig(UnitSourceGenerator... unitsCode) {
 		super(unitsCode);
 	}
@@ -47,15 +47,15 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 	public final static LoadOrBuildAndDefineConfig forUnitSourceGenerator(UnitSourceGenerator... unitsCode) {
 		return new LoadOrBuildAndDefineConfig(unitsCode);
 	}
-	
+
 	@SafeVarargs
 	public final static LoadOrBuildAndDefineConfig forUnitSourceGenerator(Collection<UnitSourceGenerator>... unitsCode) {
 		return new LoadOrBuildAndDefineConfig(unitsCode);
 	}
-	
+
 	public static class ForCodeExecutorAbst<C extends ForCodeExecutorAbst<C>> extends LoadOrBuildAndDefineConfigAbst<C> {
 		BodySourceGenerator body;
-		
+
 		ForCodeExecutorAbst(String executorName, BodySourceGenerator bodySG) {
 			super(
 				UnitSourceGenerator.create(Classes.retrievePackageName(executorName))
@@ -64,32 +64,32 @@ public class LoadOrBuildAndDefineConfig extends LoadOrBuildAndDefineConfigAbst<L
 			this.body = bodySG;
 			modifyCompilationConfig(compileConfig -> compileConfig.storeCompiledClasses(false));
 		}
-		
+
 		public C setSimpleName(String simpleName) {
 			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
 			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
 			cSG.getTypeDeclaration().setSimpleName(simpleName);
-			return (C)this;					
+			return (C)this;
 		}
-		
+
 		public C setName(String name) {
 			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
 			uSG.setPackageName(Classes.retrievePackageName(name));
 			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
 			cSG.getTypeDeclaration().setSimpleName(Classes.retrieveSimpleName(name));
-			return (C)this;					
+			return (C)this;
 		}
-		
+
 		String getExecutorName() {
 			UnitSourceGenerator uSG = unitSourceGenerators.iterator().next();
 			ClassSourceGenerator cSG = uSG.getAllClasses().values().iterator().next();
 			return uSG.getPackageName() + "." + cSG.getTypeDeclaration().getSimpleName();
 		}
-		
+
 		BodySourceGenerator getBody() {
 			return body;
 		}
-		
+
 	}
-	
+
 }

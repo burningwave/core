@@ -47,17 +47,17 @@ public class FieldCriteria extends MemberCriteria<
 	private FieldCriteria() {
 		super();
 	}
-	
+
 	public static FieldCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });
 	}
-	
+
 	public static FieldCriteria forEntireClassHierarchy() {
 		return new FieldCriteria();
 	}
-	
+
 	@Override
 	Function<Class<?>, Field[]> getMembersSupplierFunction() {
 		return Classes::getDeclaredFields;
@@ -66,12 +66,12 @@ public class FieldCriteria extends MemberCriteria<
 	public static FieldCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
 		return new FieldCriteria().scanUpTo(predicate);
 	}
-	
+
 	public static FieldCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
 		return new FieldCriteria().scanUpTo(predicate);
 	}
-	
-	
+
+
 	public FieldCriteria type(final Predicate<Class<?>> predicate) {
 		this.predicate = concat(
 			this.predicate,

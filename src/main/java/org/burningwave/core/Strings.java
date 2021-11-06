@@ -48,56 +48,56 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 
 public class Strings implements ManagedLogger {
-	
+
 	public final Pattern PLACE_HOLDER_NAME_EXTRACTOR_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
 	public final Pattern PLACE_HOLDER_EXTRACTOR_PATTERN = Pattern.compile("(\\$\\{[\\w\\d\\.\\:\\-]*\\})");
 
 	private Strings() {}
-	
+
 	public static Strings create() {
 		return new Strings();
 	}
-	
+
 	public String capitalizeFirstCharacter(String value) {
 		return Character.valueOf(value.charAt(0)).toString().toUpperCase()
 		+ value.substring(1, value.length());
 	}
-	
+
 	public boolean isBlank(String str) {
 		int strLen;
 		if ((str == null) || ((strLen = str.length()) == 0)) {
 			return true;
-		}	
+		}
 		for (int i = 0; i < strLen; ++i) {
 			if (!(Character.isWhitespace(str.charAt(i)))) {
 				return false;
 			}
 		}
 		return true;
-	}	
-	
+	}
+
 	public boolean isNotBlank(String str) {
 		return (!(isBlank(str)));
 	}
-	
-	
+
+
 	public boolean isEmpty(String str) {
 		return ((str == null) || (str.length() == 0));
 	}
 
 	public boolean isNotEmpty(String str) {
 		return (!(isEmpty(str)));
-	}	 
-	
-	
+	}
+
+
 	public boolean contains(String str, char searchChar) {
 		if (isEmpty(str)) {
 			return false;
 		}
 		return (str.indexOf(searchChar) >= 0);
 	}
-	
-	
+
+
 	public String strip(String str, String stripChars) {
 		if (isEmpty(str)) {
 			return str;
@@ -106,7 +106,7 @@ public class Strings implements ManagedLogger {
 		return stripEnd(str, stripChars);
 	}
 
-	
+
 	public String stripStart(String str, String stripChars) {
 		int strLen;
 		if (str == null || (strLen = str.length()) == 0) {
@@ -149,11 +149,11 @@ public class Strings implements ManagedLogger {
 	}
 	public String lowerCaseFirstCharacter(String string) {
 		return Character.toLowerCase(string.charAt(0)) + string.substring(1);
-	}	
-	
+	}
+
 	public String replace(String text, Map<String, String> params) {
 		AtomicReference<String> template = new AtomicReference<>(text);
-		params.forEach((key, value) -> 
+		params.forEach((key, value) ->
 			template.set(
 				template.get().replaceAll(
 					key.replaceAll("\\$", "\\\\\\$")
@@ -165,8 +165,8 @@ public class Strings implements ManagedLogger {
 		);
 		return template.get();
 	}
-	
-	
+
+
 	public Map<Integer, List<String>> extractAllGroups(Pattern pattern, String target) {
 		Matcher matcher = pattern.matcher(target);
 		Map<Integer, List<String>> found = new LinkedHashMap<>();
@@ -177,7 +177,7 @@ public class Strings implements ManagedLogger {
 					if ((foundString = found.get(i)) == null) {
 						foundString = new ArrayList<>();
 						found.put(i, foundString);
-					}					
+					}
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
@@ -186,14 +186,14 @@ public class Strings implements ManagedLogger {
 		}
 		return found;
 	}
-	
+
 	public String compile(String message, Object... arguments) {
 		for (Object obj : arguments) {
 			message = message.replaceFirst("\\{\\}", Objects.isNull(obj) ? "null" : clear(obj.toString()));
 		}
 		return message;
 	}
-	
+
 	private String clear(String text) {
 		return text
 		.replace("\\", "\\\\\\")
@@ -204,27 +204,27 @@ public class Strings implements ManagedLogger {
 		.replace(".", "\\.")
 		.replace("$", "\\$");
 	}
-	
+
     public String from(StackTraceElement[] stackTrace) {
         return from(stackTrace, '\t', 1);
     }
-    
+
     public String from(StackTraceElement[] stackTrace, int marginCount) {
         return from(stackTrace, '\t', marginCount);
     }
-    
+
     public String from(StackTraceElement[] stackTrace, char marginChar, int marginCount) {
     	return from(Arrays.asList(stackTrace), marginChar, marginCount);
     }
-    
+
     public String from(List<StackTraceElement> stackTrace) {
     	return from(stackTrace, '\t', 1);
     }
-    
+
     public String from(List<StackTraceElement> stackTrace, int marginCount) {
     	return from(stackTrace, '\t', marginCount);
     }
-    
+
     public String from(List<StackTraceElement> stackTrace, char marginChar, int marginCount) {
     	if (stackTrace.isEmpty()) {
     		return "";
@@ -232,15 +232,15 @@ public class Strings implements ManagedLogger {
     	String margin = new String(new char[marginCount]).replace('\0', marginChar);
     	return "\n" + margin + "at " + String.join("\n" + margin + "at ", stackTrace.stream().map(sTE -> sTE.toString()).collect(Collectors.toList()));
     }
-	
+
 	public String formatMessage(Throwable exc) {
 		return exc.toString() + ": " + exc.getMessage();
 	}
-    
+
 	public static class Paths {
 		Function<String, String> pathCleaner;
 		Function<String, String> uRLPathConverter;
-		
+
 		private Paths() {
 			if (StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")) {
 				pathCleaner = (path) -> {
@@ -250,7 +250,7 @@ public class Strings implements ManagedLogger {
 					}
 					if (path.endsWith("/")) {
 						path = path.substring(0, path.length() - 1);
-					}	
+					}
 					return path.replaceAll("\\/{2,}", "/");
 				};
 				uRLPathConverter = this::convertURLPathToAbsolutePath0;
@@ -265,15 +265,15 @@ public class Strings implements ManagedLogger {
 				uRLPathConverter = this::convertURLPathToAbsolutePath1;
 			}
 		}
-		
+
 		public static Paths create() {
 			return new Paths();
 		}
-		
+
 		public String clean(String path) {
 			return pathCleaner.apply(path);
 		}
-		
+
 		public String toSquaredPath(String absolutePath, boolean isFolder) {
 			String squaredPath = null;
 			String root = absolutePath.indexOf("/") > 0?
@@ -294,7 +294,7 @@ public class Strings implements ManagedLogger {
 			}
 			return "[" + root + "]" + squaredPath;
 		}
-		
+
 		public String normalizeAndClean(String path) {
 			if (path.contains("..") ||
 				path.contains(".\\") ||
@@ -304,7 +304,7 @@ public class Strings implements ManagedLogger {
 			}
 			return clean(path);
 		}
-		
+
 		public String getExtension(String path) {
 			if (path.endsWith("/")) {
 				return null;
@@ -318,11 +318,11 @@ public class Strings implements ManagedLogger {
 			}
 			return null;
 		}
-		
+
 		public String convertURLPathToAbsolutePath(String inputURLPath) {
 			return uRLPathConverter.apply(inputURLPath);
 		}
-		
+
 		private String convertURLPathToAbsolutePath0(String inputURLPath) {
 			String absolutePath = Executor.get(() ->
 				URLDecoder.decode(
@@ -332,24 +332,24 @@ public class Strings implements ManagedLogger {
 			absolutePath = removeInitialPathElements(absolutePath,
 				"jar:",
 				"zip:",
-				"file:", 
+				"file:",
 				//Patch for tomcat 7
 				"!"
 			);
-			
+
 			if (absolutePath.startsWith("/")) {
 				absolutePath = absolutePath.substring(1);
 			}
-			
+
 			absolutePath = absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
-			
+
 			if (absolutePath.endsWith("/")) {
 				absolutePath = absolutePath.substring(0, absolutePath.length() - 1);
 			}
-			
+
 			return absolutePath;
 		}
-		
+
 		private String convertURLPathToAbsolutePath1(String inputURLPath) {
 			String absolutePath = Executor.get(() ->
 				URLDecoder.decode(
@@ -359,21 +359,21 @@ public class Strings implements ManagedLogger {
 			absolutePath = removeInitialPathElements(absolutePath,
 				"jar:",
 				"zip:",
-				"file:", 
+				"file:",
 				//Patch for tomcat 7
 				"!"
 			);
-			
+
 			absolutePath = absolutePath.replaceAll("\\.(.*?)!\\/", "\\.$1\\/");
 			return absolutePath;
 		}
-		
+
 		public String removeInitialPathElements(String path, String... toRemove) {
 			if (toRemove != null && toRemove.length > 0) {
-				for (int i = 0; i < toRemove.length; i++) {
-					if (path.startsWith(toRemove[i])) {
+				for (String element : toRemove) {
+					if (path.startsWith(element)) {
 						path = path.substring(
-							path.indexOf(toRemove[i]) + toRemove[i].length(), 
+							path.indexOf(element) + element.length(),
 							path.length());
 					}
 				}
@@ -384,7 +384,7 @@ public class Strings implements ManagedLogger {
 
 
 	public boolean areEquals(String string1, String string2) {
-		return (isEmpty(string1) && isEmpty(string2)) || 
+		return (isEmpty(string1) && isEmpty(string2)) ||
 			(isNotEmpty(string1) && isNotEmpty(string2) && string1.equals(string2));
 	}
 

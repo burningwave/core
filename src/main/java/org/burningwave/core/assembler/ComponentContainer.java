@@ -77,35 +77,35 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier, Properties.Listener, ManagedLogger {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
-			
+
 			public static final String AFTER_INIT = "component-container.after-init.operations";
-					
+
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-	
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
-				Arrays.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR + 
+				Arrays.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
 				SearchResult.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
 			);
 			defaultValues.put(
-				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX, 
+				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,
 				ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
 			);
-			
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	private static Collection<ComponentContainer> instances;
 	private Map<Class<?>, Component> components;
 	private Supplier<java.util.Properties> propertySupplier;
@@ -114,26 +114,26 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private Consumer<ComponentContainer> preAfterInitCall;
 	private QueuedTasksExecutor.Task afterInitTask;
 	private String instanceId;
-	
+
 	static {
 		instances = ConcurrentHashMap.newKeySet();
 	}
-	
+
 	ComponentContainer(Supplier<java.util.Properties> propertySupplier) {
 		this.instanceId = getId();
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
-		this.config = new Properties();		
+		this.config = new Properties();
 		listenTo(GlobalProperties);
 		listenTo(this.config);
 		instances.add(this);
 	}
-	
+
 	public final static ComponentContainer create(String configFileName) {
 		try {
 			return new ComponentContainer(() -> {
 				try {
-					Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+					Set<ClassLoader> classLoaders = new HashSet<>();
 					classLoaders.add(ComponentContainer.class.getClassLoader());
 					classLoaders.add(Thread.currentThread().getContextClassLoader());
 					java.util.Properties config = io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
@@ -154,7 +154,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	public final static ComponentContainer create(java.util.Properties properties) {
 		try {
 			return new ComponentContainer(() -> properties).init();
@@ -163,11 +163,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	public final static ComponentContainer create() {
 		return create((Properties)null);
 	}
-	
+
 	private ComponentContainer init() {
 		Properties config = new Properties();
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
@@ -182,7 +182,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		defaultProperties.putAll(ClassPathScanner.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(ClassPathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathScannerClassLoader.Configuration.DEFAULT_VALUES);
-				
+
 		config.putAll(GlobalProperties);
 		Optional.ofNullable(propertySupplier.get()).ifPresent(customConfig -> config.putAll(customConfig));
 		for (Map.Entry<Object, Object> defVal : defaultProperties.entrySet()) {
@@ -192,19 +192,19 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			IterableObjectHelper.refresh(this.config, config);
 		});
-		
+
 		logConfigProperties();
 		setAfterInitTask();
 		return this;
 	}
-	
+
 	private ComponentContainer setAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.afterInitTask = BackgroundExecutor.createTask(task -> {
 					if (preAfterInitCall != null) {
 						preAfterInitCall.accept(this);
-					}				
+					}
 					Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
 					if (tasks != null) {
 						for (QueuedTasksExecutor.TaskAbst<?, ?> iteratedTask : tasks) {
@@ -216,12 +216,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return this;
 	}
-	
+
 	public ComponentContainer preAfterInit(Consumer<ComponentContainer> preAfterInitCall) {
 		this.preAfterInitCall = preAfterInitCall;
 		return this;
 	}
-	
+
 	public void logConfigProperties() {
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
@@ -231,12 +231,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			componentContainerConfig.toPrettyString(2)
 		);
 	}
-	
+
 	ComponentContainer markAsUndestroyable() {
 		this.isUndestroyable = true;
 		return this;
 	}
-	
+
 	@Override
 	public void processChangeNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
 		if (properties == GlobalProperties) {
@@ -279,36 +279,36 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private String getMutexForComponentsId() {
 		return instanceId + "_components";
 	}
-	
+
 	public void reset() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear();
 			init();
 		});
 	}
-	
+
 	public static ComponentContainer getInstance() {
 		return Holder.getComponentContainerInstance();
 	}
-	
+
 	public String getConfigProperty(String propertyName) {
 		return IterableObjectHelper.resolveStringValue(ResolveConfig.forNamedKey(propertyName).on(config));
 	}
-	
+
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
 		return IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(propertyName).on(config).withDefaultValues(defaultValues)
 		);
 	}
-	
+
 	public Object setConfigProperty(String propertyName, Object propertyValue) {
 		return config.put(propertyName, propertyValue);
 	}
-	
+
 	public Object removeConfigProperty(String propertyName) {
 		return config.remove(propertyName);
 	}
-	
+
 	@Override
 	public <I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier) {
 		T component = (T)components.get(cls);
@@ -328,7 +328,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return component;
 	}
-	
+
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(PathScannerClassLoader.class, () -> {
@@ -355,10 +355,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return classLoader;
 		});
 	}
-	
+
 	@Override
 	public ClassFactory getClassFactory() {
-		return getOrCreate(ClassFactory.class, () -> 
+		return getOrCreate(ClassFactory.class, () ->
 			ClassFactory.create(
 				getByteCodeHunter(),
 				() -> getClassPathHunter(),
@@ -370,20 +370,20 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				),
 				config
 			)
-		);	
+		);
 	}
-	
+
 	@Override
 	public CodeExecutor getCodeExecutor() {
-		return getOrCreate(CodeExecutor.class, () -> 
+		return getOrCreate(CodeExecutor.class, () ->
 			CodeExecutor.create(
 				() -> getClassFactory(),
 				getPathHelper(),
 				config
 			)
-		);	
+		);
 	}
-	
+
 	@Override
 	public JavaMemoryCompiler getJavaMemoryCompiler() {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
@@ -418,10 +418,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			)
 		);
 	}
-	
+
 	@Override
 	public ClassPathHunter getClassPathHunter() {
-		return getOrCreate(ClassPathHunter.class, () -> 
+		return getOrCreate(ClassPathHunter.class, () ->
 			ClassPathHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
@@ -432,10 +432,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			)
 		);
 	}
-	
+
 	@Override
 	public ByteCodeHunter getByteCodeHunter() {
-		return getOrCreate(ByteCodeHunter.class, () -> 
+		return getOrCreate(ByteCodeHunter.class, () ->
 			ByteCodeHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
@@ -449,7 +449,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
-		return getOrCreate(FunctionalInterfaceFactory.class, () -> 
+		return getOrCreate(FunctionalInterfaceFactory.class, () ->
 			FunctionalInterfaceFactory.create(
 				getClassFactory()
 			)
@@ -464,11 +464,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			)
 		);
 	}
-	
+
 	public <T> T resolveProperty(java.util.Properties properties, String configKey) {
 		return resolveProperty(properties, configKey, null);
 	}
-	
+
 	public <T> T resolveProperty(java.util.Properties properties, String configKey, Map<?, ?> defaultValues) {
 		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
@@ -489,11 +489,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return object;
 		}
 	}
-	
+
 	@Override
 	public ComponentContainer clear() {
 		Map<Class<?>, Component> components = this.components;
-		Synchronizer.execute(getMutexForComponentsId(), () -> { 
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			this.components = new ConcurrentHashMap<>();
 		});
 		if (!components.isEmpty()) {
@@ -504,7 +504,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 							component.close();
 						} else {
 							((PathScannerClassLoader)component).unregister(this, true);
-						}					
+						}
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(getClass()::getName,"Exception occurred while closing " + component, exc);
 					}
@@ -513,7 +513,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return this;
 	}
-	
+
 	public static void clearAll() {
 		for (ComponentContainer componentContainer : instances) {
 			try {
@@ -524,14 +524,14 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		Cache.clear();
 	}
-	
+
 	void close(boolean force) {
 		if (force || !isUndestroyable) {
 			instances.remove(this);
 			closeResources(() -> instanceId == null, task -> {
 				unregister(GlobalProperties);
 				unregister(config);
-				clear();			
+				clear();
 				components = null;
 				propertySupplier = null;
 				config = null;
@@ -541,12 +541,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		close(false);
 	}
-	
+
 	static void closeAll() {
 		boolean clearCache = !instances.isEmpty();
 		for (ComponentContainer componentContainer : instances) {
@@ -561,15 +561,15 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		System.gc();
 	}
-	
+
 	public static void clearAllCaches() {
 		clearAllCaches(true, true, true);
 	}
-	
+
 	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		clearAllCaches(closeHuntersResults, closeClassRetrievers, true);
 	}
-	
+
 	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
 			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
@@ -577,7 +577,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
 		System.gc();
 	}
-	
+
 	@Override
 	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
 		if (closeHuntersResults) {
@@ -589,7 +589,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		System.gc();
 	}
-	
+
 	@Override
 	public void closeHuntersSearchResults() {
 		ClassPathScanner.Abst<?, ?, ?> hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ByteCodeHunter.class);
@@ -606,10 +606,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 	}
 
-	
+
 	private static class Holder {
 		private static final ComponentContainer INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
-		
+
 		private static ComponentContainer getComponentContainerInstance() {
 			return INSTANCE;
 		}
@@ -618,14 +618,14 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public boolean isClosed() {
 		return !instances.contains(this);
 	}
-	
-	
+
+
 	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
-		
+
 		static {
 	        ClassLoader.registerAsParallelCapable();
 	    }
-		
+
 		Runnable markAsCloseableAlgorithm;
 		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
 			Criteria scanFileCriteria, Runnable markAsCloseableAlgorithm
@@ -633,7 +633,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			super(parentClassLoader, pathHelper, scanFileCriteria);
 			this.markAsCloseableAlgorithm = markAsCloseableAlgorithm;
 		}
-		
+
 		public void markAsCloseable() {
 			markAsCloseableAlgorithm.run();
 		}

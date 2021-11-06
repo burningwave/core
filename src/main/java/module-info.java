@@ -27,7 +27,7 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 module org.burningwave.core {
-	
+
     requires java.base;
     requires java.compiler;
     requires jdk.unsupported;
@@ -35,7 +35,7 @@ module org.burningwave.core {
     requires static io.github.toolfactory.narcissus;
     requires static org.burningwave.jvm;
     requires static org.slf4j;
-    
+
     exports org.burningwave.core;
     exports org.burningwave.core.assembler;
     exports org.burningwave.core.classes;
@@ -44,5 +44,5 @@ module org.burningwave.core {
     exports org.burningwave.core.io;
     exports org.burningwave.core.iterable;
     exports org.burningwave.core.jvm;
-    
+
 }

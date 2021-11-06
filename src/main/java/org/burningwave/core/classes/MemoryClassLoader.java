@@ -66,11 +66,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	protected boolean isClosed;
 	String instanceId;
 	ClassLoader[] allParents;
-	
+
 	static {
         ClassLoader.registerAsParallelCapable();
     }
-	
+
 	protected MemoryClassLoader(
 		ClassLoader parentClassLoader
 	) {
@@ -89,13 +89,13 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	private void computeAllParents() {
 		Collection<ClassLoader> allParents = ClassLoaders.getAllParents(this);
 		this.allParents = allParents.toArray(new ClassLoader[allParents.size()]);
-	}	
+	}
 
 	@Override
 	public void receive(ChangeParentsContext context) {
-		computeAllParents();		
+		computeAllParents();
 	}
-	
+
 	public static MemoryClassLoader create(ClassLoader parentClassLoader) {
 		return new MemoryClassLoader(parentClassLoader);
 	}
@@ -115,7 +115,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	void addByteCode0(String className, ByteBuffer byteCode) {
 		notLoadedByteCodes.put(className, byteCode);
 	}
-    
+
     public Map.Entry<String, ByteBuffer> getNotLoadedByteCode(String className) {
     	try {
         	for (Map.Entry<String, ByteBuffer> entry : notLoadedByteCodes.entrySet()){
@@ -132,7 +132,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     	}
     	return null;
     }
-    
+
     public ByteBuffer getByteCodeOf(String className) {
     	try {
     		return Optional.ofNullable(notLoadedByteCodes.get(className)).orElseGet(() -> Optional.ofNullable(loadedByteCodes.get(className)).orElseGet(() -> null));
@@ -145,7 +145,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     	}
     	return null;
     }
-    
+
     void addByteCodes(Map<String, ByteBuffer> byteCodes) {
     	try {
     		for (Map.Entry<String, ByteBuffer> clazz : byteCodes.entrySet()) {
@@ -160,9 +160,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", byteCodes.toString(), this.toString());
     		}
     	}
-		
+
     }
-    
+
     public void addByteCodes(Collection<Entry<String, ByteBuffer>> classes) {
     	try {
     		for (Map.Entry<String, ByteBuffer> clazz : classes) {
@@ -177,7 +177,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
     		}
     	}
-	} 
+	}
 
 	public void addByteCodes(Entry<String, ByteBuffer>... classes) {
 		try {
@@ -192,13 +192,13 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		} else {
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
     		}
-    	}    	
-	} 
-    
+    	}
+	}
+
 	public boolean hasPackageBeenDefined(String packageName) {
 		return Strings.isEmpty(packageName) || ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
 	}
-    
+
     @Override
     protected Package definePackage(String packageName, String specTitle,
 		String specVersion, String specVendor, String implTitle,
@@ -216,7 +216,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     	}
     	return pkg;
     }
-    
+
 	void definePackageOf(Class<?> cls) {
 		if (cls.getName().contains(".")) {
 			String pckgName = cls.getName().substring(
@@ -228,10 +228,10 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		    			definePackage(pckgName, null, null, null, null, null, null, null);
 		    		}
 		    	});
-			}	
+			}
 		}
 	}
-    
+
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws ClassNotFoundException {
     	Class<?> cls = null;
@@ -246,26 +246,26 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 				);
 			} else {
 				Driver.throwException(exc);
-			}			
+			}
 		}
     	removeNotLoadedBytecode(className);
     	return cls;
     }
-    
-    
+
+
     public Class<?> loadOrDefineClass(Class<?> toLoad) throws ClassNotFoundException {
     	return ClassLoaders.loadOrDefine(toLoad, this);
     }
-    
+
     public Class<?> loadOrDefineClass(JavaClass toLoad) throws ClassNotFoundException {
     	return ClassLoaders.loadOrDefineByJavaClass(toLoad, this);
     }
-    
+
     public Class<?> loadOrDefineClass(ByteBuffer byteCode) throws ClassNotFoundException {
     	return ClassLoaders.loadOrDefineByByteCode(byteCode, this);
     }
-    
-    
+
+
     @Override
     public InputStream getResourceAsStream(String name) {
     	InputStream inputStream = Resources.getAsInputStream(name, allParents).getValue();
@@ -274,7 +274,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     	}
     	return inputStream;
     }
-    
+
 	protected InputStream getByteCodeAsInputStream(String classRelativePath) {
 		if (classRelativePath.endsWith(".class")) {
 			ByteBuffer byteCode = getByteCode(classRelativePath);
@@ -286,7 +286,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     	}
 		return null;
 	}
-    
+
 	ByteBuffer getByteCode(String classRelativePath) {
 		try {
 			String className = classRelativePath.substring(0, classRelativePath.lastIndexOf(".class")).replace("/", ".");
@@ -301,11 +301,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		} else {
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute getByteCode on {} because {} has been closed", classRelativePath, this.toString());
     		}
-    	}    
+    	}
 		return null;
 	}
-    
-    
+
+
     protected void addLoadedByteCode(String className, ByteBuffer byteCode) {
     	try {
     		loadedByteCodes.put(className, byteCode);
@@ -315,10 +315,10 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		} else {
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addLoadedByteCode on {} because {} has been closed", className, this.toString());
     		}
-    	}    
+    	}
     }
-    
-    
+
+
 	@Override
     protected Class<?> findClass(String className) throws ClassNotFoundException {
 		Class<?> cls = null;
@@ -366,11 +366,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			throw new ClassNotFoundException(className);
 		}
 	}
-	
+
 	protected void logWarn(String className, String message) {
 		ManagedLoggersRepository.logWarn(getClass()::getName, message);
 	}
-	
+
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
 		synchronized(getClassLoadingLock(className)) {
 			Class<?> cls = super.defineClass(className, byteCode, protectionDomain);
@@ -389,18 +389,18 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		} else {
     			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute removeNotLoadedBytecode on class named {} because {} has been closed", className, this.toString());
     		}
-    	}    
+    	}
 	}
-	
-	
+
+
 	/*public Set<Class<?>> getLoadedClassesForPackage(Predicate<Package> packagePredicate	) {
 		return ClassLoaders.retrieveLoadedClassesForPackage(this, packagePredicate);
 	}*/
-	
+
 	Map<String, ByteBuffer> getLoadedBytecodes() {
 		return loadedByteCodes;
 	}
-		
+
 	public Collection<Class<?>> forceBytecodesLoading() {
 		Collection<Class<?>> loadedClasses = new HashSet<>();
 		for (Map.Entry<String, ByteBuffer> entry : new HashMap<>(notLoadedByteCodes).entrySet()){
@@ -412,7 +412,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 		return loadedClasses;
 	}
-	
+
 	@Override
 	public MemoryClassLoader clear () {
 		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
@@ -425,7 +425,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}, Thread.MIN_PRIORITY).submit();
 		return this;
 	}
-	
+
 	protected void unregister() {
 		ClassLoaders.unregister(this);
 		ClassLoaders.unregisterNotificationListenerOfParentsChange(this);
@@ -438,7 +438,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		Cache.bindedFunctionalInterfaces.remove(this, true);
 		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this, true);
 	}
-	
+
 	public synchronized boolean register(Object client) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
@@ -447,7 +447,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 		return false;
 	}
-	
+
 	public synchronized boolean unregister(Object client, boolean close) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
@@ -459,12 +459,12 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void close() {
 		closeResources();
 	}
-	
+
 	Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;

@@ -60,24 +60,24 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	private String instanceId;
 	private ClassPathHunter classPathHunter;
 	private FileSystemItem classPathsBasePath;
-	private Properties config;	
-	
-	
+	private Properties config;
+
+
 	ClassPathHelperImpl(
 		ClassPathHunter classPathHunter, Properties config
-	) {	
+	) {
 		this.instanceId = UUID.randomUUID().toString();
 		this.classPathHunter = classPathHunter;
 		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
 		this.config = config;
 		listenTo(config);
 	}
-	
+
 	@Override
 	public String getTemporaryFolderPrefix() {
 		return getClass().getName() + "@" + instanceId;
 	}
-	
+
 	CheckingOption getClassFileCheckingOption() {
 		return FileSystemItem.CheckingOption.forLabel(
 			config.resolveStringValue(
@@ -86,12 +86,12 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			)
 		);
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories) {
 		return compute(classRepositories, null, (Predicate<FileSystemItem>)null);
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(
 		Collection<String> classRepositories,
@@ -99,7 +99,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	) {
 		return computeByClassesSearching(classRepositories, null, classCriteria);
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig) {
 		SearchConfig searchConfigCopy = searchConfig.createCopy();
@@ -116,20 +116,20 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 				try(SearchResult result = classPathHunter.findBy(
 						searchConfigCopy
 					)
-				) {	
+				) {
 					return result.getClassPaths();
 				}
 			}
 		);
 	}
-			
-	
+
+
 	@Override
 	public Supplier<Map<String, String>> computeByClassesSearching(
 		Collection<String> classRepositories,
 		Collection<String> pathsToBeRefreshed,
 		ClassCriteria classCriteria
-	) {	
+	) {
 		SearchConfig searchConfig = SearchConfig.forPaths(classRepositories).by(
 			classCriteria
 		).optimizePaths(
@@ -142,8 +142,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 		return computeByClassesSearching(searchConfig);
 	}
-	
-	
+
+
 	@Override
 	public Supplier<Map<String, String>> computeFromSources(
 		Collection<String> sources,
@@ -151,7 +151,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	) {
 		return computeFromSources(sources, classRepositories, null, null);
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> computeFromSources(
 		Collection<String> sources,
@@ -163,7 +163,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
 		}
 		ClassCriteria classCriteria = ClassCriteria.create().className(
-			className -> 
+			className ->
 				imports.contains(className)
 		);
 		if (otherClassCriteria != null) {
@@ -171,11 +171,11 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 		return computeByClassesSearching(classRepositories, classCriteria);
 	}
-	
+
 	@Override
 	@SafeVarargs
 	public final Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, Collection<String>... pathColls) {
-		FileSystemItem.CheckingOption checkFileOption = 
+		FileSystemItem.CheckingOption checkFileOption =
 			getClassFileCheckingOption();
 		Collection<String> classPaths = new HashSet<>();
 		try (SearchResult result = classPathHunter.findBy(
@@ -187,7 +187,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					true
 				)
 			)
-		) {	
+		) {
 			for (FileSystemItem classPath : result.getClassPaths()) {
 				classPaths.add(classPath.getAbsolutePath());
 				classPath.reset();
@@ -195,12 +195,12 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 		return classPaths;
 	}
-	
+
 	@Override
 	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, String... path) {
 		return searchWithoutTheUseOfCache(classCriteria, Arrays.asList(path));
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> computeFromSources(
 		Collection<String> sources,
@@ -212,16 +212,16 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		for (String sourceCode : sources) {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
 		}
-		Predicate<FileSystemItem> javaClassFilter = (classFile) -> 
+		Predicate<FileSystemItem> javaClassFilter = (classFile) ->
 			imports.contains(classFile.toJavaClass().getName())
 		;
-		
+
 		if (javaClassFilterAdditionalFilter != null) {
 			javaClassFilter = javaClassFilter.or(javaClassFilterAdditionalFilter);
 		}
 		return compute(classRepositories, pathsToBeRefreshedPredicate, javaClassFilter);
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> compute(
 		Collection<String> classRepositories,
@@ -229,7 +229,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	) {
 		return compute(classRepositories, null, javaClassProcessor);
 	}
-	
+
 	@Override
 	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
 		ClassLoader classLoader,
@@ -239,7 +239,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	) {
 		return computeAndAddAllToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
 	}
-	
+
 	@Override
 	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
 		ClassLoader classLoader,
@@ -247,23 +247,23 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Collection<String> pathsToBeRefreshed,
 		String className,
 		Collection<String> notFoundClasses
-	) {	
+	) {
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
 		if (pathsToBeRefreshed != null) {
 			pathsToBeRefreshedPredicate =  fileSystemItem -> pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
 		}
-		
+
 		Collection<String> notFoundClassClassPaths = new HashSet<>();
 		Predicate<FileSystemItem> criteriaOne = (fileSystemItemCls) -> {
-			JavaClass javaClass = fileSystemItemCls.toJavaClass(); 
+			JavaClass javaClass = fileSystemItemCls.toJavaClass();
 			if (javaClass.getName().equals(className)) {
 				String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
 				notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
 				return true;
-			}				
+			}
 			return false;
 		};
-		
+
 		Collection<String> notFoundClassesClassPaths = new HashSet<>();
 		Predicate<FileSystemItem> criteriaTwo = (fileSystemItemCls) -> {
 			JavaClass javaClass = fileSystemItemCls.toJavaClass();
@@ -273,16 +273,16 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
 					return true;
 				}
-			}			
+			}
 			return false;
 		};
-		
+
 		Map<String, String> classPaths = compute(
 			classRepositories,
 			pathsToBeRefreshedPredicate,
 			criteriaOne.or(criteriaTwo)
 		).get();
-		
+
 		ClassLoader targetClassLoader = classLoader;
 		Collection<String> classPathsToLoad = new HashSet<>();
 		if (!notFoundClassClassPaths.isEmpty()) {
@@ -303,18 +303,18 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		if (targetClassLoader == null) {
 			targetClassLoader = classLoader;
 		}
-		
+
 		Map<String, ClassLoader> addedClassPathsForClassLoader = new HashMap<>();
-		
+
 		if (!(targetClassLoader instanceof PathScannerClassLoader)) {
 			for (String classPath : notFoundClassesClassPaths) {
 				classPathsToLoad.add(classPaths.get(classPath));
 			}
-			
+
 			for (String classPath :  classPathsToLoad) {
 				if (!ClassLoaders.addClassPath(
 					targetClassLoader,
-					absolutePath -> 
+					absolutePath ->
 						pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
 					classPath
 				).isEmpty()) {
@@ -335,7 +335,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			}
 			for (String addedClassPath : pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 				classPathsToLoad,
-				absolutePath -> 
+				absolutePath ->
 					pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath)
 			)) {
 				addedClassPathsForClassLoader.put(addedClassPath, pathScannerClassLoader);
@@ -343,24 +343,24 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 		return addedClassPathsForClassLoader;
 	}
-	
+
 	@Override
 	public Supplier<Map<String, String>> compute(
 		Collection<String> classRepositories,
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
 		Predicate<FileSystemItem> javaClassFilter
-	) {		
+	) {
 		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 			getClassFileCheckingOption()
 		);
 		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate != null? pathsToBeRefreshedPredicate :
 			fileSystemItem -> false;
-		
+
 		Predicate<FileSystemItem> finalJavaClassFilter = javaClassFilter != null? javaClassFilter :
 			(fileSystemItem) -> true;
-		
+
 		return compute0(
-			classRepositories, 
+			classRepositories,
 			null,
 			clsRepositories -> {
 				Collection<FileSystemItem> classPaths = ConcurrentHashMap.newKeySet();
@@ -368,7 +368,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					FileSystemItem classRepository = FileSystemItem.ofPath(classRepositoryPath);
 					if (finalPathsToBeRefreshedPredicate.test(classRepository)) {
 						classRepository.refresh();
-					}					
+					}
 					classRepository.findInAllChildren(
 						classFileFilter.and().allFileThat(fileSystemItemCls -> {
 							JavaClass javaClass = fileSystemItemCls.toJavaClass();
@@ -389,8 +389,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			}
 		);
 	}
-	
-	
+
+
 	private Supplier<Map<String, String>> compute0(
 		Collection<String> classRepositories,
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
@@ -398,19 +398,19 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	) {
 		Map<String, String> classPaths = new HashMap<>();
 		Collection<FileSystemItem> effectiveClassPaths = callRepositoriesSupplier.apply(classRepositories);
-		
-		Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>(); 
-		
+
+		Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>();
+
 		if (pathsToBeRefreshedPredicate == null) {
 			pathsToBeRefreshedPredicate = fileSystemItem -> false;
-		}	
-		
+		}
+
 		if (!effectiveClassPaths.isEmpty()) {
 			for (FileSystemItem fsObject : effectiveClassPaths) {
 				if (pathsToBeRefreshedPredicate.test(fsObject)) {
 					fsObject.refresh();
 				}
-				if (fsObject.isCompressed()) {					
+				if (fsObject.isCompressed()) {
 					Executor.run(() -> {
 						synchronized (this) {
 							FileSystemItem classPath = FileSystemItem.ofPath(
@@ -442,8 +442,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			pathsCreationTasks.stream().forEach(pathsCreationTask -> pathsCreationTask.join());
 			return classPaths;
 		};
-	}	
-	
+	}
+
 	@Override
 	public void close() {
 		closeResources(() -> classPathsBasePath == null, task -> {
@@ -453,7 +453,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			classPathsBasePath = null;
 			classPathHunter = null;
 			config = null;
-			instanceId = null;				
+			instanceId = null;
 		});
 	}
 }

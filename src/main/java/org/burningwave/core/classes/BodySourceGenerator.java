@@ -35,40 +35,40 @@ import java.util.Optional;
 public class BodySourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = 5923611245424078711L;
-	
+
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private String startingDelimiter;
 	private String endingDelimiter;
 	private String elementPrefix;
 	private String elementSeparator;
 	private Collection<SourceGenerator> bodyGenerators;
-		
+
 	BodySourceGenerator() {}
-	
+
 	public static BodySourceGenerator create() {
 		return new BodySourceGenerator().setDelimiters("{\n", "\n}").setElementPrefix("\t");
 	}
-	
+
 	public static BodySourceGenerator createSimple() {
-		return new BodySourceGenerator().setDelimiters(null, null).setElementPrefix(null); 
+		return new BodySourceGenerator().setDelimiters(null, null).setElementPrefix(null);
 	}
-	
+
 	public BodySourceGenerator setBodyElementSeparator(String elementSeparator) {
 		this.elementSeparator = elementSeparator;
 		return this;
 	}
-	
+
 	public BodySourceGenerator setElementPrefix(String elementPrefix) {
 		this.elementPrefix = elementPrefix;
 		return this;
 	}
-	
+
 	public BodySourceGenerator setDelimiters(String startingDelimiter, String endingDelimiter) {
 		this.startingDelimiter = startingDelimiter;
 		this.endingDelimiter = endingDelimiter;
 		return this;
 	}
-	
+
 	public BodySourceGenerator setStartingDelimiter(String startingDelimiter) {
 		this.startingDelimiter = startingDelimiter;
 		return this;
@@ -78,15 +78,15 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		this.endingDelimiter = endingDelimiter;
 		return this;
 	}
-	
+
 	public BodySourceGenerator addElement(SourceGenerator... generators) {
 		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (SourceGenerator generator : generators) {
 			this.bodyGenerators.add(generator);
 		}
-		return this;		
+		return this;
 	}
-	
+
 	public BodySourceGenerator addCode(String... elements) {
 		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		for (String element : elements) {
@@ -102,30 +102,30 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	boolean isEmpty() {
 		return bodyGenerators == null || bodyGenerators.isEmpty();
 	}
-	
+
 	public BodySourceGenerator addCodeLine(String... codes) {
 		if (codes.length > 0) {
 			for (String code : codes) {
-				addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + code);	
+				addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : "") + code);
 			}
 		} else {
 			addCode((bodyGenerators != null && !bodyGenerators.isEmpty()? "\n" : ""));
 		}
-		return this;	
+		return this;
 	}
-	
+
 	public BodySourceGenerator addAllElements(Collection<? extends SourceGenerator> generators) {
 		Optional.ofNullable(this.bodyGenerators).orElseGet(() -> this.bodyGenerators = new ArrayList<>());
 		generators.forEach(generator -> {
 			addElement(generator);
 		});
-		return this;		
+		return this;
 	}
-	
+
 	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
@@ -157,23 +157,23 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	public BodySourceGenerator useType(java.lang.Class<?>... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
-		for (java.lang.Class<?> cls : classes) {			
+		for (java.lang.Class<?> cls : classes) {
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
-		return this;		
+		return this;
 	}
-	
+
 	String getStartingDelimiter() {
 		return startingDelimiter;
 	}
-	
+
 	String getEndingDelimiter() {
 		return endingDelimiter;
 	}
-	
+
 	String getBodyCode() {
 		String elementPrefix = !isEmpty()? this.elementPrefix : null;
 		String bodyCode =
@@ -182,20 +182,20 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 			.replaceAll("\n(.)", "\n" + Optional.ofNullable(elementPrefix).orElseGet(() -> "") + "$1");
 		return bodyCode;
 	}
-	
-	
-	
+
+
+
 	public BodySourceGenerator useType(String... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
-		for (String cls : classes) {			
+		for (String cls : classes) {
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));
 		}
-		return this;		
+		return this;
 	}
-	
+
 	@Override
 	public String make() {
 		return getOrEmpty(startingDelimiter, getBodyCode(), endingDelimiter);
 	}
-	
+
 }

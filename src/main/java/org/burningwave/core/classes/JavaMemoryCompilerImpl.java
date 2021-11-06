@@ -88,7 +88,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	JavaCompiler compiler;
 	FileSystemItem compiledClassesRepository;
 	Properties config;
-	
+
 	JavaMemoryCompilerImpl(
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
@@ -99,9 +99,9 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.compiledClassesRepository = FileSystemItem.of(((ClassPathHelperImpl)classPathHelper).getOrCreateTemporaryFolder("compiledClassesRepository"));
 		this.config = config;
-	}	
-	
-	
+	}
+
+
 	@Override
 	public ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(JavaMemoryCompiler.Compilation.Config config) {
 		return compile(
@@ -146,30 +146,30 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		return IterableObjectHelper.merge(
 			config::getClassPaths,
 			config::getAdditionalClassPaths,
-			() -> 
+			() ->
 				pathHelper.getPaths(
 					Configuration.Key.CLASS_PATHS
 				)
 		);
 	}
-	
+
 	private ProducerTask<JavaMemoryCompiler.Compilation.Result> compile(
 		Collection<String> sources,
-		Collection<String> classPaths, 
+		Collection<String> classPaths,
 		Collection<String> classRepositoriesPaths,
 		Collection<String> blackListedClassPaths,
 		String compiledClassesStorage,
 		boolean useTemporaryFolderForStoring,
 		Map<String, String> extraOptions
-	) {	
+	) {
 		ProducerTask<JavaMemoryCompiler.Compilation.Result> tsk = BackgroundExecutor.createProducerTask(task -> {
 			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
 			Collection<MemorySource> memorySources = new ArrayList<>();
 			sourcesToMemorySources(sources, memorySources);
 			try (Compilation.Context context = Compilation.Context.create(
 					this,
-					memorySources, 
-					new ArrayList<>(classPaths), 
+					memorySources,
+					new ArrayList<>(classPaths),
 					new ArrayList<>(classRepositoriesPaths),
 					new ArrayList<>(blackListedClassPaths),
 					extraOptions
@@ -183,16 +183,16 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					});
 				}
 				Collection<String> classNames = compiledFiles.keySet();
-				ManagedLoggersRepository.logInfo(getClass()::getName, 
-					classNames.size() > 1?	
+				ManagedLoggersRepository.logInfo(getClass()::getName,
+					classNames.size() > 1?
 						"Classes {} have been succesfully compiled":
 						"Class {} has been succesfully compiled",
-					classNames.size() > 1?		
+					classNames.size() > 1?
 						String.join(", ", classNames):
 						classNames.stream().findFirst().orElseGet(() -> "")
 				);
 				return new JavaMemoryCompiler.Compilation.Result(
-					storedFilesClassPath  != null ? FileSystemItem.ofPath(storedFilesClassPath) : null, 
+					storedFilesClassPath  != null ? FileSystemItem.ofPath(storedFilesClassPath) : null,
 					compiledFiles, new HashSet<>(context.classPaths)
 				);
 			}
@@ -211,8 +211,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			}
 		}
 		return storedFilesClassPath;
-	}	
-	
+	}
+
 	private void sourcesToMemorySources(Collection<String> sources, Collection<MemorySource> memorySources) {
 		for (String source : sources) {
 			String className = SourceCodeHandler.extractClassName(source);
@@ -222,7 +222,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				throw new JavaMemoryCompiler.Compilation.Exception(Strings.compile("Class name \"{}\" is not valid", className), exc);
 			}
 		}
-		
+
 	}
 
 	private Map<String, ByteBuffer> compile(Compilation.Context context) {
@@ -236,7 +236,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				Optional.ofNullable(val).ifPresent(value -> {
 					options.add(value);
 				});
-				
+
 			});
 		}
 		DiagnosticListener diagnosticListener = new DiagnosticListener(context);
@@ -263,15 +263,15 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				return compile(context);
 			} else {
 				return memoryFileManager.getCompiledFiles().stream().collect(
-					Collectors.toMap(compiledFile -> 
+					Collectors.toMap(compiledFile ->
 						compiledFile.getName(), compiledFile ->
 						compiledFile.toByteBuffer()
 					)
 				);
 			}
 		}
-	}	
-	
+	}
+
 	@Override
 	public void close() {
 		closeResources(() -> compiledClassesRepository == null, task -> {
@@ -281,17 +281,17 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			pathHelper = null;
 		});
 	}
-	
+
 	static class DiagnosticListener implements javax.tools.DiagnosticListener<JavaFileObject>, Serializable, Component {
-		
+
 		private static final long serialVersionUID = 4404913684967693355L;
-		
+
 		private Compilation.Context context;
-		
+
 		DiagnosticListener (Compilation.Context context) {
 			this.context = context;
 		}
-		
+
 		@Override
 		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
 			String message = diagnostic.getMessage(Locale.ENGLISH);
@@ -307,7 +307,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> fsObjects = null;
 			String classNameOrSimpleNameTemp = null;
 			Predicate<JavaClass> javaClassPredicate = null;
-			
+
 			if (message.indexOf("class file for") != -1 && message.indexOf("not found") != -1) {
 				classNameOrSimpleNameTemp = message.substring(message.indexOf("for ") + 4);
 				classNameOrSimpleNameTemp = classNameOrSimpleNameTemp.substring(0, classNameOrSimpleNameTemp.indexOf(" "));
@@ -323,8 +323,8 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				classNameOrSimpleNameTemp = message.substring(message.indexOf("class ")+6);
 				final String classSimpleName = classNameOrSimpleNameTemp;
 				javaClassPredicate =  (cls) -> cls.getSimpleName().equals(classSimpleName);
-			}			
-			
+			}
+
 			if (javaClassPredicate != null) {
 				try {
 					fsObjects = context.findForClassName(javaClassPredicate);
@@ -342,7 +342,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 						}
 					}
 				}
-				if (Strings.isNotEmpty(packageName)) {			
+				if (Strings.isNotEmpty(packageName)) {
 					try {
 						fsObjects = context.findForPackageName(packageName);
 					} catch (Exception exc) {
@@ -353,7 +353,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				}
 			}
 			if (fsObjects == null || fsObjects.isEmpty()) {
-				String classNameOrSimpleName = classNameOrSimpleNameTemp;				
+				String classNameOrSimpleName = classNameOrSimpleNameTemp;
 				throw new JavaMemoryCompiler.Compilation.Exception(
 					Optional.ofNullable(javaClassPredicate).map(jCP -> "Class or package \"" + classNameOrSimpleName + "\" not found").orElseGet(() -> message)
 				);
@@ -362,65 +362,65 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				context.addToClassPath(fsObject);
 			});
 		}
-		
+
 	}
-	
+
 	static class MemorySource extends SimpleJavaFileObject implements Serializable {
-	
+
 		private static final long serialVersionUID = 4669403234662034315L;
-		
+
 		private final String content;
 		private final String name;
-		
+
 	    final static String PREFIX = "memo:///";
 	    public MemorySource(Kind kind, String name, String content) throws URISyntaxException {
 	        super(new URI(PREFIX + name.replace('.', '/') + kind.extension), kind);
 	        this.name = name;
 	        this.content = content;
 	    }
-	    
+
 	    @Override
 		public String getName() {
 	    	return this.name;
 	    }
-	    
+
 	    @Override
 	    public CharSequence getCharContent(boolean ignore) {
 	        return this.content;
 	    }
-	    
+
 	    public String getContent() {
 	        return this.content;
 	    }
 	}
-	
+
 	static class MemoryFileObject extends SimpleJavaFileObject implements Component {
-		
+
 		private String name;
 		private ByteBuffer content;
-		
+
 	    MemoryFileObject(String name, Kind kind) {
 	        super(URI.create("memory:///" + name.replace('.', '/') + kind.extension), kind);
 	        this.name = name;
 	    }
-	    
+
 	    public String getPath() {
 	    	return uri.getPath();
 	    }
-	    
+
 	    @Override
 		public String getName() {
 	    	return this.name;
 	    }
-	    
+
 	    public ByteBuffer toByteBuffer() {
 	    	return BufferHandler.shareContent(content);
 	    }
-	    
+
 	    public byte[] toByteArray() {
 	    	return BufferHandler.toByteArray(content);
 	    }
-	
+
 	    @Override
 	    public OutputStream openOutputStream() {
 	        return new ByteBufferOutputStream(BufferHandler.getDefaultBufferSize()) {
@@ -431,7 +431,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	    		}
 	    	};
 	    }
-	    
+
 	    @Override
 		public void close() {
 	    	name = null;
@@ -441,16 +441,16 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 
 	// to make the --release parameter work we to implement the StandardJavaFileManager interface
 	static class MemoryFileManager extends ForwardingJavaFileManager implements Component, StandardJavaFileManager {
-		
+
 		private List<MemoryFileObject> compiledFiles;
 		private StandardJavaFileManager javaFileManager;
-		
+
 		MemoryFileManager(StandardJavaFileManager javaFileManager) {
 	        super(javaFileManager);
 	        this.javaFileManager = javaFileManager;
 	        compiledFiles = new CopyOnWriteArrayList<>();
 	    }
-		
+
 		@Override
 	    public MemoryFileObject getJavaFileForOutput
 	            (Location location, String name, Kind kind, FileObject source) {
@@ -458,14 +458,14 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	        this.compiledFiles.add(mc);
 	        return mc;
 	    }
-		
+
 		List<MemoryFileObject> getCompiledFiles() {
 			return compiledFiles;
 		}
-		
+
 		@Override
 		public void close() {
-			compiledFiles.forEach(compiledFile -> 
+			compiledFiles.forEach(compiledFile ->
 				compiledFile.close()
 			);
 			compiledFiles.clear();
@@ -502,21 +502,21 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
             } catch (IllegalArgumentException exc) {
             	ManagedLoggersRepository.logWarn(getClass()::getName, exc.getMessage());
             }
-			
+
 		}
 
 		@Override
 		public Iterable<? extends File> getLocation(Location location) {
 			return javaFileManager.getLocation(location);
 		}
-	   
+
 	}
 
 
 	static class Compilation {
-		
+
 		static class Context implements Closeable, ManagedLogger {
-			
+
 			Collection<String> classPaths;
 			Collection<String> blackListedClassPaths;
 			Map<String, String> options;
@@ -525,7 +525,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			private JavaMemoryCompiler javaMemoryCompiler;
 			private Throwable previousException;
 			private Collection<String> diagnositListenerInterceptedMessages;
-			
+
 			private Context(
 				JavaMemoryCompiler javaMemoryCompiler,
 				Collection<MemorySource> sources,
@@ -550,7 +550,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				this.classRepositories = classRepositories;
 				this.diagnositListenerInterceptedMessages = new HashSet<>();
 			}
-			
+
 			static Context create(
 				JavaMemoryCompiler javaMemoryCompiler,
 				Collection<MemorySource> sources,
@@ -561,7 +561,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			) {
 				return new Context(javaMemoryCompiler, sources, classPaths, classRepositories, blackListedClassPaths, extraOptions);
 			}
-			
+
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
 					if (blackListedClassPaths.contains(path)) {
@@ -573,7 +573,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					classPaths.add(classPath);
 				}
 			}
-			
+
 			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
@@ -583,7 +583,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 								((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()
 							),
 						(classFile) ->
-							Objects.equals(classFile.toJavaClass().getPackageName(), packageName)		
+							Objects.equals(classFile.toJavaClass().getPackageName(), packageName)
 					).get().values()
 				);
 				if (classPaths.isEmpty()) {
@@ -593,13 +593,13 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 							classRepositories,
 							null,
 							(classFile) ->
-								Objects.equals(classFile.toJavaClass().getPackageName(), packageName)	
+								Objects.equals(classFile.toJavaClass().getPackageName(), packageName)
 						).get().values()
 					);
 				}
 				return classPaths;
 			}
-			
+
 			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
@@ -625,15 +625,15 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					}
 					return classPaths;
 			}
-			
+
 			void setPreviousException(Throwable previousException) {
 				this.previousException = previousException;
 			}
-			
+
 			Throwable getPreviousException() {
 				return previousException;
 			}
-			
+
 			@Override
 			public void close() {
 				options.clear();
@@ -649,6 +649,6 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			}
 
 		}
-		
+
 	}
 }

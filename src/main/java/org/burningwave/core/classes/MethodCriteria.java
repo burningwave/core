@@ -46,26 +46,26 @@ public class MethodCriteria extends ExecutableMemberCriteria<
 	private MethodCriteria() {
 		super();
 	}
-	
+
 	public static MethodCriteria withoutConsideringParentClasses() {
 		return byScanUpTo((lastClassInHierarchy, currentScannedClass) -> {
             return lastClassInHierarchy.equals(currentScannedClass);
         });
 	}
-	
+
 	@Override
 	Function<Class<?>, Method[]> getMembersSupplierFunction() {
 		return  Classes::getDeclaredMethods;
 	}
-	
+
 	public static MethodCriteria forEntireClassHierarchy() {
 		return new MethodCriteria();
 	}
-	
+
 	public static MethodCriteria byScanUpTo(TriPredicate<Map<Class<?>, Class<?>>, Class<?>, Class<?>> predicate) {
 		return new MethodCriteria().scanUpTo(predicate);
 	}
-	
+
 	public static MethodCriteria byScanUpTo(BiPredicate<Class<?>, Class<?>> predicate) {
 		return new MethodCriteria().scanUpTo(predicate);
 	}

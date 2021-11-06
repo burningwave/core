@@ -49,7 +49,7 @@ public class Modules {
 	private Set<?> everyOneSet = new HashSet<>();
 	private Set<?> allUnnamedSet = new HashSet<>();
 	private Map<String, ?> nameToModule;
-	
+
 	Modules() {
 		try {
 			moduleClass = Driver.getClassByName(
@@ -75,11 +75,11 @@ public class Modules {
 			Driver.throwException(exc);
 		}
 	}
-	
+
 	public static Modules create() {
 		return new Modules();
 	}
-	
+
 	public void exportAllToAll() {
 		try {
 			nameToModule.forEach((name, module) -> {
@@ -92,37 +92,37 @@ public class Modules {
 			Driver.throwException(exc);
 		}
 	}
-	
-	
+
+
 	public void exportToAllUnnamed(String name) {
 		exportTo(name, this::exportToAllUnnamed);
 	}
-	
-	
+
+
 	public void exportToAll(String name) {
 		exportTo(name, this::exportToAll);
 	}
-	
-	
+
+
 	public void exportPackage(String moduleFromName, String moduleToName, String... packageNames) {
 		Object moduleFrom = checkAndGetModule(moduleFromName);
 		Object moduleTo = checkAndGetModule(moduleToName);
 		exportPackage(moduleFrom, moduleTo, packageNames);
 	}
-	
-	
+
+
 	public void exportPackageToAll(String moduleFromName, String... packageNames) {
 		Object moduleFrom = checkAndGetModule(moduleFromName);
 		exportPackage(moduleFrom, everyOneSet.iterator().next(), packageNames);
 	}
-	
-	
+
+
 	public void exportPackageToAllUnnamed(String moduleFromName, String... packageNames) {
 		Object moduleFrom = checkAndGetModule(moduleFromName);
 		exportPackage(moduleFrom, allUnnamedSet.iterator().next(), packageNames);
 	}
-	
-	
+
+
 	public void export(String moduleFromName, String moduleToName) {
 		try {
 			Object moduleFrom = checkAndGetModule(moduleFromName);
@@ -135,8 +135,8 @@ public class Modules {
 			Driver.throwException(exc);
 		}
 	}
-	
-	
+
+
 	void exportPackage(Object moduleFrom, Object moduleTo, String... packageNames) {
 		Set<String> modulePackages = Methods.invokeDirect(moduleFrom, "getPackages");
 		Stream.of(packageNames).forEach(pkgName -> {
@@ -149,7 +149,7 @@ public class Modules {
 			export("openPackages", moduleFrom, pkgName, moduleTo);
 		});
 	}
-	
+
 
 	Object checkAndGetModule(String name) {
 		Object module = nameToModule.get(name);
@@ -158,7 +158,7 @@ public class Modules {
 		}
 		return module;
 	}
-	
+
 	void exportTo(String name, TriConsumer<String, Object, String> exporter) {
 		try {
 			Object module = checkAndGetModule(name);
@@ -170,8 +170,8 @@ public class Modules {
 			Driver.throwException(exc);
 		}
 	}
-	
-	
+
+
 	void exportToAll(String fieldName, Object module, String pkgName) {
 		Map<String, Set<?>> pckgForModule = Fields.getDirect(module, fieldName);
 		if (pckgForModule == null) {
@@ -179,12 +179,12 @@ public class Modules {
 			Fields.setDirect(module, fieldName, pckgForModule);
 		}
 		pckgForModule.put(pkgName, allSet);
-		if (fieldName.startsWith("exported")) {	
+		if (fieldName.startsWith("exported")) {
 			Methods.invokeStaticDirect(moduleClass, "addExportsToAll0", module, pkgName);
 		}
 	}
-	
-	
+
+
 	void exportToAllUnnamed(String fieldName, Object module, String pkgName) {
 		Map<String, Set<?>> pckgForModule = Fields.getDirect(module, fieldName);
 		if (pckgForModule == null) {
@@ -192,11 +192,11 @@ public class Modules {
 			Fields.setDirect(module, fieldName, pckgForModule);
 		}
 		pckgForModule.put(pkgName, allUnnamedSet);
-		if (fieldName.startsWith("exported")) {	
+		if (fieldName.startsWith("exported")) {
 			Methods.invokeStaticDirect(moduleClass, "addExportsToAllUnnamed0", module, pkgName);
 		}
 	}
-	
+
 	void export(String fieldName, Object moduleFrom, String pkgName, Object moduleTo) {
 		Map<String, Set<?>> pckgForModule = Fields.getDirect(moduleFrom, fieldName);
 		if (pckgForModule == null) {
@@ -209,26 +209,26 @@ public class Modules {
 				moduleSet = new HashSet<>(moduleSet);
 			} else {
 				moduleSet = new HashSet<>();
-			}			
+			}
 			pckgForModule.put(pkgName, moduleSet);
 		}
 		moduleSet.add(moduleTo);
-		if (fieldName.startsWith("exported")) {	
+		if (fieldName.startsWith("exported")) {
 			Methods.invokeStaticDirect(moduleClass, "addExports0", moduleFrom, pkgName, moduleTo);
-		}		
+		}
 	}
 
 
 	public static class NotFoundException extends RuntimeException {
 
 		private static final long serialVersionUID = 3095842376538548262L;
-		
+
 		public NotFoundException(String message) {
 	        super(message);
 	    }
-		
+
 	}
-	
+
 	public static class PackageNotFoundException extends RuntimeException {
 
 		private static final long serialVersionUID = 7545728769111299062L;
@@ -236,6 +236,6 @@ public class Modules {
 		public PackageNotFoundException(String message) {
 	        super(message);
 	    }
-		
+
 	}
 }

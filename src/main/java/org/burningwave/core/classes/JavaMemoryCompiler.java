@@ -46,9 +46,9 @@ import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.Properties;
 
 public interface JavaMemoryCompiler {
-	
+
 	public static class Configuration {
-		
+
 		public static class Key {
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
 			public static final String BLACK_LISTED_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.black-listed-class-paths";
@@ -56,16 +56,16 @@ public interface JavaMemoryCompiler {
 			public static final String CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-repositories";
 			public static final String ADDITIONAL_CLASS_REPOSITORIES =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-repositories";
 		}
-		
+
 		public final static Map<String, Object> DEFAULT_VALUES;
-		
+
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(
 				Key.CLASS_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() + 
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() + 
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() +
 				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
 			defaultValues.put(
@@ -76,12 +76,12 @@ public interface JavaMemoryCompiler {
 			defaultValues.put(
 				Key.BLACK_LISTED_CLASS_PATHS,
 				"//${paths.main-class-paths}/..//children:.*?surefirebooter\\d{0,}\\.jar;"
-			);			
-			
+			);
+
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
-	
+
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
@@ -90,31 +90,31 @@ public interface JavaMemoryCompiler {
 		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper, config);
 	}
 
-	public ProducerTask<Compilation.Result> compile(Compilation.Config config);	
-	
+	public ProducerTask<Compilation.Result> compile(Compilation.Config config);
+
 	public static class Compilation {
-		
+
 		public static class Config {
 			private Collection<String> sources;
-			
+
 			private Collection<String> classPaths;
 			private Collection<String> additionalClassPaths;
-			
+
 			private Collection<String> blackListedClassPaths;
 			private Collection<String> additionalBlackListedClassPaths;
-			
+
 			private Collection<String> classRepositories;
 			private Collection<String> additionalClassRepositories;
-			
+
 			private String compiledClassesStorage;
 			private boolean useTemporaryFolderForStoring;
 			Map<String, String> extraParameters;
-			
+
 			private Config() {
 				this.sources = new HashSet<>();
 				storeCompiledClassesToTemporaryFolder("common");
 			}
-			
+
 			@SafeVarargs
 			public final static Config withSources(Collection<String>... sourceCollections) {
 				Config compileConfig = new Config();
@@ -123,17 +123,17 @@ public interface JavaMemoryCompiler {
 				}
 				return compileConfig;
 			}
-			
+
 			@SafeVarargs
 			public final static Config withSource(String... sources) {
 				return withSources(Arrays.asList(sources));
 			}
-			
+
 			@SafeVarargs
 			public final static Config forUnitSourceGenerator(UnitSourceGenerator... sources) {
 				return forUnitSourceGenerators(Arrays.asList(sources));
 			}
-			
+
 			@SafeVarargs
 			public final static Config forUnitSourceGenerators(Collection<UnitSourceGenerator>... sourceCollections) {
 				Config compileConfig = new Config();
@@ -142,7 +142,7 @@ public interface JavaMemoryCompiler {
 				}
 				return compileConfig;
 			}
-			
+
 			public Config storeCompiledClasses(boolean flag) {
 				if (flag) {
 					if (compiledClassesStorage == null) {
@@ -153,27 +153,27 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			public Config storeCompiledClassesToTemporaryFolder(String folderName) {
 				compiledClassesStorage = folderName;
 				useTemporaryFolderForStoring = true;
 				return this;
 			}
-			
+
 			public Config storeCompiledClassesTo(String folderName) {
 				compiledClassesStorage = folderName;
 				useTemporaryFolderForStoring = false;
 				return this;
 			}
-			
+
 			public Config storeCompiledClassesToNewTemporaryFolder() {
 				return storeCompiledClassesToTemporaryFolder(UUID.randomUUID().toString());
 			}
-			
+
 			public Config setVersion(String version) {
 				return putExtraParameter("--release", version);
 			}
-			
+
 			public Config putExtraParameter(String parameterName, String parameterValue) {
 				if (extraParameters == null) {
 					extraParameters = new LinkedHashMap<>();
@@ -183,8 +183,8 @@ public interface JavaMemoryCompiler {
 			}
 
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config setClassPaths(Collection<String>... classPathCollections) {
 				if (classPaths == null) {
@@ -195,14 +195,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config setClassPaths(String... classPaths) {
 				return setClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config addClassPaths(Collection<String>... classPathCollections) {
 				if (additionalClassPaths == null) {
@@ -213,14 +213,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config addClassPaths(String... classPaths) {
 				return addClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config setClassRepositories(Collection<String>... classPathCollections) {
 				if (classRepositories == null) {
@@ -231,14 +231,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config setClassRepository(String... classPaths) {
 				return setClassRepositories(Arrays.asList(classPaths));
 			}
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config addClassRepositories(Collection<String>... classPathCollections) {
 				if (additionalClassRepositories == null) {
@@ -249,14 +249,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config addClassRepository(String... classPaths) {
 				return addClassRepositories(Arrays.asList(classPaths));
 			}
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config setBlackListedClassPaths(Collection<String>... classPathCollections) {
 				if (blackListedClassPaths == null) {
@@ -267,14 +267,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config setBlackListedClassPaths(String... classPaths) {
 				return setBlackListedClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////	
-			
+		////////////////////
+
 			@SafeVarargs
 			public final Config addBlackListedClassPaths(Collection<String>... classPathCollections) {
 				if (additionalBlackListedClassPaths == null) {
@@ -285,14 +285,14 @@ public interface JavaMemoryCompiler {
 				}
 				return this;
 			}
-			
+
 			@SafeVarargs
 			public final Config addBlackListedClassPaths(String... classPaths) {
 				return addBlackListedClassPaths(Arrays.asList(classPaths));
 			}
 
 		////////////////////
-			
+
 			Collection<String> getSources() {
 				return sources;
 			}
@@ -312,7 +312,7 @@ public interface JavaMemoryCompiler {
 			Collection<String> getAdditionalClassRepositories() {
 				return additionalClassRepositories;
 			}
-			
+
 			Collection<String> getBlackListedClassPaths() {
 				return blackListedClassPaths;
 			}
@@ -320,11 +320,11 @@ public interface JavaMemoryCompiler {
 			Collection<String> getAdditionalBlackListedClassPaths() {
 				return additionalBlackListedClassPaths;
 			}
-			
+
 			boolean isStoringCompiledClassesEnabled() {
 				return compiledClassesStorage != null;
 			}
-			
+
 			String getCompiledClassesStorage() {
 				return compiledClassesStorage;
 			}
@@ -332,21 +332,21 @@ public interface JavaMemoryCompiler {
 			boolean useTemporaryFolderForStoring() {
 				return useTemporaryFolderForStoring;
 			}
-			
+
 			Map<String, String> getExtraParameters() {
 				return extraParameters;
 			}
-		
+
 		}
-		
-		
-		
+
+
+
 		public static class Result implements Closeable {
 			private FileSystemItem classPath;
 			private Map<String, ByteBuffer> compiledFiles;
 			private Collection<String> dependencies;
-			
-			
+
+
 			Result(FileSystemItem classPath, Map<String, ByteBuffer> compiledFiles, Collection<String> classPaths) {
 				this.classPath = classPath;
 				this.compiledFiles = compiledFiles;
@@ -374,10 +374,10 @@ public interface JavaMemoryCompiler {
 				compiledFiles.clear();
 				dependencies.clear();
 				classPath = null;
-			}	
-			
+			}
+
 		}
-		
+
 		public static class Exception extends RuntimeException {
 
 			private static final long serialVersionUID = 4515340268068466479L;
@@ -385,10 +385,10 @@ public interface JavaMemoryCompiler {
 			public Exception(String s) {
 				super(s);
 			}
-			
+
 			public Exception(String s, Throwable cause) {
 				super(s, cause);
 			}
-		}	
+		}
 	}
 }

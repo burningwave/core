@@ -39,23 +39,23 @@ import org.burningwave.core.concurrent.Synchronizer.Mutex;
 
 @SuppressWarnings("unchecked")
 class ClassLoaderManager<C extends ClassLoader> implements Closeable {
-	
-	
+
+
 	private Supplier<C> classLoaderSupplier;
 	private Object classLoaderOrClassLoaderSupplier;
-	private C classLoader;	
-	
+	private C classLoader;
+
 	ClassLoaderManager(
 		Object classLoaderOrClassLoaderSupplier
 	) {
 		this.classLoaderOrClassLoaderSupplier = classLoaderOrClassLoaderSupplier;
 	}
-	
-	
+
+
 	C get() {
 		return this.classLoader;
 	}
-	
+
 	C get(Object client) {
 		C classLoaderTemp = null;
 		Supplier<C> defaultClassLoaderSupplier = this.classLoaderSupplier;
@@ -96,17 +96,17 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 							this.classLoaderSupplier = (Supplier<C>) defaultClassLoaderOrDefaultClassLoaderSupplier;
 							return get(client);
 						}
-					} else {						
+					} else {
 						return classLoader;
 					}
 				}
 			}
 		}
 		return classLoader;
-	}	
+	}
 
 
-	
+
 	void reset() {
 		Synchronizer.execute(getOperationId("getDefaultClassLoader"), () -> {
 			C classLoader = this.classLoader;
@@ -126,7 +126,7 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 			}
 		});
 	}
-	
+
 	@Override
 	public void close() {
 		this.classLoaderOrClassLoaderSupplier = null;

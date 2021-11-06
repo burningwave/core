@@ -35,12 +35,12 @@ import java.util.Objects;
 @FunctionalInterface
 public interface Runnable extends java.lang.Runnable {
 
-    
+
     default Runnable andThen(java.lang.Runnable after) {
         Objects.requireNonNull(after);
-        return () -> { 
+        return () -> {
         	run();
-        	after.run(); 
+        	after.run();
         };
     }
 }

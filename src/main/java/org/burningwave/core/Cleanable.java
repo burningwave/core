@@ -30,9 +30,9 @@ package org.burningwave.core;
 
 @SuppressWarnings("unchecked")
 public interface Cleanable {
-		
+
 	public default <C extends Cleanable> C clear() {
 		return (C)this;
 	}
-	
+
 }

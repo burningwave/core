@@ -34,12 +34,12 @@ import java.util.Objects;
 public interface ThrowingRunnable<E extends Throwable> {
 
     public abstract void run() throws E;
-    
+
     default ThrowingRunnable<E> andThen(ThrowingRunnable<E> after) {
         Objects.requireNonNull(after);
-        return () -> { 
+        return () -> {
         	run();
-        	after.run(); 
+        	after.run();
         };
     }
 }

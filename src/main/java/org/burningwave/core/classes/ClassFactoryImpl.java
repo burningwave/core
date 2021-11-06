@@ -56,7 +56,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 	private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
 	private Collection<ClassRetriever> classRetrievers;
 	Properties config;
-	
+
 	ClassFactoryImpl(
 		ByteCodeHunter byteCodeHunter,
 		Supplier<ClassPathHunter> classPathHunterSupplier,
@@ -65,7 +65,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
 		Properties config
-	) {	
+	) {
 		this.byteCodeHunter = byteCodeHunter;
 		this.classPathHunterSupplier = classPathHunterSupplier;
 		this.javaMemoryCompiler = javaMemoryCompiler;
@@ -78,7 +78,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		this.config = config;
 		listenTo(config);
 	}
-	
+
 	@Override
 	public <K, V> void processChangeNotification(Properties properties, Event event, K key, V newValue,
 			V previousValue) {
@@ -91,21 +91,21 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			}
 		}
 	}
-	
+
 	ClassLoader getDefaultClassLoader(Object client) {
 		return this.defaultClassLoaderManager.get(client);
 	}
-	
+
 	ClassPathHunter getClassPathHunter() {
 		return classPathHunter != null? classPathHunter :
 			(classPathHunter = classPathHunterSupplier.get());
 	}
-	
+
 	@Override
 	public ClassRetriever loadOrBuildAndDefine(UnitSourceGenerator... unitsCode) {
 		return loadOrBuildAndDefine(LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitsCode));
 	}
-	
+
 	@Override
 	public <L extends LoadOrBuildAndDefineConfigAbst<L>> ClassRetriever loadOrBuildAndDefine(L config) {
 		if (config.isVirtualizeClassesEnabled()) {
@@ -113,7 +113,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		}
 		return loadOrBuildAndDefine(
 			config.getClassesName(),
-			config.getCompileConfigSupplier(),			
+			config.getCompileConfigSupplier(),
 			config.isUseOneShotJavaCompilerEnabled(),
 			IterableObjectHelper.merge(
 				() -> config.getClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(),
@@ -130,22 +130,22 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			),
 			(client) -> Optional.ofNullable(
 				config.getClassLoader()
-			).orElseGet(() -> 
+			).orElseGet(() ->
 				getDefaultClassLoader(client)
 			)
 		);
 	}
-	
+
 	private ClassRetriever loadOrBuildAndDefine(
 		Collection<String> classNames,
-		Supplier<Compilation.Config> compileConfigSupplier,		
+		Supplier<Compilation.Config> compileConfigSupplier,
 		boolean useOneShotJavaCompiler,
 		Collection<String> additionalClassRepositoriesForClassLoader,
 		Function<Object, ClassLoader> classLoaderSupplier
 	) {
 		try {
 			Object temporaryClient = new Object(){};
-			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);			
+			ClassLoader classLoader = classLoaderSupplier.apply(temporaryClient);
 			return new ClassRetriever(
 				this,
 				 (classRetriever) -> {
@@ -167,23 +167,23 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	boolean register(ClassRetriever classRetriever) {
 		classRetrievers.add(classRetriever);
 		return true;
 	}
-	
+
 	boolean unregister(ClassRetriever classRetriever) {
 		classRetrievers.remove(classRetriever);
 		return true;
 	}
-	
+
 	@Override
 	public void closeClassRetrievers() {
 		Synchronizer.execute(getOperationId("closeClassRetrievers"), () -> {
 			Collection<ClassRetriever> classRetrievers = this.classRetrievers;
 			if (classRetrievers != null) {
-				Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();		
+				Iterator<ClassRetriever> classRetrieverIterator = classRetrievers.iterator();
 				while(classRetrieverIterator.hasNext()) {
 					ClassRetriever classRetriever = classRetrieverIterator.next();
 					classRetriever.close();
@@ -191,15 +191,15 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			}
 		});
 	}
-	
+
 	@Override
 	public void reset(boolean closeClassRetrievers) {
 		if (closeClassRetrievers) {
 			closeClassRetrievers();
 		}
-		this.defaultClassLoaderManager.reset();		
+		this.defaultClassLoaderManager.reset();
 	}
-	
+
 	@Override
 	public void close() {
 		closeResources(() -> this.classRetrievers == null, tsk -> {
@@ -213,10 +213,10 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 			javaMemoryCompiler = null;
 			byteCodeHunter = null;
 			classPathHunter = null;
-			classPathHunterSupplier = null;	
+			classPathHunterSupplier = null;
 			config = null;
 		});
 	}
 
-	
+
 }

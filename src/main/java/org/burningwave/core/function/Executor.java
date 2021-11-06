@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 public interface Executor {
 
@@ -41,16 +41,16 @@ public interface Executor {
 			ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
 		}
 	}
-    
+
 
 	static <E extends Throwable> void runAndIgnoreExceptions(ThrowingRunnable<? extends Throwable> runnable) {
     	try {
 			runnable.run();
 		} catch (Throwable exc) {
-			
+
 		}
 	}
-    
+
     static <E extends Throwable> void run(ThrowingRunnable<E> runnable) {
 		try {
 			runnable.run();
@@ -58,7 +58,7 @@ public interface Executor {
 			Driver.throwException(exc);
 		}
 	}
-    
+
     static <E extends Throwable> void run(ThrowingRunnable<E> runnable, int attemptsNumber) {
 		while (true) {
 			try {
@@ -71,7 +71,7 @@ public interface Executor {
 			--attemptsNumber;
 		}
 	}
-    
+
 	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier) {
 		try {
 			return supplier.get();
@@ -79,7 +79,7 @@ public interface Executor {
 			return Driver.throwException(exc);
 		}
 	}
-	
+
 	static <T, E extends Throwable> T get(ThrowingSupplier<T, ? extends E> supplier, int attemptsNumber) {
 		while (true) {
 			try {
