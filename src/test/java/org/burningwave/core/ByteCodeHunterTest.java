@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 
 
 public class ByteCodeHunterTest extends BaseTest {
-	
-	
+
+
 	@Test
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -40,8 +40,8 @@ public class ByteCodeHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
-	
+
+
 	@Test
 	public void findAllByNameTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -58,14 +58,14 @@ public class ByteCodeHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void cacheTestOneTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear")
 		).by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -87,14 +87,14 @@ public class ByteCodeHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -109,15 +109,15 @@ public class ByteCodeHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
-	
+
+
 	@Test
 	public void uncachedTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
@@ -130,22 +130,22 @@ public class ByteCodeHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
-	
+
+
 	@Test
 	public void parallelTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		SearchConfig searchConfig = SearchConfig.forPaths(
 			componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 		).by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, targetClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(targetClass)
 			).useClasses(
 				Closeable.class
 			)
 		);
 		Stream.of(
-			CompletableFuture.runAsync(() -> 
+			CompletableFuture.runAsync(() ->
 				componentSupplier.getByteCodeHunter().findBy(
 					searchConfig
 				)
@@ -157,7 +157,7 @@ public class ByteCodeHunterTest extends BaseTest {
 			)
 		).forEach(cF -> cF.join());
 	}
-	
+
 
 	@Test
 	public void findAllWithByteCodeEqualsTestOne() {
@@ -177,7 +177,7 @@ public class ByteCodeHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllWithByteCodeEqualsAndUseDuplicatedPathsTestOne() {
 //		Collection<String> disabledLoggers = GlobalProperties.resolveStringValues("managed-logger.repository.logging.warn.disabled-for", ";");
@@ -188,7 +188,7 @@ public class ByteCodeHunterTest extends BaseTest {
 //		disabledLoggers.add(PathScannerClassLoader.class.getName());
 //		GlobalProperties.put("managed-logger.repository.logging.warn.disabled-for", String.join(";", disabledLoggers));
 	}
-	
+
 	@Test
 	public void findAllBurningWaveClassesTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -199,7 +199,7 @@ public class ByteCodeHunterTest extends BaseTest {
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getPaths((path) -> path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThoseThatMatch((targetClass) -> 
+					ClassCriteria.create().allThoseThatMatch((targetClass) ->
 						Object.class.isAssignableFrom(targetClass)
 					)
 				)

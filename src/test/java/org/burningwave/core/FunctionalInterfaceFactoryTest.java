@@ -21,26 +21,26 @@ import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
 public class FunctionalInterfaceFactoryTest extends BaseTest {
-	
-	
+
+
 	@Test
 	public void getOrBuildFunctionClassTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineFunctionSubType(Thread.currentThread().getContextClassLoader(), 10));
-	}	
-	
+	}
+
 	@Test
 	public void getOrBuildConsumerClassTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefineConsumerSubType(Thread.currentThread().getContextClassLoader(), 5));
 	}
-	
+
 	@Test
 	public void getOrBuildPredicateClassTest() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> componentSupplier.getFunctionalInterfaceFactory().loadOrBuildAndDefinePredicateSubType(Thread.currentThread().getContextClassLoader(), 10));
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -49,7 +49,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			virtualObj.apply(new Service(), "Hello", "World!", new String[] {"How are you?"});
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestSix() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -58,7 +58,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			virtualObj.apply(new Service(), "Hello", "World!", "How are you?");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestFour() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -67,7 +67,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			virtualObj.apply(new Service(), "Hello", "World!", new String[] {"How are you?"});
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestFive() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -76,7 +76,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			virtualObj.accept(new Service(), new String[] {"Hello", "World!"});
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildPredicateClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -87,13 +87,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
-				Service.class				
+				Service.class
 			);
 			Virtual virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			((MultiParamsPredicate)virtualObj).test(new Service(), new Object(), "World!", "How are you?");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -111,7 +111,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildFunctionClassTestThree() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -123,13 +123,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(Object.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
-				Service.class				
+				Service.class
 			);
 			MultiParamsFunction<String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.apply("Hello", "World!", "How are you?");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildSupplierClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -137,13 +137,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("retrieve")).and().parameterTypes(params -> params.length == 0),
-				Service.class				
+				Service.class
 			);
 			Supplier<Object> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.get();
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildSupplierClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -151,13 +151,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("supply")).and().parameterTypes(params -> params.length == 0),
-				Service.class				
+				Service.class
 			);
 			Function<Service, Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.apply(new Service());
 		});
 	}
-	
+
 	@Test
 	//Not works
 	public void getOrBuildConsumerClassTestOne() throws Throwable {
@@ -169,13 +169,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 				.and().parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 1 && params[idx].equals(String.class))
 				.and().parameterType((params, idx) -> idx == 2 && params[idx].equals(String.class)),
-				Service.class				
+				Service.class
 			);
 			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "Hello", "World!", "How are you?");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildConsumerClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -183,13 +183,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("accept")).and().parameterTypes(params -> params.length == 1),
-				Service.class				
+				Service.class
 			);
 			BiConsumer<Service, String> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "hello!");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildConsumerClassTestThree() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -197,13 +197,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("staticAccept")).and().parameterTypes(params -> params.length == 4),
-				Service.class				
+				Service.class
 			);
 			MultiParamsConsumer virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service(), "Hello ", "world!", "How are you?");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildRunnableClassTestOne() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -211,13 +211,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("run")).and().parameterTypes(params -> params.length == 0),
-				Service.class				
+				Service.class
 			);
 			Consumer<Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.accept(new Service());
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildRunnableClassTestTwo() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -225,13 +225,13 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Method mth = Members.findOne(
 				MethodCriteria.withoutConsideringParentClasses()
 				.name((name) -> name.matches("staticRun")).and().parameterTypes(params -> params.length == 0),
-				Service.class				
+				Service.class
 			);
 			Runnable virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(mth);
 			virtualObj.run();
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildSupplierClassTestFour() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -241,7 +241,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			service.printName();
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildSupplierClassTestFive() throws Throwable {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -249,7 +249,7 @@ public class FunctionalInterfaceFactoryTest extends BaseTest {
 			Constructor<?> ctor = Constructors.findFirst(
 				ConstructorCriteria.withoutConsideringParentClasses().parameterTypes(params -> params.length == 1).and()
 				.parameterType((params, idx) -> idx == 0 && params[idx].equals(String.class)),
-				Service.class				
+				Service.class
 			);
 			Function<String, Service> virtualObj = componentSupplier.getFunctionalInterfaceFactory().getOrCreate(ctor);
 			Service service = virtualObj.apply("John");

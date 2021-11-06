@@ -11,14 +11,14 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 public class StringsTest extends BaseTest {
-	
+
 	@Test
 	public void extractTestOne() {
 		testNotNull(() ->
 			Strings.extractAllGroups(Pattern.compile("\\$\\{([\\w\\d\\.]*)\\}([\\w]*)"), "${${ciao.Asdf.1}prova${ciao}}").get(1).get(0)
 		);
 	}
-	
+
 	@Test
 	public void convertURLTestOne() {
 		testNotNull(() ->
@@ -26,14 +26,14 @@ public class StringsTest extends BaseTest {
 				.getName().replace(".", "/")+ ".class").toString())
 		);
 	}
-	
-	
+
+
 	@Test
 	public void stripTest() {
 		assertTrue(!Strings.contains(Strings.strip(" Hello! ", " "), ' '));
 	}
-	
-	
+
+
 	@Test
 	public void replaceTest() {
 		Map<String, String> parameters = new HashMap<>();

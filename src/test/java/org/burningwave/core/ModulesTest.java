@@ -17,7 +17,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SuppressWarnings("unchecked")
 public class ModulesTest extends BaseTest {
-	
+
 	@Test
 	@Order(1)
 	public void exportPackageToAllUnnamedTest() {
@@ -39,8 +39,8 @@ public class ModulesTest extends BaseTest {
 			}
 		});
 	}
-	
-	
+
+
 	@Test
 	@Order(10)
 	public void exportAllToAllTest() {
@@ -59,5 +59,5 @@ public class ModulesTest extends BaseTest {
 			}
 		});
 	}
-	
+
 }

@@ -20,7 +20,7 @@ public class IterableZipContainerTest extends BaseTest {
 			return zip.getConventionedAbsolutePath();
 		});
 	}
-	
+
 	@Test
 	public void getConventionedAbsolutePathTestTwo() {
 		testNotNull(() ->{
@@ -33,5 +33,5 @@ public class IterableZipContainerTest extends BaseTest {
 			return zip.getConventionedAbsolutePath();
 		});
 	}
-	
+
 }

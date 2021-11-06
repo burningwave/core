@@ -10,31 +10,31 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("all")
 public class ConstructorsTest extends BaseTest {
-	
+
 	@Test
 	public void newInstanceOfTestOne() {
 		testNotNull(() -> Constructors.newInstanceDirectOf(ExtendedService.class));
 	}
-	
+
 	@Test
 	public void newInstanceOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotNull(() -> Constructors.newInstanceDirectOf(
-				Class.forName("org.burningwave.core.classes.FunctionalInterfaceFactoryImpl"), 
+				Class.forName("org.burningwave.core.classes.FunctionalInterfaceFactoryImpl"),
 				componentSupplier.getClassFactory()
 			)
 		);
 	}
-	
+
 	@Test
 	public void convertToMethodHandleTestOne() {
 		testNotNull(() ->
 			Constructors.findDirectHandle(
 				Constructors.findOneAndMakeItAccessible(ExtendedService.class)
-			).invoke()			
+			).invoke()
 		);
 	}
-	
+
 	@Test
 	public void newInstanceOfDirectTestOne() {
 		testNotNull(() -> {
@@ -43,7 +43,7 @@ public class ConstructorsTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void newInstanceOfDirectTestTwo() {
 		testNotNull(() -> {
@@ -52,14 +52,14 @@ public class ConstructorsTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void newInstanceOfDirectTestThree() {
 		testNotNull(() ->
 			Constructors.newInstanceDirectOf(SearchConfig.class)
 		);
 	}
-	
+
 	@Test
 	public void newInstanceOfTestThree() {
 		testNotNull(() ->

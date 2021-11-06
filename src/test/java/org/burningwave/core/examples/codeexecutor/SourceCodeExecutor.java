@@ -9,7 +9,7 @@ import org.burningwave.core.classes.BodySourceGenerator;
 import org.burningwave.core.classes.ExecuteConfig;
 
 public class SourceCodeExecutor {
-    
+
     public static Integer execute() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         return componentSupplier.getCodeExecutor().execute(
@@ -24,9 +24,9 @@ public class SourceCodeExecutor {
                 .addCodeLine("return Integer.valueOf(inputNumber + (Integer)parameter[1]);")
             ).withParameter(Integer.valueOf(5), Integer.valueOf(3))
         );
-        
+
     }
-    
+
     public static void main(String[] args) {
         System.out.println("Total is: " + execute());
     }

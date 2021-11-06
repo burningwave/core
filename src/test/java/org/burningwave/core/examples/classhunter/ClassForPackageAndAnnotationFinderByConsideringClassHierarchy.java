@@ -11,13 +11,13 @@ import org.burningwave.core.classes.ConstructorCriteria;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.SearchConfig;
-    
+
 public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
-    
+
     public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassHunter classHunter = componentSupplier.getClassHunter();
-        
+
         try (
                 SearchResult result = classHunter.findBy(
                 //Highly optimized scanning by filtering resources before loading from ClassLoader
@@ -45,5 +45,5 @@ public class ClassForPackageAndAnnotationFinderByConsideringClassHierarchy {
             return result.getClasses();
         }
     }
-   
+
 }

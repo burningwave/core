@@ -9,7 +9,7 @@ import org.burningwave.core.classes.SearchConfig;
 import org.junit.jupiter.api.Test;
 
 public class ClassPathHunterTest extends BaseTest {
-	
+
 	@Test
 	public void findAllSubtypeOfTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -50,7 +50,7 @@ public class ClassPathHunterTest extends BaseTest {
 				result.getClassPaths()
 		);
 	}
-	
+
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -78,7 +78,7 @@ public class ClassPathHunterTest extends BaseTest {
 			true
 		);
 	}
-	
+
 	@Test
 	public void findAllTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -90,7 +90,7 @@ public class ClassPathHunterTest extends BaseTest {
 				)
 			),
 			(result) -> {
-				return result.getClassPaths();				
+				return result.getClassPaths();
 			}, true
 		);
 	}

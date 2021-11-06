@@ -23,9 +23,9 @@ public class Finder {
             //With the row below the search will be executed on runtime Classpaths
             pathHelper.getMainClassPaths()
         );
-        
+
         SearchResult searchResult = classHunter.findBy(searchConfig);
-        
+
         return searchResult.getClasses();
     }
 

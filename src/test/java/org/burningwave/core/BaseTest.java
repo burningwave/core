@@ -27,13 +27,13 @@ public class BaseTest implements Component {
 
 	Collection<ComponentSupplier> componentSuppliers = new CopyOnWriteArrayList<>();
 	private static ComponentContainer componentSupplier;
-	
+
 //	protected ComponentSupplier getComponentSupplier() {
 //		//Set<ComponentSupplier> componentSuppliers = getComponentSupplierSetForTest();
 //		//return getNewComponentSupplier();
 //		return ComponentSupplier.getInstance();
 //	}
-	
+
 	protected synchronized ComponentContainer getComponentSupplier() {
 		if (componentSupplier == null || componentSupplier.isClosed()) {
 			return componentSupplier = ComponentContainer.create("burningwave.properties");
@@ -41,8 +41,8 @@ public class BaseTest implements Component {
 		return componentSupplier;
 		//return ComponentSupplier.getInstance();
 	}
-	
-	
+
+
 	public synchronized void closeComponentContainer() {
 		componentSupplier.close();
 		componentSupplier = null;
@@ -56,7 +56,7 @@ public class BaseTest implements Component {
 				@Override
 				public void run() {
 					componentSuppliers.add(ComponentSupplier.getInstance());
-				};
+				}
 			};
 			threadList.add(thread);
 			thread.start();
@@ -70,13 +70,13 @@ public class BaseTest implements Component {
 		});
 		return componentSuppliers;
 	}
-	
+
 	protected ComponentSupplier getNewComponentSupplier() {
 		ComponentSupplier componentSupplier = ComponentContainer.create("burningwave.properties");
 		componentSuppliers.add(componentSupplier);
 		return componentSupplier;
 	}
-		
+
 	public void testNotNull(ThrowingSupplier<?> supplier) {
 		Object object = null;
 		try {
@@ -88,11 +88,11 @@ public class BaseTest implements Component {
 		}
 		assertNotNull(object);
 	}
-	
+
 	protected void testNotEmpty(ThrowingSupplier<Collection<?>> supplier) {
 		testNotEmpty(supplier, false);
 	}
-	
+
 	protected void testNotEmpty(ThrowingSupplier<Collection<?>> supplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
@@ -113,7 +113,7 @@ public class BaseTest implements Component {
 		}
 		assertTrue(coll != null && !coll.isEmpty());
 	}
-	
+
 	private String getCallerMethod() {
 		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 		for (StackTraceElement stackTraceElement : stackTraceElements) {
@@ -128,7 +128,7 @@ public class BaseTest implements Component {
 	public <T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier) {
 		testNotEmpty(autoCloaseableSupplier, collSupplier, false);
 	}
-	
+
 	public <T extends AutoCloseable> void testNotEmpty(Supplier<T> autoCloaseableSupplier, Function<T, Collection<?>> collSupplier, boolean printAllElements) {
 		long initialTime = System.currentTimeMillis();
 		Collection<?> coll = null;
@@ -157,10 +157,10 @@ public class BaseTest implements Component {
 		);
 		assertTrue(isNotEmpty);
 	}
-	
-	
+
+
 	public <T extends AutoCloseable> void testNotNull(
-		ThrowingSupplier<T> autoCloseableSupplier, 
+		ThrowingSupplier<T> autoCloseableSupplier,
 		Function<T, ?> objectSupplier
 	) {
 		long initialTime = System.currentTimeMillis();
@@ -169,10 +169,10 @@ public class BaseTest implements Component {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
-		}		
+		}
 	}
-	
-	
+
+
 	public void testDoesNotThrow(Executable executable) {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
@@ -186,13 +186,13 @@ public class BaseTest implements Component {
 		}
 		assertNull(throwable);
 	}
-	
-	
+
+
 	String getFormattedDifferenceOfMillis(long value1, long value2) {
 		String valueFormatted = String.format("%04d", (value1 - value2));
 		return valueFormatted.substring(0, valueFormatted.length() - 3) + "," + valueFormatted.substring(valueFormatted.length() -3);
 	}
-	
+
 	void waitFor(long seconds) {
 		try {
 			Thread.sleep(seconds * 1000);
@@ -200,5 +200,5 @@ public class BaseTest implements Component {
 			Driver.throwException(exc);
 		}
 	}
-	
+
 }

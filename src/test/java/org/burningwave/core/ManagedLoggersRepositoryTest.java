@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 
 public class ManagedLoggersRepositoryTest extends BaseTest {
-	
+
 	@Test
 	public void placeHolderedLogInfoTest() {
 		testDoesNotThrow(() -> {

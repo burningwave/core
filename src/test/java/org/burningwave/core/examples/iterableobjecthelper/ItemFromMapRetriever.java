@@ -15,7 +15,7 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings("unused")
 public class ItemFromMapRetriever {
-    
+
     public void execute() throws IOException {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         PathHelper pathHelper = componentSupplier.getPathHelper();
@@ -34,7 +34,7 @@ public class ItemFromMapRetriever {
             ResolveConfig.forNamedKey("class-loader-01")
             .on(map)
         );
-        
+
         map.clear();
         map.put("class-loaders", "${class-loader-02};${class-loader-03};");
         map.put("class-loader-02", Thread.currentThread().getContextClassLoader());
@@ -45,7 +45,7 @@ public class ItemFromMapRetriever {
             .withValuesSeparator(";")
         );
     }
-    
+
     public static void main(String[] args) throws IOException {
         new ItemFromMapRetriever().execute();
     }

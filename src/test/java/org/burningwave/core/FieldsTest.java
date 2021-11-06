@@ -14,25 +14,25 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("unused")
 public class FieldsTest extends BaseTest {
-	
+
 	@Test
 	public void getAllTestOne() {
 		testNotEmpty(
 			() -> {
-				return Fields.getAll(ComponentContainer.getInstance()).values();	
+				return Fields.getAll(ComponentContainer.getInstance()).values();
 			},
 		true);
 	}
-	
+
 	@Test
 	public void getAllDirectTestOne() {
 		testNotEmpty(
 			() -> {
-				return Fields.getAllDirect(ComponentContainer.getInstance()).values();	
+				return Fields.getAllDirect(ComponentContainer.getInstance()).values();
 			},
 		true);
 	}
-	
+
 	@Test
 	public void setDirectTestOne() {
 		testDoesNotThrow(() -> {
@@ -73,7 +73,7 @@ public class FieldsTest extends BaseTest {
 			assertTrue(charValue == 'a');
 		});
 	}
-	
+
 	@Test
 	public void setDirectVolatileTestOne() {
 		testDoesNotThrow(() -> {
@@ -114,8 +114,8 @@ public class FieldsTest extends BaseTest {
 			assertTrue(charValue == 'a');
 		});
 	}
-	
-	
+
+
 	@Test
 	public void getAllTestTwo() {
 		testNotEmpty(() -> {

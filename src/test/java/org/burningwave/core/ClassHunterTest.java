@@ -23,7 +23,7 @@ import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
 public class ClassHunterTest extends BaseTest {
-	
+
 	@Test
 	public void findAllTestOne() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -49,29 +49,29 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> 
+			() ->
 				componentSupplier.getClassHunter().find(),
 			(result) ->
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllUncachedTestFour() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		testNotEmpty(
-			() -> 
+			() ->
 				componentSupplier.getClassHunter().find(),
 			(result) ->
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void getResourceAsStreamTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -90,11 +90,11 @@ public class ClassHunterTest extends BaseTest {
 					cls = itr.next();
 				}
 				return ((PathScannerClassLoader)cls.getClassLoader()).getResourceAsStream("META-INF/MANIFEST.MF");
-				
+
 			}
 		);
 	}
-	
+
 	@Test
 	public void refreshCacheTestOne() throws Exception {
 		findAllTestOne();
@@ -110,7 +110,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 		testNotEmpty(
-			() -> 
+			() ->
 				componentSupplier.getClassHunter().findBy(
 					SearchConfig.forPaths(
 						componentSupplier.getPathHelper().getPath(path -> path.contains("spring-core-4.3.4.RELEASE.jar"))
@@ -120,7 +120,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllTestThree() throws Exception {
 		findAllTestOne();
@@ -144,7 +144,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findRecursiveInChildrenExcludingZipAndJar() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -171,8 +171,8 @@ public class ClassHunterTest extends BaseTest {
 							fileSystemItem ->
 								fileSystemItem.isFolder() ||
 								(fileSystemItem.getExtension() != null &&
-								!fileSystemItem.getExtension().equals("zip") && 
-								!fileSystemItem.getExtension().equals("jar") && 
+								!fileSystemItem.getExtension().equals("zip") &&
+								!fileSystemItem.getExtension().equals("jar") &&
 								fileSystemItem.toJavaClass() != null)
 						);
 					}
@@ -198,7 +198,7 @@ public class ClassHunterTest extends BaseTest {
 			uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 		).useClasses(
 			//With this directive we ask the library to load one or more classes to be used for comparisons:
-			//it serves to eliminate the problem that a class, loaded by different class loaders, 
+			//it serves to eliminate the problem that a class, loaded by different class loaders,
 			//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 			//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 			Complex.Data.Item.class
@@ -216,7 +216,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -236,7 +236,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 	}
 
-	
+
 	@Test
 	public void findAllSubtypeOfTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -252,7 +252,7 @@ public class ClassHunterTest extends BaseTest {
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
+						//it serves to eliminate the problem that a class, loaded by different class loaders,
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						Closeable.class,
@@ -263,7 +263,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -279,7 +279,7 @@ public class ClassHunterTest extends BaseTest {
 						uploadedClasses.get(AbstractList.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
+						//it serves to eliminate the problem that a class, loaded by different class loaders,
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						AbstractList.class
@@ -289,7 +289,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestFiveAndCloseComponentContainer() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -311,7 +311,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 		closeComponentContainer();
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -338,7 +338,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -354,7 +354,7 @@ public class ClassHunterTest extends BaseTest {
 							(uploadedClasses, initialClass, cls) -> cls.equals(uploadedClasses.get(Object.class))
 						).parameterType(
 							(array, idx) -> idx == 0 && array[idx].equals(int.class)
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						)
 					).useClasses(
@@ -368,7 +368,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -385,7 +385,7 @@ public class ClassHunterTest extends BaseTest {
 						MethodCriteria.byScanUpTo(
 							(uploadedClasses, initialClass, cls) -> cls.equals(uploadedClasses.get(Object.class))
 						).parameterTypesAreAssignableFrom(int.class)
-						.skip((classes, initialClass, examinedClass) -> 
+						.skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						)
 					).useClasses(
@@ -399,7 +399,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestNine() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -417,7 +417,7 @@ public class ClassHunterTest extends BaseTest {
 					)
 				).setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(
-						FileSystemItem.CheckingOption.FOR_NAME).and().allFileThat(fileSystemItem -> 
+						FileSystemItem.CheckingOption.FOR_NAME).and().allFileThat(fileSystemItem ->
 							fileSystemItem.getAbsolutePath().contains("/org/")
 					)
 				)
@@ -431,7 +431,7 @@ public class ClassHunterTest extends BaseTest {
 			).values()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -449,7 +449,7 @@ public class ClassHunterTest extends BaseTest {
 								cls.equals(uploadedClasses.get(Object.class))
 						).parameterType(
 							(array, idx) -> idx == 0 && array[idx].equals(int.class)
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						).result((foundMethods) ->
 							foundMethods.size() > 3
@@ -464,7 +464,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -484,7 +484,7 @@ public class ClassHunterTest extends BaseTest {
 						).parameterType(
 							(uploadedClasses, array, idx) ->
 								idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						)
 					).useClasses(
@@ -500,7 +500,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -509,10 +509,10 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -535,7 +535,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestFive() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -544,10 +544,10 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -568,7 +568,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -577,10 +577,10 @@ public class ClassHunterTest extends BaseTest {
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -599,7 +599,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSeven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -608,19 +608,19 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		MethodCriteria methodCriteria_02 = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -640,7 +640,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getMembersBy(methodCriteria_01)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithConstructorTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -648,10 +648,10 @@ public class ClassHunterTest extends BaseTest {
 		ConstructorCriteria constructorCriteria = ConstructorCriteria.forEntireClassHierarchy().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -672,20 +672,20 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(constructorCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		
+
 		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -701,7 +701,7 @@ public class ClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				).waitForSearchEnding(
 					false
-				)	
+				)
 			),
 			(result) -> {
 				result.waitForSearchEnding();
@@ -709,7 +709,7 @@ public class ClassHunterTest extends BaseTest {
 			}
 		);
 	}
-	
+
 	@Test
 	public void cacheTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -721,7 +721,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -732,7 +732,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void cacheTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -744,7 +744,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -755,7 +755,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllBurningWaveClassesByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -765,7 +765,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getPaths((path) ->
 					path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
+					ClassCriteria.create().allThoseThatMatch((currentScannedClass) ->
 						currentScannedClass.getPackage() != null &&
 						currentScannedClass.getPackage().getName().startsWith("org.burningwave")
 					)
@@ -776,7 +776,7 @@ public class ClassHunterTest extends BaseTest {
 			false
 		);
 	}
-	
+
 	@Test
 	public void findAllAnnotatedMethods() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -797,7 +797,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllAnnotatedMethodsTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -823,7 +823,7 @@ public class ClassHunterTest extends BaseTest {
 			)
 		);
 	}
-	
+
 	@Test
 	public void findAllTestOneByIsolatedClassLoader() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -853,7 +853,7 @@ public class ClassHunterTest extends BaseTest {
 						uploadedClasses.get(Complex.Data.Item.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
+						//it serves to eliminate the problem that a class, loaded by different class loaders,
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						Complex.Data.Item.class
@@ -864,7 +864,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestTwoByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -885,7 +885,7 @@ public class ClassHunterTest extends BaseTest {
 		);
 	}
 
-	
+
 	@Test
 	public void findAllSubtypeOfTestThreeByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -901,7 +901,7 @@ public class ClassHunterTest extends BaseTest {
 						uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
+						//it serves to eliminate the problem that a class, loaded by different class loaders,
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						Closeable.class,
@@ -913,7 +913,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfTestFourByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -929,7 +929,7 @@ public class ClassHunterTest extends BaseTest {
 						uploadedClasses.get(AbstractList.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						//With this directive we ask the library to load one or more classes to be used for comparisons:
-						//it serves to eliminate the problem that a class, loaded by different class loaders, 
+						//it serves to eliminate the problem that a class, loaded by different class loaders,
 						//turns out to be different for the comparison operators (eg. The isAssignableFrom method).
 						//If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
 						AbstractList.class
@@ -939,7 +939,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -956,7 +956,7 @@ public class ClassHunterTest extends BaseTest {
 							(uploadedClasses, initialClass, cls) -> cls.equals(uploadedClasses.get(Object.class))
 						).parameterType(
 							(array, idx) -> idx == 0 && array[idx].equals(int.class)
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						)
 					).useClasses(
@@ -970,7 +970,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestTwoByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -988,7 +988,7 @@ public class ClassHunterTest extends BaseTest {
 								cls.equals(uploadedClasses.get(Object.class))
 						).parameterType(
 							(array, idx) -> idx == 0 && array[idx].equals(int.class)
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						).result((foundMethods) ->
 							foundMethods.size() > 3
@@ -1004,7 +1004,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestThreeByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1025,7 +1025,7 @@ public class ClassHunterTest extends BaseTest {
 						).parameterType(
 							(uploadedClasses, array, idx) ->
 								idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-						).skip((classes, initialClass, examinedClass) -> 
+						).skip((classes, initialClass, examinedClass) ->
 							classes.get(Object.class) == examinedClass
 						)
 					).useClasses(
@@ -1042,7 +1042,7 @@ public class ClassHunterTest extends BaseTest {
 			false
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestFourByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1051,10 +1051,10 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1077,7 +1077,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestFiveByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1086,10 +1086,10 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1111,7 +1111,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSixByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1120,10 +1120,10 @@ public class ClassHunterTest extends BaseTest {
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1143,7 +1143,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(methodCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsTestSevenByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1152,19 +1152,19 @@ public class ClassHunterTest extends BaseTest {
 		).parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(BigDecimal.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		MethodCriteria methodCriteria_02 = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1184,7 +1184,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getMembersBy(methodCriteria_01)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithConstructorTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1192,7 +1192,7 @@ public class ClassHunterTest extends BaseTest {
 		ConstructorCriteria constructorCriteria = ConstructorCriteria.withoutConsideringParentClasses().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
 		testNotEmpty(
@@ -1215,20 +1215,20 @@ public class ClassHunterTest extends BaseTest {
 				result.getMembersBy(constructorCriteria)
 		);
 	}
-	
+
 	@Test
 	public void findAllSubtypeOfWithMethodsByAsyncModeTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		
+
 		MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(
 			(methodName) -> methodName.startsWith("set")
 		).and().parameterType(
 			(uploadedClasses, array, idx) ->
 				idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-		).skip((classes, initialClass, examinedClass) -> 
+		).skip((classes, initialClass, examinedClass) ->
 			classes.get(Object.class) == examinedClass
 		);
-		
+
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1244,7 +1244,7 @@ public class ClassHunterTest extends BaseTest {
 					Thread.currentThread().getContextClassLoader()
 				).waitForSearchEnding(
 					false
-				).useNewIsolatedClassLoader()	
+				).useNewIsolatedClassLoader()
 			),
 			(result) -> {
 				result.waitForSearchEnding();
@@ -1252,7 +1252,7 @@ public class ClassHunterTest extends BaseTest {
 			}
 		);
 	}
-	
+
 	@Test
 	public void cacheTestOneByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1264,7 +1264,7 @@ public class ClassHunterTest extends BaseTest {
 			(result) -> result.getClasses()
 		);
 		searchConfig.by(
-			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
+			ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 				uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 			).useClasses(
 				Closeable.class
@@ -1277,7 +1277,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void cacheTestTwoByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1288,10 +1288,10 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(searchConfig),
 			(result) -> result.getClasses()
 		);
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			componentSupplier.getClassHunter().findBy(
 				searchConfig.by(
-					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) -> 
+					ClassCriteria.create().byClassesThatMatch((uploadedClasses, currentScannedClass) ->
 						uploadedClasses.get(Closeable.class).isAssignableFrom(currentScannedClass)
 					).useClasses(
 						Closeable.class
@@ -1301,7 +1301,7 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
+
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1312,7 +1312,7 @@ public class ClassHunterTest extends BaseTest {
 					componentSupplier.getPathHelper().getPaths((path) ->
 					path.endsWith("target/classes"))
 				).by(
-					ClassCriteria.create().allThoseThatMatch((currentScannedClass) -> 
+					ClassCriteria.create().allThoseThatMatch((currentScannedClass) ->
 						currentScannedClass.getPackage() != null &&
 						currentScannedClass.getPackage().getName().startsWith("org.burningwave")
 					)
@@ -1323,8 +1323,8 @@ public class ClassHunterTest extends BaseTest {
 			false
 		);
 	}
-	
-	
+
+
 	@Test
 	public void findAllBurningWaveClassesThroughResources() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1340,8 +1340,8 @@ public class ClassHunterTest extends BaseTest {
 			false
 		);
 	}
-	
-	
+
+
 //	@Test
 //	public void findAllWithModuleByIsolatedClassLoader() {
 //		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1351,7 +1351,7 @@ public class ClassHunterTest extends BaseTest {
 //					componentSupplier.getPathHelper().getMainClassPaths()
 //				).by(
 //					ClassCriteria.create().allThoseThatMatch((currentScannedClass) ->
-//						currentScannedClass.getModule().getName() != null && 
+//						currentScannedClass.getModule().getName() != null &&
 //						currentScannedClass.getModule().getName().equals("jdk.xml.dom")
 //					)
 //				)
@@ -1361,7 +1361,7 @@ public class ClassHunterTest extends BaseTest {
 //			false
 //		);
 //	}
-	
+
 	@Test
 	public void findAllAnnotatedMethodsByIsolatedClassLoader() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -1385,14 +1385,14 @@ public class ClassHunterTest extends BaseTest {
 				result.getClasses()
 		);
 	}
-	
-	
+
+
 	@Test
 	public void findByPackageNameTestOne() {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
-	        
+
 	        SearchConfig searchConfig = SearchConfig.forPaths(
 	            new ArrayList<String>()
 	        ).by(
@@ -1405,15 +1405,15 @@ public class ClassHunterTest extends BaseTest {
 	        }
 		}, true);
 	}
-	
-	
+
+
 	@Test
 	public void findByPackageNameTestTwo() {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 	        PathHelper pathHelper = componentSupplier.getPathHelper();
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
-	        
+
 	        SearchConfig searchConfig = SearchConfig.forPaths(
 	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
 	        ).by(

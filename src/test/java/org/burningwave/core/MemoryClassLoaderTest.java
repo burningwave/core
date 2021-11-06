@@ -15,13 +15,13 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.junit.jupiter.api.Test;
 
 public class MemoryClassLoaderTest extends BaseTest {
-	
+
 	protected MemoryClassLoader getMemoryClassLoader(ClassLoader parent) {
 		return MemoryClassLoader.create(
 				parent
 		);
 	}
-	
+
 	UnitSourceGenerator generateSources() {
 		ClassSourceGenerator ClassSG = ClassSourceGenerator.create(
 			TypeDeclarationSourceGenerator.create("ReTry")
@@ -39,26 +39,26 @@ public class MemoryClassLoaderTest extends BaseTest {
 		).addStaticImport(StaticComponentContainer.class, "Streams", "Classes");
 		return unitSG;
 	}
-	
+
 	@Test
 	public void loadClassTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				return memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
-			}			
+			}
 		});
 	}
-	
+
 	@Test
 	public void getResourceAsStreamTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
 				memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
 				return memoryClassLoader.getResourceAsStream(PropertyAccessor.class.getName().replace(".", "/") + ".class");
-			}			
+			}
 		});
 	}
-	
+
 	@Test
 	public void getResourceAsStreamTestTwo() throws ClassNotFoundException {
 		try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
@@ -66,7 +66,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			assertTrue(memoryClassLoader.hasPackageBeenDefined(PropertyAccessor.class.getPackage().getName()));
 		}
 	}
-	
+
 	@Test
 	public void loadClassTestTwo() throws ClassNotFoundException {
 		testNotNull(() -> {
@@ -82,7 +82,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void forceCompiledClassesLoadingTestOne() throws ClassNotFoundException {
 		testNotEmpty(() -> {
@@ -98,7 +98,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void getNotLoadedByteCodeTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
@@ -114,7 +114,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void getByteCodeOfTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 public class FileSystemItemTest extends BaseTest {
-	
+
 	@Test
 	public void readTestOne() {
 		testNotNull(() -> {
@@ -24,7 +24,7 @@ public class FileSystemItemTest extends BaseTest {
 			}
 		);
 	}
-	
+
 	@Test
 	public void resetTestOne() {
 		testNotNull(() -> {
@@ -38,12 +38,12 @@ public class FileSystemItemTest extends BaseTest {
 			}
 		);
 	}
-	
+
 	@Test
 	public void resetTestTwo() {
 		testNotNull(() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
-				
+
 				FileSystemItem fIS = componentSupplier.getPathHelper().getResource(
 					"/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes/javax/swing/UIManager$1.class"
 				);
@@ -57,9 +57,9 @@ public class FileSystemItemTest extends BaseTest {
 				return fIS.toByteBuffer();
 			}
 		);
-	}	
-	
-	
+	}
+
+
 	@Test
 	public void readTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -68,8 +68,8 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).toInputStream());
 	}
-	
-	
+
+
 	@Test
 	public void readTestThree() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -78,7 +78,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).getParent());
 	}
-	
+
 	@Test
 	public void readTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -87,7 +87,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/generic/MethodGen$BranchTarget.class"
 		).getParent().getParent().getChildren());
 	}
-	
+
 	@Test
 	public void readTestFive() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -95,8 +95,8 @@ public class FileSystemItemTest extends BaseTest {
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).getChildren());
-	}	
-	
+	}
+
 	@Test
 	public void readTestSix() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -105,7 +105,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 		).getChildren());
 	}
-	
+
 	@Test
 	public void readTestSeven() {
 		testNotEmpty(() -> {
@@ -113,11 +113,11 @@ public class FileSystemItemTest extends BaseTest {
 					StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")?
 						"C:" : "/"
 				).getChildren();
-			}, 
+			},
 			true
 		);
 	}
-	
+
 	@Test
 	public void readTestTwentyThree() {
 		testNotEmpty(() -> {
@@ -128,7 +128,7 @@ public class FileSystemItemTest extends BaseTest {
 			}, true
 		);
 	}
-		
+
 	@Test
 	public void readTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -137,7 +137,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar/org/apache/bcel/verifier"
 		).getAllChildren());
 	}
-	
+
 	@Test
 	public void readTestNine() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -145,7 +145,7 @@ public class FileSystemItemTest extends BaseTest {
 			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 		).getAllChildren());
 	}
-	
+
 	@Test
 	public void readTestTen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -153,7 +153,7 @@ public class FileSystemItemTest extends BaseTest {
 			componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/classes"))
 		).getAllChildren());
 	}
-	
+
 	@Test
 	public void readTestEleven() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -162,7 +162,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).getAllChildren());
 	}
-	
+
 	@Test
 	public void readTestTwelve() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -171,7 +171,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib"
 		).getChildren());
 	}
-	
+
 	@Test
 	public void readTestThirteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -180,7 +180,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).getAllChildren());
 	}
-	
+
 	@Test
 	public void readTestFourteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -188,7 +188,7 @@ public class FileSystemItemTest extends BaseTest {
 			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 		).getChildren(), true);
 	}
-	
+
 	@Test
 	public void readTestFifteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -198,54 +198,54 @@ public class FileSystemItemTest extends BaseTest {
 		).findInAllChildren(FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> fileSystemItem.getName().endsWith(".class"))),
 		false);
 	}
-	
+
 	@Test
 	public void readTestSixteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.getAllChildren(),
 		false);
 	}
-	
+
 	@Test
 	public void readTestSeventeen() {
 		testNotEmpty(() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				PathHelper pathHelper = componentSupplier.getPathHelper();
-	
+
 				return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 					.getChildren();
 			},
 			true
 		);
 	}
-	
-	
+
+
 	@Test
 	public void readTestEighteen() {
 		testNotEmpty(() -> {
 				ComponentSupplier componentSupplier = getComponentSupplier();
 				PathHelper pathHelper = componentSupplier.getPathHelper();
-	
+
 				return pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 					.getChildren().stream().filter(FileSystemItem::isFolder).findFirst().get().getChildren();
 			},
 			true
 		);
 	}
-	
+
 	@Test
 	public void readTestNineteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod")
 		.getChildren(),
 		true);
 	}
-	
+
 	@Test
 	public void readTestTwenty() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -253,17 +253,17 @@ public class FileSystemItemTest extends BaseTest {
 			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
 		).getChildren(), true);
 	}
-	
+
 	@Test
 	public void readTestTwentyOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			pathHelper.getResource("/../../src/test/external-resources/libs-for-test.zip/java.desktop.jmod/classes")
 		.findInAllChildren(FileSystemItem.Criteria.forAllFileThat(FileSystemItem::isFolder)),
 		false);
 	}
-	
+
 	@Test
 	public void readTestTwentyTwo() {
 		testNotEmpty(() -> {
@@ -275,7 +275,7 @@ public class FileSystemItemTest extends BaseTest {
 			true
 		);
 	}
-	
+
 	@Test
 	public void readWithFilterTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -289,7 +289,7 @@ public class FileSystemItemTest extends BaseTest {
 		),
 		false);
 	}
-	
+
 	@Test
 	public void refreshTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -303,7 +303,7 @@ public class FileSystemItemTest extends BaseTest {
 			return fileSysteItem.getAllChildren();
 		});
 	}
-	
+
 	@Test
 	public void refreshTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -317,7 +317,7 @@ public class FileSystemItemTest extends BaseTest {
 			return fileSysteItem.getChildren();
 		});
 	}
-	
+
 	@Test
 	public void copyFileTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -326,7 +326,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
 		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
-	
+
 	@Test
 	public void copyFileTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -335,7 +335,7 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar"
 		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
-	
+
 	@Test
 	public void copyFolderTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -344,11 +344,11 @@ public class FileSystemItemTest extends BaseTest {
 			basePath + "/../../src/test/external-resources/libs-for-test.zip/META-INF"
 		).copyTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getChildren());
 	}
-	
+
 	@Test
 	public void copyFolderTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			componentSupplier.getPathHelper().getResource(
 				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 			).copyTo(
@@ -356,7 +356,7 @@ public class FileSystemItemTest extends BaseTest {
 			).getChildren()
 		);
 	}
-	
+
 	@Test
 	public void toByteBufferTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -368,23 +368,23 @@ public class FileSystemItemTest extends BaseTest {
 			return fIS.toByteBuffer();
 		});
 	}
-	
+
 	@Test
 	@Tag("Heavy")
 	public void copyAllChildrenTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			pathHelper.getResource(
 				"/../../src/test/external-resources/libs-for-test.zip"
 			).copyAllChildrenTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").getAllChildren()
 		);
 	}
-	
+
 	@Test
 	public void copyAllChildrenTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			componentSupplier.getPathHelper().getResource(
 				"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/bcel-5.1.jar"
 			).copyAllChildrenTo(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests").findFirstInAllChildren(
@@ -392,7 +392,7 @@ public class FileSystemItemTest extends BaseTest {
 			).getAllChildren()
 		);
 	}
-	
+
 	@Test
 	public void toUrlTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -405,7 +405,7 @@ public class FileSystemItemTest extends BaseTest {
 			return url;
 		});
 	}
-	
+
 	@Test
 	public void javaHomeTreeTest() {
 		testNotEmpty(() -> {

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 
 public class IterableObjectHelperTest extends BaseTest {
-	
+
 	@Test
 	public void resolveTestOne() {
 		testNotNull(() -> {
@@ -21,7 +21,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void resolveTestTwo() {
 		testNotEmpty(() -> {
@@ -35,7 +35,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void resolveTestThree() {
 		testNotNull(() -> {
@@ -49,7 +49,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void containsTestOne() {
 		testNotNull(() -> {
@@ -63,5 +63,5 @@ public class IterableObjectHelperTest extends BaseTest {
 			);
 		});
 	}
-	
+
 }

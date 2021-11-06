@@ -11,7 +11,7 @@ import org.burningwave.core.classes.PathScannerClassLoader;
 import org.junit.jupiter.api.Test;
 
 public class PathScannerClassLoaderTest extends BaseTest {
-	
+
 	@Test
 	public void getResourcesTestOne() throws ClassNotFoundException {
 		testNotEmpty(() -> {
@@ -24,10 +24,10 @@ public class PathScannerClassLoaderTest extends BaseTest {
 			);
 			return Collections.list(classLoader.getResources("META-INF/MANIFEST.MF")).stream().map(url ->
 				Paths.convertURLPathToAbsolutePath(url.getPath())).collect(Collectors.toSet()
-			);			
+			);
 		}, true);
 	}
-	
+
 	@Test
 	public void getResourcesTestTwo() throws ClassNotFoundException {
 		testNotEmpty(() -> {
@@ -38,10 +38,10 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return Collections.list(classLoader.getResources("org/burningwave/core/Component.class"));			
+			return Collections.list(classLoader.getResources("org/burningwave/core/Component.class"));
 		}, true);
 	}
-	
+
 	@Test
 	public void getResourceTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
@@ -52,10 +52,10 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return classLoader.getResource("org/burningwave/core/Component.class");			
+			return classLoader.getResource("org/burningwave/core/Component.class");
 		});
 	}
-	
+
 	@Test
 	public void getResourceTestTwo() throws ClassNotFoundException {
 		testNotNull(() -> {
@@ -66,10 +66,10 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return classLoader.getResource("META-INF/MANIFEST.MF");			
+			return classLoader.getResource("META-INF/MANIFEST.MF");
 		});
 	}
-	
+
 	@Test
 	public void getResourceTestThree() throws ClassNotFoundException {
 		testNotNull(() -> {
@@ -80,7 +80,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
 			);
-			return classLoader.getResource("burningwave.properties");			
+			return classLoader.getResource("burningwave.properties");
 		});
 	}
 }

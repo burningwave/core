@@ -11,16 +11,16 @@ import org.junit.jupiter.api.Test;
 
 
 public class MembersTest extends BaseTest {
-	
+
 	@Test
 	public void findOneTestOne() {
 		testNotNull(() ->
 			Members.findOne(
 				MethodCriteria.forEntireClassHierarchy().name((name) ->
 					name.matches("apply")
-				).and().parameterType((params, idx) -> 
+				).and().parameterType((params, idx) ->
 					idx == 0 && params[idx].equals(Object.class)
-				).and().parameterType((params, idx) -> 
+				).and().parameterType((params, idx) ->
 					idx == 1 && params[idx].equals(String.class)
 				).and().parameterType((params, idx) ->
 					idx == 2 && params[idx].equals(String.class)
@@ -29,18 +29,18 @@ public class MembersTest extends BaseTest {
 			)
 		);
 	}
-	
-	
+
+
 	@Test
 	public void findOneTestTwo() {
 		testNotNull(() ->
 			Members.findOne(
 				MethodCriteria.forEntireClassHierarchy()
 				.name((name) -> name.matches("apply"))
-				.and().parameterType((params, idx) -> 
+				.and().parameterType((params, idx) ->
 					idx == 0 && params[idx].equals(Object.class)
 				)
-				.and().parameterType((params, idx) -> 
+				.and().parameterType((params, idx) ->
 					idx == 1 && params[idx].equals(String.class)
 				)
 				.and().parameterType((params, idx) ->
@@ -52,17 +52,17 @@ public class MembersTest extends BaseTest {
 			)
 		);
 	}
-	
+
 	@Test
 	public void matchOneTestOne() {
 		assertTrue(
 			Members.match(
 				MethodCriteria.forEntireClassHierarchy()
 				.name((name) -> name.matches("apply"))
-				.and().parameterType((params, idx) -> 
+				.and().parameterType((params, idx) ->
 					idx == 0 && params[idx].equals(Object.class)
 				)
-				.and().parameterType((params, idx) -> 
+				.and().parameterType((params, idx) ->
 					idx == 1 && params[idx].equals(String.class)
 				)
 				.and().parameterType((params, idx) ->
@@ -74,7 +74,7 @@ public class MembersTest extends BaseTest {
 			)
 		);
 	}
-	
+
 	@Test
 	public void findAllTestOne() {
 		testNotEmpty(() ->
@@ -86,7 +86,7 @@ public class MembersTest extends BaseTest {
 			)
 		);
 	}
-	
+
 	@Test
 	public void findFirstTestOne() {
 		testNotNull(() ->

@@ -5,7 +5,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ByMethodOr
 import org.burningwave.core.bean.Complex;
 
 public class GetAndSetPropertiesThroughPath{
-    
+
     public void execute() {
         Complex complex = new Complex();
         //This type of property accessor try to access by field introspection: if no field was found
@@ -24,9 +24,9 @@ public class GetAndSetPropertiesThroughPath{
         nameFromObjectInArray = ByMethodOrByFieldPropertyAccessor.get(complex, "data.itemsMap[items][1][1].name");
         System.out.println(nameFromObjectInArray);
     }
-    
+
     public static void main(String[] args) {
         new GetAndSetPropertiesThroughPath().execute();
     }
-    
+
 }
