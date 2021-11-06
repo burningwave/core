@@ -662,6 +662,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			probablyDeadLocked = true;
 		}
 
+		private void remove() {
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			queuedTasksExecutor.tasksInExecution.remove(this);
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(id);
+			}
+			if (executorIndex != null) {
+				executorIndex = null;
+				--queuedTasksExecutor.executorsIndex;
+			}
+		}
+
 		public T waitForStarting() {
 			return waitForStarting(false, 0);
 		}
@@ -816,13 +828,17 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 			return "";
 		}
-
-		void logInfo() {
+		
+		public void logInfo() {
 			if (this.getCreatorInfos() != null) {
 				ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
 			}
 		}
-
+		
+		public void logException() {
+			logException(exc);
+		}
+		
 		private void logException(Throwable exc) {
 			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
 				"Exception occurred while executing {}: \n{}: {}{}{}",
@@ -834,16 +850,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					"\nthat was created:" + Strings.from(this.getCreatorInfos())
 					: ""
 			));
-		}		
-
-		void markAsFinished() {
-			synchronized(this) {
-				finished = true;
-				queuedTasksExecutor.tasksInExecution.remove(this);
-				++queuedTasksExecutor.executedTasksCount;
-				notifyAll();
-			}
-			clear();
 		}
 
 		void clear() {
@@ -852,17 +858,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			executor = null;
 			queuedTasksExecutor = null;
 		}
-		
-		private void remove() {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this);
-			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(id);
+
+		void markAsFinished() {
+			finished = true;
+			synchronized(this) {
+				queuedTasksExecutor.tasksInExecution.remove(this);
+				++queuedTasksExecutor.executedTasksCount;
+				notifyAll();
 			}
-			if (executorIndex != null) {
-				executorIndex = null;
-				--queuedTasksExecutor.executorsIndex;
-			}
+			clear();
 		}
 
 		abstract void execute0() throws Throwable;
