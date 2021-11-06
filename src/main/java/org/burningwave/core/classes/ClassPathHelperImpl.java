@@ -212,19 +212,9 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		for (String sourceCode : sources) {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
 		}
-		Predicate<FileSystemItem> javaClassFilter = (classFile) -> {
-			JavaClass javaClass = classFile.toJavaClass();
-			try {
-				return imports.contains(classFile.toJavaClass().getName());
-			} catch (NullPointerException exc) {
-				if (javaClass == null) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not extract JavaClass from file {}", classFile.getAbsolutePath());
-				} else {
-					throw exc;
-				}
-			}
-			return false;
-		};
+		Predicate<FileSystemItem> javaClassFilter = (classFile) ->
+			imports.contains(classFile.toJavaClass().getName())
+		;
 
 		if (javaClassFilterAdditionalFilter != null) {
 			javaClassFilter = javaClassFilter.or(javaClassFilterAdditionalFilter);
@@ -266,18 +256,10 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Collection<String> notFoundClassClassPaths = new HashSet<>();
 		Predicate<FileSystemItem> criteriaOne = (fileSystemItemCls) -> {
 			JavaClass javaClass = fileSystemItemCls.toJavaClass();
-			try {
-				if (javaClass.getName().equals(className)) {
-					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-					notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
-					return true;
-				}
-			} catch (NullPointerException exc) {
-				if (javaClass == null) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not extract JavaClass from file {}", fileSystemItemCls.getAbsolutePath());
-				} else {
-					throw exc;
-				}
+			if (javaClass.getName().equals(className)) {
+				String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+				notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+				return true;
 			}
 			return false;
 		};
@@ -286,18 +268,10 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Predicate<FileSystemItem> criteriaTwo = (fileSystemItemCls) -> {
 			JavaClass javaClass = fileSystemItemCls.toJavaClass();
 			for (String notFoundClass : notFoundClasses) {
-				try {
-					if (javaClass.getName().equals(notFoundClass)) {
-						String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-						notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
-						return true;
-					}
-				} catch (NullPointerException exc) {
-					if (javaClass == null) {
-						ManagedLoggersRepository.logWarn(getClass()::getName, "Could not extract JavaClass from file {}", fileSystemItemCls.getAbsolutePath());
-					} else {
-						throw exc;
-					}
+				if (javaClass.getName().equals(notFoundClass)) {
+					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+					notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+					return true;
 				}
 			}
 			return false;
@@ -398,23 +372,15 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					classRepository.findInAllChildren(
 						classFileFilter.and().allFileThat(fileSystemItemCls -> {
 							JavaClass javaClass = fileSystemItemCls.toJavaClass();
-							try {
-								if (finalJavaClassFilter.test(fileSystemItemCls)) {
-									String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-									classPaths.add(
-										FileSystemItem.ofPath(
-											classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
-										)
-									);
-									return true;
-								}
-							} catch (NullPointerException exc) {
-								if (javaClass == null) {
-									ManagedLoggersRepository.logWarn(getClass()::getName, "Could not extract JavaClass from file {}", fileSystemItemCls.getAbsolutePath());
-								} else {
-									throw exc;
-								}
-							}							
+							if (finalJavaClassFilter.test(fileSystemItemCls)) {
+								String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+								classPaths.add(
+									FileSystemItem.ofPath(
+										classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath()))
+									)
+								);
+								return true;
+							}
 							return false;
 						}).setDefaultExceptionHandler()
 					);
