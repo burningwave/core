@@ -662,18 +662,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			probablyDeadLocked = true;
 		}
 
-		private void remove() {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this);
-			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(id);
-			}
-			if (executorIndex != null) {
-				executorIndex = null;
-				--queuedTasksExecutor.executorsIndex;
-			}
-		}
-
 		public T waitForStarting() {
 			return waitForStarting(false, 0);
 		}
@@ -846,14 +834,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					"\nthat was created:" + Strings.from(this.getCreatorInfos())
 					: ""
 			));
-		}
-
-		void clear() {
-			remove();
-			executable = null;
-			executor = null;
-			queuedTasksExecutor = null;
-		}
+		}		
 
 		void markAsFinished() {
 			synchronized(this) {
@@ -863,6 +844,25 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				notifyAll();
 			}
 			clear();
+		}
+
+		void clear() {
+			remove();
+			executable = null;
+			executor = null;
+			queuedTasksExecutor = null;
+		}
+		
+		private void remove() {
+			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			queuedTasksExecutor.tasksInExecution.remove(this);
+			if (runOnlyOnce) {
+				runOnlyOnceTasksToBeExecuted.remove(id);
+			}
+			if (executorIndex != null) {
+				executorIndex = null;
+				--queuedTasksExecutor.executorsIndex;
+			}
 		}
 
 		abstract void execute0() throws Throwable;
