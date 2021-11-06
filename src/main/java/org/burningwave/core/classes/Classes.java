@@ -769,17 +769,17 @@ public class Classes implements MembersRetriever {
 			String implVendor,
 			URL sealBase
 		) throws IllegalArgumentException {
-	    	return Executor.get(() -> {
-	    		try {
-	    			return (Package) definePackageMethod.invoke(
-	    				classLoader, name, specTitle, specVersion, specVendor,
-	    				implTitle, implVersion, implVendor, sealBase
-	    			);
-	    		} catch (IllegalArgumentException exc) {
-	    			ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
-	    			return retrieveLoadedPackage(classLoader, name);
-	    		}
-	    	});
+			return Executor.get(() -> {
+				try {
+					return (Package) definePackageMethod.invoke(
+						classLoader, name, specTitle, specVersion, specVendor,
+						implTitle, implVersion, implVendor, sealBase
+					);
+				} catch (IllegalArgumentException exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
+					return retrieveLoadedPackage(classLoader, name);
+				}
+			});
 	    }
 
 		private void definePackageFor(Class<?> cls,
