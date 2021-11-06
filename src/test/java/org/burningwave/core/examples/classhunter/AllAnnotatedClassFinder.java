@@ -45,10 +45,10 @@ public class AllAnnotatedClassFinder {
         );
 
         try (SearchResult searchResult = classHunter.findBy(searchConfig)) {
-    
+
             //If you need all annotaded methods unconment this
             //searchResult.getMembersFlatMap().values();
-    
+
             return searchResult.getClasses();
         }
     }

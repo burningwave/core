@@ -33,7 +33,7 @@ public class Finder {
                 uploadedClasses.get(Serializable.class).isAssignableFrom(currentScannedClass)
             ).useClasses(
                 //With this directive we ask the library to load one or more classes to be used for comparisons:
-                //it serves to eliminate the problem that a class, loaded by different class loaders, 
+                //it serves to eliminate the problem that a class, loaded by different class loaders,
                 //turns out to be different for the comparison operators (eg. The isAssignableFrom method).
                 //If you call this method, you must retrieve the uploaded class in all methods that support this feature like in the point[1]
                 Closeable.class,
@@ -42,7 +42,7 @@ public class Finder {
         );
 
         SearchResult searchResult = classHunter.findBy(searchConfig);
-        
+
         return searchResult.getClasses();
     }
 

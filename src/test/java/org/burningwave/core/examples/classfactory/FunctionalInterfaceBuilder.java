@@ -43,7 +43,7 @@ public class FunctionalInterfaceBuilder {
         ).get(
             "packagename.MyFunctionalInterface"
         );
-    }   
+    }
 
     public static void main(String[] args) throws Throwable {
         execute();

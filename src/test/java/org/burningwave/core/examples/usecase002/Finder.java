@@ -12,21 +12,21 @@ import org.burningwave.core.classes.MethodCriteria;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 
-public class Finder {       
+public class Finder {
 
     public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         PathHelper pathHelper = componentSupplier.getPathHelper();
         ClassHunter classHunter = componentSupplier.getClassHunter();
 
-        MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(methodName -> 
+        MethodCriteria methodCriteria = MethodCriteria.forEntireClassHierarchy().name(methodName ->
             methodName.startsWith("set")
         ).and().parameterType(
             (uploadedClasses, array, idx) ->
                 idx == 0 && array[idx].equals(uploadedClasses.get(Date.class))
-        ).skip((classes, initialClass, examinedClass) -> 
+        ).skip((classes, initialClass, examinedClass) ->
             classes.get(Object.class) == examinedClass
-        );            
+        );
 
         SearchConfig searchConfig = SearchConfig.forPaths(
             //Here you can add all absolute path you want:

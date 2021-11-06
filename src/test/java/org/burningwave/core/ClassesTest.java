@@ -13,12 +13,12 @@ public class ClassesTest extends BaseTest {
 			Classes.getDeclaredMethod(Classes.getClass(), method -> method.getName().equals("retrieveNames"))
 		);
 	}
-	
+
 	@Test
 	public void getDeclaredConstructorTestOne() {
 		testNotNull(() ->
 			Classes.getDeclaredConstructor(Classes.getClass(), ctor -> ctor.getParameterCount() == 0)
 		);
 	}
-	
+
 }

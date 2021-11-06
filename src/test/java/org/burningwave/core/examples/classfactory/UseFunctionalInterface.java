@@ -51,7 +51,7 @@ public class UseFunctionalInterface {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassFactory classFactory = componentSupplier.getClassFactory();
         //this method compile all compilation units and upload the generated classes to default
-        //class loader declared with property "class-factory.default-class-loader" in 
+        //class loader declared with property "class-factory.default-class-loader" in
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
         //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
@@ -76,7 +76,7 @@ public class UseFunctionalInterface {
         System.out.println(
             ((Date)virtualObject.invokeDirect("convert", LocalDateTime.now())).toString()
         );
-    }   
+    }
 
     public static class ToBeExtended {
 

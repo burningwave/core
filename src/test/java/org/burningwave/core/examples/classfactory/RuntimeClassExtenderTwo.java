@@ -23,7 +23,7 @@ import org.burningwave.core.classes.UnitSourceGenerator;
 import org.burningwave.core.classes.VariableSourceGenerator;
 
 public class RuntimeClassExtenderTwo {
-	
+
     @SuppressWarnings("resource")
 	public static void execute() throws Throwable {
     	UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
@@ -83,7 +83,7 @@ public class RuntimeClassExtenderTwo {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassFactory classFactory = componentSupplier.getClassFactory();
         //this method compile all compilation units and upload the generated classes to default
-        //class loader declared with property "class-factory.default-class-loader" in 
+        //class loader declared with property "class-factory.default-class-loader" in
         //burningwave.properties file (see "Overview and configuration").
         //If you need to upload the class to another class loader use
         //loadOrBuildAndDefine(LoadOrBuildAndDefineConfig) method
@@ -108,7 +108,7 @@ public class RuntimeClassExtenderTwo {
         System.out.println(
             ((Date)virtualObject.invokeDirect("now")).toString()
         );
-    }   
+    }
 
     public static class ToBeExtended {
 

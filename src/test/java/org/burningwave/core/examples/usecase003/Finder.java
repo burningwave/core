@@ -26,9 +26,9 @@ public class Finder {
 			pathHelper.getMainClassPaths()
 		).by(
 			ClassCriteria.create().allThoseThatMatch(cls ->
-				cls.getName().equals("Finder")	  
+				cls.getName().equals("Finder")
 			)
-		);		
+		);
 
 		SearchResult searchResult = classPathHunter.findBy(searchConfig);
 		return searchResult.getClassPaths();

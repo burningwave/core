@@ -10,7 +10,7 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.junit.jupiter.api.Test;
 
 public class CodeExecutorTest extends BaseTest {
-	
+
 	@Test
 	public void executeCodeTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -24,12 +24,12 @@ public class CodeExecutorTest extends BaseTest {
 				.addCodeLine("System.out.println(\"number list size: \" + numbers.size());")
 				.addCodeLine("System.out.println(\"number in the list: \" + numbers.get(0));")
 				.addCodeLine("Integer inputNumber = (Integer)parameter[0];")
-				.addCodeLine("return inputNumber++;")		
+				.addCodeLine("return inputNumber++;")
 				.withParameter(Integer.valueOf(5))
 			);
 		});
 	}
-	
+
 	@Test
 	public void executeCodeOfPropertiesFileTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -41,7 +41,7 @@ public class CodeExecutorTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void executeCodeOfPropertiesFilesTestTwo() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -56,7 +56,7 @@ public class CodeExecutorTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void executeCodeOfPropertiesFilesTestThree() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -70,7 +70,7 @@ public class CodeExecutorTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	public void executeCodeOfPropertiesTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();

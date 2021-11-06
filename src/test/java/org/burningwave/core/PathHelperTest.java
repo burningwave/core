@@ -13,20 +13,20 @@ import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
 public class PathHelperTest extends BaseTest {
-	
+
 	@Test
 	public void getResourceAsStreamTestOne() {
-		testNotNull(() ->{ 
+		testNotNull(() ->{
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			try(InputStream inputStream = componentSupplier.getPathHelper().getResourceAsStream("io/github/toolfactory/jvm/util/ClassLoaderDelegateForJDK9.bwc")) {
 				return inputStream;
 			}
 		});
 	}
-	
+
 	@Test
 	public void getResourceAsStreamTestTwo() {
-		testNotNull(() ->{ 
+		testNotNull(() ->{
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			Collection<Thread> threads = new ArrayList<>();
@@ -47,19 +47,19 @@ public class PathHelperTest extends BaseTest {
 			return pathHelper .getResource("../../src/test/external-resources/libs-for-test.zip");
 		});
 	}
-	
+
 	@Test
 	public void getResourceTestOne() {
-		testNotNull(() ->{ 
+		testNotNull(() ->{
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			return pathHelper.getResource("burningwave.properties");
 		});
 	}
-	
+
 	@Test
 	public void getResourceAsStringBufferTestOne() {
-		testNotNull(() ->{ 
+		testNotNull(() ->{
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			StringBuffer fileAsString = pathHelper.getResourceAsStringBuffer("burningwave.properties");
@@ -67,7 +67,7 @@ public class PathHelperTest extends BaseTest {
 			return fileAsString;
 		});
 	}
-	
+
 	@Test
 	public void getResourceCustomClassPath() {
 		testNotEmpty(() ->{
@@ -76,16 +76,16 @@ public class PathHelperTest extends BaseTest {
 			return pathHelper.getPaths("custom-class-path");
 		});
 	}
-	
+
 	@Test
 	public void getResourceCustomClassPathTestTwo() {
-		testNotEmpty(() -> { 
+		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			return pathHelper.getPaths("custom-class-path2");
 		});
 	}
-	
+
 	@Test
 	public void optimizePathsTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -98,5 +98,5 @@ public class PathHelperTest extends BaseTest {
 		assertEquals(paths.size(), 1);
 		assertTrue(paths.iterator().next().endsWith("/src/test/external-resources"));
 	}
-	
+
 }

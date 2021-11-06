@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 public class ByteBufferHandlerTest extends BaseTest {
 
-	
+
 	@Test
 	public void getAddressTest() {
 		testNotNull(() -> {
@@ -15,7 +15,7 @@ public class ByteBufferHandlerTest extends BaseTest {
 			return Long.valueOf(BufferHandler.getAddress(BufferHandler.allocateDirect(1)));
 		});
 	}
-	
+
 	@Test
 	public void getDeallocatorTest() {
 		testDoesNotThrow(() -> {
@@ -25,12 +25,12 @@ public class ByteBufferHandlerTest extends BaseTest {
 			BufferHandler.getDeallocator(BufferHandler.allocateDirect(1), false).freeMemory();
 		});
 	}
-	
+
 	@Test
 	public void destroyTest() {
 		testDoesNotThrow(() -> {
 			BufferHandler.destroy(BufferHandler.allocateDirect(1).duplicate(), true);
 		});
 	}
-	
+
 }

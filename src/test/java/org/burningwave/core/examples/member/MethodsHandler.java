@@ -14,17 +14,17 @@ import org.burningwave.core.classes.MethodCriteria;
 
 @SuppressWarnings("unused")
 public class MethodsHandler {
-    
+
     public static void execute() {
         //Invoking method by using reflection
         Methods.invoke(System.out, "println", "Hello World");
 
         //Invoking static method by using MethodHandle
         Integer number = Methods.invokeStaticDirect(Integer.class, "valueOf", 1);
-        
+
         //Invoking method by using MethodHandle
         Methods.invokeDirect(System.out, "println", number);
-        
+
         //Filtering and obtaining a MethodHandle reference
         MethodHandle methodHandle = Methods.findFirstDirectHandle(
             MethodCriteria.byScanUpTo((cls) ->
@@ -32,15 +32,15 @@ public class MethodsHandler {
                 cls.getName().equals(ClassLoader.class.getName())
             ).name(
                 "defineClass"::equals
-            ).and().parameterTypes(params -> 
+            ).and().parameterTypes(params ->
                 params.length == 3
             ).and().parameterTypesAreAssignableFrom(
                 String.class, ByteBuffer.class, ProtectionDomain.class
-            ).and().returnType((cls) -> 
+            ).and().returnType((cls) ->
                 cls.getName().equals(Class.class.getName())
             ), ClassLoader.class
-        );        
-        
+        );
+
         //Filtering and obtaining all methods of ClassLoader class that have at least
         //one input parameter of Class type
         Collection<Method> methods = Methods.findAll(
@@ -52,9 +52,9 @@ public class MethodsHandler {
             }), ClassLoader.class
         );
     }
-    
+
     public static void main(String[] args) {
         execute();
     }
-    
+
 }

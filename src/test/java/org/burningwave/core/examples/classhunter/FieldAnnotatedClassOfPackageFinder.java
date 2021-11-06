@@ -10,13 +10,13 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.ClassHunter.SearchResult;
 import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.SearchConfig;
-    
+
 public class FieldAnnotatedClassOfPackageFinder {
-    
+
     public Collection<Class<?>> find() {
         ComponentSupplier componentSupplier = ComponentContainer.getInstance();
         ClassHunter classHunter = componentSupplier.getClassHunter();
-        
+
         try (
             SearchResult result = classHunter.findBy(
                 //Highly optimized scanning by filtering resources before loading from ClassLoader
@@ -34,5 +34,5 @@ public class FieldAnnotatedClassOfPackageFinder {
             return result.getClasses();
         }
     }
-    
+
 }

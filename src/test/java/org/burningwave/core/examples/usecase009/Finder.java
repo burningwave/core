@@ -13,8 +13,8 @@ import org.burningwave.core.classes.FieldCriteria;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 
-public class Finder {	   
-	
+public class Finder {
+
 	public Collection<Class<?>> find() {
 		ComponentSupplier componentSupplier = ComponentContainer.getInstance();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
@@ -25,7 +25,7 @@ public class Finder {
 		}).result((foundFields) -> {
 			return foundFields.size() >= 2;
 		});
-		
+
 		SearchConfig searchConfig = SearchConfig.forPaths(
 			//Here you can add all absolute path you want:
 			//both folders, zip and jar will be recursively scanned.

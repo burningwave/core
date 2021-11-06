@@ -17,13 +17,13 @@ import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
 
 public class ClassLoadersTest extends BaseTest {
-	
+
 	protected MemoryClassLoader getMemoryClassLoader(ClassLoader parent) {
 		return MemoryClassLoader.create(
 			parent
 		);
 	}
-	
+
 	@Test
 	public void setAsParentClassLoaderTest() {
 		testNotNull(() -> {
@@ -33,7 +33,7 @@ public class ClassLoadersTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void setAsMasterTest() {
 		testNotNull(() -> {
@@ -51,7 +51,7 @@ public class ClassLoadersTest extends BaseTest {
 			return parent;
 		});
 	}
-	
+
 	@Test
 	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
@@ -61,7 +61,7 @@ public class ClassLoadersTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
@@ -73,7 +73,7 @@ public class ClassLoadersTest extends BaseTest {
 			return cls;
 		});
 	}
-	
+
 	@Test
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
@@ -85,7 +85,7 @@ public class ClassLoadersTest extends BaseTest {
 			return cls;
 		});
 	}
-	
+
 	@Test
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
@@ -102,7 +102,7 @@ public class ClassLoadersTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
@@ -124,7 +124,7 @@ public class ClassLoadersTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void createAndClose() {
 		testDoesNotThrow(() -> {

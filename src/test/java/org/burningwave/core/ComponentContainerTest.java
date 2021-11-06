@@ -16,7 +16,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
 
-	
+
 	@Test
 	@Order(5)
 	public void resetAndCloseTest() {
@@ -37,7 +37,7 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.close();
 		});
 	}
-	
+
 	@Test
 	@Order(17)
 	public void clearAll() {
@@ -49,8 +49,8 @@ public class ComponentContainerTest extends BaseTest {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
 		});
 	}
-	
-	
+
+
 	@Test
 	@Order(3)
 	public void reset() {
@@ -58,7 +58,7 @@ public class ComponentContainerTest extends BaseTest {
 			getComponentSupplier().reset();
 		});
 	}
-	
+
 	@Test
 	@Order(1)
 	public void putPropertyOne() {
@@ -75,7 +75,7 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	@Order(2)
 	public void putPropertyTwo() {
@@ -87,7 +87,7 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
 	@Order(4)
 	public void putPropertyThree() {
@@ -103,11 +103,11 @@ public class ComponentContainerTest extends BaseTest {
 					")" +
 				");" +
 				"ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), \"ClassLoader {} succesfully created\", classLoader);" +
-				"return classLoader;"	
+				"return classLoader;"
 			);
 		});
 	}
-	
+
 	@Test
 	@Order(6)
 	public void putPropertyFour() {
@@ -123,7 +123,7 @@ public class ComponentContainerTest extends BaseTest {
 					")" +
 				");" +
 				"ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), \"ClassLoader {} succesfully created\", classLoader);" +
-				"return classLoader;"	
+				"return classLoader;"
 			);
 		});
 	}

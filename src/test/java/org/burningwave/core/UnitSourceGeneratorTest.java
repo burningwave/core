@@ -118,7 +118,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, unit.make());
 		});
 	}
-	
+
 	@Test
 	public void generateUnitAndStoreTestOne() throws Throwable {
 		UnitSourceGenerator.create(
@@ -149,8 +149,8 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests"
 		);
 	}
-	
-	
+
+
 	@Test
 	public void generateUnitTwo() throws Throwable {
 		UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
@@ -174,7 +174,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		return ClassSourceGenerator.create(
 			TypeDeclarationSourceGenerator.create(className)
 		).addOuterCodeLine("//Comment").addAnnotation(
-			AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true, 
+			AnnotationSourceGenerator.create("NotEmpty.List").useType(NotEmpty.class).addParameter("value", true,
 				AnnotationSourceGenerator.create(NotEmpty.class).addParameter(
 					VariableSourceGenerator.create("message").setValue("\"Person name should not be empty\"")
 				).addParameter(
@@ -192,7 +192,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 			Modifier.PUBLIC
 		)
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][].class).useFullyQualifiedName(true), "multiTimesZero").addModifier(Modifier.PRIVATE))
-		.addField(VariableSourceGenerator.create(Date[][][].class, "multiTimesOne").addModifier(Modifier.PRIVATE))		
+		.addField(VariableSourceGenerator.create(Date[][][].class, "multiTimesOne").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][][][].class), "multiTimesTwo").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][]", "Date[][][][][]"), "multiTimesThree").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][][]", "Date[][][][][][]").useFullyQualifiedName(true), "multiTimesFour").addModifier(Modifier.PRIVATE))
@@ -258,9 +258,9 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						.addOuterCodeLine("@Override")
 						.addBodyCodeLine("return super.get(key);")
 					)
-				)		
+				)
 			).addBodyCode(";")
-			
+
 		)
 		.setStaticInitializer(BodySourceGenerator.create().addCodeLine("serialVersionUID = 1L;"))
 		.addMethod(
@@ -294,19 +294,19 @@ public class UnitSourceGeneratorTest extends BaseTest {
 							.addBodyCodeLine("return new Date();")
 						)
 					)
-				
+
 				)
 			).addBodyCodeLine("return (Comparable<T>)dateSupplier.get();")
 		).addConcretizedType(
 			Serializable.class
 		).expands(Object.class);
 	}
-	
+
 	@Test
 	public void testEnum() {
 		testDoesNotThrow(() -> {
 			UnitSourceGenerator unitSG = UnitSourceGenerator.create("org.burningwave.core.examples.classfactory").addClass(
-				createEnum()				
+				createEnum()
 			);
 			unitSG.storeToClassPath(StaticComponentContainer.SystemProperties.get("user.home") + "/Desktop/bw-tests");
 			System.out.println("\nGenerated code:\n" + unitSG.make());

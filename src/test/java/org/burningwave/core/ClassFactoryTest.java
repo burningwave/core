@@ -36,8 +36,8 @@ import org.burningwave.core.service.Service;
 import org.junit.jupiter.api.Test;
 
 public class ClassFactoryTest extends BaseTest {
-	
-	
+
+
 	@Test
 	public void getOrBuildPojoClassTestOne() throws Exception {
 		testNotNull(() -> {
@@ -48,15 +48,15 @@ public class ClassFactoryTest extends BaseTest {
 					UnitSourceGenerator.create(Classes.retrievePackageName(className)).
 					addClass(
 						PojoSourceGenerator.create().generate(
-							className					
+							className
 						)
 					)
 				)
 			).get(className);
 		});
 	}
-	
-	
+
+
 	@Test
 	public void getOrBuildPojoClassTestTwo() throws Exception {
 		String className = this.getClass().getPackage().getName() + ".TestTwoPojoImpl";
@@ -84,14 +84,14 @@ public class ClassFactoryTest extends BaseTest {
 					))
 				).useClassLoader(Thread.currentThread().getContextClassLoader())
 			).get(classNameTwo);
-			Method createMethod = Classes.getDeclaredMethods(reloadedCls, method -> 
+			Method createMethod = Classes.getDeclaredMethods(reloadedCls, method ->
 				method.getName().equals("create") &&
 				method.getParameterTypes()[0].equals(String.class)).stream().findFirst().orElse(null);
 			PojoInterface pojoObject = (PojoInterface)createMethod.invoke(null, "try");
 			return pojoObject;
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildPojoClassTestFour() throws Exception {
 		testNotNull(() -> {
@@ -101,7 +101,7 @@ public class ClassFactoryTest extends BaseTest {
 				UnitSourceGenerator.create(Classes.retrievePackageName(className)).
 				addClass(
 					PojoSourceGenerator.create().generate(
-						className					
+						className
 					)
 				)
 			);
@@ -113,7 +113,7 @@ public class ClassFactoryTest extends BaseTest {
 			).get(className);
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildClassTestOne() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -138,12 +138,12 @@ public class ClassFactoryTest extends BaseTest {
 				"tryyy.ReTry"
 			);
 		});
-		testNotNull(() -> 
+		testNotNull(() ->
 			componentSupplier.getClassFactory().loadOrBuildAndDefine(unitSG).get("tryyy.ReTry$ReReTry")
 		);
 	}
-	
-	
+
+
 	@Test
 	public void getOrBuildClassWithExternalClassOneParallelizedTest() {
 		testDoesNotThrow(() -> {
@@ -160,28 +160,28 @@ public class ClassFactoryTest extends BaseTest {
 			}
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestOne() {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", null);
 	}
-	
+
 	@Test
 	//@Tag("Heavy")
 	public void getOrBuildClassWithExternalClassTestFive() {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExampleFour", "ComplexExampleFive", null);
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestSix() {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", Thread.currentThread().getContextClassLoader());
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestNine() {
 		getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", new ClassLoader(null){});
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestSeven() {
 		testNotNull(() -> {
@@ -199,7 +199,7 @@ public class ClassFactoryTest extends BaseTest {
 			).addImport(
 				"org.springframework.core.serializer.DefaultSerializer"
 			);
-			AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<ClassFactory.ClassRetriever>();
+			AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<>();
 			testNotNull(() -> {
 				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
 					SearchConfig.byCriteria(
@@ -220,7 +220,7 @@ public class ClassFactoryTest extends BaseTest {
 			return classRetrieverWrapper.get();
 		});
 	}
-	
+
 	public void getOrBuildClassWithExternalClassTestOne(
 		boolean clearCache,
 		String classNameOne,
@@ -241,7 +241,7 @@ public class ClassFactoryTest extends BaseTest {
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
 				).addThrowable(
-					TypeDeclarationSourceGenerator.create("SOAPException")				
+					TypeDeclarationSourceGenerator.create("SOAPException")
 				).addBodyCodeLine("super(parentSoapMsg, inputStream);")
 			)
 		).addImport(
@@ -263,7 +263,7 @@ public class ClassFactoryTest extends BaseTest {
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("SOAPMessageImpl"), "parentSoapMsg"),
 					VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(InputStream.class), "inputStream")
 				).addThrowable(
-					TypeDeclarationSourceGenerator.create("SOAPException")				
+					TypeDeclarationSourceGenerator.create("SOAPException")
 				).addBodyCodeLine("super(parentSoapMsg, inputStream);")
 			)
 		).addImport(
@@ -281,7 +281,7 @@ public class ClassFactoryTest extends BaseTest {
 				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 			);
 			ClassFactory.ClassRetriever classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				config			
+				config
 			);
 			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
@@ -294,18 +294,18 @@ public class ClassFactoryTest extends BaseTest {
 				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
 			);
 			classRetriever = componentSupplier.getClassFactory().loadOrBuildAndDefine(
-				config			
+				config
 			);
 			return classRetriever.get("packagename." + classNameTwo);
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestTwo() {
 		_getOrBuildClassWithExternalClassTestTwo();
 	}
-	
-	
+
+
 	public ClassFactory.ClassRetriever _getOrBuildClassWithExternalClassTestTwo() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
@@ -320,7 +320,7 @@ public class ClassFactoryTest extends BaseTest {
 		).addImport(
 			"org.springframework.core.serializer.DefaultSerializer"
 		);
-		AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<ClassFactory.ClassRetriever>();
+		AtomicReference<ClassFactory.ClassRetriever> classRetrieverWrapper = new AtomicReference<>();
 		testNotNull(() -> {
 			try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
 				SearchConfig.byCriteria(
@@ -329,10 +329,10 @@ public class ClassFactoryTest extends BaseTest {
 			)) {
 				classRetrieverWrapper.set(
 					componentSupplier.getClassFactory().loadOrBuildAndDefine(
-						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompilationConfig(compileConfig -> 
+						LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG).modifyCompilationConfig(compileConfig ->
 							compileConfig.addClassPaths(
 								pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-							)							
+							)
 						)
 					)
 				);
@@ -341,7 +341,7 @@ public class ClassFactoryTest extends BaseTest {
 		});
 		return classRetrieverWrapper.get();
 	}
-	
+
 	//@Test
 	public void getOrBuildClassWithExternalClassTestEight() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -360,7 +360,7 @@ public class ClassFactoryTest extends BaseTest {
 		).addImport(
 			"jdk.internal.loader.BuiltinClassLoader"
 		);
-		
+
 			testNotNull(() -> {
 				try (ClassPathHunter.SearchResult searchResult = componentSupplier.getClassPathHunter().findBy(
 					SearchConfig.byCriteria(
@@ -374,7 +374,7 @@ public class ClassFactoryTest extends BaseTest {
 				}
 			});
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestFour() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -399,7 +399,7 @@ public class ClassFactoryTest extends BaseTest {
 			return classRetriever.get("packagename.ExternalClassReferenceTestFour");
 		});
 	}
-	
+
 	@Test
 	public void getOrBuildClassWithExternalClassTestThree() {
 		getOrBuildClassWithExternalClassTestTwo();
@@ -458,7 +458,7 @@ public class ClassFactoryTest extends BaseTest {
 			return list;
 		});
 	}
-	
+
 	@Test
 	public void regenerateClassesTest() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
@@ -477,14 +477,14 @@ public class ClassFactoryTest extends BaseTest {
 			UnitSourceGenerator unitSG = UnitSourceGenerator.create("classfactory.tests").addClass(
 				ClassSG
 			);
-		
+
 			Collection<Class<?>> classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 				unitSG
 			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
 				"classfactory.tests.ClassOne",
 				"classfactory.tests.ClassOne$InnerClass"
 			);
-			
+
 			ClassSG.addInnerClass(
 				ClassSourceGenerator.create(
 					TypeDeclarationSourceGenerator.create("InnerClassTwo")
@@ -492,7 +492,7 @@ public class ClassFactoryTest extends BaseTest {
 					Modifier.PUBLIC | Modifier.STATIC
 				)
 			);
-			
+
 			classes = componentSupplier.getClassFactory().loadOrBuildAndDefine( LoadOrBuildAndDefineConfig.forUnitSourceGenerator(
 				unitSG
 			).useClassLoader(new URLClassLoader(new URL[]{}, Thread.currentThread().getContextClassLoader()))).get(
@@ -503,9 +503,9 @@ public class ClassFactoryTest extends BaseTest {
 			return classes;
 		});
 	}
-	
+
 	public static class Repeat extends ClassFactoryTest {
-		
+
 	}
-	
+
 }
