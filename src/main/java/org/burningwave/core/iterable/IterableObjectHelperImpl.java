@@ -606,13 +606,21 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				);
 			}
 			tasks.stream().forEach(task ->  {
-				task.waitForFinish();
-//				long timeAtStartWaiting = System.currentTimeMillis();
-//				task.waitForFinish(180000);
-//				if (System.currentTimeMillis() - timeAtStartWaiting > 175000) {
-//					ManagedLoggersRepository.logInfo(getClass()::getName, "PROBABLE DEADLOCKED TASK");
-//					task.logInfo();
-//				}
+				long timeAtStartWaiting = System.currentTimeMillis();
+				task.waitForFinish(180000);
+				if (System.currentTimeMillis() - timeAtStartWaiting > 175000) {
+					while(true) {
+						ManagedLoggersRepository.logInfo(getClass()::getName, "PROBABLE DEADLOCKED TASK");
+						task.logInfo();
+						synchronized(task) {
+							try {
+								wait(60000);
+							} catch (InterruptedException e) {
+
+							}
+						}
+					}
+				}
 				
 			});
 		} else {
