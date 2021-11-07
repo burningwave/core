@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
+import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
@@ -143,7 +144,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 	}
 
-	public static class Supplier {
+	public static class Supplier implements Identifiable {
 		public static class Configuration {
 			public static class Key {
 				public static final String MAX_POOLABLE_THREADS_COUNT = "thread-supplier.max-poolable-threads-count";
@@ -416,7 +417,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						if (runningThreads.remove(this)) {
 							--supplier.threadsCount;
 							--supplier.poolableThreadsCount;
-						} else if (poolableSleepingThreads.remove(this)) {
+						} else if (removePoolableSleepingThread(this) != null) {
 							--supplier.threadsCount;
 							--supplier.poolableThreadsCount;
 						}
@@ -492,14 +493,22 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		private Thread getPoolableThread() {
-			Iterator<Thread> itr = poolableSleepingThreads.iterator();
-			while (itr.hasNext()) {
-				Thread thread = itr.next();
-				if (poolableSleepingThreads.remove(thread)) {
-					return thread;
+			for (Thread thread : poolableSleepingThreads) {
+				Thread availableThread = removePoolableSleepingThread(thread);
+				if (availableThread != null) {
+					return availableThread;
 				}
 			}
 			return null;
+		}
+
+		private Thread removePoolableSleepingThread(Thread thread) {
+			return Synchronizer.execute(getOperationId("removePoolableSleepingThread"), () -> {
+				if (poolableSleepingThreads.remove(thread)) {
+					return thread;
+				}
+				return null;
+			});
 		}
 
 		public void shutDownAllPoolableSleeping() {

@@ -762,21 +762,23 @@ public class Classes implements MembersRetriever {
 			}
 		}
 
-	    private Package definePackage(
+		private Package definePackage(
 			ClassLoader classLoader, MethodHandle definePackageMethod,
 			String name, String specTitle, String specVersion,
 			String specVendor, String implTitle, String implVersion,
 			String implVendor,
 			URL sealBase
 		) throws IllegalArgumentException {
-	    	return Executor.get(() -> {
-	    		try {
-	    			return (Package) definePackageMethod.invoke(classLoader, name, specTitle, specVersion, specVendor, implTitle,
-	    				implVersion, implVendor, sealBase);
-	    		} catch (IllegalArgumentException exc) {
-	    			ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
-	    			return retrieveLoadedPackage(classLoader, name);
-	    		}
+			return Executor.get(() -> {
+				try {
+					return (Package) definePackageMethod.invoke(
+						classLoader, name, specTitle, specVersion, specVendor,
+						implTitle, implVersion, implVendor, sealBase
+					);
+				} catch (IllegalArgumentException exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
+					return retrieveLoadedPackage(classLoader, name);
+				}
 			});
 	    }
 
@@ -794,7 +796,7 @@ public class Classes implements MembersRetriever {
 			    			definePackage(classLoader, definePackageMethod, pckgName, null, null, null, null, null, null, null);
 			    		}
 			    	});
-				}
+			    }
 			}
 		}
 

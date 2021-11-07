@@ -57,6 +57,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
+import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
@@ -1015,7 +1016,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 	}
 
-	public static class Group {
+	public static class Group implements Identifiable {
 		String name;
 		Map<Integer, QueuedTasksExecutor> queuedTasksExecutors;
 		TasksMonitorer allTasksMonitorer;
@@ -1192,7 +1193,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			} catch (NullPointerException exc) {
 				if (queuedTasksExecutors == null) {
 					if (initializator != null) {
-						Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+						Synchronizer.execute(getOperationId("initialization"), () -> {
 							if (initializator != null) {
 								initializator.accept(this);
 								initializator = null;
@@ -1368,7 +1369,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public Group waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
-			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+			Synchronizer.execute(getOperationId("initialization"), () -> {
 				if (initializator != null) {
 					return;
 				}
@@ -1458,7 +1459,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public boolean shutDown(boolean waitForTasksTermination) {
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
-			Synchronizer.execute("queuedTasksExecutorGroup.initialization", () -> {
+			Synchronizer.execute(getOperationId("initialization"), () -> {
 				if (initializator != null) {
 					initializator = null;
 					return;
