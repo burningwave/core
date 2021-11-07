@@ -610,6 +610,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				task.waitForFinish(180000);
 				if (System.currentTimeMillis() - timeAtStartWaiting > 175000 && !task.hasFinished()) {
 					ManagedLoggersRepository.logInfo(getClass()::getName, "PROBABLE DEADLOCKED TASK");
+					task.logInfo();
 					task.waitForFinish();
 				}
 				
