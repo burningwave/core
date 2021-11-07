@@ -26,14 +26,12 @@
 	AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 	OR OTHER DEALINGS IN THE SOFTWARE.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>12.13.3-SNAPSHOT</version>
+	<version>12.13.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -469,11 +467,8 @@
 								</goals>
 								<configuration>
 									<target>
-										<jar update="true"
-											destfile="${project.build.directory}/${project.build.finalName}.jar">
-											<zipfileset prefix="META-INF/versions/9"
-												dir="${project.build.directory}/classes"
-												includes="module-info.class" />
+										<jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
+											<zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
 										</jar>
 									</target>
 								</configuration>
