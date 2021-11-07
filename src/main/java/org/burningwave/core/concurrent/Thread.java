@@ -380,6 +380,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							synchronized (this) {
 								runningThreads.remove(this);
 								executable = null;
+								originalExecutable = null;
 								if (!alive) {
 									continue;
 								}
