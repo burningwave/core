@@ -298,14 +298,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		final Thread getOrCreate(int initialValue, int requestCount) {
-			Thread thread = get();
+			Thread thread = getPoolableThread();
 			if (thread != null) {
 				return thread;
 			}
 			if (requestCount > 0 && poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
-						if ((thread = get()) != null) {
+						if ((thread = getPoolableThread()) != null) {
 							return thread;
 						}
 						if (poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
@@ -491,7 +491,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 		}
 
-		private Thread get() {
+		private Thread getPoolableThread() {
 			Iterator<Thread> itr = poolableSleepingThreads.iterator();
 			while (itr.hasNext()) {
 				Thread thread = itr.next();
