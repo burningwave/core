@@ -883,17 +883,23 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		void markAsFinished() {
-			finished = true;
-			synchronized(this) {
-				try {
-					QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-					queuedTasksExecutor.tasksInExecution.remove(this);
-					++queuedTasksExecutor.executedTasksCount;
-				} finally {
+			try {
+				finished = true;
+				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+				queuedTasksExecutor.tasksInExecution.remove(this);
+				++queuedTasksExecutor.executedTasksCount;
+				if (executorIndex != null) {
+					executorIndex = null;
+					--queuedTasksExecutor.executorsIndex;
+				}
+			} finally {
+				synchronized(this) {
 					notifyAll();
 				}
+				if (runOnlyOnce) {
+					runOnlyOnceTasksToBeExecuted.remove(id);
+				}
 			}
-			clear();
 		}
 
 		abstract void execute0() throws Throwable;
