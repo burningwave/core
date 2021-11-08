@@ -97,7 +97,7 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.1</junit-jupiter.version>
 		<junit.version>1.8.1</junit.version>
-		<burningwave-jvm-driver.version>6.3.1</burningwave-jvm-driver.version>
+		<burningwave-jvm-driver.version>6.3.2</burningwave-jvm-driver.version>
 		<jvm-driver.version>8.4.1</jvm-driver.version>
 		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -143,14 +143,18 @@
 			<groupId>io.github.toolfactory</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${jvm-driver.version}</version>
+			<exclusions>
+		        <exclusion>
+		            <groupId>io.github.toolfactory</groupId>
+		            <artifactId>narcissus</artifactId>
+		        </exclusion>
+		    </exclusions>
 		</dependency>
 
 		<dependency>
 			<groupId>org.burningwave</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${burningwave-jvm-driver.version}</version>
-			<scope>compile</scope>
-			<optional>true</optional>
 		</dependency>
 
 		<dependency>
