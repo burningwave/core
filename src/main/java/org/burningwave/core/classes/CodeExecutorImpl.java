@@ -141,7 +141,6 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		String code = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(config.getPropertyName())
 			.on(properties)
-			.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
 			.deleteUnresolvedPlaceHolder(true)
 			.withDefaultValues(config.getDefaultValues())
 		);
@@ -176,7 +175,6 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			String value = IterableObjectHelper.resolveStringValue(
 				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)
 				.on(properties)
-				.withDefaultValueSeparator(Configuration.Value.CODE_LINE_SEPARATOR)
 				.deleteUnresolvedPlaceHolder(true)
 				.withDefaultValues(config.getDefaultValues())
 			);

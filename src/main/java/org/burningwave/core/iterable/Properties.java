@@ -29,7 +29,6 @@
 package org.burningwave.core.iterable;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
@@ -294,7 +293,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 				listener.processChangeNotification(this, event, key, newValue, oldValue);
 			} catch (Throwable exc){
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
-				Driver.throwException(exc);
 			}
 		}
 	}

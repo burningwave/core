@@ -29,7 +29,6 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -46,7 +45,6 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -70,6 +68,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
+	//Deferred initialized
+	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
+	private Class<?>[] parallelCollectionClasses;
 
 
 	IterableObjectHelperImpl(Properties config) {
@@ -81,13 +82,46 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 			buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+		this.parallelCollectionClassesSupplier = () -> retrieveParallelCollectionClasses(config);
+	}
+
+	private Class<?>[] retrieveParallelCollectionClasses(Properties config) {
+		Collection<Class<?>> parallelCollectionClasses = new LinkedHashSet<Class<?>>();
+		parallelCollectionClasses.add(
+			Driver.getClassByName(
+				"java.util.concurrent.ConcurrentHashMap$CollectionView",
+				false,
+				this.getClass().getClassLoader(),
+				this.getClass()
+			)
+		);
+		parallelCollectionClasses.add(CopyOnWriteArraySet.class);
+		parallelCollectionClasses.add(CopyOnWriteArrayList.class);
+		Collection<String> classNames = resolveStringValues(
+			ResolveConfig.ForNamedKey.forNamedKey(
+				Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_ADDITIONAL_OUTPUT_COLLECTION_ENABLED_CLASSES
+			).on(config)
+		);
+		if (classNames != null) {
+			for (String className : classNames) {
+				parallelCollectionClasses.add(
+					Driver.getClassByName(
+						className,
+						false,
+						this.getClass().getClassLoader(),
+						this.getClass()
+					)
+				);
+			}
+		}
+		return parallelCollectionClasses.toArray(new Class[parallelCollectionClasses.size()]);
 	}
 
 	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
 		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
 				ResolveConfig.ForNamedKey.forNamedKey(
-					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+					Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE
 				).on(config)
 			)
 		);
@@ -129,12 +163,15 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
 			this.defaultValuesSeparator = (String)newValue;
 		}
-		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION) && newValue != null) {
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE) && newValue != null) {
 			this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 				buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		}
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_ADDITIONAL_OUTPUT_COLLECTION_ENABLED_CLASSES)) {
+			this.parallelCollectionClasses = retrieveParallelCollectionClasses(config);
 		}
 	}
 
@@ -630,14 +667,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 
 	private boolean isConcurrent(Collection<?> coll) {
-		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView
-		return
-			coll instanceof ConcurrentHashMap ||
-			coll instanceof ConcurrentHashMap.KeySetView ||
-			coll instanceof CopyOnWriteArrayList ||
-			coll instanceof CopyOnWriteArraySet ||
-			Classes.java_util_concurrent_ConcurrentHashMap_CollectionViewClass.isAssignableFrom(coll.getClass()) ||
-			coll.getClass().getName().startsWith(ConcurrentHashMap.class.getName());
+		try {
+			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
+				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
+					return true;
+				}
+			}
+			return false;
+		} catch (NullPointerException exc) {
+			if (this.parallelCollectionClasses == null) {
+				this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+				return isConcurrent(coll);
+			}
+			throw exc;
+		}
 	}
 
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {

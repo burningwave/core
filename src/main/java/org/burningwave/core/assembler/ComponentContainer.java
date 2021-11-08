@@ -92,10 +92,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
-				Arrays.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR +
-				SearchResult.class.getName() + CodeExecutor.Configuration.Value.CODE_LINE_SEPARATOR
+				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+				Arrays.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				SearchResult.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 			defaultValues.put(
 				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,

@@ -86,19 +86,12 @@ public class Classes implements MembersRetriever {
 	Field[] emtpyFieldsArray;
 	Method[] emptyMethodsArray;
 	Constructor<?>[] emptyConstructorsArray;
-	public final Class<?> java_util_concurrent_ConcurrentHashMap_CollectionViewClass;
 
 
 	private Classes() {
 		emtpyFieldsArray = new Field[]{};
 		emptyMethodsArray = new Method[]{};
 		emptyConstructorsArray = new Constructor<?>[]{};
-		java_util_concurrent_ConcurrentHashMap_CollectionViewClass = Driver.getClassByName(
-			"java.util.concurrent.ConcurrentHashMap$CollectionView",
-			false,
-			this.getClass().getClassLoader(),
-			this.getClass()
-		);
 	}
 
 	public static Classes create() {
