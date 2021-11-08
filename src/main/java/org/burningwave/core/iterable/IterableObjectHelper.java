@@ -77,8 +77,9 @@ public interface IterableObjectHelper {
 			defaultValues.put(
 				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
 				ConcurrentHashMap.class.getName() + "$CollectionView" + ";" +
-				CopyOnWriteArraySet.class.getName() + ";" +
-				CopyOnWriteArrayList.class.getName()
+				CopyOnWriteArrayList.class.getName() + ";" +
+				CopyOnWriteArraySet.class.getName()
+				
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

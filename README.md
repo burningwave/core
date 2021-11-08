@@ -1116,8 +1116,8 @@ iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-coun
 	autodetect
 iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types=\
 	java.util.concurrent.ConcurrentHashMap$CollectionView;\
-	java.util.concurrent.CopyOnWriteArraySet;\
-	java.util.concurrent.CopyOnWriteArrayList
+	java.util.concurrent.CopyOnWriteArrayList\
+	java.util.concurrent.CopyOnWriteArraySet;	
 #This property is optional and it is possible to use a custom JVM Driver which implements
 #the io.github.toolfactory.jvm.Driver interface.
 #If you are using the default jvm-driver library other possible values are:
