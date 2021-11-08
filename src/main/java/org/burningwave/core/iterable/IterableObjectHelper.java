@@ -33,6 +33,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -53,8 +56,10 @@ public interface IterableObjectHelper {
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD =
 				"iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold";
-			public final static String DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION =
+			public final static String PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE =
 				"iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size";
+			public final static String PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES =
+				"iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types";
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -66,7 +71,16 @@ public interface IterableObjectHelper {
 
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "autodetect");
 
-			defaultValues.put(Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION, 2);
+			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE, 2);
+			
+			//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
+			defaultValues.put(
+				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
+				ConcurrentHashMap.class.getName() + "$CollectionView" + ";" +
+				CopyOnWriteArrayList.class.getName() + ";" +
+				CopyOnWriteArraySet.class.getName()
+				
+			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}

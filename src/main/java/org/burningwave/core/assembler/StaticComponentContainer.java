@@ -199,7 +199,7 @@ public class StaticComponentContainer {
 			String configFileName = "burningwave.static.properties";
 			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
 			properties.putAll(propertiesFromConfigurationFile);
-
+			adjustConfigurationValues(properties);
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
 				@Override
 				public <K, V> void processChangeNotification(Properties config, org.burningwave.core.iterable.Properties.Event event, K key, V newValue, V previousValue) {
@@ -424,6 +424,17 @@ public class StaticComponentContainer {
 			throw new RuntimeException(exc);
 		}
 
+	}
+
+	private static void adjustConfigurationValues(Properties properties) {
+		org.burningwave.core.iterable.IterableObjectHelper temporaryPropertyResolver = org.burningwave.core.iterable.IterableObjectHelper.create(properties);
+		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).unregister(properties);
+		String propertyValue = properties.getProperty(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES);
+		propertyValue = propertyValue.replace(";", temporaryPropertyResolver.getDefaultValuesSeparator());
+		properties.put(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES, propertyValue);
+		propertyValue = properties.getProperty(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR);
+		propertyValue = propertyValue.replace(";", temporaryPropertyResolver.getDefaultValuesSeparator());
+		properties.put(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, propertyValue);
 	}
 
 	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {

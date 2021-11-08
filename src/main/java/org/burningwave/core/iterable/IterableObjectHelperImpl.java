@@ -29,7 +29,6 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
@@ -47,9 +46,6 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -71,6 +67,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private int maxThreadCountsForParallelIteration;
+	//Deferred initialized
+	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
+	private Class<?>[] parallelCollectionClasses;
 
 
 	IterableObjectHelperImpl(Properties config) {
@@ -82,13 +81,36 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 			buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+		this.parallelCollectionClassesSupplier = () -> retrieveParallelCollectionClasses(config);
+	}
+
+	private Class<?>[] retrieveParallelCollectionClasses(Properties config) {
+		Collection<Class<?>> parallelCollectionClasses = new LinkedHashSet<Class<?>>();
+		Collection<String> classNames = resolveStringValues(
+			ResolveConfig.ForNamedKey.forNamedKey(
+				Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES
+			).on(config)
+		);
+		if (classNames != null) {
+			for (String className : classNames) {
+				parallelCollectionClasses.add(
+					Driver.getClassByName(
+						className,
+						false,
+						this.getClass().getClassLoader(),
+						this.getClass()
+					)
+				);
+			}
+		}
+		return parallelCollectionClasses.toArray(new Class[parallelCollectionClasses.size()]);
 	}
 
 	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
 		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
 				ResolveConfig.ForNamedKey.forNamedKey(
-					Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION
+					Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE
 				).on(config)
 			)
 		);
@@ -130,12 +152,15 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
 			this.defaultValuesSeparator = (String)newValue;
 		}
-		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_MINIMUM_COLLECTION_SIZE_FOR_PARALLEL_ITERATION) && newValue != null) {
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE) && newValue != null) {
 			this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 				buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		}
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
+		}
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES)) {
+			this.parallelCollectionClasses = retrieveParallelCollectionClasses(config);
 		}
 	}
 
@@ -230,7 +255,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValue(
 			config.filter, () ->
 			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+				config.map, config.filter,
+				config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
 		);
@@ -241,7 +267,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValue(
 			config.filter, () ->
 			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+				config.map, config.filter, 
+				config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
 		);
@@ -261,7 +288,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator : 
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator : 
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -269,7 +302,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return (Map<K, V>) resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator : 
+				config.defaultValueSeparator != null ? 
+					config.defaultValueSeparator :
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -277,7 +316,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator :
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator : 
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -285,7 +330,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ?
+				config.valuesSeparator :
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator :
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -408,9 +459,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										if (valueObject instanceof String) {
 											String replacement = (String)valueObject;
 											if (valuesSeparator != null) {
-												for (String replacementUnit : replacement.split(valuesSeparatorForSplitting)) {
+												for (String replacementUnit : replacement.split(valuesSeparator)) {
 													newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacementUnit);
-													newReplacement += newReplacement.endsWith(valuesSeparatorForSplitting) ? "" : valuesSeparatorForSplitting;
+													newReplacement += newReplacement.endsWith(valuesSeparator) ? "" : valuesSeparator;
 												}
 											} else {
 												newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacement);
@@ -428,14 +479,14 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						if (valuesSeparator == null) {
 							values.add(stringValue);
 						} else {
-							for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
+							for (String valueToAdd : stringValue.split(valuesSeparator)) {
 								values.add(valueToAdd);
 							}
 						}
 					}
 				} else {
 					if (valuesSeparator != null) {
-						for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
+						for (String valueToAdd : stringValue.split(valuesSeparator)) {
 							values.add(valueToAdd);
 						}
 					} else {
@@ -640,14 +691,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 
 	private boolean isConcurrent(Collection<?> coll) {
-		//Also include ConcurrentHashMap.KeySetView, ConcurrentHashMap.ValuesView, ConcurrentHashMap.EntrySetView
-		return
-			coll instanceof ConcurrentHashMap ||
-			coll instanceof ConcurrentHashMap.KeySetView ||
-			coll instanceof CopyOnWriteArrayList ||
-			coll instanceof CopyOnWriteArraySet ||
-			Classes.java_util_concurrent_ConcurrentHashMap_CollectionViewClass.isAssignableFrom(coll.getClass()) ||
-			coll.getClass().getName().startsWith(ConcurrentHashMap.class.getName());
+		try {
+			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
+				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
+					return true;
+				}
+			}
+			return false;
+		} catch (NullPointerException exc) {
+			if (this.parallelCollectionClasses == null) {
+				this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+				return isConcurrent(coll);
+			}
+			throw exc;
+		}
 	}
 
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {

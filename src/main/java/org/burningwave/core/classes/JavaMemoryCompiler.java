@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,14 +66,14 @@ public interface JavaMemoryCompiler {
 
 			defaultValues.put(
 				Key.CLASS_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() +
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
 				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
 			);
 			defaultValues.put(
 				Key.CLASS_REPOSITORIES,
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() +
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 			defaultValues.put(
 				Key.BLACK_LISTED_CLASS_PATHS,

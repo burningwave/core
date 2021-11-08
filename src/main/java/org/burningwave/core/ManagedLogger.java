@@ -128,6 +128,8 @@ public interface ManagedLogger {
 
 				defaultValues.put(Key.TYPE, "autodetect");
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
+				
+				//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
 					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
 					MemoryClassLoader.class.getName() + ";" +
@@ -278,7 +280,7 @@ public interface ManagedLogger {
 				String loggerDisabledFor = properties.getProperty(configKey);
 				if (loggerDisabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
-						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(";"));
+						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(IterableObjectHelper.getDefaultValuesSeparator()));
 					}
 				}
 			}
@@ -287,7 +289,7 @@ public interface ManagedLogger {
 				String loggerEnabledFor = properties.getProperty(configKey);
 				if (loggerEnabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
-						addLoggingLevelFor(loggingLevel, loggerEnabledFor.split(";"));
+						addLoggingLevelFor(loggingLevel, loggerEnabledFor.split(IterableObjectHelper.getDefaultValuesSeparator()));
 					}
 				}
 			}

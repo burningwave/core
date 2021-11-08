@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,26 +65,22 @@ public interface CodeExecutor {
 
 		}
 
-		public static class Value {
-			public static final String CODE_LINE_SEPARATOR = ";";
-		}
-
 		public final static Map<String, Object> DEFAULT_VALUES;
 
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Key.COMMON_IMPORTS,
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + Value.CODE_LINE_SEPARATOR +
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggersRepository" + Value.CODE_LINE_SEPARATOR +
-				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + Value.CODE_LINE_SEPARATOR +
- 				ComponentSupplier.class.getName() + Value.CODE_LINE_SEPARATOR +
-				Function.class.getName() + Value.CODE_LINE_SEPARATOR +
-				FileSystemItem.class.getName() + Value.CODE_LINE_SEPARATOR +
-				PathHelper.class.getName() + Value.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.ProducerTask.class.getName() + Value.CODE_LINE_SEPARATOR +
-				QueuedTasksExecutor.Task.class.getName() + Value.CODE_LINE_SEPARATOR +
-				Supplier.class.getName() + Value.CODE_LINE_SEPARATOR
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggersRepository" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+ 				ComponentSupplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				Function.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				FileSystemItem.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				PathHelper.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				QueuedTasksExecutor.ProducerTask.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				QueuedTasksExecutor.Task.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				Supplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
