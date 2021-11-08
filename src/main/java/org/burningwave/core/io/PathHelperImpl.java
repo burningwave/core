@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
@@ -71,11 +72,9 @@ class PathHelperImpl implements Component, PathHelper {
 	private Collection<String> allPaths;
 	private Properties config;
 	private QueuedTasksExecutor.Task initializerTask;
-	private String pathsSeparator;
 
 	PathHelperImpl(Properties config) {
 		this.config = config;
-		pathsSeparator = Configuration.getPathsSeparator();
 		listenTo(config);
 		launchAllPathsLoadingTask();
 	}
@@ -210,8 +209,8 @@ class PathHelperImpl implements Component, PathHelper {
 		synchronized(this) {
 			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
 			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
-				if (!currentPropertyPaths.endsWith(pathsSeparator)) {
-					currentPropertyPaths += pathsSeparator;
+				if (!currentPropertyPaths.endsWith(IterableObjectHelper.getDefaultValuesSeparator())) {
+					currentPropertyPaths += IterableObjectHelper.getDefaultValuesSeparator();
 				}
 				currentPropertyPaths += paths;
 				config.put(pathGroupPropertyName, currentPropertyPaths);
@@ -240,11 +239,11 @@ class PathHelperImpl implements Component, PathHelper {
 						defaultValues.put(placeHolderName,
 						Optional.ofNullable(defaultValues.get(placeHolderName)).map(pHP ->
 							pHP +
-							(pHP.endsWith(pathsSeparator)?
-								"" : pathsSeparator) +
+							(pHP.endsWith(IterableObjectHelper.getDefaultValuesSeparator())?
+								"" : IterableObjectHelper.getDefaultValuesSeparator()) +
 							placeHolderPath +
-							(placeHolderPath.endsWith(pathsSeparator)?
-								"" : pathsSeparator)
+							(placeHolderPath.endsWith(IterableObjectHelper.getDefaultValuesSeparator())?
+								"" : IterableObjectHelper.getDefaultValuesSeparator())
 						).orElseGet(() -> {
 							return placeHolderPath;
 						}));
@@ -255,7 +254,7 @@ class PathHelperImpl implements Component, PathHelper {
 			Properties configWithResolvedPaths = new Properties();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, pathsSeparator, true);
+			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, IterableObjectHelper.getDefaultValuesSeparator(), true);
 			if (computedPaths != null) {
 				groupPaths.addAll(addPaths(pathGroupName, computedPaths));
 			}
@@ -526,7 +525,6 @@ class PathHelperImpl implements Component, PathHelper {
 			pathGroups = null;
 			allPaths.clear();
 			allPaths = null;
-			pathsSeparator = null;
 			config = null;
 		});
 	}

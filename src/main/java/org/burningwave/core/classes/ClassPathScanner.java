@@ -67,9 +67,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 
 			defaultValues.put(
 				Key.DEFAULT_SEARCH_CONFIG_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + PathHelper.Configuration.getPathsSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator()
+				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 			defaultValues.put(
 				Key.DEFAULT_CHECK_FILE_OPTIONS,

@@ -45,8 +45,6 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -87,19 +85,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	private Class<?>[] retrieveParallelCollectionClasses(Properties config) {
 		Collection<Class<?>> parallelCollectionClasses = new LinkedHashSet<Class<?>>();
-		parallelCollectionClasses.add(
-			Driver.getClassByName(
-				"java.util.concurrent.ConcurrentHashMap$CollectionView",
-				false,
-				this.getClass().getClassLoader(),
-				this.getClass()
-			)
-		);
-		parallelCollectionClasses.add(CopyOnWriteArraySet.class);
-		parallelCollectionClasses.add(CopyOnWriteArrayList.class);
 		Collection<String> classNames = resolveStringValues(
 			ResolveConfig.ForNamedKey.forNamedKey(
-				Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_ADDITIONAL_OUTPUT_COLLECTION_ENABLED_CLASSES
+				Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES
 			).on(config)
 		);
 		if (classNames != null) {
@@ -170,7 +158,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 		}
-		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_ADDITIONAL_OUTPUT_COLLECTION_ENABLED_CLASSES)) {
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES)) {
 			this.parallelCollectionClasses = retrieveParallelCollectionClasses(config);
 		}
 	}
@@ -266,7 +254,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValue(
 			config.filter, () ->
 			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+				config.map, config.filter,
+				config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
 		);
@@ -277,7 +266,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValue(
 			config.filter, () ->
 			resolve(
-				config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+				config.map, config.filter, 
+				config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
 		);
@@ -297,7 +287,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator : 
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator : 
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -305,7 +301,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return (Map<K, V>) resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator : 
+				config.defaultValueSeparator != null ? 
+					config.defaultValueSeparator :
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -313,7 +315,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ? 
+				config.valuesSeparator :
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator : 
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -321,7 +329,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public <K> Map<K, Collection<String>> resolveStringValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return resolveForKeys(
-			config.map, config.filter, config.valuesSeparator, config.defaultValueSeparator,
+			config.map, config.filter,
+			config.valuesSeparator != null ?
+				config.valuesSeparator :
+				config.defaultValueSeparator != null ?
+					config.defaultValueSeparator :
+					defaultValuesSeparator,
+			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
 		);
 	}
@@ -444,9 +458,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										if (valueObject instanceof String) {
 											String replacement = (String)valueObject;
 											if (valuesSeparator != null) {
-												for (String replacementUnit : replacement.split(valuesSeparatorForSplitting)) {
+												for (String replacementUnit : replacement.split(valuesSeparator)) {
 													newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacementUnit);
-													newReplacement += newReplacement.endsWith(valuesSeparatorForSplitting) ? "" : valuesSeparatorForSplitting;
+													newReplacement += newReplacement.endsWith(valuesSeparator) ? "" : valuesSeparator;
 												}
 											} else {
 												newReplacement += placeHolderedValue.replace("${" + placeHolder + "}", replacement);
@@ -464,14 +478,14 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						if (valuesSeparator == null) {
 							values.add(stringValue);
 						} else {
-							for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
+							for (String valueToAdd : stringValue.split(valuesSeparator)) {
 								values.add(valueToAdd);
 							}
 						}
 					}
 				} else {
 					if (valuesSeparator != null) {
-						for (String valueToAdd : stringValue.split(valuesSeparatorForSplitting)) {
+						for (String valueToAdd : stringValue.split(valuesSeparator)) {
 							values.add(valueToAdd);
 						}
 					} else {

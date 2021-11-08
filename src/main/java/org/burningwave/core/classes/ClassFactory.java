@@ -90,8 +90,8 @@ public interface ClassFactory {
 			);
 			defaultValues.put(
 				Key.CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER,
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + PathHelper.Configuration.getPathsSeparator() +
-				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + PathHelper.Configuration.getPathsSeparator() +
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_PATHS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"${" + JavaMemoryCompiler.Configuration.Key.CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
 				"${" + Key.ADDITIONAL_CLASS_REPOSITORIES_FOR_DEFAULT_CLASS_LOADER + "}"
 			);
 			defaultValues.put(

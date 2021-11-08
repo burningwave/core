@@ -31,7 +31,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			properties.put("class-loader-03", Thread.currentThread().getContextClassLoader().getParent());
 			return IterableObjectHelper.resolveValues(
 				ResolveConfig.forNamedKey("class-loaders")
-				.on(properties).withValuesSeparator(";")
+				.on(properties)
 			);
 		});
 	}
