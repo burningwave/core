@@ -397,10 +397,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						}
 					}
 					synchronized (this) {
-						if (runningThreads.remove(this)) {
-							--supplier.threadsCount;
-							--supplier.poolableThreadsCount;
-						}
+						remove();
 					}
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
@@ -414,13 +411,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				public void interrupt() {
 					shutDown();
 					synchronized (this) {
-						if (runningThreads.remove(this)) {
-							--supplier.threadsCount;
-							--supplier.poolableThreadsCount;
-						} else if (removePoolableSleepingThread(this) != null) {
-							--supplier.threadsCount;
-							--supplier.poolableThreadsCount;
-						}
+						remove();
 					}
 					try {
 						super.interrupt();
@@ -435,6 +426,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 
+				private void remove() {
+					if (runningThreads.remove(this)) {
+						--supplier.threadsCount;
+						--supplier.poolableThreadsCount;
+					} else if (removePoolableSleepingThread(this) != null) {
+						--supplier.threadsCount;
+						--supplier.poolableThreadsCount;
+					}
+				}
 			};
 		}
 
@@ -495,7 +495,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private Thread getPoolableThread() {
 			for (Thread thread : poolableSleepingThreads) {
 				Thread availableThread = removePoolableSleepingThread(thread);
-				if (availableThread != null) {
+				if (availableThread != null && availableThread.getState() == Thread.State.WAITING) {
 					return availableThread;
 				}
 			}

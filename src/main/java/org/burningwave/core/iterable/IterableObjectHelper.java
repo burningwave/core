@@ -33,7 +33,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiConsumer;
@@ -78,8 +81,12 @@ public interface IterableObjectHelper {
 				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
 				ConcurrentHashMap.class.getName() + "$CollectionView" + ";" +
 				CopyOnWriteArrayList.class.getName() + ";" +
-				CopyOnWriteArraySet.class.getName()
-				
+				CopyOnWriteArraySet.class.getName() + ";" +
+				BlockingQueue.class.getName() + ";" +
+				ConcurrentSkipListSet.class.getName() + ";" +
+				ConcurrentSkipListMap.class.getName() + "$EntrySet" + ";" +
+				ConcurrentSkipListMap.class.getName() + "$KeySet" + ";" +
+				ConcurrentSkipListMap.class.getName() + "$Values" + ";"
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
