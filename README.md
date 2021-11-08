@@ -1114,6 +1114,10 @@ iterable-object-helper.parallel-iteration.applicability.default-minimum-collecti
 	2
 iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
 	autodetect
+iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types=\
+	java.util.concurrent.ConcurrentHashMap$CollectionView;\
+	java.util.concurrent.CopyOnWriteArraySet;\
+	java.util.concurrent.CopyOnWriteArrayList
 #This property is optional and it is possible to use a custom JVM Driver which implements
 #the io.github.toolfactory.jvm.Driver interface.
 #If you are using the default jvm-driver library other possible values are:
