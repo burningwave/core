@@ -506,21 +506,26 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 			} catch (NullPointerException exception) {
 				//Deferred initialization
-				poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(thread -> {
-					try {
-						synchronized (thread) {
-							thread.wait();
-						}
-						synchronized (poolableSleepingThreads) {
-							poolableSleepingThreads.notifyAll();
-						}
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(getClass()::getName, exc);
+				Synchronizer.execute(getOperationId("createPoolableSleepingThreadCollectionNotifier"), () -> {
+					if (this.poolableSleepingThreadCollectionNotifier == null) {
+						Thread poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(thread -> {
+							try {
+								synchronized (thread) {
+									thread.wait();
+								}
+								synchronized (poolableSleepingThreads) {
+									poolableSleepingThreads.notifyAll();
+								}
+							} catch (Throwable exc) {
+								ManagedLoggersRepository.logError(getClass()::getName, exc);
+							}
+						}, true);
+						poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
+						poolableSleepingThreadCollectionNotifier.setDaemon(true);
+						poolableSleepingThreadCollectionNotifier.start();
+						this.poolableSleepingThreadCollectionNotifier = poolableSleepingThreadCollectionNotifier;
 					}
-				}, true);
-				poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
-				poolableSleepingThreadCollectionNotifier.setDaemon(true);
-				poolableSleepingThreadCollectionNotifier.start();
+				});
 				notifyToPoolableSleepingThreadCollectionWaiter();
 			}
 		}
