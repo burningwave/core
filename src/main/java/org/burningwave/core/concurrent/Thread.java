@@ -512,16 +512,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							try {
 								synchronized (thread) {
 									thread.wait();
-								}
-								synchronized (poolableSleepingThreads) {
-									poolableSleepingThreads.notifyAll();
+									synchronized (poolableSleepingThreads) {
+										poolableSleepingThreads.notifyAll();
+									}
 								}
 							} catch (Throwable exc) {
 								ManagedLoggersRepository.logError(getClass()::getName, exc);
 							}
 						}, true);
 						poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
-						poolableSleepingThreadCollectionNotifier.setDaemon(true);
+						poolableSleepingThreadCollectionNotifier.setDaemon(daemon);
 						poolableSleepingThreadCollectionNotifier.start();
 						this.poolableSleepingThreadCollectionNotifier = poolableSleepingThreadCollectionNotifier;
 					}
