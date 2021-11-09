@@ -75,18 +75,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public Thread setExecutable(Runnable executable) {
-		this.originalExecutable = thread -> executable.run();
-		return setExecutable(this.originalExecutable, false);
+		return setExecutable(executable, false);
 	}
 
 	public Thread setExecutable(Runnable executable, boolean isLooper) {
-		this.originalExecutable = thread -> executable.run();
-		this.looper = isLooper;
-		return this;
+		return setExecutable(thread -> executable.run(), isLooper);
 	}
 	
 	public Thread setExecutable(Consumer<Thread> executable) {
-		this.originalExecutable = executable;
 		return setExecutable(executable, false);
 	}
 
