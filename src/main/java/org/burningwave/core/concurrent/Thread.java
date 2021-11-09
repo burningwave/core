@@ -73,9 +73,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	public void setIndexedName(String prefix) {
 		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - executor") + " " + index);
 	}
+	
+	public Thread setExecutable(Runnable executable) {
+		return setExecutable(executable, false);
+	}
 
+	public Thread setExecutable(Runnable executable, boolean isLooper) {
+		return setExecutable(thread -> executable.run(), isLooper);
+	}
+	
 	public Thread setExecutable(Consumer<Thread> executable) {
-		this.originalExecutable = executable;
 		return setExecutable(executable, false);
 	}
 
@@ -206,6 +213,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> poolableSleepingThreads;
+		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
 
@@ -387,21 +395,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								}
 								setIndexedName();
 								poolableSleepingThreads.add(this);
-								synchronized (poolableSleepingThreads) {
-									poolableSleepingThreads.notifyAll();
-								}
+								notifyToPoolableSleepingThreadCollectionWaiter();
 								wait();
 							}
 						} catch (InterruptedException exc) {
 							ManagedLoggersRepository.logError(getClass()::getName, exc);
 						}
 					}
-					synchronized (this) {
-						remove();
-					}
-					synchronized (poolableSleepingThreads) {
-						poolableSleepingThreads.notifyAll();
-					}
+					removePermanently();
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -410,27 +412,23 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				@Override
 				public void interrupt() {
 					shutDown();
-					synchronized (this) {
-						remove();
-					}
+					removePermanently();
 					try {
 						super.interrupt();
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
-					synchronized (poolableSleepingThreads) {
-						poolableSleepingThreads.notifyAll();
-					}
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
 				}
 
-				private void remove() {
+				private synchronized void removePermanently () {
 					if (runningThreads.remove(this)) {
 						--supplier.threadsCount;
 						--supplier.poolableThreadsCount;
-					} else if (removePoolableSleepingThread(this) != null) {
+					} else if (removePoolableSleepingThread(this)) {
 						--supplier.threadsCount;
 						--supplier.poolableThreadsCount;
 					}
@@ -453,9 +451,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							--supplier.threadsCount;
 						}
 					}
-					synchronized (poolableSleepingThreads) {
-						poolableSleepingThreads.notifyAll();
-					}
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -474,16 +470,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
-					synchronized (poolableSleepingThreads) {
-						poolableSleepingThreads.notifyAll();
-					}
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
 				}
 			};
 		}
-
+		
 		public void printStatus() {
 			ManagedLoggersRepository.logInfo(
 				getClass()::getName,
@@ -494,24 +488,49 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 
 		private Thread getPoolableThread() {
 			for (Thread thread : poolableSleepingThreads) {
-				Thread availableThread = removePoolableSleepingThread(thread);
-				if (availableThread != null) {
-					if (availableThread.getState() == Thread.State.WAITING) {
-						return availableThread;
-					}
-					poolableSleepingThreads.add(availableThread);
+				if (removePoolableSleepingThread(thread)) {
+					return thread;					
 				}
 			}
 			return null;
 		}
 
-		private Thread removePoolableSleepingThread(Thread thread) {
-			return Synchronizer.execute(getOperationId("removePoolableSleepingThread"), () -> {
-				if (poolableSleepingThreads.remove(thread)) {
-					return thread;
+
+		private void notifyToPoolableSleepingThreadCollectionWaiter() {
+			try {
+				synchronized (poolableSleepingThreadCollectionNotifier) {
+					poolableSleepingThreadCollectionNotifier.notify();
 				}
-				return null;
-			});
+			} catch (NullPointerException exception) {
+				//Deferred initialization
+				Synchronizer.execute(getOperationId("createPoolableSleepingThreadCollectionNotifier"), () -> {
+					if (this.poolableSleepingThreadCollectionNotifier == null) {
+						Thread poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(thread -> {
+							try {
+								synchronized (thread) {
+									thread.wait();
+								}
+								synchronized (poolableSleepingThreads) {
+									poolableSleepingThreads.notifyAll();
+								}
+							} catch (Throwable exc) {
+								ManagedLoggersRepository.logError(getClass()::getName, exc);
+							}
+						}, true);
+						poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
+						poolableSleepingThreadCollectionNotifier.setDaemon(true);
+						poolableSleepingThreadCollectionNotifier.start();
+						this.poolableSleepingThreadCollectionNotifier = poolableSleepingThreadCollectionNotifier;
+					}
+				});
+				notifyToPoolableSleepingThreadCollectionWaiter();
+			}
+		}
+		
+		private boolean removePoolableSleepingThread(Thread thread) {
+			synchronized (thread) {
+				return poolableSleepingThreads.remove(thread);
+			}			
 		}
 
 		public void shutDownAllPoolableSleeping() {
