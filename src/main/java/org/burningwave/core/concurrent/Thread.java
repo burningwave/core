@@ -213,7 +213,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
 		private Collection<Thread> runningThreads;
 		private Collection<Thread> poolableSleepingThreads;
-		private Thread poolableSleepingThreadsNotifier;
+		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
 
@@ -230,10 +230,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
-			poolableSleepingThreadsNotifier = createDetachedThread().setExecutable(() -> {
+			poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(() -> {
 				try {
-					synchronized (poolableSleepingThreadsNotifier) {
-						poolableSleepingThreadsNotifier.wait();
+					synchronized (poolableSleepingThreadCollectionNotifier) {
+						poolableSleepingThreadCollectionNotifier.wait();
 					}
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
@@ -242,8 +242,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 			}, true);
-			poolableSleepingThreadsNotifier.setPriority(Thread.MAX_PRIORITY);
-			poolableSleepingThreadsNotifier.setDaemon(true);
+			poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
+			poolableSleepingThreadCollectionNotifier.setDaemon(true);
 
 			int maxPoolableThreadsCountAsInt;
 			double multiplier = 3;
@@ -304,7 +304,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
-			poolableSleepingThreadsNotifier.start();
+			poolableSleepingThreadCollectionNotifier.start();
 		}
 
 		public Thread getOrCreate(String name) {
@@ -409,7 +409,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									continue;
 								}
 								setIndexedName();
-								addPoolableSleepingThread(this);
+								poolableSleepingThreads.add(this);
+								notifyToPoolableSleepingThreadCollectionWaiter();
 								wait();
 							}
 						} catch (InterruptedException exc) {
@@ -417,7 +418,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 						}
 					}
 					removePermanently();
-					notifyToPoolableSleepingThreads();
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -432,7 +433,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
-					notifyToPoolableSleepingThreads();
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -465,7 +466,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							--supplier.threadsCount;
 						}
 					}
-					notifyToPoolableSleepingThreads();
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -484,7 +485,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					} catch (Throwable exc) {
 						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 					}
-					notifyToPoolableSleepingThreads();
+					notifyToPoolableSleepingThreadCollectionWaiter();
 					synchronized(this) {
 						notifyAll();
 					}
@@ -511,16 +512,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			return null;
 		}
-		
-		private boolean addPoolableSleepingThread(Thread thread) {
-			boolean added = poolableSleepingThreads.add(thread);
-			notifyToPoolableSleepingThreads();
-			return added;
-		}
 
-		private void notifyToPoolableSleepingThreads() {
-			synchronized (poolableSleepingThreadsNotifier) {
-				poolableSleepingThreadsNotifier.notify();
+
+		private void notifyToPoolableSleepingThreadCollectionWaiter() {
+			synchronized (poolableSleepingThreadCollectionNotifier) {
+				poolableSleepingThreadCollectionNotifier.notify();
 			}
 		}
 		
