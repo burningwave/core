@@ -499,6 +499,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					if (availableThread.getState() == Thread.State.WAITING) {
 						return availableThread;
 					}
+					ManagedLoggersRepository.logWarn(getClass()::getName, "NOT WAITING THREAD");
 					poolableSleepingThreads.add(availableThread);
 				}
 			}
