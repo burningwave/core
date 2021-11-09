@@ -230,20 +230,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 			this.runningThreads = ConcurrentHashMap.newKeySet();
 			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
-			poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(() -> {
-				try {
-					synchronized (poolableSleepingThreadCollectionNotifier) {
-						poolableSleepingThreadCollectionNotifier.wait();
-					}
-					synchronized (poolableSleepingThreads) {
-						poolableSleepingThreads.notifyAll();
-					}
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
-				}
-			}, true);
-			poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
-			poolableSleepingThreadCollectionNotifier.setDaemon(true);
 
 			int maxPoolableThreadsCountAsInt;
 			double multiplier = 3;
@@ -304,7 +290,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
-			poolableSleepingThreadCollectionNotifier.start();
 		}
 
 		public Thread getOrCreate(String name) {
@@ -515,8 +500,28 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 
 
 		private void notifyToPoolableSleepingThreadCollectionWaiter() {
-			synchronized (poolableSleepingThreadCollectionNotifier) {
-				poolableSleepingThreadCollectionNotifier.notify();
+			try {
+				synchronized (poolableSleepingThreadCollectionNotifier) {
+					poolableSleepingThreadCollectionNotifier.notify();
+				}
+			} catch (NullPointerException exception) {
+				//Deferred initialization
+				poolableSleepingThreadCollectionNotifier = createDetachedThread().setExecutable(thread -> {
+					try {
+						synchronized (thread) {
+							thread.wait();
+						}
+						synchronized (poolableSleepingThreads) {
+							poolableSleepingThreads.notifyAll();
+						}
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(getClass()::getName, exc);
+					}
+				}, true);
+				poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
+				poolableSleepingThreadCollectionNotifier.setDaemon(true);
+				poolableSleepingThreadCollectionNotifier.start();
+				notifyToPoolableSleepingThreadCollectionWaiter();
 			}
 		}
 		
