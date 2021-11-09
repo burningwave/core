@@ -512,9 +512,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							try {
 								synchronized (thread) {
 									thread.wait();
-									synchronized (poolableSleepingThreads) {
-										poolableSleepingThreads.notifyAll();
-									}
+								}
+								synchronized (poolableSleepingThreads) {
+									poolableSleepingThreads.notifyAll();
 								}
 							} catch (Throwable exc) {
 								ManagedLoggersRepository.logError(getClass()::getName, exc);
