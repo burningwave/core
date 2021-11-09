@@ -149,6 +149,8 @@
 			<groupId>org.burningwave</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${burningwave-jvm-driver.version}</version>
+			<scope>compile</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
