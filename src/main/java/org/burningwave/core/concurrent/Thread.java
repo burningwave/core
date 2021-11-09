@@ -387,9 +387,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								}
 								setIndexedName();
 								poolableSleepingThreads.add(this);
-								synchronized (poolableSleepingThreads) {
-									poolableSleepingThreads.notifyAll();
-								}
+								new java.lang.Thread (() -> {
+									synchronized (poolableSleepingThreads) {
+										poolableSleepingThreads.notifyAll();
+									}
+								}).start();
 								wait();
 							}
 						} catch (InterruptedException exc) {
