@@ -143,12 +143,6 @@
 			<groupId>io.github.toolfactory</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${jvm-driver.version}</version>
-			<exclusions>
-		        <exclusion>
-		            <groupId>io.github.toolfactory</groupId>
-		            <artifactId>narcissus</artifactId>
-		        </exclusion>
-		    </exclusions>
 		</dependency>
 
 		<dependency>
