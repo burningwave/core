@@ -396,9 +396,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							ManagedLoggersRepository.logError(getClass()::getName, exc);
 						}
 					}
-					synchronized (this) {
-						remove();
-					}
+					remove();
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
 					}
@@ -410,9 +408,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				@Override
 				public void interrupt() {
 					shutDown();
-					synchronized (this) {
-						remove();
-					}
+					remove();
 					try {
 						super.interrupt();
 					} catch (Throwable exc) {
@@ -426,11 +422,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 
-				private void remove() {
+				private synchronized void remove() {
 					if (runningThreads.remove(this)) {
 						--supplier.threadsCount;
 						--supplier.poolableThreadsCount;
-					} else if (removePoolableSleepingThread(this) != null) {
+					} else if (removePoolableSleepingThread(this)) {
 						--supplier.threadsCount;
 						--supplier.poolableThreadsCount;
 					}
@@ -494,25 +490,20 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 
 		private Thread getPoolableThread() {
 			for (Thread thread : poolableSleepingThreads) {
-				Thread availableThread = removePoolableSleepingThread(thread);
-				if (availableThread != null) {
-					if (availableThread.getState() == Thread.State.WAITING) {
-						return availableThread;
+				if (removePoolableSleepingThread(thread)) {
+					if (thread.getState() != Thread.State.WAITING) {
+						ManagedLoggersRepository.logWarn(getClass()::getName, "NOT WAITING THREAD");
 					}
-					ManagedLoggersRepository.logWarn(getClass()::getName, "NOT WAITING THREAD");
-					poolableSleepingThreads.add(availableThread);
+					return thread;					
 				}
 			}
 			return null;
 		}
 
-		private Thread removePoolableSleepingThread(Thread thread) {
-			return Synchronizer.execute(getOperationId("removePoolableSleepingThread"), () -> {
-				if (poolableSleepingThreads.remove(thread)) {
-					return thread;
-				}
-				return null;
-			});
+		private boolean removePoolableSleepingThread(Thread thread) {
+			synchronized (thread) {
+				return poolableSleepingThreads.remove(thread);
+			}			
 		}
 
 		public void shutDownAllPoolableSleeping() {
