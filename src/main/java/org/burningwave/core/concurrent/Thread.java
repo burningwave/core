@@ -552,6 +552,15 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			while (itr.hasNext()) {
 				itr.next().shutDown();
 			}
+			Synchronizer.execute(getOperationId("createPoolableSleepingThreadCollectionNotifier"), () -> {
+				Thread poolableSleepingThreadCollectionNotifier = this.poolableSleepingThreadCollectionNotifier;
+				this.poolableSleepingThreadCollectionNotifier = null;
+				synchronized(poolableSleepingThreadCollectionNotifier) {
+					poolableSleepingThreadCollectionNotifier.notify();
+				}
+				this.poolableSleepingThreadCollectionNotifier.shutDown();
+			});
+			
 		}
 
 		public static Supplier create(
