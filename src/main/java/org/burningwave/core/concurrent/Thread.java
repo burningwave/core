@@ -398,7 +398,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							ManagedLoggersRepository.logError(getClass()::getName, exc);
 						}
 					}
-					remove();
+					removePermanently();
 					synchronized (poolableSleepingThreads) {
 						poolableSleepingThreads.notifyAll();
 					}
@@ -410,7 +410,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				@Override
 				public void interrupt() {
 					shutDown();
-					remove();
+					removePermanently();
 					try {
 						super.interrupt();
 					} catch (Throwable exc) {
@@ -424,7 +424,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					}
 				}
 
-				private synchronized void remove() {
+				private synchronized void removePermanently () {
 					if (runningThreads.remove(this)) {
 						--supplier.threadsCount;
 						--supplier.poolableThreadsCount;
