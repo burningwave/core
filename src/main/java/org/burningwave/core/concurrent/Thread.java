@@ -498,9 +498,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				if (availableThread != null) {
 					if (availableThread.getState() == Thread.State.WAITING) {
 						return availableThread;
-					} else {
-						poolableSleepingThreads.add(availableThread);
 					}
+					poolableSleepingThreads.add(availableThread);
 				}
 			}
 			return null;
