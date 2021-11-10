@@ -76,17 +76,25 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public Thread setExecutable(Runnable executable) {
-		return setExecutable(executable, false);
+		return setExecutable(checkExecutable(executable), false);
 	}
 
 	public Thread setExecutable(Runnable executable, boolean isLooper) {
+		checkExecutable(executable);
 		return setExecutable(thread -> executable.run(), isLooper);
 	}
 	
 	public Thread setExecutable(Consumer<Thread> executable) {
-		return setExecutable(executable, false);
+		return setExecutable(checkExecutable(executable), false);
 	}
-
+	
+	private <T> T checkExecutable(T executable) {
+		if (executable == null) {
+			throw new IllegalArgumentException("Executable could not be null");
+		}
+		return executable;
+	}
+	
 	public Thread setExecutable(Consumer<Thread> executable, boolean isLooper) {
 		this.originalExecutable = executable;
 		this.looper = isLooper;
@@ -143,7 +151,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	void shutDown(boolean waitForFinish) {
 		alive = false;
 		stopLooping();
-		if (waitForFinish) {
+		if (waitForFinish && Thread.currentThread() != this) {
 			try {
 				join();
 			} catch (InterruptedException exc) {
@@ -390,20 +398,30 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 						}
 						try {
+							runningThreads.remove(this);
+							executable = null;
+							originalExecutable = null;
+							if (!alive) {
+								continue;
+							}
+							setIndexedName();
 							synchronized (this) {
-								runningThreads.remove(this);
-								executable = null;
-								originalExecutable = null;
-								if (!alive) {
+								if (!addPoolableSleepingThread(this)) {
+									ManagedLoggersRepository.logWarn(
+										getClass()::getName,
+										"Could not add thread {} to poolable sleeping container: it will be shutted down",
+										Objects.getId(this)
+									);
+									this.shutDown();
+									notifyToPoolableSleepingThreadCollectionWaiter();
 									continue;
 								}
-								setIndexedName();
-								addPoolableSleepingThread(this);
 								notifyToPoolableSleepingThreadCollectionWaiter();
 								wait();
 							}
 						} catch (InterruptedException exc) {
 							ManagedLoggersRepository.logError(getClass()::getName, exc);
+							this.shutDown();
 						}
 					}
 					removePermanently();
@@ -482,7 +500,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		
-		private void addPoolableSleepingThread(Thread thread) {
+		private boolean addPoolableSleepingThread(Thread thread) {
 			for (int i = 0; i < poolableSleepingThreads.length; i++) {
 				if (poolableSleepingThreads[i] == null) {
 					final int currentIndex = i;
@@ -496,10 +514,11 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							return false;
 						}
 					)) {
-						break;
+						return true;
 					};
 				}
 			}
+			return false;
 		}
 		
 		private Thread getPoolableThread() {
@@ -518,7 +537,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 								ManagedLoggersRepository.logWarn(
 									getClass()::getName,
 									"Poolable thread {} is not in a waiting state: \n{}",
-									thread.hashCode(),
+									Objects.getId(thread),
 									Strings.from(thread.getStackTrace(), 0)
 								);
 							}
