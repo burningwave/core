@@ -377,8 +377,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			} catch (Throwable exc) {
 				maxPoolableThreadsCountAsInt = (int)(Runtime.getRuntime().availableProcessors() * multiplier);
 			}
-			if (maxPoolableThreadsCountAsInt <= 0) {
-				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
+			
+			if (!(maxPoolableThreadsCountAsInt >= 0)) {
+				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than or equal to zero");
 			}
 			
 			int maxDetachedThreadsCountAsInt;
