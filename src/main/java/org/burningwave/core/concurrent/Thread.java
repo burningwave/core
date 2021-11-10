@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
@@ -76,17 +77,25 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public Thread setExecutable(Runnable executable) {
-		return setExecutable(executable, false);
+		return setExecutable(checkExecutable(executable), false);
 	}
 
 	public Thread setExecutable(Runnable executable, boolean isLooper) {
+		checkExecutable(executable);
 		return setExecutable(thread -> executable.run(), isLooper);
 	}
 	
 	public Thread setExecutable(Consumer<Thread> executable) {
-		return setExecutable(executable, false);
+		return setExecutable(checkExecutable(executable), false);
 	}
-
+	
+	private <T> T checkExecutable(T executable) {
+		if (executable == null) {
+			throw new IllegalArgumentException("Executable could not be null");
+		}
+		return executable;
+	}
+	
 	public Thread setExecutable(Consumer<Thread> executable, boolean isLooper) {
 		this.originalExecutable = executable;
 		this.looper = isLooper;
@@ -143,7 +152,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	void shutDown(boolean waitForFinish) {
 		alive = false;
 		stopLooping();
-		if (waitForFinish) {
+		if (waitForFinish && Thread.currentThread() != this) {
 			try {
 				join();
 			} catch (InterruptedException exc) {
@@ -202,7 +211,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
 		}
-
+		
+		private static BiPredicate<Thread.Supplier, Thread> ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION = Thread.Supplier::addForwardPoolableSleepingThread;
+		private static BiPredicate<Thread.Supplier, Thread> ADD_REVERSE_POOLABLE_SLEEPING_THREAD_FUNCTION = Thread.Supplier::addReversePoolableSleepingThread;
+		
 		private String name;
 		private volatile long threadsCount;
 		private volatile long poolableThreadsCount;
@@ -218,7 +230,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
-
+		private BiPredicate<Thread.Supplier, Thread> addPoolableSleepingThreadFunction;
+		
 		Supplier (
 			String name,
 			Properties config
@@ -294,6 +307,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
+			this.addPoolableSleepingThreadFunction = ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION;
 		}
 
 		public Thread getOrCreate(String name) {
@@ -390,20 +404,29 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 						}
 						try {
+							runningThreads.remove(this);
+							executable = null;
+							originalExecutable = null;
+							if (!alive) {
+								continue;
+							}
+							setIndexedName();
 							synchronized (this) {
-								runningThreads.remove(this);
-								executable = null;
-								originalExecutable = null;
-								if (!alive) {
+								if (!addPoolableSleepingThreadFunction.test(Supplier.this, this)) {
+									ManagedLoggersRepository.logWarn(
+										getClass()::getName,
+										"Could not add thread {} to poolable sleeping container: it will be shutted down",
+										Objects.getId(this)
+									);
+									this.shutDown();
 									continue;
 								}
-								setIndexedName();
-								addPoolableSleepingThread(this);
 								notifyToPoolableSleepingThreadCollectionWaiter();
 								wait();
 							}
 						} catch (InterruptedException exc) {
 							ManagedLoggersRepository.logError(getClass()::getName, exc);
+							this.shutDown();
 						}
 					}
 					removePermanently();
@@ -482,24 +505,37 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		
-		private void addPoolableSleepingThread(Thread thread) {
+		private boolean addForwardPoolableSleepingThread(Thread thread) {
+			addPoolableSleepingThreadFunction = ADD_REVERSE_POOLABLE_SLEEPING_THREAD_FUNCTION;
 			for (int i = 0; i < poolableSleepingThreads.length; i++) {
-				if (poolableSleepingThreads[i] == null) {
-					final int currentIndex = i;
-					if (Synchronizer.execute(
-						getOperationId("addPoolableSleepingThread[" + i + "]"),
-						() -> {
-							if (poolableSleepingThreads[currentIndex] == null) {
-								poolableSleepingThreads[currentIndex] = thread;
-								return true;
-							}
-							return false;
-						}
-					)) {
-						break;
-					};
+				if (addPoolableSleepingThread(thread, i)) {
+					return true;
 				}
 			}
+			return false;		
+		}
+		
+		private boolean addReversePoolableSleepingThread(Thread thread) {
+			addPoolableSleepingThreadFunction = ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION;
+			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {
+				if (addPoolableSleepingThread(thread, i)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		private boolean addPoolableSleepingThread(Thread thread, int currentIndex) {
+			return poolableSleepingThreads[currentIndex] == null && Synchronizer.execute(
+				getOperationId("addPoolableSleepingThread[" + currentIndex + "]"),
+				() -> {
+					if (poolableSleepingThreads[currentIndex] == null) {
+						poolableSleepingThreads[currentIndex] = thread;
+						return true;
+					}
+					return false;
+				}
+			);
 		}
 		
 		private Thread getPoolableThread() {
@@ -510,18 +546,16 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 				if (poolableSleepingThreads[i] == thread) {
 					synchronized (thread) {
-						if (poolableSleepingThreads[i] == thread) {
-							if (thread.getState() == Thread.State.WAITING) {
-								poolableSleepingThreads[i] = null;
-								return thread;
-							} else {
-								ManagedLoggersRepository.logWarn(
-									getClass()::getName,
-									"Poolable thread {} is not in a waiting state: \n{}",
-									thread.hashCode(),
-									Strings.from(thread.getStackTrace(), 0)
-								);
-							}
+						if (thread.getState() == Thread.State.WAITING) {
+							poolableSleepingThreads[i] = null;
+							return thread;
+						} else {
+							ManagedLoggersRepository.logWarn(
+								getClass()::getName,
+								"Poolable thread {} is not in a waiting state: \n{}",
+								thread.hashCode(),
+								Strings.from(thread.getStackTrace(), 0)
+							);
 						}
 					}
 				}
