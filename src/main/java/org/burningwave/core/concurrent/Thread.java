@@ -213,7 +213,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private long poolableThreadRequestTimeout;
 		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
 		private Collection<Thread> runningThreads;
-		//Changed poolable thread container to array (since 12.16.0, the previous version is 12.15.1)
+		//Changed poolable thread container to array (since 12.15.2, the previous version is 12.15.1)
 		private Thread[] poolableSleepingThreads;
 		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
