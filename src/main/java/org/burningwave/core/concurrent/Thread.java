@@ -213,7 +213,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private long poolableThreadRequestTimeout;
 		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
 		private Collection<Thread> runningThreads;
-		private Collection<Thread> poolableSleepingThreads;
+		//Changed poolable thread container to array (since 12.15.2, the previous version is 12.15.1)
+		private Thread[] poolableSleepingThreads;
 		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
@@ -229,8 +230,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 					.on(config)
 				)
 			);
-			this.runningThreads = ConcurrentHashMap.newKeySet();
-			this.poolableSleepingThreads = ConcurrentHashMap.newKeySet();
 
 			int maxPoolableThreadsCountAsInt;
 			double multiplier = 3;
@@ -247,7 +246,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			if (maxPoolableThreadsCountAsInt <= 0) {
 				throw new IllegalArgumentException("maxPoolableThreadsCount must be greater than zero");
 			}
-
+			
 			int maxDetachedThreadsCountAsInt;
 			try {
 				maxDetachedThreadsCountAsInt = Objects.toInt(
@@ -265,6 +264,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				maxDetachedThreadsCountAsInt = Integer.MAX_VALUE - maxPoolableThreadsCountAsInt;
 			}
 			this.maxPoolableThreadsCount = maxPoolableThreadsCountAsInt;
+			
+			this.runningThreads = ConcurrentHashMap.newKeySet();
+			this.poolableSleepingThreads = new Thread[maxPoolableThreadsCount];
+			
 			this.inititialMaxThreadsCount = this.maxThreadsCount = maxPoolableThreadsCountAsInt + maxDetachedThreadsCountAsInt;
 			this.poolableThreadRequestTimeout = Objects.toLong(
 				IterableObjectHelper.resolveValue(
@@ -395,7 +398,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 									continue;
 								}
 								setIndexedName();
-								poolableSleepingThreads.add(this);
+								addPoolableSleepingThread(this);
 								notifyToPoolableSleepingThreadCollectionWaiter();
 								wait();
 							}
@@ -479,11 +482,82 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		
+		private void addPoolableSleepingThread(Thread thread) {
+			for (int i = 0; i < poolableSleepingThreads.length; i++) {
+				if (poolableSleepingThreads[i] == null) {
+					final int currentIndex = i;
+					if (Synchronizer.execute(
+						getOperationId("addPoolableSleepingThread[" + i + "]"),
+						() -> {
+							if (poolableSleepingThreads[currentIndex] == null) {
+								poolableSleepingThreads[currentIndex] = thread;
+								return true;
+							}
+							return false;
+						}
+					)) {
+						break;
+					};
+				}
+			}
+		}
+		
+		private Thread getPoolableThread() {
+			for (int i = 0; i < poolableSleepingThreads.length; i++) {
+				Thread thread = poolableSleepingThreads[i];
+				if (thread == null) {
+					continue;
+				}
+				if (poolableSleepingThreads[i] == thread) {
+					synchronized (thread) {
+						if (poolableSleepingThreads[i] == thread) {
+							if (thread.getState() == Thread.State.WAITING) {
+								poolableSleepingThreads[i] = null;
+								return thread;
+							} else {
+								ManagedLoggersRepository.logWarn(
+									getClass()::getName,
+									"Poolable thread {} is not in a waiting state: \n{}",
+									thread.hashCode(),
+									Strings.from(thread.getStackTrace(), 0)
+								);
+							}
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
+		private boolean removePoolableSleepingThread(Thread thread) {
+			for (int i = 0; i < poolableSleepingThreads.length; i++) {
+				if (poolableSleepingThreads[i] == thread) {
+					synchronized (thread) {
+						if (poolableSleepingThreads[i] == thread) {
+							poolableSleepingThreads[i] = null;
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+		
+		private int getPoolableSleepingThreadCount() {
+			int count = 0;
+			for (Thread thread : poolableSleepingThreads) {
+				if (thread != null) {
+					count++;
+				}
+			}
+			return count;
+		}
+		
 		public void printStatus() {
 			ManagedLoggersRepository.logInfo(
 				getClass()::getName,
 				"\n\tRunning threads: {}\n\tPoolable sleeping threads: {}\n\tThreads count: {}",
-				runningThreads.size(), poolableSleepingThreads.size(), threadsCount
+				runningThreads.size(), getPoolableSleepingThreadCount(), threadsCount
 			);
 		}
 
@@ -517,45 +591,18 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				notifyToPoolableSleepingThreadCollectionWaiter();
 			}
 		}
-		
-		private Thread getPoolableThread() {
-			for (Thread thread : poolableSleepingThreads) {
-				if (removePoolableSleepingThread(thread)) {
-					if (thread.getState() == Thread.State.WAITING) {
-						return thread;
-					} else {
-						ManagedLoggersRepository.logWarn(
-							getClass()::getName,
-							"Poolable thread {} is not in a waiting state: \n{}",
-							thread.hashCode(),
-							Strings.from(thread.getStackTrace(), 0)
-						);
-						poolableSleepingThreads.add(thread);
-					}					
-				}
-			}
-			return null;
-		}
-		
-		private boolean removePoolableSleepingThread(Thread thread) {
-			synchronized (thread) {
-				return poolableSleepingThreads.remove(thread);
-			}			
-		}
 
 		public void shutDownAllPoolableSleeping() {
-			Iterator<Thread> itr = poolableSleepingThreads.iterator();
-			while (itr.hasNext()) {
-				itr.next().shutDown();
+			for (Thread thread : poolableSleepingThreads) {
+				if (thread != null) {
+					thread.shutDown();
+				}
 			}
 		}
 
 		public void shutDownAll() {
-			Iterator<Thread> itr = poolableSleepingThreads.iterator();
-			while (itr.hasNext()) {
-				itr.next().shutDown();
-			}
-			itr = runningThreads.iterator();
+			shutDownAllPoolableSleeping();
+			Iterator<Thread> itr = runningThreads.iterator();
 			while (itr.hasNext()) {
 				itr.next().shutDown();
 			}
