@@ -623,7 +623,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								ManagedLoggersRepository.logError(getClass()::getName, exc);
 							}
 						}, true);
-						poolableSleepingThreadCollectionNotifier.setName(name + " - notifier");
+						poolableSleepingThreadCollectionNotifier.setName(name + " - Notifier");
 						poolableSleepingThreadCollectionNotifier.setPriority(Thread.MAX_PRIORITY);
 						poolableSleepingThreadCollectionNotifier.setDaemon(daemon);
 						poolableSleepingThreadCollectionNotifier.start();
