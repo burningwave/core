@@ -32,7 +32,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -51,7 +50,7 @@ import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
-public class Thread extends java.lang.Thread implements ManagedLogger {
+public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 	Consumer<Thread> originalExecutable;
 	Consumer<Thread> executable;
@@ -92,6 +91,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
+	}
+	
+	public boolean isDetached() {
+		return this instanceof Detached;
+	}
+	
+	public boolean isPoolable() {
+		return this instanceof Poolable;
 	}
 
 	@Override
@@ -155,8 +162,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	private static class Poolable extends Thread {
 		
-		private Poolable(Supplier supplier, long index) {
-			super(supplier, index);
+		private Poolable(Thread.Supplier supplier, long threadsCount) {
+			super(supplier, threadsCount);
 		}
 		
 		@Override
@@ -217,7 +224,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				notifyAll();
 			}
 		}
-		
+
 		private synchronized void removePermanently () {
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadsCount;
@@ -227,15 +234,14 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				--supplier.poolableThreadsCount;
 			}
 		}
-	
 	}
 	
 	private static class Detached extends Thread {
 		
-		private Detached(Supplier supplier, long index) {
-			super(supplier, index);
+		private Detached(Thread.Supplier supplier, long threadsCount) {
+			super(supplier, threadsCount);
 		}
-		
+
 		@Override
 		public void run() {
 			try {
@@ -273,7 +279,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				notifyAll();
 			}
 		}
-	}		
+	}
+	
 	
 	public static class Supplier implements Identifiable {
 		public static class Configuration {
@@ -501,7 +508,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return createPoolableThread();
 			}
 		}
-		
+
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
 			return new Poolable(this, ++threadsCount);
@@ -552,16 +559,9 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 				if (poolableSleepingThreads[i] == thread) {
 					synchronized (thread) {
-						if (thread.getState() == Thread.State.WAITING) {
+						if (poolableSleepingThreads[i] == thread) {
 							poolableSleepingThreads[i] = null;
 							return thread;
-						} else {
-							ManagedLoggersRepository.logWarn(
-								getClass()::getName,
-								"Poolable thread {} is not in a waiting state: \n{}",
-								thread.hashCode(),
-								Strings.from(thread.getStackTrace(), 0)
-							);
 						}
 					}
 				}
@@ -776,5 +776,4 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			threadSupplier = null;
 		}
 	}
-	
 }
