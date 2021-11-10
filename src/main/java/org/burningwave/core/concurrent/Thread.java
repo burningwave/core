@@ -552,17 +552,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 				if (poolableSleepingThreads[i] == thread) {
 					synchronized (thread) {
-						if (thread.getState() == Thread.State.WAITING) {
-							poolableSleepingThreads[i] = null;
-							return thread;
-						} else {
-							ManagedLoggersRepository.logWarn(
-								getClass()::getName,
-								"Poolable thread {} is not in a waiting state: \n{}",
-								thread.hashCode(),
-								Strings.from(thread.getStackTrace(), 0)
-							);
-						}
+						poolableSleepingThreads[i] = null;
+						return thread;
 					}
 				}
 			}
