@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -486,16 +487,6 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 		}
 
-		private Thread getPoolableThread() {
-			for (Thread thread : poolableSleepingThreads) {
-				if (removePoolableSleepingThread(thread)) {
-					return thread;					
-				}
-			}
-			return null;
-		}
-
-
 		private void notifyToPoolableSleepingThreadCollectionWaiter() {
 			try {
 				synchronized (poolableSleepingThreadCollectionNotifier) {
@@ -525,6 +516,25 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				});
 				notifyToPoolableSleepingThreadCollectionWaiter();
 			}
+		}
+		
+		private Thread getPoolableThread() {
+			for (Thread thread : poolableSleepingThreads) {
+				if (removePoolableSleepingThread(thread)) {
+					if (thread.getState() == Thread.State.WAITING) {
+						return thread;
+					} else {
+						ManagedLoggersRepository.logWarn(
+							getClass()::getName,
+							"Poolable thread {} is not in a waiting state: \n{}",
+							thread.hashCode(),
+							Strings.from(thread.getStackTrace(), 0)
+						);
+						poolableSleepingThreads.add(thread);
+					}					
+				}
+			}
+			return null;
 		}
 		
 		private boolean removePoolableSleepingThread(Thread thread) {
