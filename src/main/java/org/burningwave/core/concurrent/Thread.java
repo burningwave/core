@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
@@ -209,7 +210,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
 		}
-
+		
+		private static BiPredicate<Thread.Supplier, Thread> ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION = Thread.Supplier::addForwardPoolableSleepingThread;
+		private static BiPredicate<Thread.Supplier, Thread> ADD_REVERSE_POOLABLE_SLEEPING_THREAD_FUNCTION = Thread.Supplier::addReversePoolableSleepingThread;
+		
 		private String name;
 		private volatile long threadsCount;
 		private volatile long poolableThreadsCount;
@@ -225,7 +229,8 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
-
+		private BiPredicate<Thread.Supplier, Thread> addPoolableSleepingThreadFunction;
+		
 		Supplier (
 			String name,
 			Properties config
@@ -301,6 +306,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
+			this.addPoolableSleepingThreadFunction = ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION;
 		}
 
 		public Thread getOrCreate(String name) {
@@ -405,7 +411,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 							setIndexedName();
 							synchronized (this) {
-								if (!addPoolableSleepingThread(this)) {
+								if (!addPoolableSleepingThreadFunction.test(Supplier.this, this)) {
 									ManagedLoggersRepository.logWarn(
 										getClass()::getName,
 										"Could not add thread {} to poolable sleeping container: it will be shutted down",
@@ -498,25 +504,37 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		
-		private boolean addPoolableSleepingThread(Thread thread) {
+		private boolean addForwardPoolableSleepingThread(Thread thread) {
+			addPoolableSleepingThreadFunction = ADD_REVERSE_POOLABLE_SLEEPING_THREAD_FUNCTION;
 			for (int i = 0; i < poolableSleepingThreads.length; i++) {
-				if (poolableSleepingThreads[i] == null) {
-					final int currentIndex = i;
-					if (Synchronizer.execute(
-						getOperationId("addPoolableSleepingThread[" + i + "]"),
-						() -> {
-							if (poolableSleepingThreads[currentIndex] == null) {
-								poolableSleepingThreads[currentIndex] = thread;
-								return true;
-							}
-							return false;
-						}
-					)) {
-						return true;
-					};
+				if (addPoolableSleepingThread(thread, i)) {
+					return true;
+				}
+			}
+			return false;		
+		}
+		
+		private boolean addReversePoolableSleepingThread(Thread thread) {
+			addPoolableSleepingThreadFunction = ADD_FORWARD_POOLABLE_SLEEPING_THREAD_FUNCTION;
+			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {
+				if (addPoolableSleepingThread(thread, i)) {
+					return true;
 				}
 			}
 			return false;
+		}
+		
+		private boolean addPoolableSleepingThread(Thread thread, int currentIndex) {
+			return poolableSleepingThreads[currentIndex] == null && Synchronizer.execute(
+				getOperationId("addPoolableSleepingThread[" + currentIndex + "]"),
+				() -> {
+					if (poolableSleepingThreads[currentIndex] == null) {
+						poolableSleepingThreads[currentIndex] = thread;
+						return true;
+					}
+					return false;
+				}
+			);
 		}
 		
 		private Thread getPoolableThread() {
