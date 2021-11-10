@@ -151,129 +151,7 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 	}
-	
-	private static class Poolable extends Thread {
-		
-		private Poolable(Supplier supplier, long index) {
-			super(supplier, index);
-		}
-		
-		@Override
-		public void run() {
-			while (alive) {
-				synchronized (this) {
-					supplier.runningThreads.add(this);
-				}
-				try {
-					executable.accept(this);
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-				}
-				try {
-					supplier.runningThreads.remove(this);
-					executable = null;
-					originalExecutable = null;
-					if (!alive) {
-						continue;
-					}
-					setIndexedName();
-					synchronized (this) {
-						if (!supplier.addPoolableSleepingThreadFunction.test(supplier, this)) {
-							ManagedLoggersRepository.logWarn(
-								getClass()::getName,
-								"Could not add thread {} to poolable sleeping container: it will be shutted down",
-								Objects.getId(this)
-							);
-							this.shutDown();
-							continue;
-						}
-						supplier.notifyToPoolableSleepingThreadCollectionWaiter();
-						wait();
-					}
-				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
-					this.shutDown();
-				}
-			}
-			removePermanently();
-			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
-			synchronized(this) {
-				notifyAll();
-			}
-		}
 
-		@Override
-		public void interrupt() {
-			shutDown();
-			removePermanently();
-			try {
-				super.interrupt();
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
-			}
-			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
-			synchronized(this) {
-				notifyAll();
-			}
-		}
-		
-		private synchronized void removePermanently () {
-			if (supplier.runningThreads.remove(this)) {
-				--supplier.threadsCount;
-				--supplier.poolableThreadsCount;
-			} else if (supplier.removePoolableSleepingThread(this)) {
-				--supplier.threadsCount;
-				--supplier.poolableThreadsCount;
-			}
-		}
-	
-	}
-	
-	private static class Detached extends Thread {
-		
-		private Detached(Supplier supplier, long index) {
-			super(supplier, index);
-		}
-		
-		@Override
-		public void run() {
-			try {
-				supplier.runningThreads.add(this);
-				executable.accept(this);
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-			}
-			synchronized (this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadsCount;
-				}
-			}
-			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
-			synchronized(this) {
-				notifyAll();
-			}
-		}
-
-		@Override
-		public void interrupt() {
-			shutDown();
-			synchronized (this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadsCount;
-				}
-			}
-			try {
-				super.interrupt();
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
-			}
-			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
-			synchronized(this) {
-				notifyAll();
-			}
-		}
-	}		
-	
 	public static class Supplier implements Identifiable {
 		public static class Configuration {
 			public static class Key {
@@ -500,14 +378,122 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				return createPoolableThread();
 			}
 		}
-		
+
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
-			return new Poolable(this, ++threadsCount);
+			return new Thread(this, ++threadsCount) {
+
+				@Override
+				public void run() {
+					while (alive) {
+						synchronized (this) {
+							Supplier.this.runningThreads.add(this);
+						}
+						try {
+							executable.accept(this);
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+						}
+						try {
+							Supplier.this.runningThreads.remove(this);
+							executable = null;
+							originalExecutable = null;
+							if (!alive) {
+								continue;
+							}
+							setIndexedName();
+							synchronized (this) {
+								if (!Supplier.this.addPoolableSleepingThreadFunction.test(Supplier.this, this)) {
+									ManagedLoggersRepository.logWarn(
+										getClass()::getName,
+										"Could not add thread {} to poolable sleeping container: it will be shutted down",
+										Objects.getId(this)
+									);
+									this.shutDown();
+									continue;
+								}
+								Supplier.this.notifyToPoolableSleepingThreadCollectionWaiter();
+								wait();
+							}
+						} catch (InterruptedException exc) {
+							ManagedLoggersRepository.logError(getClass()::getName, exc);
+							this.shutDown();
+						}
+					}
+					removePermanently();
+					Supplier.this.notifyToPoolableSleepingThreadCollectionWaiter();
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+
+				@Override
+				public void interrupt() {
+					shutDown();
+					removePermanently();
+					try {
+						super.interrupt();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
+					}
+					Supplier.this.notifyToPoolableSleepingThreadCollectionWaiter();
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+
+				private synchronized void removePermanently () {
+					if (Supplier.this.runningThreads.remove(this)) {
+						--Supplier.this.threadsCount;
+						--Supplier.this.poolableThreadsCount;
+					} else if (Supplier.this.removePoolableSleepingThread(this)) {
+						--Supplier.this.threadsCount;
+						--Supplier.this.poolableThreadsCount;
+					}
+				}
+			};
 		}
 
 		Thread createDetachedThread() {
-			return new Detached(this, ++threadsCount);
+			return new Thread(this, ++threadsCount) {
+				@Override
+				public void run() {
+					try {
+						Supplier.this.runningThreads.add(this);
+						executable.accept(this);
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+					}
+					synchronized (this) {
+						if (Supplier.this.runningThreads.remove(this)) {
+							--Supplier.this.threadsCount;
+						}
+					}
+					Supplier.this.notifyToPoolableSleepingThreadCollectionWaiter();
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+
+				@Override
+				public void interrupt() {
+					shutDown();
+					synchronized (this) {
+						if (Supplier.this.runningThreads.remove(this)) {
+							--Supplier.this.threadsCount;
+						}
+					}
+					try {
+						super.interrupt();
+					} catch (Throwable exc) {
+						ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
+					}
+					Supplier.this.notifyToPoolableSleepingThreadCollectionWaiter();
+					synchronized(this) {
+						notifyAll();
+					}
+				}
+			};
 		}
 		
 		private boolean addForwardPoolableSleepingThread(Thread thread) {
@@ -551,8 +537,10 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 				}
 				if (poolableSleepingThreads[i] == thread) {
 					synchronized (thread) {
-						poolableSleepingThreads[i] = null;
-						return thread;
+						if (poolableSleepingThreads[i] == thread) {
+							poolableSleepingThreads[i] = null;
+							return thread;
+						}
 					}
 				}
 			}
@@ -766,5 +754,4 @@ public class Thread extends java.lang.Thread implements ManagedLogger {
 			threadSupplier = null;
 		}
 	}
-	
 }
