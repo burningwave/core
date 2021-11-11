@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -219,11 +218,14 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 
-		private synchronized void removePermanently () {
-			if (supplier.runningThreads.remove(this)) {
-				--supplier.threadsCount;
-				--supplier.poolableThreadsCount;
-			} else if (supplier.removePoolableSleepingThread(this)) {
+		private void removePermanently () {
+			synchronized (this) {
+				if (supplier.runningThreads.remove(this)) {
+					--supplier.threadsCount;
+					--supplier.poolableThreadsCount;
+				}
+			}
+			if (supplier.removePoolableSleepingThread(this)) {
 				--supplier.threadsCount;
 				--supplier.poolableThreadsCount;
 			}
@@ -327,7 +329,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
-		private static AtomicLong threadNumberSupplier;
+		private static long threadNumberSupplier;
 		
 		private String name;
 		private volatile long threadsCount;
@@ -352,11 +354,6 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private java.util.function.Supplier<Thread> getPoolableThreadFunction;
 		//Cached operation id
 		private String addPoolableSleepingThreadOperationId;
-		
-		
-		static {
-			threadNumberSupplier = new AtomicLong(0);
-		}
 		
 		Supplier (
 			String name,
@@ -524,12 +521,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
 			++threadsCount;
-			return new Poolable(this, threadNumberSupplier.getAndIncrement());
+			return new Poolable(this, ++threadNumberSupplier);
 		}
 
 		Thread createDetachedThread() {
 			++threadsCount;
-			return new Detached(this, threadNumberSupplier.getAndIncrement());
+			return new Detached(this, ++threadNumberSupplier);
 		}
 		
 		private boolean addForwardPoolableSleepingThread(Thread thread) {
