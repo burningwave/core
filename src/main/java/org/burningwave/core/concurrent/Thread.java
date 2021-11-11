@@ -50,30 +50,25 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.Synchronizer.Mutex;
+import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
-	private static AtomicLong numberSupplier;	
-	Consumer<Thread> originalExecutable;
-	Consumer<Thread> executable;
+	ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
+	ThrowingConsumer<Thread, ? extends Throwable> executable;
 	boolean looper;
 	boolean looping;
 	private long number;
-	
 	boolean alive;
 	Supplier supplier;
 	
-	static {
-		numberSupplier = new AtomicLong(0);
-	}
-	
-	private Thread(Supplier pool) {
-		super(pool.name + " - Executor");
-		this.supplier = pool;
-		this.number = numberSupplier.getAndIncrement();
+	private Thread(Supplier threadSupplier, long number) {
+		super(threadSupplier.name + " - Executor " + number);
+		this.supplier = threadSupplier;
+		this.number = number;
 		setIndexedName();
-		setDaemon(pool.daemon);
+		setDaemon(threadSupplier.daemon);
 	}
 	
 	public void setIndexedName() {
@@ -84,19 +79,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - Executor") + " " + number);
 	}
 	
-	public Thread setExecutable(Runnable executable) {
-		return setExecutable(executable, false);
-	}
-
-	public Thread setExecutable(Runnable executable, boolean isLooper) {
-		return setExecutable(thread -> executable.run(), isLooper);
-	}
-	
-	public Thread setExecutable(Consumer<Thread> executable) {
+	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable) {
 		return setExecutable(executable, false);
 	}
 	
-	public Thread setExecutable(Consumer<Thread> executable, boolean isLooper) {
+	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
 		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
@@ -143,13 +130,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		return looping;
 	}
 
-	public void waitFor(long millis) {
-		synchronized (this) {
-			try {
-				wait(millis);
-			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
-			}
+	public synchronized void waitFor(long millis) {
+		try {
+			wait(millis);
+		} catch (InterruptedException exc) {
+			ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 		}
 	}
 
@@ -171,8 +156,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	private static class Poolable extends Thread {
 		
-		private Poolable(Thread.Supplier supplier) {
-			super(supplier);
+		private Poolable(Thread.Supplier supplier, long number) {
+			super(supplier, number);
 		}
 		
 		@Override
@@ -247,8 +232,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	private static class Detached extends Thread {
 		
-		private Detached(Thread.Supplier supplier) {
-			super(supplier);
+		private Detached(Thread.Supplier supplier, long number) {
+			super(supplier, number);
 		}
 
 		@Override
@@ -342,6 +327,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
+		private static AtomicLong threadNumberSupplier;
+		
 		private String name;
 		private volatile long threadsCount;
 		private volatile long poolableThreadsCount;
@@ -363,9 +350,13 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private java.util.function.Supplier<Thread> getForwardPoolableThreadFunction;
 		private java.util.function.Supplier<Thread> getReversePoolableThreadFunction;
 		private java.util.function.Supplier<Thread> getPoolableThreadFunction;
-		
 		//Cached operation id
 		private String addPoolableSleepingThreadOperationId;
+		
+		
+		static {
+			threadNumberSupplier = new AtomicLong(0);
+		}
 		
 		Supplier (
 			String name,
@@ -533,12 +524,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
 			++threadsCount;
-			return new Poolable(this);
+			return new Poolable(this, threadNumberSupplier.getAndIncrement());
 		}
 
 		Thread createDetachedThread() {
 			++threadsCount;
-			return new Detached(this);
+			return new Detached(this, threadNumberSupplier.getAndIncrement());
 		}
 		
 		private boolean addForwardPoolableSleepingThread(Thread thread) {
