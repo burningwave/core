@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -52,28 +53,35 @@ import org.burningwave.core.concurrent.Synchronizer.Mutex;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public abstract class Thread extends java.lang.Thread implements ManagedLogger {
-
+	
+	private static AtomicLong numberSupplier;	
 	Consumer<Thread> originalExecutable;
 	Consumer<Thread> executable;
 	boolean looper;
 	boolean looping;
-	private final long index;
+	private long number;
+	
 	boolean alive;
 	Supplier supplier;
-
-	private Thread(Supplier pool, long index) {
-		super(pool.name + " - Executor " + index);
-		this.index = index;
+	
+	static {
+		numberSupplier = new AtomicLong(0);
+	}
+	
+	private Thread(Supplier pool) {
+		super(pool.name + " - Executor");
 		this.supplier = pool;
+		this.number = numberSupplier.getAndIncrement();
+		setIndexedName();
 		setDaemon(pool.daemon);
 	}
-
+	
 	public void setIndexedName() {
 		setIndexedName(null);
 	}
 
 	public void setIndexedName(String prefix) {
-		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - Executor") + " " + index);
+		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - Executor") + " " + number);
 	}
 	
 	public Thread setExecutable(Runnable executable) {
@@ -163,8 +171,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	private static class Poolable extends Thread {
 		
-		private Poolable(Thread.Supplier supplier, long threadsCount) {
-			super(supplier, threadsCount);
+		private Poolable(Thread.Supplier supplier) {
+			super(supplier);
 		}
 		
 		@Override
@@ -239,8 +247,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	private static class Detached extends Thread {
 		
-		private Detached(Thread.Supplier supplier, long threadsCount) {
-			super(supplier, threadsCount);
+		private Detached(Thread.Supplier supplier) {
+			super(supplier);
 		}
 
 		@Override
@@ -524,11 +532,13 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 		Thread createPoolableThread() {
 			++poolableThreadsCount;
-			return new Poolable(this, ++threadsCount);
+			++threadsCount;
+			return new Poolable(this);
 		}
 
 		Thread createDetachedThread() {
-			return new Detached(this, ++threadsCount);
+			++threadsCount;
+			return new Detached(this);
 		}
 		
 		private boolean addForwardPoolableSleepingThread(Thread thread) {
