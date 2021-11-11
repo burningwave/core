@@ -109,9 +109,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		if (alive) {
-			synchronized(this) {
-				notifyAll();
-			}
+			notifyAll();
 		} else {
 			this.alive = true;
 			super.start();
