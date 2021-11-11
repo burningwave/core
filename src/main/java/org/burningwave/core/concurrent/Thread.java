@@ -349,16 +349,27 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private Thread poolableSleepingThreadCollectionNotifier;
 		private long timeOfLastIncreaseOfMaxDetachedThreadsCount;
 		private boolean daemon;
-		private Predicate<Thread> addPoolableSleepingThreadFunction;
 		private Predicate<Thread> addForwardPoolableSleepingThreadFunction;
 		private Predicate<Thread> addReversePoolableSleepingThreadFunction;
+		private Predicate<Thread> addPoolableSleepingThreadFunction;
+		private java.util.function.Supplier<Thread> getForwardPoolableThreadFunction;
+		private java.util.function.Supplier<Thread> getReversePoolableThreadFunction;
+		private java.util.function.Supplier<Thread> getPoolableThreadFunction;
+		
 		//Cached operation id
 		private String addPoolableSleepingThreadOperationId;
 		
 		Supplier (
 			String name,
 			Properties config
-		) {
+		) {	
+			this.addForwardPoolableSleepingThreadFunction = this::addForwardPoolableSleepingThread;
+			this.addReversePoolableSleepingThreadFunction = this::addReversePoolableSleepingThread;
+			this.addPoolableSleepingThreadFunction = addForwardPoolableSleepingThreadFunction;
+			this.addPoolableSleepingThreadOperationId = getOperationId("addPoolableSleepingThread");
+			this.getForwardPoolableThreadFunction = this::getForwardPoolableThread;
+			this.getReversePoolableThreadFunction = this::getReversePoolableThread;
+			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
 			this.name = name;
 			this.daemon = Objects.toBoolean(
 				IterableObjectHelper.resolveValue(
@@ -431,10 +442,6 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadsCount = Long.MAX_VALUE;
-			this.addForwardPoolableSleepingThreadFunction = this::addForwardPoolableSleepingThread;
-			this.addReversePoolableSleepingThreadFunction = this::addReversePoolableSleepingThread;
-			this.addPoolableSleepingThreadFunction = addForwardPoolableSleepingThreadFunction;
-			this.addPoolableSleepingThreadOperationId = getOperationId("addPoolableSleepingThread");
 		}
 
 		public Thread getOrCreate(String name) {
@@ -452,14 +459,14 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		final Thread getOrCreate(int initialValue, int requestCount) {
-			Thread thread = getPoolableThread();
+			Thread thread = getPoolableThreadFunction.get();
 			if (thread != null) {
 				return thread;
 			}
 			if (requestCount > 0 && poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
 				synchronized (poolableSleepingThreads) {
 					try {
-						if ((thread = getPoolableThread()) != null) {
+						if ((thread = getPoolableThreadFunction.get()) != null) {
 							return thread;
 						}
 						if (poolableThreadsCount >= maxPoolableThreadsCount && threadsCount >= maxThreadsCount) {
@@ -554,8 +561,28 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
-		private Thread getPoolableThread() {
+		private Thread getForwardPoolableThread() {
+			this.getPoolableThreadFunction = this.getReversePoolableThreadFunction;
 			for (int i = 0; i < poolableSleepingThreads.length; i++) {
+				Thread thread = poolableSleepingThreads[i];
+				if (thread == null) {
+					continue;
+				}
+				if (poolableSleepingThreads[i] == thread) {
+					synchronized (thread) {
+						if (poolableSleepingThreads[i] == thread) {
+							poolableSleepingThreads[i] = null;
+							return thread;
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
+		private Thread getReversePoolableThread() {
+			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
+			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {
 				Thread thread = poolableSleepingThreads[i];
 				if (thread == null) {
 					continue;
@@ -656,7 +683,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				synchronized(poolableSleepingThreadCollectionNotifier) {
 					poolableSleepingThreadCollectionNotifier.notify();
 				}
-				this.poolableSleepingThreadCollectionNotifier.shutDown();
+				poolableSleepingThreadCollectionNotifier.shutDown();
 			});
 			
 		}
