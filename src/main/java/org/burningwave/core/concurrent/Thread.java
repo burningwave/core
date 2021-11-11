@@ -551,9 +551,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		private boolean addPoolableSleepingThread(Thread thread, int currentIndex) {
 			try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + currentIndex + "]"))) {
-				if (poolableSleepingThreads[currentIndex] == null) {
-					poolableSleepingThreads[currentIndex] = thread;
-					return true;
+				synchronized(mutex) {
+					if (poolableSleepingThreads[currentIndex] == null) {
+						poolableSleepingThreads[currentIndex] = thread;
+						return true;
+					}
 				}
 				return false;
 			}
