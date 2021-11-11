@@ -566,6 +566,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				Thread thread = poolableSleepingThreads[i];
 				if (thread != null) {
 					synchronized(thread) {
+						//This must replaced with the master version (see also IterableObjectHelperImpl)
 						if (poolableSleepingThreads[i] == thread) {
 							if (thread.getState() == Thread.State.WAITING) {
 								poolableSleepingThreads[i] = null;
@@ -596,6 +597,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				Thread thread = poolableSleepingThreads[i];
 				if (thread != null) {
 					synchronized(thread) {
+						//This must replaced with the master version (see also IterableObjectHelperImpl)
 						if (poolableSleepingThreads[i] == thread) {
 							if (thread.getState() == Thread.State.WAITING) {
 								poolableSleepingThreads[i] = null;
