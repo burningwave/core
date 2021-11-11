@@ -580,7 +580,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
-								getClass()::getName, "Thread {} is already abisgned",
+								getClass()::getName, "Thread {} is already assigned",
 								thread.getId()
 							);
 						}
@@ -610,7 +610,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
-								getClass()::getName, "Thread {} is already abisgned",
+								getClass()::getName, "Thread {} is already assigned",
 								thread.getId()
 							);
 						}
