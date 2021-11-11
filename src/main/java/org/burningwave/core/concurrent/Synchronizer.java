@@ -208,12 +208,8 @@ public class Synchronizer implements Closeable, ManagedLogger {
 
 		@Override
 		public void close() {
-			try {
-				if (--clientsCount < 1) {
-					Synchronizer.this.mutexes.remove(id);
-				}
-			} catch (Throwable exc) {
-
+			if (--clientsCount < 1) {
+				Synchronizer.this.mutexes.remove(id);
 			}
 		}
 	}

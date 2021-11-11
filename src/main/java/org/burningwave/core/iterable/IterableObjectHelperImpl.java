@@ -657,6 +657,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				);
 			}
 			tasks.stream().forEach(task ->  {
+				//This must replaced with the master version (see also Thread.Supplier)
 				long timeAtStartWaiting = System.currentTimeMillis();
 				task.waitForFinish(180000);
 				if (System.currentTimeMillis() - timeAtStartWaiting > 175000 && !task.hasFinished()) {

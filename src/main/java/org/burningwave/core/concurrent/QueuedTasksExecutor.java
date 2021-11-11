@@ -567,7 +567,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
 
 		String name;
-		Long executorIndex;
 		StackTraceElement[] stackTraceOnCreation;
 		List<StackTraceElement> creatorInfos;
 		Supplier<Boolean> hasBeenExecutedChecker;
@@ -876,10 +875,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (runOnlyOnce) {
 				runOnlyOnceTasksToBeExecuted.remove(id);
 			}
-			if (executorIndex != null) {
-				executorIndex = null;
-				--queuedTasksExecutor.executorsIndex;
-			}
 		}
 
 		void markAsFinished() {
@@ -888,10 +883,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 				queuedTasksExecutor.tasksInExecution.remove(this);
 				++queuedTasksExecutor.executedTasksCount;
-				if (executorIndex != null) {
-					executorIndex = null;
-					--queuedTasksExecutor.executorsIndex;
-				}
 			} finally {
 				synchronized(this) {
 					notifyAll();
@@ -911,7 +902,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
-				executor.setName(queuedTasksExecutor.name + " executor " + (executorIndex = ++queuedTasksExecutor.executorsIndex));
+				executor.setIndexedName(queuedTasksExecutor.name + " executor");
 			}
 			return (T)this;
 		}

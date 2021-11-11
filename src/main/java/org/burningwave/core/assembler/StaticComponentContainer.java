@@ -289,7 +289,7 @@ public class StaticComponentContainer {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNewDynamic();
 			}
 			ThreadSupplier = org.burningwave.core.concurrent.Thread.Supplier.create(
-				getName("Thread supplier"),
+				getName("ThreadSupplier"),
 				GlobalProperties,
 				true
 			);
@@ -463,7 +463,7 @@ public class StaticComponentContainer {
 			).on(GlobalProperties)
 		);
 		configuration.put("background-executor.thread-supplier", ThreadSupplier);
-		configuration.put("background-executor.name", "BackgroundExecutor");
+		configuration.put("background-executor.name", getName("BackgroundExecutor"));
 		configuration.put("background-executor.daemon", true);
 		configuration.put("background-executor.undestroyable-from-external", true);
 		Map<String, Object> unvalidEntries = IterableObjectHelper.resolveValues(
