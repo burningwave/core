@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1449792632)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1452640576)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1449792632)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1452640576)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -47,7 +47,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.15.8</version>
+    <version>12.16.0</version>
 </dependency>
 ```
 
@@ -62,7 +62,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.15.8</version>
+    <version>12.16.0</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
@@ -342,7 +342,7 @@ public class Finder {
 # <a name="Performing-tasks-in-parallel-with-different-priorities"></a>Performing tasks in parallel with different priorities
 By using the **BackgroundExecutor** component you can launch different functional interfaces in parallel **by setting the priority of the thread they will be assigned to**. There is also the option to wait for them start or finish.
 
-For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-threads-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-threads-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-threads-count' property for the quantity indicated by the **`thread-supplier.max-detached-threads-count.increasing-step`** property. Resetting the 'thread-supplier.max-detached-threads-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
+For obtaining threads the BackgroundExecutor uses the **ThreadSupplier** component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-thread-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-thread-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-thread-count' property for the quantity indicated by the **`thread-supplier.max-detached-thread-count.increasing-step`** property. Resetting the 'thread-supplier.max-detached-thread-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 
@@ -1112,7 +1112,7 @@ iterable-object-helper.default-values-separator=\
 	;
 iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size=\
 	2
-iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold=\
+iterable-object-helper.parallel-iteration.applicability.max-runtime-thread-count-threshold=\
 	autodetect
 iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types=\
 	java.util.concurrent.ConcurrentHashMap$CollectionView;\
@@ -1156,13 +1156,13 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
-thread-supplier.max-detached-threads-count=\
-	autodetect
-thread-supplier.max-detached-threads-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
+thread-supplier.max-detached-thread-count=\
+	${thread-supplier.max-poolable-thread-count}
+thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
 	30000
-thread-supplier.max-detached-threads-count.increasing-step=\
-	8
-thread-supplier.max-poolable-threads-count=\
+thread-supplier.max-detached-thread-count.increasing-step=\
+	autodetect
+thread-supplier.max-poolable-thread-count=\
 	autodetect
 thread-supplier.poolable-thread-request-timeout=\
 	6000

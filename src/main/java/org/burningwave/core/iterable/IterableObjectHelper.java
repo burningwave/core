@@ -57,8 +57,8 @@ public interface IterableObjectHelper {
 	public static class Configuration {
 		public static class Key {
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
-			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD =
-				"iterable-object-helper.parallel-iteration.applicability.max-runtime-threads-count-threshold";
+			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD =
+				"iterable-object-helper.parallel-iteration.applicability.max-runtime-thread-count-threshold";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE =
 				"iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES =
@@ -72,7 +72,7 @@ public interface IterableObjectHelper {
 
 			defaultValues.put(Key.DEFAULT_VALUES_SEPERATOR, ";");
 
-			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD, "autodetect");
+			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD, "autodetect");
 
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE, 2);
 			
