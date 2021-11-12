@@ -161,7 +161,15 @@ public interface IterableObjectHelper {
 	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount);
 
 	public <K, V> String toString(Map<K, V> map, int marginTabCount);
-
+	
+	public default void terminateIteration() {
+		throw TerminateIteration.NOTIFICATION;
+	}
+	
+	public default boolean isIterationTerminatedNotification(Throwable exc) {
+		return exc instanceof TerminateIteration;
+	}
+	
 	public <K, V> String toString(
 		Map<K, V> map,
 		Function<K, String> keyTransformer,
