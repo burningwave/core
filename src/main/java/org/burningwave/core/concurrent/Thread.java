@@ -300,7 +300,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 				defaultValues.put(
 					Key.MAX_DETACHED_THREAD_COUNT,
-					"autodetect"
+					"${" + Key.MAX_POOLABLE_THREAD_COUNT + "}"
 				);
 
 				defaultValues.put(
@@ -372,6 +372,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				)
 			);
 			int availableProcessors = Runtime.getRuntime().availableProcessors();
+			int multiplier = 3;
 			try {
 				maxPoolableThreadCount = Objects.toInt(
 					IterableObjectHelper.resolveValue(
@@ -380,7 +381,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxPoolableThreadCount = availableProcessors * 3;
+				maxPoolableThreadCount = availableProcessors * multiplier;
 			}
 			
 			if (!(maxPoolableThreadCount >= 0)) {
@@ -395,7 +396,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxDetachedThreadCount = maxPoolableThreadCount;
+				maxDetachedThreadCount = availableProcessors * multiplier;
 			}
 			if (maxDetachedThreadCount < 0) {
 				maxDetachedThreadCount = Integer.MAX_VALUE - maxPoolableThreadCount;
