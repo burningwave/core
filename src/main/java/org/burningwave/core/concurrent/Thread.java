@@ -300,7 +300,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 				defaultValues.put(
 					Key.MAX_DETACHED_THREAD_COUNT,
-					0
+					"autodetect"
 				);
 
 				defaultValues.put(
