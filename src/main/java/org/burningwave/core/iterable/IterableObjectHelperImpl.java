@@ -642,31 +642,62 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 						}
 					: null;
-			Iterator<I> itemIterator = items.iterator();
 			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
-			ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
-				I item = null;
-				try {
-					while (exceptionWrapper.get() == null) {
-						try {
-							synchronized (itemIterator) {
-								item = itemIterator.next();
-							}
-						} catch (NoSuchElementException exc) {
-							exceptionWrapper.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-							break;
-						}
-						action.accept(item, outputItemCollectionHandler);
-					}
-				} catch (IterableObjectHelper.TerminateIteration exc) {
-					exceptionWrapper.set(exc);
-				}
-			};
 			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
-			for (int i = 0; i < taskCountThatCanBeCreated && exceptionWrapper.get() == null; i++) {
-				tasks.add(
-					BackgroundExecutor.createTask(iterator, priority).submit()
-				);
+			if (items instanceof List) {
+				List<I> itemList = (List<I>)items;
+				final int splittedIteratorSize = itemList.size() / taskCountThatCanBeCreated;
+				for (
+					int currentIndex = 0, splittedIteratorIndex = 0; 
+					currentIndex < taskCountThatCanBeCreated && exceptionWrapper.get() == null;
+					++currentIndex, splittedIteratorIndex+=splittedIteratorSize
+				) {
+					Iterator<I> itemIterator = itemList.listIterator(splittedIteratorIndex);
+					final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
+						splittedIteratorSize :
+						(itemList.size() - (splittedIteratorSize * currentIndex));
+					tasks.add(
+						BackgroundExecutor.createTask(
+							task -> {					
+								try {
+									int remainedItems = itemsCount;
+									while (exceptionWrapper.get() == null && remainedItems > 0) {
+										action.accept(itemIterator.next(), outputItemCollectionHandler);
+										--remainedItems;							
+									}
+								} catch (IterableObjectHelper.TerminateIteration exc) {
+									exceptionWrapper.set(exc);
+								}
+							},
+							priority
+						).submit()
+					);
+				}
+			} else {
+				Iterator<I> itemIterator = items.iterator();
+				ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
+					I item = null;
+					try {
+						while (exceptionWrapper.get() == null) {
+							try {
+								synchronized (itemIterator) {
+									item = itemIterator.next();
+								}
+							} catch (NoSuchElementException exc) {
+								exceptionWrapper.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
+								break;
+							}
+							action.accept(item, outputItemCollectionHandler);
+						}
+					} catch (IterableObjectHelper.TerminateIteration exc) {
+						exceptionWrapper.set(exc);
+					}
+				};
+				for (int i = 0; i < taskCountThatCanBeCreated && exceptionWrapper.get() == null; i++) {
+					tasks.add(
+						BackgroundExecutor.createTask(iterator, priority).submit()
+					);
+				}
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
 			return outputCollection;
@@ -696,6 +727,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return outputCollection;
 	}
 
+	
 	private <I> int getCountOfTasksThatCanBeCreated(Collection<I> items, Predicate<Collection<?>> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
