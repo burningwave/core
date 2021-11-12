@@ -381,7 +381,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxPoolableThreadCount = (int)(availableProcessors * 2);
+				maxPoolableThreadCount = availableProcessors * 2;
 			}
 			
 			if (!(maxPoolableThreadCount >= 0)) {
@@ -396,7 +396,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxDetachedThreadCount = availableProcessors;
+				maxDetachedThreadCount = maxPoolableThreadCount * 2;
 			}
 			if (maxDetachedThreadCount < 0) {
 				maxDetachedThreadCount = Integer.MAX_VALUE - maxPoolableThreadCount;
