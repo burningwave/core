@@ -317,7 +317,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							outputCollection.add(child);
 						}
 					);
-					throw org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration.NOTIFICATION;
+					IterableObjectHelper.terminateIteration();
 				}
 			};
 

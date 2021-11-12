@@ -78,6 +78,7 @@ public class BaseTest implements Component {
 	}
 
 	public void testNotNull(ThrowingSupplier<?> supplier) {
+		long initialTime = System.currentTimeMillis();
 		Object object = null;
 		try {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
@@ -86,6 +87,10 @@ public class BaseTest implements Component {
 		} catch (Throwable exc) {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+			getClass()::getName,
+			getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+		);
 		assertNotNull(object);
 	}
 
