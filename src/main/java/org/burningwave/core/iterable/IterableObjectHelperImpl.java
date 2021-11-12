@@ -145,13 +145,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				)
 			);
 		} catch (Throwable exc) {
-			if (ThreadSupplier != null) {
-				return ThreadSupplier.getInititialMaxThreadCount();
-			}
-			return null;
+			return autodetectMaxRuntimeThreadsCountThreshold();
 		}
 	}
-
+	
+	private Integer autodetectMaxRuntimeThreadsCountThreshold() {
+		if (ThreadSupplier != null) {
+			if (ThreadSupplier.getMaxDetachedThreadCountIncreasingStep() > 0) {
+				return Integer.MAX_VALUE;
+			}
+			return ThreadSupplier.getInititialMaxThreadCount();
+		}
+		return null;
+	}
+	
 	@Override
 	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
@@ -703,7 +710,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					getOperationId("initMaxThreadCountsForParallelIteration"), 
 					() -> {
 						if (maxThreadCountsForParallelIteration == null) {
-							maxThreadCountsForParallelIteration = ThreadSupplier.getInititialMaxThreadCount();
+							maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
 						}
 					}
 				);				

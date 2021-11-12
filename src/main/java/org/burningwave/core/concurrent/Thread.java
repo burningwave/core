@@ -333,7 +333,6 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private volatile int threadCount;
 		private volatile int poolableThreadCount;
 		private int maxPoolableThreadCount;
-		private int maxDetachedThreadCount;
 		private int inititialMaxThreadCount;		
 		private int maxThreadCount;
 		private int maxDetachedThreadCountIncreasingStep;
@@ -381,13 +380,13 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxPoolableThreadCount = availableProcessors * 2;
+				maxPoolableThreadCount = availableProcessors * 3;
 			}
 			
 			if (!(maxPoolableThreadCount >= 0)) {
 				throw new IllegalArgumentException("maxPoolableThreadCount must be greater than or equal to zero");
 			}
-			
+			int maxDetachedThreadCount;
 			try {
 				maxDetachedThreadCount = Objects.toInt(
 					IterableObjectHelper.resolveValue(
@@ -396,7 +395,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxDetachedThreadCount = maxPoolableThreadCount * 2;
+				maxDetachedThreadCount = maxPoolableThreadCount;
 			}
 			if (maxDetachedThreadCount < 0) {
 				maxDetachedThreadCount = Integer.MAX_VALUE - maxPoolableThreadCount;
@@ -428,8 +427,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					)
 				);
 			} catch (Throwable exc) {
-				maxDetachedThreadCountIncreasingStep = availableProcessors / 2;
-				maxDetachedThreadCountIncreasingStep = maxDetachedThreadCountIncreasingStep > 0 ? maxDetachedThreadCountIncreasingStep : 1;
+				maxDetachedThreadCountIncreasingStep = availableProcessors;
 			}
 			if (maxDetachedThreadCountIncreasingStep < 1) {
 				poolableThreadRequestTimeout = 0;
@@ -484,7 +482,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							return thread;
 						}
 						if (poolableThreadCount >= maxPoolableThreadCount && threadCount >= maxThreadCount) {
-							//This block of code is for preventing dead locks
+							//This block of code is used to avoid performance degradation
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
 							if (maxDetachedThreadCountIncreasingStep < 1) {
@@ -500,8 +498,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 									maxThreadCount -= (maxDetachedThreadCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
 										() -> this.getClass().getName(),
-										"{}: decreasing maxTemporarilyThreadCount to {}",
-										java.lang.Thread.currentThread(), (maxThreadCount - maxPoolableThreadCount)
+										"{}: decreasing maxThreadCount to {}",
+										java.lang.Thread.currentThread(), maxThreadCount
 									);
 									timeOfLastIncreaseOfMaxDetachedThreadCount = Long.MAX_VALUE;
 								}
@@ -511,8 +509,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								maxThreadCount += maxDetachedThreadCountIncreasingStep;
 								ManagedLoggersRepository.logInfo(
 									() -> this.getClass().getName(),
-									"{} waited for {}ms: maxTemporarilyThreadCount will be temporarily increased to {} for preventing dead lock",
-									java.lang.Thread.currentThread(), waitElapsedTime, (maxThreadCount - maxPoolableThreadCount)
+									"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
+									java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
 								);
 								return getOrCreate(initialValue, --requestCount);
 							}
@@ -712,12 +710,16 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			return inititialMaxThreadCount;
 		}
 		
+		public int getMaxDetachedThreadCountIncreasingStep() {
+			return maxDetachedThreadCountIncreasingStep;
+		}
+		
 		public int getCountOfThreadsThatCanBeSupplied() {
 			if (maxDetachedThreadCountIncreasingStep > 0) {
 				return Integer.MAX_VALUE - runningThreads.size();
 			}
 			return maxThreadCount - runningThreads.size();
-		}		
+		}
 		
 		public void printStatus() {
 			int threadCount = this.threadCount;
