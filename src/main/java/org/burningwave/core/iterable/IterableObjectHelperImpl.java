@@ -30,9 +30,11 @@ package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -55,6 +57,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.burningwave.core.Identifiable;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -62,10 +65,10 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
-public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener {
+public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener, Identifiable {
 	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
-	private int maxThreadCountsForParallelIteration;
+	private Integer maxThreadCountsForParallelIteration;
 	//Deferred initialized
 	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
 	private Class<?>[] parallelCollectionClasses;
@@ -132,17 +135,20 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return defaultMinimumCollectionSizeForParallelIterationPredicate;
 	}
 
-	int computeMaxRuntimeThreadsCountThreshold(Properties config) {
+	Integer computeMaxRuntimeThreadsCountThreshold(Properties config) {
 		try {
 			return Objects.toInt(
 				resolveValue(
 					ResolveConfig.ForNamedKey.forNamedKey(
-						Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD
+						Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD
 					).on(config)
 				)
 			);
 		} catch (Throwable exc) {
-			return Runtime.getRuntime().availableProcessors() * 12;
+			if (ThreadSupplier != null) {
+				return ThreadSupplier.getInititialMaxThreadCount();
+			}
+			return null;
 		}
 	}
 
@@ -155,7 +161,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			this.defaultMinimumCollectionSizeForParallelIterationPredicate =
 				buildDefaultMinimumCollectionSizeForParallelIterationPredicate(config);
 		}
-		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREADS_COUNT_THRESHOLD)) {
+		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD)) {
 			this.maxThreadCountsForParallelIteration = computeMaxRuntimeThreadsCountThreshold(config);
 		}
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES)) {
@@ -615,7 +621,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (predicate == null) {
 			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
 		}
-		if (predicate.test(items) && maxThreadCountsForParallelIteration >= Synchronizer.getAllThreads().size()) {
+		int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicate);
+		if (taskCountThatCanBeCreated > 1) {
 			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
 				outputCollection != null ?
 					isConcurrent(outputCollection) ?
@@ -649,36 +656,62 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				}
 			};
 			Collection<QueuedTasksExecutor.Task> tasks = new HashSet<>();
-			int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
-			for (int i = 0; i < taskCount && exceptionWrapper.get() == null; i++) {
+			for (int i = 0; i < taskCountThatCanBeCreated && exceptionWrapper.get() == null; i++) {
 				tasks.add(
 					BackgroundExecutor.createTask(iterator, priority).submit()
 				);
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
-		} else {
-			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
-				outputCollection != null ?
-					(outputCollectionConsumer) -> {
-						outputCollectionConsumer.accept(outputCollection);
-					}
-				: null;
-			if (initialThreadPriority != priority) {
-				currentThread.setPriority(priority);
+			return outputCollection;
+		} 
+		Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
+			outputCollection != null ?
+				(outputCollectionConsumer) -> {
+					outputCollectionConsumer.accept(outputCollection);
+				}
+			: null;
+		if (initialThreadPriority != priority) {
+			currentThread.setPriority(priority);
+		}
+		try {
+			for (I item : items) {
+				action.accept(item, outputItemCollectionHandler);
 			}
-			try {
-				for (I item : items) {
-					action.accept(item, outputItemCollectionHandler);
-				}
-			} catch (IterableObjectHelper.TerminateIteration t) {} finally {
-				if (initialThreadPriority != priority) {
-					currentThread.setPriority(initialThreadPriority);
-				}
+		} catch (IterableObjectHelper.TerminateIteration t) {
+		
+		} catch (Throwable exc) {
+			ManagedLoggersRepository.logError(getClass()::getName, exc);
+		} finally {
+			if (initialThreadPriority != priority) {
+				currentThread.setPriority(initialThreadPriority);
 			}
 		}
 		return outputCollection;
 	}
 
+	private <I> int getCountOfTasksThatCanBeCreated(Collection<I> items, Predicate<Collection<?>> predicate) {
+		try {
+			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
+				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
+				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
+				return taskCount;
+			}
+			return 0;
+		} catch (NullPointerException exc) {
+			if (maxThreadCountsForParallelIteration == null) {
+				Synchronizer.execute(
+					getOperationId("initMaxThreadCountsForParallelIteration"), 
+					() -> {
+						if (maxThreadCountsForParallelIteration == null) {
+							maxThreadCountsForParallelIteration = ThreadSupplier.getInititialMaxThreadCount();
+						}
+					}
+				);				
+				return getCountOfTasksThatCanBeCreated(items, predicate);
+			}
+			throw exc;
+		}
+	}
 
 	private boolean isConcurrent(Collection<?> coll) {
 		try {
@@ -690,7 +723,14 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			return false;
 		} catch (NullPointerException exc) {
 			if (this.parallelCollectionClasses == null) {
-				this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+				Synchronizer.execute(
+					getOperationId("initParallelCollectionClassesCollection"),
+					() -> {
+						if (this.parallelCollectionClasses == null) {
+							this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+						}
+					}
+				);				
 				return isConcurrent(coll);
 			}
 			throw exc;
