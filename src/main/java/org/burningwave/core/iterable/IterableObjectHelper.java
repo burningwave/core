@@ -206,16 +206,18 @@ public interface IterableObjectHelper {
 		) {
 			this.items = items;
 		}
-
+		
+		public static <K, I, O> IterationConfig<Map.Entry<K, I>, O> of(Map<K, I> input) {
+			IterationConfig<Map.Entry<K, I>, O> config = new IterationConfig<>(input.entrySet());
+			return config;
+		}
+		
 		public static <I, O> IterationConfig<I, O> of(Collection<I> input) {
 			IterationConfig<I, O> config = new IterationConfig<>(input);
 			return config;
 		}
 
 		public IterationConfig<I, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
-			if (outputCollection == null) {
-
-			}
 			this.action = action;
 			return this;
 		}
