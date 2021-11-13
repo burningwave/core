@@ -752,13 +752,32 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private Supplier threadSupplier;
 		private Map<String, Thread> threads;
 
-		public Holder() {
+		private Holder() {
 			this(org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier);
 		}
-
-		public Holder(Supplier threadSupplier) {
+		
+		private Holder(Thread.Supplier threadSupplier) {
 			this.threadSupplier = threadSupplier;
 			this.threads = new ConcurrentHashMap<>();
+		}
+		
+		public static Holder create(
+			Thread.Supplier supplier,
+			boolean undestroyable
+		) {
+			if (undestroyable) {
+				return new Holder(supplier) {
+					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
+					@Override
+					public void close() {
+						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+							super.close();
+						}
+					}
+				};
+			} else {
+				return new Holder(supplier);
+			}
 		}
 
 		public String startLooping(boolean isDaemon, int priority, Consumer<Thread> executable) {

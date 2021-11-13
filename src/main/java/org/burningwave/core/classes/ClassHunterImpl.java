@@ -88,9 +88,7 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 	@Override
 	public void close() {
 		closeResources(() -> this.pathHelper == null, task -> {
-			this.defaultPathScannerClassLoaderManager.close();
 			super.close();
-			this.defaultPathScannerClassLoaderManager = null;
 		});
 	}
 

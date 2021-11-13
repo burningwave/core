@@ -190,8 +190,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
 		while (itr.hasNext()) {
 			Entry<K, V> entry = itr.next();
-			itr.remove();
-			itemDestroyer.accept(entry.getKey(), entry.getValue());
+			try {
+				itr.remove();
+				itemDestroyer.accept(entry.getKey(), entry.getValue());
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(getClass()::getName,"Exception occurred while removing and cleraring " + entry.getValue(), exc);
+			}
+			
 		}
 	}
 

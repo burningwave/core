@@ -293,7 +293,7 @@ public class StaticComponentContainer {
 				GlobalProperties,
 				true
 			);
-			ThreadHolder = new org.burningwave.core.concurrent.Thread.Holder(ThreadSupplier);
+			ThreadHolder = org.burningwave.core.concurrent.Thread.Holder.create(ThreadSupplier, true);
 			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
 				"background-executor",
 				getAndAdjustConfigurationForBackgroundExecutor()
