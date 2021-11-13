@@ -499,14 +499,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (!components.isEmpty()) {
 			BackgroundExecutor.createTask(task ->
 				IterableObjectHelper.deepClear(components, (type, component) -> {
-					try {
-						if (!(component instanceof PathScannerClassLoader)) {
-							component.close();
-						} else {
-							((PathScannerClassLoader)component).unregister(this, true);
-						}
-					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(getClass()::getName,"Exception occurred while closing " + component, exc);
+					if (!(component instanceof PathScannerClassLoader)) {
+						component.close();
+					} else {
+						((PathScannerClassLoader)component).unregister(this, true);
 					}
 				}),Thread.MIN_PRIORITY
 			).submit();
