@@ -167,7 +167,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 									
 								}
 							).parallelIf(
-								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+									searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+									null
 							).withPriority(
 								searchConfig.priority
 							)
@@ -177,7 +179,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
 						}
 					).parallelIf(
-						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+							searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+							null
 					).withPriority(
 						searchConfig.priority
 					)
@@ -292,7 +296,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						}
 					}
 				).parallelIf(
-					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()
+					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+						allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+						null
 				).withPriority(
 					allFileFilters.getPriority()
 				)
