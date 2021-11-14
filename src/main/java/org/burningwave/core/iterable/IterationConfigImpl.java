@@ -72,21 +72,22 @@ class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, 
 		return this;
 	}
 
-	public IterationConfigImpl<I> collectTo(Object output) {
+	IterationConfigImpl<I> setOutput(Object output) {
+		if (this.output != null) {
+			throw new IllegalArgumentException("Could not set output twice");
+		}
 		this.output = output;
 		return this;
 	}
 	
 	@Override
 	public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
-		this.output = output;
-		return new WithOutputOfCollection<>(this);
+		return new WithOutputOfCollection<>(setOutput(output));
 	}
 
 	@Override
 	public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
-		this.output = output;
-		return new WithOutputOfMap<>(this);
+		return new WithOutputOfMap<>(setOutput(output));
 	}
 
 	static abstract class WithOutput<I, W extends WithOutput<I, W>> implements IterableObjectHelper.IterationConfig<I, W> {
@@ -104,13 +105,13 @@ class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, 
 
 		@Override
 		public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
-			wrappedConfiguration.output = output;
+			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfCollection<>(wrappedConfiguration);
 		}
 
 		@Override
 		public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
-			wrappedConfiguration.output = output;
+			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfMap<>(wrappedConfiguration);
 		}
 
