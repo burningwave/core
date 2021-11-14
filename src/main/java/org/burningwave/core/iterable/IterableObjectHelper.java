@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -207,39 +206,11 @@ public interface IterableObjectHelper {
 		
 		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, C>> C of(Map<J, I> input) {
-			return (C)new IterationConfigAbst<Map.Entry<J, I>>(input.entrySet()) {
-
-				@Override
-				public <O> WithOutputOfCollection<Entry<J, I>, O> withOutput(Collection<O> output) {
-					this.output = output;
-					return new WithOutputOfCollection<>(this);
-				}
-
-				@Override
-				public <K, O> WithOutputOfMap<Entry<J, I>, K, O> withOutput(Map<K, O> output) {
-					this.output = output;
-					return new WithOutputOfMap<>(this);
-				}
-						
-			};
+			return (C)new IterationConfigImpl<Map.Entry<J, I>>(input.entrySet());
 		}
 		
 		public static <I, C extends IterationConfig<I, C>> C of(Collection<I> input) {
-			return (C)new IterationConfigAbst<I>(input) {
-
-				@Override
-				public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
-					this.output = output;
-					return new WithOutputOfCollection<>(this);
-				}
-
-				@Override
-				public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
-					this.output = output;
-					return new WithOutputOfMap<>(this);
-				}
-				
-			};
+			return (C)new IterationConfigImpl<I>(input);
 		}
 				
 		public C withAction(Consumer<I> action);
@@ -252,9 +223,9 @@ public interface IterableObjectHelper {
 		
 		public C withPriority(Integer priority);
 		
-		public static class WithOutputOfMap<I, K, O> extends IterationConfigAbst.WithOutput<I, WithOutputOfMap<I, K, O>> {
+		public static class WithOutputOfMap<I, K, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfMap<I, K, O>> {
 			
-			WithOutputOfMap(IterationConfigAbst<I> configuration) {
+			WithOutputOfMap(IterationConfigImpl<I> configuration) {
 				super(configuration);
 			}
 
@@ -265,9 +236,9 @@ public interface IterableObjectHelper {
 			
 		}
 		
-		public static class WithOutputOfCollection<I, O> extends IterationConfigAbst.WithOutput<I, WithOutputOfCollection<I, O>> {
+		public static class WithOutputOfCollection<I, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfCollection<I, O>> {
 			
-			WithOutputOfCollection(IterationConfigAbst<I> configuration) {
+			WithOutputOfCollection(IterationConfigImpl<I> configuration) {
 				super(configuration);
 			}
 

@@ -619,7 +619,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <I, K, O> Map<K, O> iterate(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, K, O> configuration
 	) {
-		IterationConfigAbst<I> config = configuration.getWrappedConfiguration();
+		IterationConfigImpl<I> config = configuration.getWrappedConfiguration();
 		return iterate(
 			config.items,
 			config.predicateForParallelIteration,
@@ -633,7 +633,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <I, O> Collection<O> iterate(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, O> configuration
 	) {
-		IterationConfigAbst<I> config = configuration.getWrappedConfiguration();
+		IterationConfigImpl<I> config = configuration.getWrappedConfiguration();
 		return iterate(
 			config.items,
 			config.predicateForParallelIteration,
@@ -646,7 +646,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	
 	@Override
 	public <I> void iterate(IterationConfig<I, ?> configuration) {
-		IterationConfigAbst<I> config = (IterationConfigAbst<I>)configuration;
+		IterationConfigImpl<I> config = (IterationConfigImpl<I>)configuration;
 		iterate(
 			config.items,
 			config.predicateForParallelIteration,

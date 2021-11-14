@@ -35,52 +35,64 @@ import java.util.function.Predicate;
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @SuppressWarnings("unchecked")
-abstract class IterationConfigAbst<I> implements IterableObjectHelper.IterationConfig<I, IterationConfigAbst<I>>{
+class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, IterationConfigImpl<I>>{
 	Collection<I> items;
 	Object action;
 	Object output;
 	Predicate<Collection<?>> predicateForParallelIteration;
 	Integer priority;
 
-	public IterationConfigAbst(
+	public IterationConfigImpl(
 		Collection<I> items
 	) {
 		this.items = items;
 	}
 
-	public <O> IterationConfigAbst<I> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
+	public <O> IterationConfigImpl<I> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
 		this.action = action;
 		return this;
 	}
 
 	@Override
-	public IterationConfigAbst<I> withAction(Consumer<I> action) {
+	public IterationConfigImpl<I> withAction(Consumer<I> action) {
 		BiConsumer<I, Consumer<Consumer<?>>> newAction = (item, outputItemCollector) -> action.accept(item);
 		this.action = newAction;
 		return this;
 	}
 
 	@Override
-	public IterationConfigAbst<I> withPriority(Integer priority) {
+	public IterationConfigImpl<I> withPriority(Integer priority) {
 		this.priority = priority;
 		return this;
 	}
 
 	@Override
-	public IterationConfigAbst<I> parallelIf(Predicate<Collection<?>> predicate) {
+	public IterationConfigImpl<I> parallelIf(Predicate<Collection<?>> predicate) {
 		this.predicateForParallelIteration = predicate;
 		return this;
 	}
 
-	public IterationConfigAbst<I> collectTo(Object output) {
+	public IterationConfigImpl<I> collectTo(Object output) {
 		this.output = output;
 		return this;
 	}
+	
+	@Override
+	public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
+		this.output = output;
+		return new WithOutputOfCollection<>(this);
+	}
+
+	@Override
+	public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
+		this.output = output;
+		return new WithOutputOfMap<>(this);
+	}
 
 	static abstract class WithOutput<I, W extends WithOutput<I, W>> implements IterableObjectHelper.IterationConfig<I, W> {
-		IterationConfigAbst<I> wrappedConfiguration;
+		IterationConfigImpl<I> wrappedConfiguration;
 
-		WithOutput(IterationConfigAbst<I> configuration) {
+		WithOutput(IterationConfigImpl<I> configuration) {
 			this.wrappedConfiguration = configuration;
 		}
 
@@ -92,11 +104,13 @@ abstract class IterationConfigAbst<I> implements IterableObjectHelper.IterationC
 
 		@Override
 		public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
+			wrappedConfiguration.output = output;
 			return new WithOutputOfCollection<>(wrappedConfiguration);
 		}
 
 		@Override
 		public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
+			wrappedConfiguration.output = output;
 			return new WithOutputOfMap<>(wrappedConfiguration);
 		}
 
@@ -112,7 +126,7 @@ abstract class IterationConfigAbst<I> implements IterableObjectHelper.IterationC
 			return (W)this;
 		}
 
-		IterationConfigAbst<I> getWrappedConfiguration() {
+		IterationConfigImpl<I> getWrappedConfiguration() {
 			return wrappedConfiguration;
 		}
 	}
