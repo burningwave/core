@@ -83,8 +83,8 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestTwo() {
-		int[] inputCollection = new int[100000000];
-		for (int i = 0; i < 100000000; i++) {
+		int[] inputCollection = new int[25000000];
+		for (int i = 0; i < 25000000; i++) {
 			inputCollection[i] = i;
 		}
 		testNotEmpty(() -> {
