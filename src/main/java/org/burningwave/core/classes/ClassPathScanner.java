@@ -142,7 +142,6 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			return findBy(SearchConfig.create());
 		}
 
-		//Not cached search
 		public R findBy(SearchConfig input) {
 			SearchConfig searchConfig = input.isInitialized() ? input : input.createCopy();
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
