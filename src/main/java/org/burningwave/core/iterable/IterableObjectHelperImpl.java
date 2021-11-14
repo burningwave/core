@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,7 +67,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener, Identifiable {
-	private Predicate<Collection<?>> defaultMinimumCollectionSizeForParallelIterationPredicate;
+	private Predicate<Object> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private Integer maxThreadCountsForParallelIteration;
 	//Deferred initialized
@@ -108,7 +109,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return parallelCollectionClasses.toArray(new Class[parallelCollectionClasses.size()]);
 	}
 
-	private Predicate<Collection<?>> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
+	private Predicate<Object> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
 		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
 				ResolveConfig.ForNamedKey.forNamedKey(
@@ -118,7 +119,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		);
 		if (defaultMinimumCollectionSizeForParallelIteration >= 0) {
 			return coll ->
-				coll.size() >= defaultMinimumCollectionSizeForParallelIteration;
+				(coll instanceof Collection ?
+					((Collection<?>)coll).size() : Array.getLength(coll)) >= defaultMinimumCollectionSizeForParallelIteration;
 		} else {
 			 return coll -> false;
 		}
@@ -131,7 +133,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 
 	@Override
-	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate() {
+	public Predicate<Object> getDefaultMinimumCollectionSizeForParallelIterationPredicate() {
 		return defaultMinimumCollectionSizeForParallelIterationPredicate;
 	}
 
@@ -616,12 +618,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, K, O> Map<K, O> iterate(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, K, O> configuration
+	public <I, D, K, O> Map<K, O> iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> configuration
 	) {
-		IterationConfigImpl<I> config = configuration.getWrappedConfiguration();
+		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
 		return iterate(
-			config.items,
+			(D)config.items,
 			config.predicateForParallelIteration,
 			(Map<K, O>)config.output,
 			(BiConsumer<I, Consumer<Consumer<Map<K, O>>>>)config.action,
@@ -630,12 +632,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, O> Collection<O> iterate(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, O> configuration
+	public <I, D, O> Collection<O> iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> configuration
 	) {
-		IterationConfigImpl<I> config = configuration.getWrappedConfiguration();
+		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
 		return iterate(
-			config.items,
+			(D)config.items,
 			config.predicateForParallelIteration,
 			(Collection<O>)config.output,
 			(BiConsumer<I, Consumer<Consumer<Collection<O>>>>)config.action,
@@ -645,10 +647,10 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I> void iterate(IterationConfig<I, ?> configuration) {
-		IterationConfigImpl<I> config = (IterationConfigImpl<I>)configuration;
+	public <I, D> void iterate(IterationConfig<I, D, ?> configuration) {
+		IterationConfigImpl<I, D> config = (IterationConfigImpl<I, D>)configuration;
 		iterate(
-			config.items,
+			(D)config.items,
 			config.predicateForParallelIteration,
 			null,
 			(BiConsumer<I, Consumer<Consumer<Collection<?>>>>)config.action,
@@ -656,9 +658,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		);
 	}
 	
-	private <I, C> C iterate(
-		Collection<I> items,
-		Predicate<Collection<?>> predicateForParallelIteration,
+	private <I, D, C> C iterate(
+		D items,
+		Predicate<D> predicateForParallelIteration,
 		C output,
 		BiConsumer<I, Consumer<Consumer<C>>> action,
 		Integer priority
@@ -669,7 +671,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			priority = initialThreadPriority;
 		}
 		if (predicateForParallelIteration == null) {
-			predicateForParallelIteration = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
+			predicateForParallelIteration = collectionOrArray -> this.defaultMinimumCollectionSizeForParallelIterationPredicate.test(collectionOrArray);
 		}
 		int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicateForParallelIteration);
 		if (taskCountThatCanBeCreated > 1) {
@@ -716,8 +718,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						).submit()
 					);
 				}
-			} else {
-				Iterator<I> itemIterator = items.iterator();
+			} else if (items instanceof Collection) {
+				Iterator<I> itemIterator = ((Collection<I>)items).iterator();
 				ThrowingConsumer<QueuedTasksExecutor.Task, ?> iterator = task -> {
 					I item = null;
 					try {
@@ -739,6 +741,35 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				for (int i = 0; i < taskCountThatCanBeCreated && exceptionWrapper.get() == null; i++) {
 					tasks.add(
 						BackgroundExecutor.createTask(iterator, priority).submit()
+					);
+				}
+			} else {
+				I[] itemArray = (I[])items;
+				final int splittedIteratorSize = itemArray.length / taskCountThatCanBeCreated;
+				for (
+					int currentIndex = 0, currentSplittedIteratorIndex = 0; 
+					currentIndex < taskCountThatCanBeCreated && exceptionWrapper.get() == null;
+					++currentIndex, currentSplittedIteratorIndex+=splittedIteratorSize
+				) {
+					final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
+						splittedIteratorSize :
+						(itemArray.length - (splittedIteratorSize * currentIndex));
+					final int splittedIteratorIndex = currentSplittedIteratorIndex;
+					tasks.add(
+						BackgroundExecutor.createTask(
+							task -> {					
+								try {
+									int remainedItems = itemsCount;
+									for (int i = splittedIteratorIndex; exceptionWrapper.get() == null && remainedItems > 0; i++ ) {
+										action.accept(itemArray[i], outputItemsHandler);
+										--remainedItems;	
+									}
+								} catch (IterableObjectHelper.TerminateIteration exc) {
+									exceptionWrapper.set(exc);
+								}
+							},
+							priority
+						).submit()
 					);
 				}
 			}
@@ -765,8 +796,14 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			currentThread.setPriority(priority);
 		}
 		try {
-			for (I item : items) {
-				action.accept(item, outputItemCollectionHandler);
+			if (items instanceof Collection) {
+				for (I item : (Collection<I>)items) {
+					action.accept(item, outputItemCollectionHandler);
+				}
+			} else {
+				for (I item : (I[])items) {
+					action.accept(item, outputItemCollectionHandler);
+				}
 			}
 		} catch (IterableObjectHelper.TerminateIteration t) {
 		
@@ -781,10 +818,10 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 
 	
-	private <I> int getCountOfTasksThatCanBeCreated(Collection<I> items, Predicate<Collection<?>> predicate) {
+	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items.size());
+				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items instanceof Collection ? ((Collection<?>)items).size() : ((I[])items).length);
 				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
 				return taskCount;
 			}

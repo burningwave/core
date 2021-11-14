@@ -150,7 +150,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
-						IterableObjectHelper.iterate(
+						IterableObjectHelper.iterateAndGet(
 							IterationConfig.of(pathsToBeScanned)
 							.withOutput(new ConcurrentHashMap<FileSystemItem, Collection<FileSystemItem>>())
 							.withAction(
@@ -167,7 +167,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 									
 								}
 							).parallelIf(
-								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+									searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+									null
 							).withPriority(
 								searchConfig.priority
 							)
@@ -177,7 +179,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 							testClassCriteriaAndAddItemsToContext(context, currentScannedPath);
 						}
 					).parallelIf(
-						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+							searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+							null
 					).withPriority(
 						searchConfig.priority
 					)
@@ -292,7 +296,9 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 						}
 					}
 				).parallelIf(
-					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()
+					allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate() != null ?
+						allFileFilters.getMinimumCollectionSizeForParallelIterationPredicate()::test :
+						null
 				).withPriority(
 					allFileFilters.getPriority()
 				)

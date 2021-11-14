@@ -49,7 +49,7 @@ public class IterableObjectHelperTest extends BaseTest {
 //		long initialTime = System.currentTimeMillis();
 //		for (int i = 0; i < 10; i++) {
 			testNotEmpty(() -> {
-				return IterableObjectHelper.iterate(
+				return IterableObjectHelper.iterateAndGet(
 					IterationConfig.of(inputCollection)
 					.parallelIf(inputColl -> inputColl.size() > 2)
 					.withOutput(new ArrayList<>())

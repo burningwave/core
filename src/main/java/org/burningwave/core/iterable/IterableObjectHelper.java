@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,7 +100,7 @@ public interface IterableObjectHelper {
 		return iterableObjectHelper;
 	}
 
-	public Predicate<Collection<?>> getDefaultMinimumCollectionSizeForParallelIterationPredicate();
+	public Predicate<Object> getDefaultMinimumCollectionSizeForParallelIterationPredicate();
 
 	public String getDefaultValuesSeparator();
 
@@ -150,15 +151,15 @@ public interface IterableObjectHelper {
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
 	
-	public <I, O> Collection<O> iterate(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, O> config
+	public <I, D, O> Collection<O> iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> config
 	);
 	
-	public <I, K, O> Map<K, O> iterate(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, K, O> config
+	public <I, D, K, O> Map<K, O> iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> config
 	);
 	
-	public <I> void iterate(IterationConfig<I, ?> config);
+	public <I, D> void iterate(IterationConfig<I, D, ?> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
 
@@ -202,47 +203,63 @@ public interface IterableObjectHelper {
 	}
 
 
-	public static interface IterationConfig<I, C extends IterationConfig<I, C>> {
+	public static interface IterationConfig<I, D, C extends IterationConfig<I, D, C>> {
 		
 		
-		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, C>> C of(Map<J, I> input) {
-			return (C)new IterationConfigImpl<Map.Entry<J, I>>(input.entrySet());
+		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
+			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input.entrySet());
 		}
 		
-		public static <I, C extends IterationConfig<I, C>> C of(Collection<I> input) {
-			return (C)new IterationConfigImpl<I>(input);
+		public static <I, C extends IterationConfig<I, Collection<I>, C>> C of(Collection<I> input) {
+			return (C)new IterationConfigImpl<I, Collection<I>>(input);
+		}
+		
+		public static <I, C extends IterationConfig<I, I[], C>> C of(I[] input) {
+			return (C)new IterationConfigImpl<I, I[]>(input);
+		}
+		
+		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
+			return of(input != null ? input : new HashMap<>());
+		}
+		
+		public static <I, C extends IterationConfig<I, Collection<I>, C>> C ofNullable(Collection<I> input) {
+			return of(input != null ? input : new ArrayList<>());
+		}
+		
+		public static <I, C extends IterationConfig<I, I[], C>> C ofNullable(I[] input) {
+			return of(input != null ? input : (I[])new Object[0]);
 		}
 				
 		public C withAction(Consumer<I> action);
 		
-		public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output);
+		public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output);
 		
-		public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output);
+		public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output);
 		
-		public C parallelIf(Predicate<Collection<?>> predicate);
+		public C parallelIf(Predicate<D> predicate);
 		
 		public C withPriority(Integer priority);
 		
-		public static class WithOutputOfMap<I, K, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfMap<I, K, O>> {
+		public static class WithOutputOfMap<I, D, K, O> extends IterationConfigImpl.WithOutput<I, D, WithOutputOfMap<I, D, K, O>> {
 			
-			WithOutputOfMap(IterationConfigImpl<I> configuration) {
+			WithOutputOfMap(IterationConfigImpl<I, D> configuration) {
 				super(configuration);
 			}
 
-			public WithOutputOfMap<I, K, O> withAction(BiConsumer<I, Consumer<Consumer<Map<K, O>>>> action) {
+			public WithOutputOfMap<I, D, K, O> withAction(BiConsumer<I, Consumer<Consumer<Map<K, O>>>> action) {
 				wrappedConfiguration.withAction(action);
 				return this;
 			}
 			
 		}
 		
-		public static class WithOutputOfCollection<I, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfCollection<I, O>> {
+		public static class WithOutputOfCollection<I, D, O> extends IterationConfigImpl.WithOutput<I, D, WithOutputOfCollection<I, D, O>> {
 			
-			WithOutputOfCollection(IterationConfigImpl<I> configuration) {
+			WithOutputOfCollection(IterationConfigImpl<I, D> configuration) {
 				super(configuration);
 			}
 
-			public WithOutputOfCollection<I, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
+			public WithOutputOfCollection<I, D, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
 				wrappedConfiguration.withAction(action);
 				return this;
 			}

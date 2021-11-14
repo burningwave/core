@@ -35,44 +35,47 @@ import java.util.function.Predicate;
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @SuppressWarnings("unchecked")
-class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, IterationConfigImpl<I>>{
-	Collection<I> items;
+class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<I, D, IterationConfigImpl<I, D>>{
+	Object items;
 	Object action;
 	Object output;
-	Predicate<Collection<?>> predicateForParallelIteration;
+	Predicate<D> predicateForParallelIteration;
 	Integer priority;
 
 	public IterationConfigImpl(
-		Collection<I> items
+		Object items
 	) {
+		if (items == null) {
+			throw new IllegalArgumentException("Input collection could not be null");
+		}
 		this.items = items;
 	}
 
-	public <O> IterationConfigImpl<I> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
+	public <O> IterationConfigImpl<I, D> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
 		this.action = action;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I> withAction(Consumer<I> action) {
+	public IterationConfigImpl<I, D> withAction(Consumer<I> action) {
 		BiConsumer<I, Consumer<Consumer<?>>> newAction = (item, outputItemCollector) -> action.accept(item);
 		this.action = newAction;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I> withPriority(Integer priority) {
+	public IterationConfigImpl<I, D> withPriority(Integer priority) {
 		this.priority = priority;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I> parallelIf(Predicate<Collection<?>> predicate) {
+	public IterationConfigImpl<I, D> parallelIf(Predicate<D> predicate) {
 		this.predicateForParallelIteration = predicate;
 		return this;
 	}
 
-	IterationConfigImpl<I> setOutput(Object output) {
+	IterationConfigImpl<I, D> setOutput(Object output) {
 		if (this.output != null) {
 			throw new IllegalArgumentException("Could not set output twice");
 		}
@@ -81,19 +84,19 @@ class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, 
 	}
 	
 	@Override
-	public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
+	public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output) {
 		return new WithOutputOfCollection<>(setOutput(output));
 	}
 
 	@Override
-	public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
+	public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output) {
 		return new WithOutputOfMap<>(setOutput(output));
 	}
 
-	static abstract class WithOutput<I, W extends WithOutput<I, W>> implements IterableObjectHelper.IterationConfig<I, W> {
-		IterationConfigImpl<I> wrappedConfiguration;
+	static abstract class WithOutput<I, D, W extends WithOutput<I, D, W>> implements IterableObjectHelper.IterationConfig<I, D, W> {
+		IterationConfigImpl<I, D> wrappedConfiguration;
 
-		WithOutput(IterationConfigImpl<I> configuration) {
+		WithOutput(IterationConfigImpl<I, D> configuration) {
 			this.wrappedConfiguration = configuration;
 		}
 
@@ -104,19 +107,19 @@ class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, 
 		}
 
 		@Override
-		public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output) {
+		public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output) {
 			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfCollection<>(wrappedConfiguration);
 		}
 
 		@Override
-		public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output) {
+		public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output) {
 			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfMap<>(wrappedConfiguration);
 		}
 
 		@Override
-		public W parallelIf(Predicate<Collection<?>> predicate) {
+		public W parallelIf(Predicate<D> predicate) {
 			wrappedConfiguration.parallelIf(predicate);
 			return (W)this;
 		}
@@ -127,7 +130,7 @@ class IterationConfigImpl<I> implements IterableObjectHelper.IterationConfig<I, 
 			return (W)this;
 		}
 
-		IterationConfigImpl<I> getWrappedConfiguration() {
+		IterationConfigImpl<I, D> getWrappedConfiguration() {
 			return wrappedConfiguration;
 		}
 	}
