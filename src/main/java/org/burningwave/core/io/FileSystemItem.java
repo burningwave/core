@@ -49,6 +49,7 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,8 +82,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
 	private FileSystemItem parentContainer;
-	private Set<FileSystemItem> children;
-	private Set<FileSystemItem> allChildren;
+	private Collection<FileSystemItem> children;
+	private Collection<FileSystemItem> allChildren;
 	private String instanceId;
 	private AtomicReference<JavaClass> javaClassWrapper;
 
@@ -266,12 +267,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	private Collection<FileSystemItem> findIn(
-		Supplier<Set<FileSystemItem>> childrenSupplier,
+		Supplier<Collection<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
 		boolean firstMatch,
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {
-		Set<FileSystemItem> children;
+		Collection<FileSystemItem> children;
 		try {
 			children = childrenSupplier.get();
 		} catch (Throwable exc) {
@@ -322,11 +323,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			};
 
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterate(
-			new IterationConfig<FileSystemItem, FileSystemItem>(children)
-			.withAction(action)
+			IterationConfig.of(children)
 			.parallelIf(filter.minimumCollectionSizeForParallelIterationPredicate)
-			.collectTo(outputCollectionSupplier.get())
 			.withPriority(filter.priority)
+			.withOutput(outputCollectionSupplier.get())
+			.withAction(action)
 		);
 
 		if (!iteratedFISWithErrors.isEmpty()) {
@@ -364,15 +365,15 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return absolutePath.getKey();
 	}
 
-	public Set<FileSystemItem> getAllChildren() {
-		return Optional.ofNullable(getAllChildren0()).map(children ->  Collections.unmodifiableSet(children)).orElseGet(() -> null);
+	public Collection<FileSystemItem> getAllChildren() {
+		return Optional.ofNullable(getAllChildren0()).map(children ->  Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
 
-	private Set<FileSystemItem> getAllChildren0() {
-		Set<FileSystemItem> allChildren = this.allChildren;
+	private Collection<FileSystemItem> getAllChildren0() {
+		Collection<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
 			allChildren = Synchronizer.execute(instanceId, () -> {
-				Set<FileSystemItem> allChildrenTemp = this.allChildren;
+				Collection<FileSystemItem> allChildrenTemp = this.allChildren;
 				if (allChildrenTemp == null) {
 					allChildrenTemp = this.allChildren = loadAllChildren();
 				}
@@ -382,15 +383,15 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return allChildren;
 	}
 
-	public Set<FileSystemItem> getChildren() {
-		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableSet(children)).orElseGet(() -> null);
+	public Collection<FileSystemItem> getChildren() {
+		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
 
-	private Set<FileSystemItem> getChildren0() {
-		Set<FileSystemItem> children = this.children;
+	private Collection<FileSystemItem> getChildren0() {
+		Collection<FileSystemItem> children = this.children;
 		if (children == null) {
 			children = Synchronizer.execute(instanceId, () -> {
-				Set<FileSystemItem> childrenTemp = this.children;
+				Collection<FileSystemItem> childrenTemp = this.children;
 				if (childrenTemp == null) {
 					childrenTemp = this.children = loadChildren();
 				}
@@ -537,7 +538,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
 	}
 
-	Set<FileSystemItem> loadAllChildren() {
+	Collection<FileSystemItem> loadAllChildren() {
 		if (isContainer()) {
 			if (isCompressed() || isArchive()) {
 				Predicate<IterableZipContainer.Entry> zipEntryPredicate = null;
@@ -553,7 +554,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try (IterableZipContainer zipInputStream = IterableZipContainer
 						.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
 					Set<String> folderRelPaths = new HashSet<>();
-					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+					Collection<FileSystemItem> allChildren = newCollection();
 					zipInputStream.findAllAndConvert(() -> allChildren, zipEntryPredicate, zEntry -> {
 						FileSystemItem fileSystemItem = FileSystemItem
 								.ofPath(parentContainer.getAbsolutePath() + "/" + zEntry.getName());
@@ -584,9 +585,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return allChildren;
 				}
 			} else if (isFolder()) {
-				Set<FileSystemItem> children = getChildren();
+				Collection<FileSystemItem> children = getChildren();
 				if (children != null) {
-					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+					Collection<FileSystemItem> allChildren = newCollection();
 					allChildren.addAll(children);
 					children.forEach(child -> {
 						Optional.ofNullable(child.getAllChildren())
@@ -599,7 +600,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return null;
 	}
 
-	Set<FileSystemItem> loadChildren() {
+	Collection<FileSystemItem> loadChildren() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		if (isContainer()) {
 			if (isCompressed()) {
@@ -633,14 +634,18 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return Optional.ofNullable(file.listFiles())
 							.map((childrenFiles) -> Arrays.stream(childrenFiles)
 									.map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath()))
-									.collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)))
-							.orElseGet(ConcurrentHashMap::newKeySet);
+									.collect(Collectors.toCollection(this::newCollection)))
+							.orElseGet(this::newCollection);
 				}
 			}
 		}
 		return null;
 	}
-
+	
+	private Collection<FileSystemItem> newCollection() {
+		return new ArrayList<>();
+	}
+	
 	public FileSystemItem refresh() {
 		return refresh(true);
 	}
@@ -724,14 +729,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 	}
 
-	private Set<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier,
+	private Collection<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier,
 			String itemToSearch) {
 		try (IterableZipContainer zipInputStream = zipInputStreamSupplier.get()) {
 			final String itemToSearchRegEx = itemToSearch.replace("/", "\\/") + "(.*?)\\/";
 			Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
 			boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
 			Set<String> folderRelPaths = new HashSet<>();
-			Set<FileSystemItem> children = ConcurrentHashMap.newKeySet();
+			Collection<FileSystemItem> children = this.newCollection();
 			zipInputStream.findAllAndConvert(() -> children, (zEntry) -> {
 				String nameToTest = zEntry.getName();
 				nameToTest += nameToTest.endsWith("/") ? "" : "/";
@@ -826,7 +831,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					temp = temp2;
 				}
 			}
-			Set<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
+			Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
 			if (!zipEntries.isEmpty()) {
 				IterableZipContainer.Entry zipEntry = Collections.max(
 					zipEntries,

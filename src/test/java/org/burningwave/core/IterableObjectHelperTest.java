@@ -52,6 +52,7 @@ public class IterableObjectHelperTest extends BaseTest {
 				return IterableObjectHelper.iterate(
 					IterationConfig.of(inputCollection)
 					.parallelIf(inputColl -> inputColl.size() > 2)
+					.withOutput(new ArrayList<>())
 					.withAction((number, outputCollectionSupplier) -> {
 						//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
 						if ((number % 2) == 0) {						
@@ -60,7 +61,7 @@ public class IterableObjectHelperTest extends BaseTest {
 							);
 						}
 					})
-					.collectTo(new ArrayList<>())
+					
 				);
 			}, false);
 //		}

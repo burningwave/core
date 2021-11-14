@@ -149,8 +149,16 @@ public interface IterableObjectHelper {
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter);
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
-
-	public <I, O> Collection<O> iterate(IterationConfig<I, O> config);
+	
+	public <I, O> Collection<O> iterate(
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, O> config
+	);
+	
+	public <I, K, O> Map<K, O> iterate(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, K, O> config
+	);
+	
+	public <I> void iterate(IterationConfig<I, ?> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
 
@@ -194,53 +202,55 @@ public interface IterableObjectHelper {
 	}
 
 
-	public static class IterationConfig<I, O> {
-		Collection<I> items;
-		BiConsumer<I, Consumer<Consumer<Collection<O>>>> action;
-		Collection<O> outputCollection;
-		Predicate<Collection<?>> predicateForParallelIteration;
-		Integer priority;
-
-		public IterationConfig(
-			Collection<I> items
-		) {
-			this.items = items;
+	public static interface IterationConfig<I, C extends IterationConfig<I, C>> {
+		
+		
+		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, C>> C of(Map<J, I> input) {
+			return (C)new IterationConfigImpl<Map.Entry<J, I>>(input.entrySet());
 		}
-
-		public static <I, O> IterationConfig<I, O> of(Collection<I> input) {
-			IterationConfig<I, O> config = new IterationConfig<>(input);
-			return config;
+		
+		public static <I, C extends IterationConfig<I, C>> C of(Collection<I> input) {
+			return (C)new IterationConfigImpl<I>(input);
 		}
-
-		public IterationConfig<I, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
-			if (outputCollection == null) {
-
+				
+		public C withAction(Consumer<I> action);
+		
+		public <O> WithOutputOfCollection<I, O> withOutput(Collection<O> output);
+		
+		public <K, O> WithOutputOfMap<I, K, O> withOutput(Map<K, O> output);
+		
+		public C parallelIf(Predicate<Collection<?>> predicate);
+		
+		public C withPriority(Integer priority);
+		
+		public static class WithOutputOfMap<I, K, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfMap<I, K, O>> {
+			
+			WithOutputOfMap(IterationConfigImpl<I> configuration) {
+				super(configuration);
 			}
-			this.action = action;
-			return this;
-		}
 
-		public IterationConfig<I, O> withAction(Consumer<I> action) {
-			this.action = (item, outputItemCollector) -> action.accept(item);
-			return this;
+			public WithOutputOfMap<I, K, O> withAction(BiConsumer<I, Consumer<Consumer<Map<K, O>>>> action) {
+				wrappedConfiguration.withAction(action);
+				return this;
+			}
+			
 		}
+		
+		public static class WithOutputOfCollection<I, O> extends IterationConfigImpl.WithOutput<I, WithOutputOfCollection<I, O>> {
+			
+			WithOutputOfCollection(IterationConfigImpl<I> configuration) {
+				super(configuration);
+			}
 
-		public IterationConfig<I, O> withPriority(Integer priority) {
-			this.priority = priority;
-			return this;
+			public WithOutputOfCollection<I, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
+				wrappedConfiguration.withAction(action);
+				return this;
+			}
+
 		}
-
-		public IterationConfig<I, O> parallelIf(Predicate<Collection<?>> predicate) {
-			this.predicateForParallelIteration = predicate;
-			return this;
-		}
-
-		public IterationConfig<I, O> collectTo(Collection<O> output) {
-			this.outputCollection = output;
-			return this;
-		}
-
+		
 	}
+
 
 	public static class ResolveConfig<T, K> {
 
