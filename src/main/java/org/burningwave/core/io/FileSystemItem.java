@@ -553,7 +553,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try (IterableZipContainer zipInputStream = IterableZipContainer
 						.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
 					Set<String> folderRelPaths = new HashSet<>();
-					Collection<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+					Collection<FileSystemItem> allChildren = newCollection();
 					zipInputStream.findAllAndConvert(() -> allChildren, zipEntryPredicate, zEntry -> {
 						FileSystemItem fileSystemItem = FileSystemItem
 								.ofPath(parentContainer.getAbsolutePath() + "/" + zEntry.getName());
@@ -586,7 +586,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			} else if (isFolder()) {
 				Collection<FileSystemItem> children = getChildren();
 				if (children != null) {
-					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+					Collection<FileSystemItem> allChildren = newCollection();
 					allChildren.addAll(children);
 					children.forEach(child -> {
 						Optional.ofNullable(child.getAllChildren())
@@ -633,14 +633,18 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return Optional.ofNullable(file.listFiles())
 							.map((childrenFiles) -> Arrays.stream(childrenFiles)
 									.map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath()))
-									.collect(Collectors.toCollection(ConcurrentHashMap::newKeySet)))
-							.orElseGet(ConcurrentHashMap::newKeySet);
+									.collect(Collectors.toCollection(this::newCollection)))
+							.orElseGet(this::newCollection);
 				}
 			}
 		}
 		return null;
 	}
-
+	
+	private Collection<FileSystemItem> newCollection() {
+		return new HashSet<>();
+	}
+	
 	public FileSystemItem refresh() {
 		return refresh(true);
 	}
@@ -724,14 +728,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 	}
 
-	private Set<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier,
+	private Collection<FileSystemItem> retrieveChildren(Supplier<IterableZipContainer> zipInputStreamSupplier,
 			String itemToSearch) {
 		try (IterableZipContainer zipInputStream = zipInputStreamSupplier.get()) {
 			final String itemToSearchRegEx = itemToSearch.replace("/", "\\/") + "(.*?)\\/";
 			Pattern itemToSearchRegExPattern = Pattern.compile(itemToSearchRegEx);
 			boolean isJModArchive = Streams.isJModArchive(zipInputStream.toByteBuffer());
 			Set<String> folderRelPaths = new HashSet<>();
-			Set<FileSystemItem> children = ConcurrentHashMap.newKeySet();
+			Collection<FileSystemItem> children = this.newCollection();
 			zipInputStream.findAllAndConvert(() -> children, (zEntry) -> {
 				String nameToTest = zEntry.getName();
 				nameToTest += nameToTest.endsWith("/") ? "" : "/";
