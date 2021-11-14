@@ -218,6 +218,34 @@ public interface IterableObjectHelper {
 			return (C)new IterationConfigImpl<I, I[]>(input);
 		}
 		
+		public static <I, C extends IterationConfig<Integer, int[], C>> C ofInts(int[] input) {
+			return (C)new IterationConfigImpl<Integer, int[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Long, long[], C>> C ofLongs(long[] input) {
+			return (C)new IterationConfigImpl<Long, long[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Float, float[], C>> C ofFloats(float[] input) {
+			return (C)new IterationConfigImpl<Float, float[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Double, double[], C>> C ofDoubles(double[] input) {
+			return (C)new IterationConfigImpl<Double, double[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofBooleans(boolean[] input) {
+			return (C)new IterationConfigImpl<Boolean, boolean[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofBytes(byte[] input) {
+			return (C)new IterationConfigImpl<Byte, byte[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Character, char[], C>> C ofChars(char[] input) {
+			return (C)new IterationConfigImpl<Character, char[]>(input);
+		}
+		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
 			return of(input != null ? input : new HashMap<>());
 		}

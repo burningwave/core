@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
@@ -744,8 +745,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					);
 				}
 			} else {
-				I[] itemArray = (I[])items;
-				final int splittedIteratorSize = itemArray.length / taskCountThatCanBeCreated;
+				int arrayLength = Array.getLength(items);
+				final int splittedIteratorSize = arrayLength / taskCountThatCanBeCreated;
 				for (
 					int currentIndex = 0, currentSplittedIteratorIndex = 0; 
 					currentIndex < taskCountThatCanBeCreated && exceptionWrapper.get() == null;
@@ -753,30 +754,53 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				) {
 					final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
 						splittedIteratorSize :
-						(itemArray.length - (splittedIteratorSize * currentIndex));
+						arrayLength - (splittedIteratorSize * currentIndex);
 					final int splittedIteratorIndex = currentSplittedIteratorIndex;
-					tasks.add(
-						BackgroundExecutor.createTask(
-							task -> {					
-								try {
-									int remainedItems = itemsCount;
-									for (int i = splittedIteratorIndex; exceptionWrapper.get() == null && remainedItems > 0; i++ ) {
-										action.accept(itemArray[i], outputItemsHandler);
-										--remainedItems;	
+					Class<?> componentType = items.getClass().getComponentType();
+					if (!componentType.isPrimitive()) {
+						I[] itemArray = (I[])items;
+						tasks.add(
+							BackgroundExecutor.createTask(
+								task -> {					
+									try {
+										int remainedItems = itemsCount;
+										for (int i = splittedIteratorIndex; exceptionWrapper.get() == null && remainedItems > 0; i++ ) {
+											action.accept(itemArray[i], outputItemsHandler);
+											--remainedItems;	
+										} 
+																		
+									} catch (IterableObjectHelper.TerminateIteration exc) {
+										exceptionWrapper.set(exc);
 									}
-								} catch (IterableObjectHelper.TerminateIteration exc) {
-									exceptionWrapper.set(exc);
-								}
-							},
-							priority
-						).submit()
-					);
+								},
+								priority
+							).submit()
+						);
+					} else {
+						Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);	
+						tasks.add(
+							BackgroundExecutor.createTask(
+								task -> {					
+									try {
+										int remainedItems = itemsCount;									
+										for (int i = splittedIteratorIndex; exceptionWrapper.get() == null && remainedItems > 0; i++ ) {
+											action.accept((I)itemRetriever.apply(i), outputItemsHandler);
+											--remainedItems;	
+										}																	
+									} catch (IterableObjectHelper.TerminateIteration exc) {
+										exceptionWrapper.set(exc);
+									}
+								},
+								priority
+							).submit()
+						);
+					}
 				}
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
 			return output;
 		} 
-		Consumer<Consumer<C>> outputItemCollectionHandler =
+		Consumer<Consumer<C>> outputItemsHandler =
 			output != null ?
 				(outputCollectionConsumer) -> {
 					outputCollectionConsumer.accept(output);
@@ -788,11 +812,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		try {
 			if (items instanceof Collection) {
 				for (I item : (Collection<I>)items) {
-					action.accept(item, outputItemCollectionHandler);
+					action.accept(item, outputItemsHandler);
+				}
+			} else if (!items.getClass().getComponentType().isPrimitive()) {
+				I[] itemArray = (I[])items;
+				for (I item : itemArray) {
+					action.accept(item, outputItemsHandler);
 				}
 			} else {
-				for (I item : (I[])items) {
-					action.accept(item, outputItemCollectionHandler);
+				Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);
+				int arrayLength = Array.getLength(items);
+				for (int i = 0; i < arrayLength; i++ ) {
+					action.accept((I)itemRetriever.apply(i), outputItemsHandler);
 				}
 			}
 		} catch (IterableObjectHelper.TerminateIteration t) {
@@ -806,12 +837,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return output;
 	}
-
 	
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items instanceof Collection ? ((Collection<?>)items).size() : ((I[])items).length);
+				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
 				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
 				return taskCount;
 			}

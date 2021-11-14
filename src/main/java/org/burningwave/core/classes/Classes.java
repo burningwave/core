@@ -288,6 +288,36 @@ public class Classes implements MembersRetriever {
 	public Class<?> getClassOrWrapper(Class<?> cls) {
 		return io.github.toolfactory.jvm.util.Classes.getClassOrWrapper(cls);
 	}
+	
+	public <I> Function<Integer, ?> buildArrayValueRetriever(I items) {
+		Class<?> componentType = items.getClass().getComponentType();
+		if (componentType.isPrimitive()) {
+			if (componentType == Integer.TYPE) {
+				int[] itemArray = (int[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Long.TYPE) {
+				long[] itemArray = (long[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Float.TYPE) {
+				float[] itemArray = (float[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Double.TYPE) {
+				double[] itemArray = (double[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Boolean.TYPE) {
+				boolean[] itemArray = (boolean[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Byte.TYPE) {
+				byte[] itemArray = (byte[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Character.TYPE) {
+				char[] itemArray = (char[])items;
+				return index -> itemArray[index];
+			}
+		}
+		I[] itemArray = (I[])items;
+		return index -> itemArray[index];
+	}
 
 	public static class Loaders implements Closeable {
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
