@@ -29,6 +29,7 @@
 package org.burningwave.core.iterable;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -150,11 +151,11 @@ public interface IterableObjectHelper {
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
 	
-	public <I, D, O> Collection<O> iterate(
+	public <I, D, O> Collection<O> iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> config
 	);
 	
-	public <I, D, K, O> Map<K, O> iterate(
+	public <I, D, K, O> Map<K, O> iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> config
 	);
 	
@@ -215,6 +216,18 @@ public interface IterableObjectHelper {
 		
 		public static <I, C extends IterationConfig<I, I[], C>> C of(I[] input) {
 			return (C)new IterationConfigImpl<I, I[]>(input);
+		}
+		
+		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
+			return of(input != null ? input : new HashMap<>());
+		}
+		
+		public static <I, C extends IterationConfig<I, Collection<I>, C>> C ofNullable(Collection<I> input) {
+			return of(input != null ? input : new ArrayList<>());
+		}
+		
+		public static <I, C extends IterationConfig<I, I[], C>> C ofNullable(I[] input) {
+			return of(input != null ? input : (I[])new Object[0]);
 		}
 				
 		public C withAction(Consumer<I> action);

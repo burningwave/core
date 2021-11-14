@@ -618,7 +618,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, D, K, O> Map<K, O> iterate(
+	public <I, D, K, O> Map<K, O> iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> configuration
 	) {
 		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
@@ -632,7 +632,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, D, O> Collection<O> iterate(
+	public <I, D, O> Collection<O> iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> configuration
 	) {
 		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
