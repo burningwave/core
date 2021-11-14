@@ -36,12 +36,17 @@ import java.util.function.Predicate;
  */
 @SuppressWarnings("unchecked")
 class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<I, D, IterationConfigImpl<I, D>>{
+	static final Object NO_ITEMS;
 	Object items;
 	Object action;
 	Object output;
 	Predicate<D> predicateForParallelIteration;
 	Integer priority;
-
+	
+	static {
+		NO_ITEMS = new Object();
+	}
+	
 	public IterationConfigImpl(
 		Object items
 	) {

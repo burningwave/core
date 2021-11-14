@@ -666,6 +666,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		BiConsumer<I, Consumer<Consumer<C>>> action,
 		Integer priority
 	) {
+		if (items == IterationConfigImpl.NO_ITEMS) {
+			return output;
+		}
 		Thread currentThread = Thread.currentThread();
 		int initialThreadPriority = currentThread.getPriority();
 		if (priority == null) {
