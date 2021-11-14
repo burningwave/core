@@ -80,7 +80,30 @@ public class IterableObjectHelperTest extends BaseTest {
 //			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 //		);
 	}
-
+	
+	@Test
+	public void iterateParallelTestTwo() {
+		int[] inputCollection = new int[100000000];
+		for (int i = 0; i < 100000000; i++) {
+			inputCollection[i] = i;
+		}
+		testNotEmpty(() -> {
+			return IterableObjectHelper.iterateAndGet(
+				IterationConfig.ofInts(inputCollection)
+				.parallelIf(inputColl -> inputColl.length > 2)
+				.withOutput(new ArrayList<>())
+				.withAction((number, outputCollectionSupplier) -> {
+					//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
+					if ((number % 2) == 0) {						
+						outputCollectionSupplier.accept(outputCollection -> 
+							outputCollection.add(number)
+						);
+					}
+				})
+				
+			);
+		}, false);
+	}
 	
 	@Test
 	public void resolveTestThree() {
