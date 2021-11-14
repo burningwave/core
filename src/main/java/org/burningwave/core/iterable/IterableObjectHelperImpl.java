@@ -800,7 +800,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					}
 				}
 			}
-			tasks.stream().forEach(task -> task.waitForFinish());
+			for (QueuedTasksExecutor.Task task : tasks) {
+				task.waitForFinish();
+			}
 			return output;
 		} 
 		Consumer<Consumer<C>> outputItemsHandler =
