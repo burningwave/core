@@ -68,7 +68,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
@@ -324,7 +323,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				}
 			};
 
-		final Collection<FileSystemItem> result = IterableObjectHelper.iterate(
+		final Collection<FileSystemItem> result = IterableObjectHelper.iterateAndGet(
 			IterationConfig.of(children)
 			.parallelIf(
 				filter.minimumCollectionSizeForParallelIterationPredicate != null ?
@@ -637,11 +636,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			} else {
 				File file = new File(conventionedAbsolutePath);
 				if (file.exists()) {
-					return Optional.ofNullable(file.listFiles())
-							.map((childrenFiles) -> Arrays.stream(childrenFiles)
-									.map(fl -> FileSystemItem.ofPath(fl.getAbsolutePath()))
-									.collect(Collectors.toCollection(newCollectionSupplier)))
-							.orElseGet(newCollectionSupplier);
+					return IterableObjectHelper.iterateAndGet(
+						IterationConfig.ofNullable(file.listFiles())
+						.withOutput((Collection<FileSystemItem>)newCollectionSupplier.get())
+						.withAction((fl, outputCollectionHandler) -> {
+							outputCollectionHandler.accept(
+								(outputCollection) -> {
+									outputCollection.add(FileSystemItem.ofPath(fl.getAbsolutePath()));
+								}
+							);
+						})
+					);
 				}
 			}
 		}

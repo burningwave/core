@@ -150,7 +150,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
-						IterableObjectHelper.iterate(
+						IterableObjectHelper.iterateAndGet(
 							IterationConfig.of(pathsToBeScanned)
 							.withOutput(new ConcurrentHashMap<FileSystemItem, Collection<FileSystemItem>>())
 							.withAction(
