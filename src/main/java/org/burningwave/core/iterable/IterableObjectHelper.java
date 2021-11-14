@@ -29,7 +29,6 @@
 package org.burningwave.core.iterable;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -207,7 +206,7 @@ public interface IterableObjectHelper {
 		
 		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
-			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input.entrySet());
+			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : null);
 		}
 		
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C of(Collection<I> input) {
@@ -218,16 +217,72 @@ public interface IterableObjectHelper {
 			return (C)new IterationConfigImpl<I, I[]>(input);
 		}
 		
+		public static <I, C extends IterationConfig<Integer, int[], C>> C ofInts(int[] input) {
+			return (C)new IterationConfigImpl<Integer, int[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Long, long[], C>> C ofLongs(long[] input) {
+			return (C)new IterationConfigImpl<Long, long[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Float, float[], C>> C ofFloats(float[] input) {
+			return (C)new IterationConfigImpl<Float, float[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Double, double[], C>> C ofDoubles(double[] input) {
+			return (C)new IterationConfigImpl<Double, double[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofBooleans(boolean[] input) {
+			return (C)new IterationConfigImpl<Boolean, boolean[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofBytes(byte[] input) {
+			return (C)new IterationConfigImpl<Byte, byte[]>(input);
+		}
+		
+		public static <I, C extends IterationConfig<Character, char[], C>> C ofChars(char[] input) {
+			return (C)new IterationConfigImpl<Character, char[]>(input);
+		}
+		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
-			return of(input != null ? input : new HashMap<>());
+			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : IterationConfigImpl.NO_ITEMS);
 		}
 		
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C ofNullable(Collection<I> input) {
-			return of(input != null ? input : new ArrayList<>());
+			return (C)new IterationConfigImpl<I, Collection<I>>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
 		
 		public static <I, C extends IterationConfig<I, I[], C>> C ofNullable(I[] input) {
-			return of(input != null ? input : (I[])new Object[0]);
+			return (C)new IterationConfigImpl<I, I[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Integer, int[], C>> C ofNullableInts(int[] input) {
+			return (C)new IterationConfigImpl<Integer, int[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Long, long[], C>> C ofNullableLongs(long[] input) {
+			return (C)new IterationConfigImpl<Long, long[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Float, float[], C>> C ofNullableFloats(float[] input) {
+			return (C)new IterationConfigImpl<Float, float[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Double, double[], C>> C ofNullableDoubles(double[] input) {
+			return (C)new IterationConfigImpl<Double, double[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofNullableBooleans(boolean[] input) {
+			return (C)new IterationConfigImpl<Boolean, boolean[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofNullableBytes(byte[] input) {
+			return (C)new IterationConfigImpl<Byte, byte[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+		}
+		
+		public static <I, C extends IterationConfig<Character, char[], C>> C ofNullableChars(char[] input) {
+			return (C)new IterationConfigImpl<Character, char[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
 				
 		public C withAction(Consumer<I> action);
