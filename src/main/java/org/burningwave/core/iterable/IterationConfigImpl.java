@@ -51,7 +51,7 @@ class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<
 		Object items
 	) {
 		if (items == null) {
-			throw new IllegalArgumentException("Input collection could not be null");
+			throw new IllegalArgumentException("Input collection or array could not be null");
 		}
 		this.items = items;
 	}

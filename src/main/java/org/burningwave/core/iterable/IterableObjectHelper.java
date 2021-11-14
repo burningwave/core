@@ -206,7 +206,7 @@ public interface IterableObjectHelper {
 		
 		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
-			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input.entrySet());
+			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : null);
 		}
 		
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C of(Collection<I> input) {
