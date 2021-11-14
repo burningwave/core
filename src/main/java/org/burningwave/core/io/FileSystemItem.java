@@ -553,7 +553,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try (IterableZipContainer zipInputStream = IterableZipContainer
 						.create(parentContainer.getAbsolutePath(), parentContainer.toByteBuffer())) {
 					Set<String> folderRelPaths = new HashSet<>();
-					Set<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
+					Collection<FileSystemItem> allChildren = ConcurrentHashMap.newKeySet();
 					zipInputStream.findAllAndConvert(() -> allChildren, zipEntryPredicate, zEntry -> {
 						FileSystemItem fileSystemItem = FileSystemItem
 								.ofPath(parentContainer.getAbsolutePath() + "/" + zEntry.getName());
@@ -826,7 +826,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					temp = temp2;
 				}
 			}
-			Set<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
+			Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
 			if (!zipEntries.isEmpty()) {
 				IterableZipContainer.Entry zipEntry = Collections.max(
 					zipEntries,

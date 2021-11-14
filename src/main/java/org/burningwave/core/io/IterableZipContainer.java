@@ -37,8 +37,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -115,7 +115,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		return null;
 	}
 
-	public default <T> Set<T> findAllAndConvert(
+	public default <T> Collection<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
@@ -123,13 +123,13 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		return findAllAndConvert(HashSet::new, zipEntryPredicate, tSupplier, loadZipEntryData);
 	}
 
-	public default <T> Set<T> findAllAndConvert(
-		Supplier<Set<T>> supplier,
+	public default <T> Collection<T> findAllAndConvert(
+		Supplier<Collection<T>> supplier,
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		Set<T> collection = supplier.get();
+		Collection<T> collection = supplier.get();
 		Entry zipEntry = getCurrentZipEntry();
 		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 			if (loadZipEntryData.test(zipEntry)) {
@@ -200,7 +200,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 	}
 
 	public default <T> T findOneAndConvert(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Function<IterableZipContainer.Entry, T> tSupplier, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
-		Set<T> entriesFound = findAllAndConvert(
+		Collection<T> entriesFound = findAllAndConvert(
 			zipEntryPredicate,
 			tSupplier,
 			loadZipEntryData
@@ -227,12 +227,12 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		);
 	}
 
-	public default Set<IterableZipContainer.Entry> findAll(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public default Collection<IterableZipContainer.Entry> findAll(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findAll(HashSet::new, zipEntryPredicate, loadZipEntryData);
 	}
 
-	public default Set<IterableZipContainer.Entry> findAll(
-		Supplier<Set<IterableZipContainer.Entry>> setSupplier,
+	public default Collection<IterableZipContainer.Entry> findAll(
+		Supplier<Collection<IterableZipContainer.Entry>> setSupplier,
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return findAllAndConvert(
