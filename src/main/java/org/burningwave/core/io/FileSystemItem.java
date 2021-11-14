@@ -49,6 +49,7 @@ import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -642,7 +643,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 	
 	private Collection<FileSystemItem> newCollection() {
-		return new HashSet<>();
+		return new ArrayList<>();
 	}
 	
 	public FileSystemItem refresh() {
