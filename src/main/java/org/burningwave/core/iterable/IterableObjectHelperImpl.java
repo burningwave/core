@@ -614,36 +614,74 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return object != null && value != null && object.equals(value);
 	}
-
-
+	
+	@Override
+	public <I, K, O> Map<K, O> iterate(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, K, O> configuration
+	) {
+		IterationConfigAbst<I> config = configuration.getWrappedConfiguration();
+		return iterate(
+			config.items,
+			config.predicateForParallelIteration,
+			(Map<K, O>)config.output,
+			(BiConsumer<I, Consumer<Consumer<Map<K, O>>>>)config.action,
+			config.priority
+		);
+	}
+	
 	@Override
 	public <I, O> Collection<O> iterate(
-		IterationConfig<I, O> config
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, O> configuration
 	) {
-		Predicate<Collection<?>> predicate = config.predicateForParallelIteration;
-		Collection<I> items = config.items;
-		Collection<O> outputCollection = config.outputCollection;
-		BiConsumer<I, Consumer<Consumer<Collection<O>>>> action = config.action;
-		Integer priority = config.priority;
+		IterationConfigAbst<I> config = configuration.getWrappedConfiguration();
+		return iterate(
+			config.items,
+			config.predicateForParallelIteration,
+			(Collection<O>)config.output,
+			(BiConsumer<I, Consumer<Consumer<Collection<O>>>>)config.action,
+			config.priority
+		);
+		
+	}
+	
+	@Override
+	public <I> void iterate(IterationConfig<I, ?> configuration) {
+		IterationConfigAbst<I> config = (IterationConfigAbst<I>)configuration;
+		iterate(
+			config.items,
+			config.predicateForParallelIteration,
+			null,
+			(BiConsumer<I, Consumer<Consumer<Collection<?>>>>)config.action,
+			config.priority
+		);
+	}
+	
+	private <I, C> C iterate(
+		Collection<I> items,
+		Predicate<Collection<?>> predicateForParallelIteration,
+		C output,
+		BiConsumer<I, Consumer<Consumer<C>>> action,
+		Integer priority
+	) {
 		Thread currentThread = Thread.currentThread();
 		int initialThreadPriority = currentThread.getPriority();
 		if (priority == null) {
 			priority = initialThreadPriority;
 		}
-		if (predicate == null) {
-			predicate = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
+		if (predicateForParallelIteration == null) {
+			predicateForParallelIteration = this.defaultMinimumCollectionSizeForParallelIterationPredicate;
 		}
-		int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicate);
+		int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicateForParallelIteration);
 		if (taskCountThatCanBeCreated > 1) {
-			Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
-				outputCollection != null ?
-					isConcurrent(outputCollection) ?
-						(outputCollectionConsumer) -> {
-							outputCollectionConsumer.accept(outputCollection);
+			Consumer<Consumer<C>> outputItemsHandler =
+				output != null ?
+					isConcurrent(output) ?
+						(outputHandler) -> {
+							outputHandler.accept(output);
 						} :
-						(outputCollectionConsumer) -> {
-							synchronized (outputCollection) {
-								outputCollectionConsumer.accept(outputCollection);
+						(outputHandler) -> {
+							synchronized (output) {
+								outputHandler.accept(output);
 							}
 						}
 					: null;
@@ -667,7 +705,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								try {
 									int remainedItems = itemsCount;
 									while (exceptionWrapper.get() == null && remainedItems > 0) {
-										action.accept(itemIterator.next(), outputItemCollectionHandler);
+										action.accept(itemIterator.next(), outputItemsHandler);
 										--remainedItems;							
 									}
 								} catch (IterableObjectHelper.TerminateIteration exc) {
@@ -692,7 +730,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								exceptionWrapper.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 								break;
 							}
-							action.accept(item, outputItemCollectionHandler);
+							action.accept(item, outputItemsHandler);
 						}
 					} catch (IterableObjectHelper.TerminateIteration exc) {
 						exceptionWrapper.set(exc);
@@ -705,12 +743,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				}
 			}
 			tasks.stream().forEach(task -> task.waitForFinish());
-			return outputCollection;
+			return output;
 		} 
-		Consumer<Consumer<Collection<O>>> outputItemCollectionHandler =
-			outputCollection != null ?
+		Consumer<Consumer<C>> outputItemCollectionHandler =
+			output != null ?
 				(outputCollectionConsumer) -> {
-					outputCollectionConsumer.accept(outputCollection);
+					outputCollectionConsumer.accept(output);
 				}
 			: null;
 		if (initialThreadPriority != priority) {
@@ -729,7 +767,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				currentThread.setPriority(initialThreadPriority);
 			}
 		}
-		return outputCollection;
+		return output;
 	}
 
 	
@@ -757,7 +795,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private boolean isConcurrent(Collection<?> coll) {
+	private boolean isConcurrent(Object coll) {
 		try {
 			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
 				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
@@ -813,5 +851,5 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		private static final long serialVersionUID = -8096435103182655041L;
 
 	}
-
+	
 }
