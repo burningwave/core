@@ -148,27 +148,31 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			C context = searchConfig.isInitialized() ? searchConfig.getSearchContext() : searchConfig.init(this);
 			context.executeSearch(() -> {
 				Collection<FileSystemItem> pathsToBeScanned = searchConfig.getPathsToBeScanned();
-				Map<FileSystemItem, Collection<FileSystemItem>> classFilesForPath = new ConcurrentHashMap<>();
-				IterableObjectHelper.iterate(
-					IterationConfig.of(pathsToBeScanned).withAction(
-						currentScannedPath -> {
-							if (!currentScannedPath.isContainer()) {
-								throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
-							}
-							classFilesForPath.put(
-								currentScannedPath,
-								scanAndAddToPathScannerClassLoader(context, currentScannedPath)
-							);
-						}
-					).parallelIf(
-						searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
-					).withPriority(
-						searchConfig.priority
-					)
-				);
+
 				IterableObjectHelper.iterate(
 					IterationConfig.of(
-						classFilesForPath.entrySet()
+						IterableObjectHelper.iterate(
+							IterationConfig.of(pathsToBeScanned)
+							.withOutput(new ConcurrentHashMap<FileSystemItem, Collection<FileSystemItem>>())
+							.withAction(
+								(currentScannedPath, outputHandler) -> {
+									if (!currentScannedPath.isContainer()) {
+										throw new IllegalArgumentException(Strings.compile("{} is not a folder or archive", currentScannedPath.getAbsolutePath()));
+									}
+									outputHandler.accept(output -> {
+										output.put(
+											currentScannedPath,
+											scanAndAddToPathScannerClassLoader(context, currentScannedPath)
+										);
+									});
+									
+								}
+							).parallelIf(
+								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate()
+							).withPriority(
+								searchConfig.priority
+							)
+						)
 					).withAction(
 						currentScannedPath -> {
 							testClassCriteriaAndAddItemsToContext(context, currentScannedPath);

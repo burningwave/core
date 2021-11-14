@@ -322,11 +322,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			};
 
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterate(
-			new IterationConfig<FileSystemItem, FileSystemItem>(children)
-			.withAction(action)
+			IterationConfig.of(children)
 			.parallelIf(filter.minimumCollectionSizeForParallelIterationPredicate)
-			.collectTo(outputCollectionSupplier.get())
 			.withPriority(filter.priority)
+			.withOutput(outputCollectionSupplier.get())
+			.withAction(action)
 		);
 
 		if (!iteratedFISWithErrors.isEmpty()) {
