@@ -81,9 +81,6 @@ class IterationConfigImpl<I, IC> implements IterableObjectHelper.IterationConfig
 	}
 
 	IterationConfigImpl<I, IC> setOutput(Object output) {
-		if (this.output != null) {
-			throw new IllegalArgumentException("Could not set output twice");
-		}
 		this.output = output;
 		return this;
 	}
