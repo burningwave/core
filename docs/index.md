@@ -28,6 +28,7 @@ And now we will see:
 * [retrieving classes of runtime class paths or of other paths through the ClassHunter](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [finding where a class is loaded from](#Finding-where-a-class-is-loaded-from)
 * [performing tasks in parallel with different priorities](#Performing-tasks-in-parallel-with-different-priorities)
+* [Iterating collections and arrays in parallel](#Iterating-collections-and-arrays-in-parallel)
 * [reaching a resource of the file system](#Reaching-a-resource-of-the-file-system)
 * [resolving, collecting or retrieving paths](#Resolving-collecting-or-retrieving-paths)
 * [retrieving placeholdered items from map and properties file](#Retrieving-placeholdered-items-from-map-and-properties-file)
@@ -47,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.20.1</version>
+    <version>12.21.0</version>
 </dependency>
 ```
 
@@ -62,7 +63,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.20.1</version>
+    <version>12.21.0</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
@@ -337,7 +338,7 @@ public class Finder {
 }
 ```
 
-<br>
+<br/>
 
 # <a name="Performing-tasks-in-parallel-with-different-priorities"></a>Performing tasks in parallel with different priorities
 By using the **BackgroundExecutor** component you can launch different functional interfaces in parallel **by setting the priority of the thread they will be assigned to**. There is also the option to wait for them start or finish.
@@ -393,6 +394,69 @@ public class TaskLauncher implements ManagedLogger {
         new TaskLauncher().launch();
     }
     
+}
+```
+
+<br/>
+
+# <a name="Iterating-collections-and-arrays-in-parallel"></a>Iterating collections and arrays in parallel
+Through the underlying configurable [**BackgroundExecutor**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** is able to iterate a collection or an array in parallel and execute an action on each iterated item:
+```java
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
+
+public class CollectionAndArrayIterator {
+
+	public static void execute() {
+		List<String> output = IterableObjectHelper.iterateAndGet(
+			IterationConfig.of(buildCollection())
+			//Enabling parallel iteration when the input collection size is greater than 2
+			.parallelIf(inputColl -> inputColl.size() > 2)
+			//Setting up the output collection
+			.withOutput(new ArrayList<String>())
+			.withAction((number, outputCollectionSupplier) -> {
+				if ((number % 2) == 0) {						
+					outputCollectionSupplier.accept(outputCollection ->
+						//Converting and adding item to output collection
+						outputCollection.add(number.toString())
+					);
+				}
+			})	
+		);
+		
+		IterableObjectHelper.iterate(
+			IterationConfig.of(output)
+			//Disabling parallel iteration
+			.parallelIf(inputColl -> false)
+			.withAction((number) -> {
+				ManagedLoggersRepository.logInfo(CollectionAndArrayIterator.class::getName, "Iterated number: {}", number);
+			})	
+		);
+		
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+			CollectionAndArrayIterator.class::getName,
+			"Output collection size {}", output.size()
+		);
+	}
+
+	private static Collection<Integer> buildCollection() {
+		Collection<Integer> inputCollection = new ArrayList<>();
+		for (int i = 0; i < 1000000; i++) {
+			inputCollection.add(i);
+		}
+		return inputCollection;
+	}
+	
+	public static void main(String[] args) {
+		execute();
+	}
+	
 }
 ```
 
