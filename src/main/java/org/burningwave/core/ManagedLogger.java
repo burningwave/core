@@ -221,8 +221,8 @@ public interface ManagedLogger {
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
 			String instanceId;
-			Properties config;
-			Abst(Properties config) {
+			Map<Object, Object> config;
+			Abst(Map<Object, Object> config) {
 				this.config = config;
 				instanceId = this.toString();
 				initSpecificElements(config);
@@ -235,11 +235,11 @@ public interface ManagedLogger {
 				}
 			}
 
-			abstract void initSpecificElements(Properties properties);
+			abstract void initSpecificElements(Map<Object, Object> properties);
 
 			abstract void resetSpecificElements();
 
-			boolean getEnabledLoggingFlag(Properties properties) {
+			boolean getEnabledLoggingFlag(Map<Object, Object> properties) {
 				return Objects.toBoolean(
 					IterableObjectHelper.resolveStringValue(
 						ResolveConfig.forNamedKey(Configuration.Key.ENABLED_FLAG)
@@ -265,7 +265,7 @@ public interface ManagedLogger {
 				}
 			}
 
-			void removeLoggingLevels(Properties properties) {
+			void removeLoggingLevels(Map<Object, Object> properties) {
 				removeLoggingLevels(properties, Repository.Configuration.Key.TRACE_LOGGING_DISABLED_FOR, LoggingLevel.TRACE);
 				removeLoggingLevels(properties, Repository.Configuration.Key.DEBUG_LOGGING_DISABLED_FOR, LoggingLevel.DEBUG);
 				removeLoggingLevels(properties, Repository.Configuration.Key.INFO_LOGGING_DISABLED_FOR, LoggingLevel.INFO);
@@ -276,8 +276,8 @@ public interface ManagedLogger {
 				);
 			}
 
-			protected void removeLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
-				String loggerDisabledFor = properties.getProperty(configKey);
+			protected void removeLoggingLevels(Map<Object, Object> properties, String configKey, LoggingLevel... loggingLevels) {
+				String loggerDisabledFor = (String)properties.get(configKey);
 				if (loggerDisabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
 						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(IterableObjectHelper.getDefaultValuesSeparator()));

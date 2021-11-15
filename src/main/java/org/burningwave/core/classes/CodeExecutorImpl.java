@@ -34,7 +34,9 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -77,20 +79,24 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config) {
-		java.util.Properties properties = config.getProperties();
+		Map<Object, Object> properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
 				properties = this.config;
 			} else {
 				Properties tempProperties = new Properties();
 				if (config.isAbsoluteFilePath()) {
-					Executor.run(() ->
-						tempProperties.load(FileSystemItem.ofPath(config.getFilePath()).toInputStream())
-					);
+					Executor.run(() -> {
+						try (InputStream inputStream = FileSystemItem.ofPath(config.getFilePath()).toInputStream()) {
+							tempProperties.load(inputStream);
+						}
+					});
 				} else {
-					Executor.run(() ->
-						tempProperties.load(pathHelper.getResourceAsStream(config.getFilePath()))
-					);
+					Executor.run(() -> {
+						try (InputStream inputStream = pathHelper.getResourceAsStream(config.getFilePath())) {
+							tempProperties.load(inputStream);
+						}
+					});
 				}
 				properties = tempProperties;
 			}
@@ -170,7 +176,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		);
 	}
 
-	private String retrieveValue(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
+	private String retrieveValue(ExecuteConfig.ForProperties config, Map<Object, Object> properties, String... suffixes) {
 		for (String suffix : suffixes) {
 			String value = IterableObjectHelper.resolveStringValue(
 				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)

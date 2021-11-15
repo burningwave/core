@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.burningwave.core.ManagedLogger.Repository;
@@ -42,13 +41,13 @@ import org.burningwave.core.ManagedLogger.Repository;
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
 
-	public SimpleManagedLoggerRepository(Properties properties) {
+	public SimpleManagedLoggerRepository(Map<Object, Object> properties) {
 		super(properties);
 	}
 
 
 	@Override
-	void initSpecificElements(Properties properties) {
+	void initSpecificElements(Map<Object, Object> properties) {
 		loggers = new HashMap<>();
 	}
 

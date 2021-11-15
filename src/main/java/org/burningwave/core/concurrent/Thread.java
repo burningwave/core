@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -356,7 +355,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		Supplier (
 			String name,
-			Properties config
+			Map<Object, Object> config
 		) {	
 			this.addForwardPoolableSleepingThreadFunction = this::addForwardPoolableSleepingThread;
 			this.addReversePoolableSleepingThreadFunction = this::addReversePoolableSleepingThread;
@@ -440,7 +439,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		public static Supplier create(
 			String name,
-			java.util.Properties config,
+			Map<Object, Object> config,
 			boolean undestroyable
 		) {
 			if (undestroyable) {

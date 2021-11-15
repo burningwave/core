@@ -34,7 +34,6 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -43,12 +42,12 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	private Map<String, Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable>> loggers;
 
 
-	public SLF4JManagedLoggerRepository(Properties properties) {
+	public SLF4JManagedLoggerRepository(Map<Object, Object> properties) {
 		super(properties);
 	}
 
 	@Override
-	void initSpecificElements(Properties properties) {
+	void initSpecificElements(Map<Object, Object> properties) {
 		loggers = new HashMap<>();
 	}
 

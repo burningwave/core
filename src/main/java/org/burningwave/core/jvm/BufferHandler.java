@@ -83,11 +83,11 @@ public class BufferHandler implements Component {
 	Function<Integer, ByteBuffer> defaultByteBufferAllocator;
     final static float reallocationFactor = 1.1f;
 
-	public BufferHandler(java.util.Properties config) {
+	public BufferHandler(Map<Object, Object> config) {
 		init(config);
 	}
 
-	void init(java.util.Properties config) {
+	void init(Map<Object, Object> config) {
 		setDefaultByteBufferSize(config);
 		setDefaultByteBufferAllocationMode(config);
 		if (config instanceof Properties) {
@@ -106,7 +106,7 @@ public class BufferHandler implements Component {
 		}
 	}
 
-	private void setDefaultByteBufferSize(java.util.Properties config) {
+	private void setDefaultByteBufferSize(Map<Object, Object> config) {
 		String defaultBufferSize = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
 			.on(config)
@@ -128,7 +128,7 @@ public class BufferHandler implements Component {
 		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
 	}
 
-	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
+	private void setDefaultByteBufferAllocationMode(Map<Object, Object> config) {
 		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
 			.on(config)
@@ -161,7 +161,7 @@ public class BufferHandler implements Component {
 		return defaultBufferSize;
 	}
 
-	public static BufferHandler create(java.util.Properties config) {
+	public static BufferHandler create(Map<Object, Object> config) {
 		return new BufferHandler(config);
 	}
 

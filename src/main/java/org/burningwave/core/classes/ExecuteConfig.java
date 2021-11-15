@@ -128,7 +128,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 
 
 	public static class ForProperties extends ExecuteConfig<ExecuteConfig.ForProperties> {
-		private Properties properties;
+		private Map<Object, Object> properties;
 		private String propertyName;
 		private String filePath;
 		private boolean isAbsoluteFilePath;
@@ -172,7 +172,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			return this;
 		}
 
-		Properties getProperties() {
+		Map<Object, Object> getProperties() {
 			return properties;
 		}
 
