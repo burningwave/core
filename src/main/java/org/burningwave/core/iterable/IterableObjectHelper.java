@@ -150,15 +150,15 @@ public interface IterableObjectHelper {
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
 	
-	public <I, D, O> Collection<O> iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> config
+	public <I, IC, O, OC> OC iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
 	);
 	
-	public <I, D, K, O> Map<K, O> iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> config
+	public <I, IC, K, O, OM> OM iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
 	);
 	
-	public <I, D> void iterate(IterationConfig<I, D, ?> config);
+	public <I, IC> void iterate(IterationConfig<I, IC, ?> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
 
@@ -202,7 +202,7 @@ public interface IterableObjectHelper {
 	}
 
 
-	public static interface IterationConfig<I, D, C extends IterationConfig<I, D, C>> {
+	public static interface IterationConfig<I, IC, C extends IterationConfig<I, IC, C>> {
 		
 		
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
@@ -287,34 +287,34 @@ public interface IterableObjectHelper {
 				
 		public C withAction(Consumer<I> action);
 		
-		public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output);
+		public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output);
 		
-		public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output);
+		public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output);
 		
-		public C parallelIf(Predicate<D> predicate);
+		public C parallelIf(Predicate<IC> predicate);
 		
 		public C withPriority(Integer priority);
 		
-		public static class WithOutputOfMap<I, D, K, O> extends IterationConfigImpl.WithOutput<I, D, WithOutputOfMap<I, D, K, O>> {
+		public static class WithOutputOfMap<I, IC, K, O, OM> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfMap<I, IC, K, O, OM>> {
 			
-			WithOutputOfMap(IterationConfigImpl<I, D> configuration) {
+			WithOutputOfMap(IterationConfigImpl<I, IC> configuration) {
 				super(configuration);
 			}
 
-			public WithOutputOfMap<I, D, K, O> withAction(BiConsumer<I, Consumer<Consumer<Map<K, O>>>> action) {
+			public WithOutputOfMap<I, IC, K, O, OM> withAction(BiConsumer<I, Consumer<Consumer<OM>>> action) {
 				wrappedConfiguration.withAction(action);
 				return this;
 			}
 			
 		}
 		
-		public static class WithOutputOfCollection<I, D, O> extends IterationConfigImpl.WithOutput<I, D, WithOutputOfCollection<I, D, O>> {
+		public static class WithOutputOfCollection<I, IC, O, OC> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfCollection<I, IC, O, OC>> {
 			
-			WithOutputOfCollection(IterationConfigImpl<I, D> configuration) {
+			WithOutputOfCollection(IterationConfigImpl<I, IC> configuration) {
 				super(configuration);
 			}
 
-			public WithOutputOfCollection<I, D, O> withAction(BiConsumer<I, Consumer<Consumer<Collection<O>>>> action) {
+			public WithOutputOfCollection<I, IC, O, OC> withAction(BiConsumer<I, Consumer<Consumer<OC>>> action) {
 				wrappedConfiguration.withAction(action);
 				return this;
 			}

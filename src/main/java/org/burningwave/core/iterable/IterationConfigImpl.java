@@ -35,12 +35,12 @@ import java.util.function.Predicate;
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @SuppressWarnings("unchecked")
-class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<I, D, IterationConfigImpl<I, D>>{
+class IterationConfigImpl<I, IC> implements IterableObjectHelper.IterationConfig<I, IC, IterationConfigImpl<I, IC>>{
 	static final Object NO_ITEMS;
 	Object items;
 	Object action;
 	Object output;
-	Predicate<D> predicateForParallelIteration;
+	Predicate<IC> predicateForParallelIteration;
 	Integer priority;
 	
 	static {
@@ -56,31 +56,31 @@ class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<
 		this.items = items;
 	}
 
-	public <O> IterationConfigImpl<I, D> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
+	public <O> IterationConfigImpl<I, IC> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
 		this.action = action;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I, D> withAction(Consumer<I> action) {
+	public IterationConfigImpl<I, IC> withAction(Consumer<I> action) {
 		BiConsumer<I, Consumer<Consumer<?>>> newAction = (item, outputItemCollector) -> action.accept(item);
 		this.action = newAction;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I, D> withPriority(Integer priority) {
+	public IterationConfigImpl<I, IC> withPriority(Integer priority) {
 		this.priority = priority;
 		return this;
 	}
 
 	@Override
-	public IterationConfigImpl<I, D> parallelIf(Predicate<D> predicate) {
+	public IterationConfigImpl<I, IC> parallelIf(Predicate<IC> predicate) {
 		this.predicateForParallelIteration = predicate;
 		return this;
 	}
 
-	IterationConfigImpl<I, D> setOutput(Object output) {
+	IterationConfigImpl<I, IC> setOutput(Object output) {
 		if (this.output != null) {
 			throw new IllegalArgumentException("Could not set output twice");
 		}
@@ -89,53 +89,53 @@ class IterationConfigImpl<I, D> implements IterableObjectHelper.IterationConfig<
 	}
 	
 	@Override
-	public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output) {
+	public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output) {
 		return new WithOutputOfCollection<>(setOutput(output));
 	}
 
 	@Override
-	public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output) {
+	public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output) {
 		return new WithOutputOfMap<>(setOutput(output));
 	}
 
-	static abstract class WithOutput<I, D, W extends WithOutput<I, D, W>> implements IterableObjectHelper.IterationConfig<I, D, W> {
-		IterationConfigImpl<I, D> wrappedConfiguration;
+	static abstract class WithOutput<I, IC, CWO extends WithOutput<I, IC, CWO>> implements IterableObjectHelper.IterationConfig<I, IC, CWO> {
+		IterationConfigImpl<I, IC> wrappedConfiguration;
 
-		WithOutput(IterationConfigImpl<I, D> configuration) {
+		WithOutput(IterationConfigImpl<I, IC> configuration) {
 			this.wrappedConfiguration = configuration;
 		}
 
 		@Override
-		public W withAction(Consumer<I> action) {
+		public CWO withAction(Consumer<I> action) {
 			wrappedConfiguration.withAction(action);
-			return (W)this;
+			return (CWO)this;
 		}
 
 		@Override
-		public <O> WithOutputOfCollection<I, D, O> withOutput(Collection<O> output) {
+		public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output) {
 			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfCollection<>(wrappedConfiguration);
 		}
 
 		@Override
-		public <K, O> WithOutputOfMap<I, D, K, O> withOutput(Map<K, O> output) {
+		public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output) {
 			wrappedConfiguration.setOutput(output);
 			return new WithOutputOfMap<>(wrappedConfiguration);
 		}
 
 		@Override
-		public W parallelIf(Predicate<D> predicate) {
+		public CWO parallelIf(Predicate<IC> predicate) {
 			wrappedConfiguration.parallelIf(predicate);
-			return (W)this;
+			return (CWO)this;
 		}
 
 		@Override
-		public W withPriority(Integer priority) {
+		public CWO withPriority(Integer priority) {
 			wrappedConfiguration.withPriority(priority);
-			return (W)this;
+			return (CWO)this;
 		}
 
-		IterationConfigImpl<I, D> getWrappedConfiguration() {
+		IterationConfigImpl<I, IC> getWrappedConfiguration() {
 			return wrappedConfiguration;
 		}
 	}

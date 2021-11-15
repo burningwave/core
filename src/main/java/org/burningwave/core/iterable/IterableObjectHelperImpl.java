@@ -619,39 +619,39 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, D, K, O> Map<K, O> iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, D, K, O> configuration
+	public <I, IC, K, O, OM> OM iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> configuration
 	) {
-		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
-		return iterate(
-			(D)config.items,
+		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
+		return (OM)iterate(
+			(IC)config.items,
 			config.predicateForParallelIteration,
-			(Map<K, O>)config.output,
-			(BiConsumer<I, Consumer<Consumer<Map<K, O>>>>)config.action,
+			(OM)config.output,
+			(BiConsumer<I, Consumer<Consumer<OM>>>)config.action,
 			config.priority
 		);
 	}
 	
 	@Override
-	public <I, D, O> Collection<O> iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, D, O> configuration
+	public <I, IC, O, OC> OC iterateAndGet(
+		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> configuration
 	) {
-		IterationConfigImpl<I, D> config = configuration.getWrappedConfiguration();
-		return iterate(
-			(D)config.items,
+		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
+		return (OC)iterate(
+			(IC)config.items,
 			config.predicateForParallelIteration,
-			(Collection<O>)config.output,
-			(BiConsumer<I, Consumer<Consumer<Collection<O>>>>)config.action,
+			(OC)config.output,
+			(BiConsumer<I, Consumer<Consumer<OC>>>)config.action,
 			config.priority
 		);
 		
 	}
 	
 	@Override
-	public <I, D> void iterate(IterationConfig<I, D, ?> configuration) {
-		IterationConfigImpl<I, D> config = (IterationConfigImpl<I, D>)configuration;
+	public <I, IC> void iterate(IterationConfig<I, IC, ?> configuration) {
+		IterationConfigImpl<I, IC> config = (IterationConfigImpl<I, IC>)configuration;
 		iterate(
-			(D)config.items,
+			(IC)config.items,
 			config.predicateForParallelIteration,
 			null,
 			(BiConsumer<I, Consumer<Consumer<Collection<?>>>>)config.action,
@@ -659,11 +659,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		);
 	}
 	
-	private <I, D, C> C iterate(
-		D items,
-		Predicate<D> predicateForParallelIteration,
-		C output,
-		BiConsumer<I, Consumer<Consumer<C>>> action,
+	private <I, IC, OC> OC iterate(
+		IC items,
+		Predicate<IC> predicateForParallelIteration,
+		OC output,
+		BiConsumer<I, Consumer<Consumer<OC>>> action,
 		Integer priority
 	) {
 		if (items == IterationConfigImpl.NO_ITEMS) {
@@ -679,7 +679,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicateForParallelIteration);
 		if (taskCountThatCanBeCreated > 1) {
-			Consumer<Consumer<C>> outputItemsHandler =
+			Consumer<Consumer<OC>> outputItemsHandler =
 				output != null ?
 					isConcurrent(output) ?
 						(outputHandler) -> {
@@ -770,8 +770,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										for (int i = splittedIteratorIndex; exceptionWrapper.get() == null && remainedItems > 0; i++ ) {
 											action.accept(itemArray[i], outputItemsHandler);
 											--remainedItems;	
-										} 
-																		
+										} 							
 									} catch (IterableObjectHelper.TerminateIteration exc) {
 										exceptionWrapper.set(exc);
 									}
@@ -805,7 +804,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return output;
 		} 
-		Consumer<Consumer<C>> outputItemsHandler =
+		Consumer<Consumer<OC>> outputItemsHandler =
 			output != null ?
 				(outputCollectionConsumer) -> {
 					outputCollectionConsumer.accept(output);
@@ -827,7 +826,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			} else {
 				Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);
 				int arrayLength = Array.getLength(items);
-				for (int i = 0; i < arrayLength; i++ ) {
+				for (int i = 0; i < arrayLength; i++) {
 					action.accept((I)itemRetriever.apply(i), outputItemsHandler);
 				}
 			}
