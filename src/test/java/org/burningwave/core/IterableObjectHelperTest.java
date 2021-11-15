@@ -4,6 +4,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -42,15 +44,15 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestOne() {
-		Collection<Integer> inputCollection = new ArrayList<>();
-		for (int i = 0; i < 25000000; i++) {
-			inputCollection.add(i);
+		Collection<Integer> input = new ArrayList<>();
+		for (int i = 0; i < 100000000; i++) {
+			input.add(i);
 		}
 //		long initialTime = System.currentTimeMillis();
 //		for (int i = 0; i < 10; i++) {
 			testNotEmpty(() -> {
-				return IterableObjectHelper.iterateAndGet(
-					IterationConfig.of(inputCollection)
+				return IterableObjectHelper.createIterateAndGetTask(
+					IterationConfig.of(input)
 					.parallelIf(inputColl -> inputColl.size() > 2)
 					.withOutput(new ArrayList<>())
 					.withAction((number, outputCollectionSupplier) -> {
@@ -62,7 +64,7 @@ public class IterableObjectHelperTest extends BaseTest {
 						}
 					})
 					
-				);
+				).submit().join();
 			}, false);
 //		}
 //		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
@@ -72,7 +74,7 @@ public class IterableObjectHelperTest extends BaseTest {
 //		initialTime = System.currentTimeMillis();
 //		for (int i = 0; i < 10; i++) {
 //			testNotEmpty(() -> {
-//				return inputCollection.parallelStream().filter(number -> (number % 2) == 0).collect(Collectors.toCollection(ArrayList::new));
+//				return input.parallelStream().filter(number -> (number % 2) == 0).collect(Collectors.toCollection(ArrayList::new));
 //			}, false);
 //		}
 //		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
@@ -83,13 +85,13 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestTwo() {
-		int[] inputCollection = new int[25000000];
-		for (int i = 0; i < 25000000; i++) {
-			inputCollection[i] = i;
+		int[] input = new int[25000000];
+		for (int i = 0; i < input.length; i++) {
+			input[i] = i;
 		}
 		testNotEmpty(() -> {
 			return IterableObjectHelper.iterateAndGet(
-				IterationConfig.ofInts(inputCollection)
+				IterationConfig.ofInts(input)
 				.parallelIf(inputColl -> inputColl.length > 2)
 				.withOutput(new ArrayList<>())
 				.withAction((number, outputCollectionSupplier) -> {
@@ -103,6 +105,45 @@ public class IterableObjectHelperTest extends BaseTest {
 				
 			);
 		}, false);
+	}
+	
+	//@Test
+	public void iterateParallelTestThree() {
+		Object[] input = new Object[100000000];
+		for (int i = 0; i < input.length; i++) {
+			input[i] = new Object();
+		}
+		long initialTime = System.currentTimeMillis();
+		for (int i = 0; i < 10; i++) {
+			testNotEmpty(() -> {
+				return IterableObjectHelper.iterateAndGet(
+					IterationConfig.of(input)
+					.parallelIf(inputColl -> inputColl.length > 2)
+					.withOutput(new ArrayList<>())
+					.withAction((number, outputCollectionSupplier) -> {
+						//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
+						outputCollectionSupplier.accept(outputCollection -> 
+							outputCollection.add(number)
+						);
+					})
+					
+				);
+			}, false);
+		}
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+			getClass()::getName,
+			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+		);
+		initialTime = System.currentTimeMillis();
+		for (int i = 0; i < 10; i++) {
+			testNotEmpty(() -> {
+				return Stream.of(input).parallel().collect(Collectors.toCollection(ArrayList::new));
+			}, false);
+		}
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+			getClass()::getName,
+			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+		);
 	}
 	
 	@Test
