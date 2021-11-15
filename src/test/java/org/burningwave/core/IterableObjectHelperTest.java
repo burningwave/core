@@ -45,7 +45,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	@Test
 	public void iterateParallelTestOne() {
 		Collection<Integer> input = new ArrayList<>();
-		for (int i = 0; i < 100000000; i++) {
+		for (int i = 0; i < 250000000; i++) {
 			input.add(i);
 		}
 //		long initialTime = System.currentTimeMillis();
