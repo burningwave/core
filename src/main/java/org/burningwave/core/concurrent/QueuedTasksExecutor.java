@@ -62,6 +62,8 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.function.ThrowingFunction;
+import org.burningwave.core.function.ThrowingRunnable;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
@@ -206,7 +208,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		this.taskCreationTrackingEnabled = flag;
 		return this;
 	}
-
+	
+	public <T> ProducerTask<T> createProducerTask(ThrowingSupplier<T, ? extends Throwable> executable) {
+		return createProducerTask(task -> executable.get());
+	}
+	
 	public <T> ProducerTask<T> createProducerTask(ThrowingFunction<ProducerTask<T>, T, ? extends Throwable> executable) {
 		Function<ThrowingFunction<ProducerTask<T>, T, ? extends Throwable>, ProducerTask<T>> taskCreator = getProducerTaskSupplier();
 		ProducerTask<T> task = taskCreator.apply(executable);
@@ -229,7 +235,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		};
 	}
-
+	
+	public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
+		return createTask(task -> executable.run());
+	}
+	
 	public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable) {
 		Task task = getTaskSupplier().apply(executable);
 		task.priority = this.defaultPriority;
@@ -1177,12 +1187,20 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				};
 			}
 		}
-
+		
 		public <T> ProducerTask<T> createProducerTask(ThrowingFunction<ProducerTask<T>, T, ? extends Throwable> executable) {
 			return createProducerTask(executable, java.lang.Thread.currentThread().getPriority());
 		}
-
+		
 		public <T> ProducerTask<T> createProducerTask(ThrowingFunction<ProducerTask<T>, T, ? extends Throwable> executable, int priority) {
+			return getByPriority(priority).createProducerTask(executable);
+		}
+		
+		public <T> ProducerTask<T> createProducerTask(ThrowingSupplier<T, ? extends Throwable> executable) {
+			return createProducerTask(executable, java.lang.Thread.currentThread().getPriority());
+		}
+		
+		public <T> ProducerTask<T> createProducerTask(ThrowingSupplier<T, ? extends Throwable> executable, int priority) {
 			return getByPriority(priority).createProducerTask(executable);
 		}
 
@@ -1237,8 +1255,16 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable) {
 			return createTask(executable, java.lang.Thread.currentThread().getPriority());
 		}
-
+		
 		public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable, int priority) {
+			return getByPriority(priority).createTask(executable);
+		}
+		
+		public Task createTask(ThrowingRunnable<? extends Throwable> executable) {
+			return createTask(executable, java.lang.Thread.currentThread().getPriority());
+		}
+		
+		public Task createTask(ThrowingRunnable<? extends Throwable> executable, int priority) {
 			return getByPriority(priority).createTask(executable);
 		}
 
