@@ -77,6 +77,17 @@ public class Properties extends ConcurrentHashMap<Object, Object> implements Man
 		return listeners;
 	}
 	
+	public Properties load(InputStream resourceAsStream) {
+		try {
+			java.util.Properties properties = new java.util.Properties();
+			properties.load(resourceAsStream);
+			putAll(properties);
+			return this;
+		} catch (IOException exc) {
+			return Driver.throwException(exc);
+		}
+	}
+	
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator != null ? this.defaultValuesSeparator : IterableObjectHelper.getDefaultValuesSeparator();
 	}
@@ -316,17 +327,6 @@ public class Properties extends ConcurrentHashMap<Object, Object> implements Man
 
 		}
 
-	}
-
-	public Properties load(InputStream resourceAsStream) {
-		try {
-			java.util.Properties properties = new java.util.Properties();
-			properties.load(resourceAsStream);
-			putAll(properties);
-			return this;
-		} catch (IOException exc) {
-			return Driver.throwException(exc);
-		}
 	}
 
 }

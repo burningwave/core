@@ -42,12 +42,12 @@ public class SLF4JManagedLoggerRepository extends ManagedLogger.Repository.Abst 
 	private Map<String, Map.Entry<org.slf4j.Logger, LoggingLevel.Mutable>> loggers;
 
 
-	public SLF4JManagedLoggerRepository(Map<Object, Object> properties) {
+	public SLF4JManagedLoggerRepository(Map<?, ?> properties) {
 		super(properties);
 	}
 
 	@Override
-	void initSpecificElements(Map<Object, Object> properties) {
+	void initSpecificElements(Map<?, ?> properties) {
 		loggers = new HashMap<>();
 	}
 

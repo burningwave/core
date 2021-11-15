@@ -79,7 +79,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config) {
-		Map<Object, Object> properties = config.getProperties();
+		Map<?, ?> properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
 				properties = this.config;
@@ -176,7 +176,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		);
 	}
 
-	private String retrieveValue(ExecuteConfig.ForProperties config, Map<Object, Object> properties, String... suffixes) {
+	private String retrieveValue(ExecuteConfig.ForProperties config, Map<?, ?> properties, String... suffixes) {
 		for (String suffix : suffixes) {
 			String value = IterableObjectHelper.resolveStringValue(
 				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)

@@ -41,13 +41,13 @@ import org.burningwave.core.ManagedLogger.Repository;
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
 
-	public SimpleManagedLoggerRepository(Map<Object, Object> properties) {
+	public SimpleManagedLoggerRepository(Map<?, ?> properties) {
 		super(properties);
 	}
 
 
 	@Override
-	void initSpecificElements(Map<Object, Object> properties) {
+	void initSpecificElements(Map<?, ?> properties) {
 		loggers = new HashMap<>();
 	}
 

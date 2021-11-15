@@ -108,7 +108,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	private static Collection<ComponentContainer> instances;
 	private Map<Class<?>, Component> components;
-	private Supplier<Map<Object, Object>> propertySupplier;
+	private Supplier<Map<?, ?>> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
@@ -119,7 +119,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		instances = ConcurrentHashMap.newKeySet();
 	}
 
-	ComponentContainer(Supplier<Map<Object, Object>> propertySupplier) {
+	ComponentContainer(Supplier<Map<?, ?>> propertySupplier) {
 		this.instanceId = getId();
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
@@ -155,7 +155,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 	}
 
-	public final static ComponentContainer create(Map<Object, Object> properties) {
+	public final static ComponentContainer create(Map<?, ?> properties) {
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
@@ -165,7 +165,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	public final static ComponentContainer create() {
-		return create((Map<Object, Object>)null);
+		return create((Map<?, ?>)null);
 	}
 
 	private ComponentContainer init() {
@@ -465,11 +465,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		);
 	}
 
-	public <T> T resolveProperty(Map<Object, Object> properties, String configKey) {
+	public <T> T resolveProperty(Map<?, ?> properties, String configKey) {
 		return resolveProperty(properties, configKey, null);
 	}
 
-	public <T> T resolveProperty(Map<Object, Object> properties, String configKey, Map<?, ?> defaultValues) {
+	public <T> T resolveProperty(Map<?, ?> properties, String configKey, Map<?, ?> defaultValues) {
 		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
 			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
