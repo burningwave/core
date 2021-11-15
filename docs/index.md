@@ -1577,6 +1577,11 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<summary><b>IterableObjectHelper</b></summary>
 	<ul>
 		<li>
+			<a href="https://github.com/burningwave/core/wiki/Iterating-collections-and-arrays-in-parallel">
+			<b>USE CASE</b>: iterating collections and arrays in parallel
+			</a>
+		</li>
+		<li>
 			<a href="https://github.com/burningwave/core/wiki/Retrieving-placeholdered-items-from-map-and-properties-file">
 			<b>USE CASE</b>: retrieving placeholdered items from map and properties file
 			</a>
