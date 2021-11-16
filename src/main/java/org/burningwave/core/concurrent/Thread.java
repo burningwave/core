@@ -204,7 +204,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			ManagedLoggersRepository.logInfo(
 				getClass()::getName,
 				"Called interrupt on {}: \n{}",
-				getName(), Strings.from(getStackTrace(), 0)
+				getName(),
+				Strings.from(getStackTrace(), 2)
 			);
 			shutDown();
 			removePermanently();
@@ -583,12 +584,35 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					synchronized(thread) {
 						if (poolableSleepingThreads[i] == thread) {
 							poolableSleepingThreads[i] = null;
-							return thread;
+							if (thread.getState() == Thread.State.WAITING) {								
+								return thread;
+							} else {
+								interrupt(thread);
+							}
+						}  else {
+							ManagedLoggersRepository.logInfo(
+								getClass()::getName, "Thread {} is already assigned",
+								thread.getName()
+							);
 						}
 					}
 				}				
 			}
 			return null;
+		}
+
+		private void interrupt(Thread thread) {
+			ManagedLoggersRepository.logError(
+				getClass()::getName,
+				"\n\tPoolable thread {} with executable {} is not in a waiting state and it will be interrupted",
+				thread.getName(),
+				thread.executable
+			);
+			try {
+				thread.interrupt();
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
+			}
 		}
 		
 		private Thread getReversePoolableThread() {
@@ -599,7 +623,16 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					synchronized(thread) {
 						if (poolableSleepingThreads[i] == thread) {
 							poolableSleepingThreads[i] = null;
-							return thread;
+							if (thread.getState() == Thread.State.WAITING) {								
+								return thread;
+							} else {
+								interrupt(thread);
+							}
+						}  else {
+							ManagedLoggersRepository.logInfo(
+								getClass()::getName, "Thread {} is already assigned",
+								thread.getName()
+							);
 						}
 					}
 				}				
