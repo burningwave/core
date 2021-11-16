@@ -33,7 +33,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 
 public interface Streams {
@@ -61,6 +63,14 @@ public interface Streams {
 	public ByteBuffer toByteBuffer(InputStream inputStream, int size);
 
 	public ByteBuffer toByteBuffer(InputStream inputStream);
+	
+	public <K, V> Map<K, V> toPropertiesMap(Supplier<InputStream> inputStreamSupplier);
+	
+	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map);
+	
+	public<K,V> Map<K, V> toPropertiesMap(InputStream inputStream);
+	
+	public void feelPropertiesMap(InputStream inputStream, Map<?, ?> map);
 
 	public StringBuffer getAsStringBuffer(InputStream inputStream);
 
