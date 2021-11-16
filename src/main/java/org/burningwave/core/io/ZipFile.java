@@ -271,7 +271,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		private Supplier<ByteBuffer> zipEntryContentSupplier;
 		private Boolean archive;
 
-		public Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
+		Entry(ZipFile zipMemoryContainer, String entryName, Supplier<ByteBuffer> zipEntryContentSupplier) {
 			this.zipMemoryContainer = zipMemoryContainer;
 			this.name = entryName;
 			this.absolutePath = Paths.clean(zipMemoryContainer.getAbsolutePath() + "/" + entryName);
@@ -288,8 +288,8 @@ class ZipFile implements IterableZipContainer, Memorizer {
 		}
 
 		@Override
-		public <C extends IterableZipContainer> C getParentContainer() {
-			return (C) zipMemoryContainer;
+		public IterableZipContainer getParentContainer() {
+			return zipMemoryContainer;
 		}
 
 		@Override
