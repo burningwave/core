@@ -604,9 +604,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		private void interrupt(Thread thread) {
 			ManagedLoggersRepository.logError(
 				getClass()::getName,
-				"\n\tPoolable thread {} with executable {} is not in a waiting state and it will be interrupted",
+				"\n\tThread of type {} named {} with executable {} is in state of {} and it will be interrupted",
+				thread.getClass(),
 				thread.getName(),
-				thread.executable
+				thread.executable,
+				thread.getState().name()
 			);
 			try {
 				thread.interrupt();
