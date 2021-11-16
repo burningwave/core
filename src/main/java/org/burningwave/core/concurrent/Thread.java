@@ -204,7 +204,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			ManagedLoggersRepository.logInfo(
 				getClass()::getName,
 				"Called interrupt on {}: \n{}",
-				getName(), Strings.from(getStackTrace(), 0)
+				getName(),
+				Strings.from(getStackTrace(), 2)
 			);
 			shutDown();
 			removePermanently();
@@ -581,19 +582,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				Thread thread = poolableSleepingThreads[i];
 				if (thread != null) {
 					synchronized(thread) {
-						//This must replaced with the master version (see also IterableObjectHelperImpl)
 						if (poolableSleepingThreads[i] == thread) {
-							if (thread.getState() == Thread.State.WAITING) {
-								poolableSleepingThreads[i] = null;
+							poolableSleepingThreads[i] = null;
+							if (thread.getState() == Thread.State.WAITING) {								
 								return thread;
 							} else {
-								ManagedLoggersRepository.logWarn(
-									getClass()::getName,
-									"Poolable thread {} with executable {} is not in a waiting state: \n{}",
-									thread.getName(),
-									thread.executable,
-									Strings.from(thread.getStackTrace(), 0)
-								);
+								interrupt(thread);
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
@@ -606,6 +600,21 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 			return null;
 		}
+
+		private void interrupt(Thread thread) {
+			ManagedLoggersRepository.logError(
+				getClass()::getName,
+				"\n\tPoolable thread {} - {} with executable {} is not in a waiting state and it will be interrupted",
+				thread.getClass(),
+				thread.getName(),
+				thread.executable
+			);
+			try {
+				//thread.interrupt();
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
+			}
+		}
 		
 		private Thread getReversePoolableThread() {
 			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
@@ -613,19 +622,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				Thread thread = poolableSleepingThreads[i];
 				if (thread != null) {
 					synchronized(thread) {
-						//This must replaced with the master version (see also IterableObjectHelperImpl)
 						if (poolableSleepingThreads[i] == thread) {
 							if (thread.getState() == Thread.State.WAITING) {
 								poolableSleepingThreads[i] = null;
 								return thread;
 							} else {
-								ManagedLoggersRepository.logWarn(
-									getClass()::getName,
-									"Poolable thread {} with executable {} is not in a waiting state: \n{}",
-									thread.getName(),
-									thread.executable,
-									Strings.from(thread.getStackTrace(), 0)
-								);
+								interrupt(thread);
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
