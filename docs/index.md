@@ -28,7 +28,7 @@ And now we will see:
 * [retrieving classes of runtime class paths or of other paths through the ClassHunter](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [finding where a class is loaded from](#Finding-where-a-class-is-loaded-from)
 * [performing tasks in parallel with different priorities](#Performing-tasks-in-parallel-with-different-priorities)
-* [Iterating collections and arrays in parallel](#Iterating-collections-and-arrays-in-parallel)
+* [iterating collections and arrays in parallel by setting thread priority](#Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority)
 * [reaching a resource of the file system](#Reaching-a-resource-of-the-file-system)
 * [resolving, collecting or retrieving paths](#Resolving-collecting-or-retrieving-paths)
 * [retrieving placeholdered items from map and properties file](#Retrieving-placeholdered-items-from-map-and-properties-file)
@@ -399,7 +399,7 @@ public class TaskLauncher implements ManagedLogger {
 
 <br/>
 
-# <a name="Iterating-collections-and-arrays-in-parallel"></a>Iterating collections and arrays in parallel
+# <a name="Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority"></a>Iterating collections and arrays in parallel by setting thread priority
 Through the underlying configurable [**BackgroundExecutor**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** component is able to iterate a collection or an array in parallel and execute an action on each iterated giving item giving also the ability to set the threads priority:
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -1580,7 +1580,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<ul>
 		<li>
 			<a href="https://github.com/burningwave/core/wiki/Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority">
-			<b>USE CASE</b>: iterating collections and arrays in parallel
+			<b>USE CASE</b>: iterating collections and arrays in parallel by setting thread priority
 			</a>
 		</li>
 		<li>
