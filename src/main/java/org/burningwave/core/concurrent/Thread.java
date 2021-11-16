@@ -160,9 +160,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		@Override
 		public void run() {
 			while (alive) {
-				synchronized(this) {
-					supplier.runningThreads.add(this);
-				}
+				supplier.runningThreads.add(this);
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
@@ -172,11 +170,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					supplier.runningThreads.remove(this);
 					executable = null;
 					originalExecutable = null;
-					if (!alive) {
-						continue;
-					}
 					setIndexedName();
 					synchronized(this) {
+						if (!alive) {
+							continue;
+						}
 						if (!supplier.addPoolableSleepingThreadFunction.test(this)) {
 							ManagedLoggersRepository.logWarn(
 								getClass()::getName,
@@ -203,6 +201,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 		@Override
 		public void interrupt() {
+			ManagedLoggersRepository.logInfo(
+				getClass()::getName,
+				"Called interrupt on {}: \n{}",
+				getName(), Strings.from(getStackTrace(), 0)
+			);
 			shutDown();
 			removePermanently();
 			try {
@@ -217,11 +220,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		private void removePermanently () {
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-					--supplier.poolableThreadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
+				--supplier.poolableThreadCount;
 			}
 			if (supplier.removePoolableSleepingThread(this)) {
 				--supplier.threadCount;
@@ -244,10 +245,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 			}
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
 			}
 			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
 			synchronized(this) {
@@ -258,10 +257,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		@Override
 		public void interrupt() {
 			shutDown();
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
 			}
 			try {
 				super.interrupt();
@@ -593,14 +590,14 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								ManagedLoggersRepository.logWarn(
 									getClass()::getName,
 									"Poolable thread {} is not in a waiting state: \n{}",
-									thread.getId(),
+									thread.getName(),
 									Strings.from(thread.getStackTrace(), 0)
 								);
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
 								getClass()::getName, "Thread {} is already assigned",
-								thread.getId()
+								thread.getName()
 							);
 						}
 					}
@@ -624,14 +621,14 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								ManagedLoggersRepository.logWarn(
 									getClass()::getName,
 									"Poolable thread {} is not in a waiting state: \n{}",
-									thread.getId(),
+									thread.getName(),
 									Strings.from(thread.getStackTrace(), 0)
 								);
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
 								getClass()::getName, "Thread {} is already assigned",
-								thread.getId()
+								thread.getName()
 							);
 						}
 					}
