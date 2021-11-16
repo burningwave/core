@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -83,15 +84,15 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				properties = this.config;
 			} else {
 				Properties tempProperties = new Properties();
-				if (config.isAbsoluteFilePath()) {
-					Executor.run(() ->
-						tempProperties.load(FileSystemItem.ofPath(config.getFilePath()).toInputStream())
-					);
-				} else {
-					Executor.run(() ->
-						tempProperties.load(pathHelper.getResourceAsStream(config.getFilePath()))
-					);
-				}
+				Supplier<InputStream> inputStreamSupplier = 
+					config.isAbsoluteFilePath() ?
+						() -> FileSystemItem.ofPath(config.getFilePath()).toInputStream() :
+						() -> pathHelper.getResourceAsStream(config.getFilePath());	
+				Executor.run(() -> {
+					try (InputStream inputStream = inputStreamSupplier.get()) {
+						tempProperties.load(inputStream);
+					}						
+				});
 				properties = tempProperties;
 			}
 
