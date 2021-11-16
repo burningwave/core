@@ -81,7 +81,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private Class<?>[] parallelCollectionClasses;
 
 
-	IterableObjectHelperImpl(Properties config) {
+	IterableObjectHelperImpl(Map<?, ?> config) {
 		this.defaultValuesSeparator = resolveStringValue(
 			ResolveConfig.ForNamedKey.forNamedKey(
 				Configuration.Key.DEFAULT_VALUES_SEPERATOR
@@ -93,7 +93,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		this.parallelCollectionClassesSupplier = () -> retrieveParallelCollectionClasses(config);
 	}
 
-	private Class<?>[] retrieveParallelCollectionClasses(Properties config) {
+	private Class<?>[] retrieveParallelCollectionClasses(Map<?, ?> config) {
 		Collection<Class<?>> parallelCollectionClasses = new LinkedHashSet<Class<?>>();
 		Collection<String> classNames = resolveStringValues(
 			ResolveConfig.ForNamedKey.forNamedKey(
@@ -115,7 +115,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return parallelCollectionClasses.toArray(new Class[parallelCollectionClasses.size()]);
 	}
 
-	private Predicate<Object> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Properties config) {
+	private Predicate<Object> buildDefaultMinimumCollectionSizeForParallelIterationPredicate(Map<?, ?> config) {
 		int defaultMinimumCollectionSizeForParallelIteration = Objects.toInt(
 			resolveValue(
 				ResolveConfig.ForNamedKey.forNamedKey(
@@ -143,7 +143,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return defaultMinimumCollectionSizeForParallelIterationPredicate;
 	}
 
-	Integer computeMaxRuntimeThreadsCountThreshold(Properties config) {
+	Integer computeMaxRuntimeThreadsCountThreshold(Map<?, ?> config) {
 		try {
 			return Objects.toInt(
 				resolveValue(

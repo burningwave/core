@@ -141,12 +141,12 @@ public interface ManagedLogger {
 		}
 
 		public static org.burningwave.core.ManagedLogger.Repository create(
-			org.burningwave.core.iterable.Properties config
+			Map<?, ?> config
 		) {
 			try {
-				String className = config.resolveStringValue(
-					org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE,
-					org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES
+				String className = IterableObjectHelper.resolveStringValue(
+					ResolveConfig.ForNamedKey.forNamedKey(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE)
+					.withDefaultValues(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES)
 				);
 				if ("autodetect".equalsIgnoreCase(className = className.trim())) {
 					try {
