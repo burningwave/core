@@ -16,6 +16,8 @@ public class CollectionAndArrayIterator {
             IterationConfig.of(buildCollection())
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
+            //Setting threads priority
+            .withPriority(Thread.MAX_PRIORITY)
             //Setting up the output collection
             .withOutput(new ArrayList<String>())
             .withAction((number, outputCollectionSupplier) -> {

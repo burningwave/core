@@ -28,7 +28,7 @@ And now we will see:
 * [retrieving classes of runtime class paths or of other paths through the ClassHunter](#Retrieving-classes-of-runtime-class-paths-or-of-other-paths-through-the-ClassHunter)
 * [finding where a class is loaded from](#Finding-where-a-class-is-loaded-from)
 * [performing tasks in parallel with different priorities](#Performing-tasks-in-parallel-with-different-priorities)
-* [Iterating collections and arrays in parallel](#Iterating-collections-and-arrays-in-parallel)
+* [iterating collections and arrays in parallel by setting thread priority](#Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority)
 * [reaching a resource of the file system](#Reaching-a-resource-of-the-file-system)
 * [resolving, collecting or retrieving paths](#Resolving-collecting-or-retrieving-paths)
 * [retrieving placeholdered items from map and properties file](#Retrieving-placeholdered-items-from-map-and-properties-file)
@@ -399,8 +399,8 @@ public class TaskLauncher implements ManagedLogger {
 
 <br/>
 
-# <a name="Iterating-collections-and-arrays-in-parallel"></a>Iterating collections and arrays in parallel
-Through the underlying configurable [**BackgroundExecutor**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** is able to iterate a collection or an array in parallel and execute an action on each iterated item:
+# <a name="Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority"></a>Iterating collections and arrays in parallel by setting thread priority
+Through the underlying configurable [**BackgroundExecutor**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** component is able to iterate a collection or an array in parallel and execute an action on each iterated giving item giving also the ability to set the threads priority:
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
@@ -418,6 +418,8 @@ public class CollectionAndArrayIterator {
             IterationConfig.of(buildCollection())
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
+            //Setting threads priority
+            .withPriority(Thread.MAX_PRIORITY)
             //Setting up the output collection
             .withOutput(new ArrayList<String>())
             .withAction((number, outputCollectionSupplier) -> {
@@ -1577,8 +1579,8 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 	<summary><b>IterableObjectHelper</b></summary>
 	<ul>
 		<li>
-			<a href="https://github.com/burningwave/core/wiki/Iterating-collections-and-arrays-in-parallel">
-			<b>USE CASE</b>: iterating collections and arrays in parallel
+			<a href="https://github.com/burningwave/core/wiki/Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority">
+			<b>USE CASE</b>: iterating collections and arrays in parallel by setting thread priority
 			</a>
 		</li>
 		<li>
