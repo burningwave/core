@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Collection;
@@ -40,7 +41,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -160,9 +160,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		@Override
 		public void run() {
 			while (alive) {
-				synchronized(this) {
-					supplier.runningThreads.add(this);
-				}
+				supplier.runningThreads.add(this);
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
@@ -172,11 +170,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					supplier.runningThreads.remove(this);
 					executable = null;
 					originalExecutable = null;
-					if (!alive) {
-						continue;
-					}
 					setIndexedName();
 					synchronized(this) {
+						if (!alive) {
+							continue;
+						}
 						if (!supplier.addPoolableSleepingThreadFunction.test(this)) {
 							ManagedLoggersRepository.logWarn(
 								getClass()::getName,
@@ -203,6 +201,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 		@Override
 		public void interrupt() {
+			ManagedLoggersRepository.logInfo(
+				getClass()::getName,
+				"Called interrupt on {}: \n{}",
+				getName(), Strings.from(getStackTrace(), 0)
+			);
 			shutDown();
 			removePermanently();
 			try {
@@ -217,11 +220,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		private void removePermanently () {
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-					--supplier.poolableThreadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
+				--supplier.poolableThreadCount;
 			}
 			if (supplier.removePoolableSleepingThread(this)) {
 				--supplier.threadCount;
@@ -244,10 +245,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
 			}
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
 			}
 			supplier.notifyToPoolableSleepingThreadCollectionWaiter();
 			synchronized(this) {
@@ -258,10 +257,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		@Override
 		public void interrupt() {
 			shutDown();
-			synchronized(this) {
-				if (supplier.runningThreads.remove(this)) {
-					--supplier.threadCount;
-				}
+			if (supplier.runningThreads.remove(this)) {
+				--supplier.threadCount;
 			}
 			try {
 				super.interrupt();
@@ -355,7 +352,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		Supplier (
 			String name,
-			Properties config
+			Map<Object, Object> config
 		) {	
 			this.addForwardPoolableSleepingThreadFunction = this::addForwardPoolableSleepingThread;
 			this.addReversePoolableSleepingThreadFunction = this::addReversePoolableSleepingThread;
@@ -439,7 +436,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		public static Supplier create(
 			String name,
-			java.util.Properties config,
+			Map<Object, Object> config,
 			boolean undestroyable
 		) {
 			if (undestroyable) {
