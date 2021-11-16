@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, ClassPathHunter.SearchResult> {
 
@@ -85,7 +84,7 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 	public static ClassPathHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new ClassPathHunterImpl(
 			pathHelper,

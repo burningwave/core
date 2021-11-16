@@ -433,7 +433,7 @@ public class StaticComponentContainer {
 	}
 	
 	private static org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey onGlobalPropertiesforNamedKey(String key) {
-		return org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey.forNamedKey(key).on(GlobalProperties);
+		return org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(key).on(GlobalProperties);
 	}
 
 	private static void adjustConfigurationValues(Properties properties) {

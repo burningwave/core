@@ -89,7 +89,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 		PathHelper pathHelper;
 		Function<InitContext, C> contextSupplier;
 		Function<C, R> resultSupplier;
-		Properties config;
+		Map<?, ?> config;
 		Collection<SearchResult<I>> searchResults;
 		String instanceId;
 		ClassLoaderManager<PathScannerClassLoader> defaultPathScannerClassLoaderManager;
@@ -99,7 +99,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			Function<InitContext, C> contextSupplier,
 			Function<C, R> resultSupplier,
 			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			Properties config
+			Map<?, ?> config
 		) {
 			this.pathHelper = pathHelper;
 			this.contextSupplier = contextSupplier;

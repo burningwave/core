@@ -45,7 +45,6 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 public interface JavaMemoryCompiler {
 
@@ -87,7 +86,7 @@ public interface JavaMemoryCompiler {
 	public static JavaMemoryCompiler create(
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper, config);
 	}

@@ -270,8 +270,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 								pathScannerClassLoader,
 								"classFileCriteriaAndConsumer",
 								FileSystemItem.Criteria.forClassTypeFiles(
-									config.resolveStringValue(
-										PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+									IterableObjectHelper.resolveStringValue(
+										ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+										.on(config)
 									)
 								)
 							);
@@ -344,9 +345,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
 				), getPathHelper(),
 				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(
-						PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
-					)
+						IterableObjectHelper.resolveStringValue(
+							ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+							.on(config)
+						)
 				),
 				() -> {
 					Synchronizer.execute(getMutexForComponentsId(), () -> {

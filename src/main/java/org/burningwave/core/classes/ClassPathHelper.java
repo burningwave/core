@@ -36,7 +36,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.iterable.Properties;
 
 public interface ClassPathHelper {
 
@@ -62,7 +61,7 @@ public interface ClassPathHelper {
 		}
 	}
 
-	public static ClassPathHelper create(ClassPathHunter classPathHunter, Properties config) {
+	public static ClassPathHelper create(ClassPathHunter classPathHunter, Map<?, ?> config) {
 		return new ClassPathHelperImpl(classPathHunter, config);
 	}
 

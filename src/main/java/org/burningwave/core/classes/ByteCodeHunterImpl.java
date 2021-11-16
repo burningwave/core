@@ -28,16 +28,17 @@
  */
 package org.burningwave.core.classes;
 
+import java.util.Map;
+
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 public class ByteCodeHunterImpl extends ClassPathScanner.Abst<JavaClass, SearchContext<JavaClass>, ByteCodeHunter.SearchResult> implements ByteCodeHunter {
 	ByteCodeHunterImpl(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		super(
 			pathHelper,

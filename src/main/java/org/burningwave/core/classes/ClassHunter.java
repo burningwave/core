@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Criteria;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 
 @SuppressWarnings("unchecked")
@@ -86,7 +85,7 @@ public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.Sear
 	public static ClassHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new ClassHunterImpl(
 			pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
