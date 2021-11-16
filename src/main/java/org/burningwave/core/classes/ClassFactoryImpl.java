@@ -76,7 +76,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		);
 		this.classRetrievers = new CopyOnWriteArrayList<>();
 		this.config = config;
-		listenTo(config);
+		checkAndListenTo(config);
 	}
 
 	@Override
@@ -204,7 +204,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 	public void close() {
 		closeResources(() -> this.classRetrievers == null, tsk -> {
 			this.defaultClassLoaderManager.close();
-			unregister(config);
+			checkAndUnregister(config);
 			closeClassRetrievers();
 			BackgroundExecutor.createTask(task -> {
 				this.classRetrievers = null;

@@ -54,17 +54,17 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
-	private Properties config;
+	private Map<?, ?> config;
 
 	CodeExecutorImpl(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
-		Properties config
+		Map<?, ?> config
 	) {
 		this.classFactorySupplier = classFactorySupplier;
 		this.pathHelper = pathHelper;
 		this.config = config;
-		listenTo(config);
+		checkAndListenTo(config);
 	}
 
 	private ClassFactory getClassFactory() {
@@ -85,19 +85,15 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				properties = this.config;
 			} else {
 				Properties tempProperties = new Properties();
-				if (config.isAbsoluteFilePath()) {
-					Executor.run(() -> {
-						try (InputStream inputStream = FileSystemItem.ofPath(config.getFilePath()).toInputStream()) {
-							tempProperties.load(inputStream);
-						}
-					});
-				} else {
-					Executor.run(() -> {
-						try (InputStream inputStream = pathHelper.getResourceAsStream(config.getFilePath())) {
-							tempProperties.load(inputStream);
-						}
-					});
-				}
+				Supplier<InputStream> inputStreamSupplier = 
+					config.isAbsoluteFilePath() ?
+						() -> FileSystemItem.ofPath(config.getFilePath()).toInputStream() :
+						() -> pathHelper.getResourceAsStream(config.getFilePath());	
+				Executor.run(() -> {
+					try (InputStream inputStream = inputStreamSupplier.get()) {
+						tempProperties.load(inputStream);
+					}						
+				});
 				properties = tempProperties;
 			}
 
@@ -267,7 +263,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 
 	@Override
 	public void close() {
-		unregister(config);
+		if (config instanceof Properties) {
+			checkAndUnregister((Properties)config);
+		}
 		classFactory = null;
 		pathHelper = null;
 		classFactorySupplier = null;

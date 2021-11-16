@@ -75,7 +75,7 @@ class PathHelperImpl implements Component, PathHelper {
 
 	PathHelperImpl(Properties config) {
 		this.config = config;
-		listenTo(config);
+		checkAndListenTo(config);
 		launchAllPathsLoadingTask();
 	}
 
@@ -516,7 +516,7 @@ class PathHelperImpl implements Component, PathHelper {
 			if (initializerTask != null) {
 				initializerTask.abortOrWaitForFinish();
 			}
-			unregister(config);
+			checkAndUnregister(config);
 			pathGroups.forEach((key, value) -> {
 				value.clear();
 				pathGroups.remove(key);

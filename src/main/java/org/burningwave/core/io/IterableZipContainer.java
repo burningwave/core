@@ -31,6 +31,8 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -98,19 +100,29 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 
 	@SuppressWarnings("resource")
 	public static IterableZipContainer create(String absolutePath, InputStream inputStream) {
-		ByteBufferInputStream iS;
-		if (inputStream instanceof ByteBufferInputStream) {
-			iS = new ByteBufferInputStream(((ByteBufferInputStream)inputStream).toByteBuffer());
-		} else if (inputStream instanceof FileInputStream) {
-			FileInputStream fileInputStream = (FileInputStream)inputStream;
-			iS = new ByteBufferInputStream(fileInputStream.toByteBuffer());
-		} else {
-			iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
-		}
-		if (Streams.isJModArchive(iS.toByteBuffer())) {
-			return createZipFile(absolutePath, iS.toByteBuffer());
-		} else if (Streams.isArchive(iS.toByteBuffer())) {
-			return new ZipInputStream(absolutePath, new ByteBufferInputStream(iS.toByteBuffer()));
+		ByteBufferInputStream iS = null;
+		try {
+			if (inputStream instanceof ByteBufferInputStream) {
+				iS = new ByteBufferInputStream(((ByteBufferInputStream)inputStream).toByteBuffer());
+			} else if (inputStream instanceof FileInputStream) {
+				FileInputStream fileInputStream = (FileInputStream)inputStream;
+				iS = new ByteBufferInputStream(fileInputStream.toByteBuffer());
+			} else {
+				iS = new ByteBufferInputStream(Streams.toByteBuffer(inputStream));
+			}
+			if (Streams.isJModArchive(iS.toByteBuffer())) {
+				return createZipFile(absolutePath, iS.toByteBuffer());
+			} else if (Streams.isArchive(iS.toByteBuffer())) {
+				return new ZipInputStream(absolutePath, new ByteBufferInputStream(iS.toByteBuffer()));
+			}
+		} finally {
+			try {
+				if (iS != null) {
+					iS.close();
+				}
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(IterableZipContainer.class::getName, exc);
+			}
 		}
 		return null;
 	}
@@ -255,7 +267,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 
 	public static interface Entry extends Component{
 
-		public <C extends IterableZipContainer> C getParentContainer();
+		public IterableZipContainer getParentContainer();
 
 		public default String getConventionedAbsolutePath() {
 			return getParentContainer().getConventionedAbsolutePath() + getCleanedName();

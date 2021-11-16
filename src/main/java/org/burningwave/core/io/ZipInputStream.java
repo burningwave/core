@@ -196,12 +196,12 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			private String cleanedName;
 			private Boolean archive;
 
-			public Attached(Entry.Attached e, ZipInputStream zIS) {
+			Attached(Entry.Attached e, ZipInputStream zIS) {
 				super(e);
 				this.zipInputStream = zIS;
 			}
 
-			public Attached(String name, ZipInputStream zIS) {
+			Attached(String name, ZipInputStream zIS) {
 				super(name);
 				this.zipInputStream = zIS;
 			}
@@ -216,7 +216,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			}
 
 			@Override
-			public ZipInputStream getParentContainer() {
+			public IterableZipContainer getParentContainer() {
 				return zipInputStream;
 			}
 

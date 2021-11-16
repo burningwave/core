@@ -90,9 +90,7 @@ public class BufferHandler implements Component {
 	void init(Map<?, ?> config) {
 		setDefaultByteBufferSize(config);
 		setDefaultByteBufferAllocationMode(config);
-		if (config instanceof Properties) {
-			listenTo((Properties)config);
-		}
+		checkAndListenTo(config);
 		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();
 		mainCycle:
 		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {

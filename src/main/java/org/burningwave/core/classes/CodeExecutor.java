@@ -41,7 +41,6 @@ import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 
 public interface CodeExecutor {
@@ -91,7 +90,7 @@ public interface CodeExecutor {
 	public static CodeExecutor create(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new CodeExecutorImpl(
 			classFactorySupplier,

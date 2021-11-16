@@ -589,8 +589,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							} else {
 								ManagedLoggersRepository.logWarn(
 									getClass()::getName,
-									"Poolable thread {} is not in a waiting state: \n{}",
+									"Poolable thread {} with executable {} is not in a waiting state: \n{}",
 									thread.getName(),
+									thread.executable,
 									Strings.from(thread.getStackTrace(), 0)
 								);
 							}
@@ -620,8 +621,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							} else {
 								ManagedLoggersRepository.logWarn(
 									getClass()::getName,
-									"Poolable thread {} is not in a waiting state: \n{}",
+									"Poolable thread {} with executable {} is not in a waiting state: \n{}",
 									thread.getName(),
+									thread.executable,
 									Strings.from(thread.getStackTrace(), 0)
 								);
 							}

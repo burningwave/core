@@ -110,7 +110,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 			this.defaultPathScannerClassLoaderManager = new ClassLoaderManager<>(
 				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier
 			);
-			listenTo(config);
+			checkAndListenTo(config);
 		}
 
 		@Override
@@ -342,7 +342,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 
 		@Override
 		public void close() {
-			unregister(config);
+			checkAndUnregister(config);
 			pathHelper = null;
 			contextSupplier = null;
 			config = null;

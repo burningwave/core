@@ -124,8 +124,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
-		listenTo(GlobalProperties);
-		listenTo(this.config);
+		checkAndListenTo(GlobalProperties);
+		checkAndListenTo(this.config);
 		instances.add(this);
 	}
 
@@ -525,8 +525,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (force || !isUndestroyable) {
 			instances.remove(this);
 			closeResources(() -> instanceId == null, task -> {
-				unregister(GlobalProperties);
-				unregister(config);
+				checkAndUnregister(GlobalProperties);
+				checkAndUnregister(config);
 				clear();
 				components = null;
 				propertySupplier = null;

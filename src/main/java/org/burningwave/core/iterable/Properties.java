@@ -313,16 +313,32 @@ public class Properties extends ConcurrentHashMap<Object, Object> implements Man
 	public static interface Listener {
 
 
-		public default <T extends Listener> T listenTo(Properties properties) {
+		public default <L extends Listener> L listenTo(Properties properties) {
 			properties.getListeners().add(this);
-			return (T)this;
+			return (L)this;
 		}
 
-		public default <T extends Listener> T unregister(Properties properties) {
+		public default <L extends Listener> L unregister(Properties properties) {
 			properties.getListeners().remove(this);
-			return (T)this;
+			return (L)this;
 		}
-
+		
+		public default <L extends Listener> L checkAndListenTo(Map<?, ?> map) {
+			if (map instanceof Properties) {
+				this.listenTo((Properties)map);
+				return (L)this;
+			}
+			return null;
+		}
+		
+		public default <L extends Listener> L checkAndUnregister(Map<?, ?> map) {
+			if (map instanceof Properties) {
+				this.unregister((Properties)map);
+				return (L)this;
+			}
+			return null;
+		}
+		
 		public default <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 
 		}

@@ -230,9 +230,7 @@ public interface ManagedLogger {
 					enableLogging();
 				}
 				removeLoggingLevels(config);
-				if (config instanceof org.burningwave.core.iterable.Properties) {
-					listenTo((org.burningwave.core.iterable.Properties)config);
-				}
+				checkAndListenTo(config);
 			}
 
 			abstract void initSpecificElements(Map<?, ?> properties);
@@ -315,9 +313,7 @@ public interface ManagedLogger {
 
 			@Override
 			public void close() {
-				if (config instanceof org.burningwave.core.iterable.Properties) {
-					unregister((org.burningwave.core.iterable.Properties)config);
-				}
+				checkAndUnregister(config);
 				config = null;
 				instanceId = null;
 			}
