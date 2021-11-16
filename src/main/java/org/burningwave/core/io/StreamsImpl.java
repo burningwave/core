@@ -43,7 +43,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -203,28 +202,12 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 	}
 	
 	@Override
-	public <K, V> Map<K, V> toPropertiesMap(Supplier<InputStream> inputStreamSupplier) {
-		try (InputStream inputStream = inputStreamSupplier.get()) {
-			return toPropertiesMap(inputStream);
-		} catch (IOException exc) {
-			return Driver.throwException(exc);
-		}
-	}
-	
-	@Override
 	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map) {
 		try (InputStream inputStream = inputStreamSupplier.get()) {
 			feelPropertiesMap(inputStream, map);
 		} catch (IOException exc) {
 			Driver.throwException(exc);
 		}		
-	}
-	
-	@Override
-	public <K, V> Map<K, V> toPropertiesMap(InputStream inputStream) {
-		Map<K, V> map = new ConcurrentHashMap<>();
-		feelPropertiesMap(inputStream, map);
-		return map;
 	}
 
 	@Override

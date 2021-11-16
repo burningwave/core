@@ -64,11 +64,7 @@ public interface Streams {
 
 	public ByteBuffer toByteBuffer(InputStream inputStream);
 	
-	public <K, V> Map<K, V> toPropertiesMap(Supplier<InputStream> inputStreamSupplier);
-	
 	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map);
-	
-	public<K,V> Map<K, V> toPropertiesMap(InputStream inputStream);
 	
 	public void feelPropertiesMap(InputStream inputStream, Map<?, ?> map);
 
