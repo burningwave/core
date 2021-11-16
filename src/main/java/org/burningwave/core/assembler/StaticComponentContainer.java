@@ -74,6 +74,13 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
+		
+		}
+		
+		public static class Value {
+			
+			public static String FILE_NAME = "burningwave.static.properties";
+			
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -196,7 +203,7 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			String configFileName = "burningwave.static.properties";
+			String configFileName = Configuration.Value.FILE_NAME;
 			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
 			properties.putAll(propertiesFromConfigurationFile);
 			adjustConfigurationValues(properties);
