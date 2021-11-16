@@ -2,9 +2,9 @@ name: Build and test
 
 on:
   schedule:
-#      - cron: "0 2-23/4 * * *"
-     - cron: "0 15 * * 5"
-#     - cron: "0 10,22 30 9 *"
+    - cron: "0 3-23/6 * * *"
+#    - cron: "0 15 * * 5"
+#    - cron: "0 10,22 30 9 *"
 
 jobs:
     
@@ -14,8 +14,8 @@ jobs:
       fail-fast: true
       max-parallel: 15
       matrix:
-#        architecture: [x64, x64, x64, x64, x64, x64, x64, x64]
-        architecture: [x64]
+        architecture: [x64, x64, x64, x64, x64, x64, x64, x64]
+#        architecture: [x64]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
     runs-on: ${{ matrix.os }}
