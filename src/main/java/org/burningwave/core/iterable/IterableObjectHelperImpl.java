@@ -703,7 +703,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			if (taskCountThatCanBeCreated > 1) {
 				Consumer<Consumer<OC>> outputItemsHandler =
 					output != null ?
-						isConcurrent(output) ?
+						isConcurrentEnabled(output) ?
 							(outputHandler) -> {
 								outputHandler.accept(output);
 							} :
@@ -921,7 +921,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min(Runtime.getRuntime().availableProcessors(), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
+				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
 				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
 				return taskCount;
 			}
@@ -942,7 +942,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private boolean isConcurrent(Object coll) {
+	private boolean isConcurrentEnabled(Object coll) {
 		try {
 			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
 				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
@@ -960,7 +960,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					}
 				);				
-				return isConcurrent(coll);
+				return isConcurrentEnabled(coll);
 			}
 			throw exc;
 		}

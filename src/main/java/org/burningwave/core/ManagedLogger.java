@@ -129,11 +129,15 @@ public interface ManagedLogger {
 				defaultValues.put(Key.TYPE, "autodetect");
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
 				
+				String defaultValuesSeparator = (String)org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES.get(
+					org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR		
+				);
+				
 				//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-					ComponentContainer.PathScannerClassLoader.class.getName() + ";" +
-					MemoryClassLoader.class.getName() + ";" +
-					PathScannerClassLoader.class.getName() + ";"
+					ComponentContainer.PathScannerClassLoader.class.getName() + defaultValuesSeparator +
+					MemoryClassLoader.class.getName() + defaultValuesSeparator +
+					PathScannerClassLoader.class.getName() + defaultValuesSeparator
 				);
 
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
