@@ -273,17 +273,15 @@ public class StaticComponentContainer {
 				}
 			}.checkAndListenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
-			String driverClassName = GlobalProperties.resolveValue(
-				Configuration.Key.JVM_DRIVER_TYPE
-			);
+			String driverClassName = IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.JVM_DRIVER_TYPE));
 			if (driverClassName != null) {
 				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
 				).getDeclaredConstructor().newInstance());
-				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+				if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.JVM_DRIVER_INIT)))) {
 					Driver.init();
 				}
-			} else if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.JVM_DRIVER_INIT))) {
+			} else if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.JVM_DRIVER_INIT)))) {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNew();
 			} else {
 				Driver = io.github.toolfactory.jvm.Driver.Factory.getNewDynamic();
@@ -299,14 +297,14 @@ public class StaticComponentContainer {
 				getAndAdjustConfigurationForBackgroundExecutor()
 			);
 			Synchronizer = org.burningwave.core.concurrent.Synchronizer.create(
-				Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer",
+				Optional.ofNullable(IterableObjectHelper.resolveStringValue(onGlobalPropertiesforNamedKey(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS))).map(nm -> nm + " - ").orElseGet(() -> "") + "Synchronizer",
 				true
 			);
-			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED))) {
+			if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
 
-			if (!Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BANNER_HIDE))) {
+			if (!Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BANNER_HIDE)))) {
 				showBanner();
 			}
 			ManagedLoggersRepository = ManagedLogger.Repository.create(GlobalProperties);
@@ -391,17 +389,18 @@ public class StaticComponentContainer {
 				Double.valueOf(((double) (System.nanoTime() - startTime)) / 1_000_000_000).toString()
 			);
 			if (Objects.toBoolean(
-				GlobalProperties.resolveValue(
-					Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
+					IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(
+						Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED
+					)
 				)
 			)) {
 				Synchronizer.startAllThreadsMonitoring(
 					Objects.toLong(
-						GlobalProperties.resolveValue(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL)
+						IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL))
 					)
 				);
 			}
-			if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED))) {
+			if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED)))) {
 				BackgroundExecutor.startAllTasksMonitoring(
 					retrieveAllTasksMonitoringConfig()
 				);
@@ -409,7 +408,7 @@ public class StaticComponentContainer {
 
 			if (JVMInfo.getVersion() > 8) {
 				Modules = org.burningwave.core.classes.Modules.create();
-				if (Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL))) {
+				if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.MODULES_EXPORT_ALL_TO_ALL)))) {
 					try {
 						Modules.exportAllToAll();
 					} catch (Throwable exc) {
@@ -424,6 +423,10 @@ public class StaticComponentContainer {
 			throw new RuntimeException(exc);
 		}
 
+	}
+	
+	private static org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey onGlobalPropertiesforNamedKey(String key) {
+		return org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey.forNamedKey(key).on(GlobalProperties);
 	}
 
 	private static void adjustConfigurationValues(Properties properties) {
@@ -495,17 +498,21 @@ public class StaticComponentContainer {
 
 
 	private static String getName(String simpleName) {
-		return Optional.ofNullable(GlobalProperties.resolveStringValue(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS)).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
+		return Optional.ofNullable(IterableObjectHelper.resolveStringValue(
+			onGlobalPropertiesforNamedKey(Configuration.Key.GROUP_NAME_FOR_NAMED_ELEMENTS))
+		).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
 
 	private static final QueuedTasksExecutor.Group.TasksMonitorer.Config retrieveAllTasksMonitoringConfig() {
-		String probablyDeadLockedThreadsHandlingPolicy = GlobalProperties.resolveStringValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY);
+		String probablyDeadLockedThreadsHandlingPolicy = IterableObjectHelper.resolveStringValue(
+			onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY)
+		);
 		return new QueuedTasksExecutor.Group.TasksMonitorer.Config().setAllTasksLoggerEnabled(
-			Objects.toBoolean(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED))
+			Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED)))
 		).setInterval(
-			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL))
+			Objects.toLong(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL)))
 		).setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
-			Objects.toLong(GlobalProperties.resolveValue(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED))
+			Objects.toLong(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED)))
 		).setMarkAsProbableDeadLocked(
 			probablyDeadLockedThreadsHandlingPolicy.toLowerCase().contains("mark as probable dead locked")
 		).setKillProbableDeadLockedTasks(
@@ -515,7 +522,7 @@ public class StaticComponentContainer {
 
 	private static void showBanner() throws IOException {
 		try (InputStream inputStream = Resources.getAsInputStream(
-			GlobalProperties.resolveValue(Configuration.Key.BANNER_FILE),
+				IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BANNER_FILE)),
 			Component.class.getClassLoader(),
 			Thread.currentThread().getContextClassLoader()
 		).getValue()) {
