@@ -62,6 +62,7 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties.Event;
 
 
@@ -251,10 +252,15 @@ class PathHelperImpl implements Component, PathHelper {
 				}
 
 			}
-			Properties configWithResolvedPaths = new Properties();
+			Map<Object, Object> configWithResolvedPaths = new HashMap<>();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, IterableObjectHelper.getDefaultValuesSeparator(), true);
+			Collection<String> computedPaths = IterableObjectHelper.resolveStringValues(
+				ResolveConfig.forNamedKey(pathGroupPropertyName)
+				.on(configWithResolvedPaths)
+				.withValuesSeparator(IterableObjectHelper.getDefaultValuesSeparator())
+				.deleteUnresolvedPlaceHolder(true)
+			);
 			if (computedPaths != null) {
 				groupPaths.addAll(addPaths(pathGroupName, computedPaths));
 			}
