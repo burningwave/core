@@ -96,7 +96,7 @@ public interface IterableObjectHelper {
 
 	public static IterableObjectHelper create(Properties config) {
 		IterableObjectHelperImpl iterableObjectHelper = new IterableObjectHelperImpl(config);
-		iterableObjectHelper.listenTo(config);
+		iterableObjectHelper.checkAndListenTo(config);
 		return iterableObjectHelper;
 	}
 

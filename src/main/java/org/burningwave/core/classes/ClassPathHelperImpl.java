@@ -70,7 +70,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		this.classPathHunter = classPathHunter;
 		this.classPathsBasePath = FileSystemItem.of(getOrCreateTemporaryFolder("classPaths"));
 		this.config = config;
-		listenTo(config);
+		checkAndListenTo(config);
 	}
 
 	@Override
@@ -447,7 +447,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	@Override
 	public void close() {
 		closeResources(() -> classPathsBasePath == null, task -> {
-			unregister(config);
+			checkAndUnregister(config);
 			FileSystemHelper.deleteOnExit(getOrCreateTemporaryFolder());
 			classPathsBasePath.destroy();
 			classPathsBasePath = null;

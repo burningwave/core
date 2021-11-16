@@ -163,7 +163,7 @@ public interface ManagedLogger {
 						Driver.getClassByName(className, false,
 							ManagedLogger.Repository.class.getClassLoader(),
 							ManagedLogger.Repository.class
-						).getConstructor(java.util.Properties.class).newInstance(config);
+						).getConstructor(Map.class).newInstance(config);
 				}
 
 			} catch (Throwable exc) {
@@ -221,8 +221,8 @@ public interface ManagedLogger {
 		public static abstract class Abst implements Repository, org.burningwave.core.iterable.Properties.Listener  {
 			boolean isEnabled;
 			String instanceId;
-			Properties config;
-			Abst(Properties config) {
+			Map<?, ?> config;
+			Abst(Map<?, ?> config) {
 				this.config = config;
 				instanceId = this.toString();
 				initSpecificElements(config);
@@ -230,16 +230,14 @@ public interface ManagedLogger {
 					enableLogging();
 				}
 				removeLoggingLevels(config);
-				if (config instanceof org.burningwave.core.iterable.Properties) {
-					listenTo((org.burningwave.core.iterable.Properties)config);
-				}
+				checkAndListenTo(config);
 			}
 
-			abstract void initSpecificElements(Properties properties);
+			abstract void initSpecificElements(Map<?, ?> properties);
 
 			abstract void resetSpecificElements();
 
-			boolean getEnabledLoggingFlag(Properties properties) {
+			boolean getEnabledLoggingFlag(Map<?, ?> properties) {
 				return Objects.toBoolean(
 					IterableObjectHelper.resolveStringValue(
 						ResolveConfig.forNamedKey(Configuration.Key.ENABLED_FLAG)
@@ -265,7 +263,7 @@ public interface ManagedLogger {
 				}
 			}
 
-			void removeLoggingLevels(Properties properties) {
+			void removeLoggingLevels(Map<?, ?> properties) {
 				removeLoggingLevels(properties, Repository.Configuration.Key.TRACE_LOGGING_DISABLED_FOR, LoggingLevel.TRACE);
 				removeLoggingLevels(properties, Repository.Configuration.Key.DEBUG_LOGGING_DISABLED_FOR, LoggingLevel.DEBUG);
 				removeLoggingLevels(properties, Repository.Configuration.Key.INFO_LOGGING_DISABLED_FOR, LoggingLevel.INFO);
@@ -276,8 +274,8 @@ public interface ManagedLogger {
 				);
 			}
 
-			protected void removeLoggingLevels(Properties properties, String configKey, LoggingLevel... loggingLevels) {
-				String loggerDisabledFor = properties.getProperty(configKey);
+			protected void removeLoggingLevels(Map<?, ?> properties, String configKey, LoggingLevel... loggingLevels) {
+				String loggerDisabledFor = (String)properties.get(configKey);
 				if (loggerDisabledFor != null) {
 					for (LoggingLevel loggingLevel : loggingLevels) {
 						removeLoggingLevelFor(loggingLevel, loggerDisabledFor.split(IterableObjectHelper.getDefaultValuesSeparator()));
@@ -315,9 +313,7 @@ public interface ManagedLogger {
 
 			@Override
 			public void close() {
-				if (config instanceof org.burningwave.core.iterable.Properties) {
-					unregister((org.burningwave.core.iterable.Properties)config);
-				}
+				checkAndUnregister(config);
 				config = null;
 				instanceId = null;
 			}

@@ -271,7 +271,7 @@ public class StaticComponentContainer {
 					}
 
 				}
-			}.listenTo(GlobalProperties = properties);
+			}.checkAndListenTo(GlobalProperties = properties);
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = GlobalProperties.resolveValue(
 				Configuration.Key.JVM_DRIVER_TYPE
@@ -428,7 +428,7 @@ public class StaticComponentContainer {
 
 	private static void adjustConfigurationValues(Properties properties) {
 		org.burningwave.core.iterable.IterableObjectHelper temporaryPropertyResolver = org.burningwave.core.iterable.IterableObjectHelper.create(properties);
-		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).unregister(properties);
+		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).checkAndUnregister(properties);
 		String propertyValue = properties.getProperty(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES);
 		propertyValue = propertyValue.replace(";", temporaryPropertyResolver.getDefaultValuesSeparator());
 		properties.put(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES, propertyValue);

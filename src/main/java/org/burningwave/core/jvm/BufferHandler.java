@@ -83,16 +83,14 @@ public class BufferHandler implements Component {
 	Function<Integer, ByteBuffer> defaultByteBufferAllocator;
     final static float reallocationFactor = 1.1f;
 
-	public BufferHandler(java.util.Properties config) {
+	public BufferHandler(Map<?, ?> config) {
 		init(config);
 	}
 
-	void init(java.util.Properties config) {
+	void init(Map<?, ?> config) {
 		setDefaultByteBufferSize(config);
 		setDefaultByteBufferAllocationMode(config);
-		if (config instanceof Properties) {
-			listenTo((Properties)config);
-		}
+		checkAndListenTo(config);
 		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();
 		mainCycle:
 		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
@@ -106,7 +104,7 @@ public class BufferHandler implements Component {
 		}
 	}
 
-	private void setDefaultByteBufferSize(java.util.Properties config) {
+	private void setDefaultByteBufferSize(Map<?, ?> config) {
 		String defaultBufferSize = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
 			.on(config)
@@ -128,7 +126,7 @@ public class BufferHandler implements Component {
 		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
 	}
 
-	private void setDefaultByteBufferAllocationMode(java.util.Properties config) {
+	private void setDefaultByteBufferAllocationMode(Map<?, ?> config) {
 		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(
 			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
 			.on(config)
@@ -161,7 +159,7 @@ public class BufferHandler implements Component {
 		return defaultBufferSize;
 	}
 
-	public static BufferHandler create(java.util.Properties config) {
+	public static BufferHandler create(Map<?, ?> config) {
 		return new BufferHandler(config);
 	}
 

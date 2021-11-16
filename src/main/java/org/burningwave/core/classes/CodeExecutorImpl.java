@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -53,17 +54,17 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 	private ClassFactory classFactory;
 	private PathHelper pathHelper;
 	private Supplier<ClassFactory> classFactorySupplier;
-	private Properties config;
+	private Map<?, ?> config;
 
 	CodeExecutorImpl(
 		Supplier<ClassFactory> classFactorySupplier,
 		PathHelper pathHelper,
-		Properties config
+		Map<?, ?> config
 	) {
 		this.classFactorySupplier = classFactorySupplier;
 		this.pathHelper = pathHelper;
 		this.config = config;
-		listenTo(config);
+		checkAndListenTo(config);
 	}
 
 	private ClassFactory getClassFactory() {
@@ -78,7 +79,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(ExecuteConfig.ForProperties config) {
-		java.util.Properties properties = config.getProperties();
+		Map<?, ?> properties = config.getProperties();
 		if (properties == null) {
 			if (config.getFilePath() == null) {
 				properties = this.config;
@@ -171,7 +172,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		);
 	}
 
-	private String retrieveValue(ExecuteConfig.ForProperties config, java.util.Properties properties, String... suffixes) {
+	private String retrieveValue(ExecuteConfig.ForProperties config, Map<?, ?> properties, String... suffixes) {
 		for (String suffix : suffixes) {
 			String value = IterableObjectHelper.resolveStringValue(
 				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)
@@ -262,7 +263,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 
 	@Override
 	public void close() {
-		unregister(config);
+		if (config instanceof Properties) {
+			checkAndUnregister((Properties)config);
+		}
 		classFactory = null;
 		pathHelper = null;
 		classFactorySupplier = null;

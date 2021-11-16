@@ -108,7 +108,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	private static Collection<ComponentContainer> instances;
 	private Map<Class<?>, Component> components;
-	private Supplier<java.util.Properties> propertySupplier;
+	private Supplier<Map<?, ?>> propertySupplier;
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
@@ -119,13 +119,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		instances = ConcurrentHashMap.newKeySet();
 	}
 
-	ComponentContainer(Supplier<java.util.Properties> propertySupplier) {
+	ComponentContainer(Supplier<Map<?, ?>> propertySupplier) {
 		this.instanceId = getId();
 		this.propertySupplier = propertySupplier;
 		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
-		listenTo(GlobalProperties);
-		listenTo(this.config);
+		checkAndListenTo(GlobalProperties);
+		checkAndListenTo(this.config);
 		instances.add(this);
 	}
 
@@ -155,7 +155,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 	}
 
-	public final static ComponentContainer create(java.util.Properties properties) {
+	public final static ComponentContainer create(Map<?, ?> properties) {
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
@@ -465,11 +465,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		);
 	}
 
-	public <T> T resolveProperty(java.util.Properties properties, String configKey) {
+	public <T> T resolveProperty(Map<?, ?> properties, String configKey) {
 		return resolveProperty(properties, configKey, null);
 	}
 
-	public <T> T resolveProperty(java.util.Properties properties, String configKey, Map<?, ?> defaultValues) {
+	public <T> T resolveProperty(Map<?, ?> properties, String configKey, Map<?, ?> defaultValues) {
 		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
 			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
@@ -525,8 +525,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (force || !isUndestroyable) {
 			instances.remove(this);
 			closeResources(() -> instanceId == null, task -> {
-				unregister(GlobalProperties);
-				unregister(config);
+				checkAndUnregister(GlobalProperties);
+				checkAndUnregister(config);
 				clear();
 				components = null;
 				propertySupplier = null;

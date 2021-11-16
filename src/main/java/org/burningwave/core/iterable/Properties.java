@@ -29,9 +29,12 @@
 package org.burningwave.core.iterable;
 
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -44,33 +47,58 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings("unchecked")
-public class Properties extends java.util.Properties implements ManagedLogger {
+public class Properties extends ConcurrentHashMap<Object, Object> implements ManagedLogger {
 	private static final long serialVersionUID = -350748766178421942L;
 
 	public static enum Event {
 		PUT, REMOVE
 	}
-
+	
 	private Set<Listener> listeners;
 	private String defaultValuesSeparator;
-
-    public Properties(Properties defaults) {
-    	this(defaults, null);
-    }
-
+	
 	public Properties() {
-		this(null, null);
+		super();
 	}
-
-	public Properties(Properties defaults, String defaultValuesSeparator) {
+	
+	public Properties(Map<?, ?> defaults, String defaultValuesSeparator) {
 		super(defaults);
-		listeners = ConcurrentHashMap.newKeySet();
 		this.defaultValuesSeparator = defaultValuesSeparator;
 	}
 
+	private Set<Listener> getListeners() {
+		if (listeners == null) {
+			synchronized (this) {
+				if (listeners == null) {
+					listeners = newKeySet();
+				}
+			}
+		}
+		return listeners;
+	}
+	
+	public Properties load(InputStream resourceAsStream) {
+		try {
+			java.util.Properties properties = new java.util.Properties();
+			properties.load(resourceAsStream);
+			putAll(properties);
+			return this;
+		} catch (IOException exc) {
+			return Driver.throwException(exc);
+		}
+	}
+	
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator != null ? this.defaultValuesSeparator : IterableObjectHelper.getDefaultValuesSeparator();
 	}
+	
+    public Object setProperty(String key, String value) {
+        return put(key, value);
+    }
+    
+    public String getProperty(String key) {
+        return (String)get(key);
+    }
 
 ////////////////////
 
@@ -79,7 +107,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -88,7 +115,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -97,7 +123,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -106,7 +131,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			ResolveConfig.forNamedKey(key)
 			.on(this)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -156,7 +180,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.on(this)
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -166,7 +189,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.on(this)
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -176,7 +198,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.on(this)
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -186,7 +207,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.on(this)
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -199,7 +219,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
 			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -210,7 +229,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
 			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -221,7 +239,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
 			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -232,7 +249,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 			.withValuesSeparator(valuesSeparator)
 			.withDefaultValueSeparator(defaultValuesSeparator)
 			.deleteUnresolvedPlaceHolder(deleteUnresolvedPlaceHolder)
-			.withDefaultValues(this.defaults)
 		);
 	}
 
@@ -264,9 +280,6 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 
 	public Map<Object, Object> toMap(Supplier<Map<Object, Object>> mapSupplier) {
 		Map<Object, Object> allValues = mapSupplier.get();
-		if (this.defaults != null) {
-			allValues.putAll(this.defaults);
-		}
 		allValues.putAll(this);
 		return allValues;
 	}
@@ -288,7 +301,7 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 	}
 
 	private void notifyChange(Event event, Object key, Object newValue, Object oldValue) {
-		for (Listener listener : listeners) {
+		for (Listener listener : getListeners()) {
 			try  {
 				listener.processChangeNotification(this, event, key, newValue, oldValue);
 			} catch (Throwable exc){
@@ -300,16 +313,32 @@ public class Properties extends java.util.Properties implements ManagedLogger {
 	public static interface Listener {
 
 
-		public default <T extends Listener> T listenTo(Properties properties) {
-			properties.listeners.add(this);
-			return (T)this;
+		public default <L extends Listener> L listenTo(Properties properties) {
+			properties.getListeners().add(this);
+			return (L)this;
 		}
 
-		public default <T extends Listener> T unregister(Properties properties) {
-			properties.listeners.remove(this);
-			return (T)this;
+		public default <L extends Listener> L unregister(Properties properties) {
+			properties.getListeners().remove(this);
+			return (L)this;
 		}
-
+		
+		public default <L extends Listener> L checkAndListenTo(Map<?, ?> map) {
+			if (map instanceof Properties) {
+				this.listenTo((Properties)map);
+				return (L)this;
+			}
+			return null;
+		}
+		
+		public default <L extends Listener> L checkAndUnregister(Map<?, ?> map) {
+			if (map instanceof Properties) {
+				this.unregister((Properties)map);
+				return (L)this;
+			}
+			return null;
+		}
+		
 		public default <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 
 		}
