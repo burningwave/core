@@ -602,14 +602,15 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		private void interrupt(Thread thread) {
-			ManagedLoggersRepository.logError(
-				getClass()::getName,
-				"\n\tPoolable thread {} - {} with executable {} is not in a waiting state and it will be interrupted",
-				thread.getClass(),
-				thread.getName(),
-				thread.executable
-			);
 			try {
+				ManagedLoggersRepository.logError(
+					getClass()::getName,
+					"\n\tThread of type {} named {} with executable {} is in state of {}",
+					thread.getClass(),
+					thread.getName(),
+					thread.executable,
+					thread.getState().name()
+				);
 				//thread.interrupt();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, exc);
@@ -623,8 +624,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				if (thread != null) {
 					synchronized(thread) {
 						if (poolableSleepingThreads[i] == thread) {
-							if (thread.getState() == Thread.State.WAITING) {
-								poolableSleepingThreads[i] = null;
+							poolableSleepingThreads[i] = null;
+							if (thread.getState() == Thread.State.WAITING) {								
 								return thread;
 							} else {
 								interrupt(thread);

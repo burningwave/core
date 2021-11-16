@@ -53,7 +53,7 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public interface ClassFactory {
 
@@ -110,7 +110,7 @@ public interface ClassFactory {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new ClassFactoryImpl(
 			byteCodeHunter,
@@ -322,9 +322,10 @@ public interface ClassFactory {
 						classPaths
 					).setFileFilter(
 						FileSystemItem.Criteria.forClassTypeFiles(
-							((ClassFactoryImpl)this.classFactory).config.resolveStringValue(
-								Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-								Configuration.DEFAULT_VALUES
+							IterableObjectHelper.resolveStringValue(
+								ResolveConfig.forNamedKey(Configuration.Key.BYTE_CODE_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS)
+								.on(((ClassFactoryImpl)this.classFactory).config)
+								.withDefaultValues(Configuration.DEFAULT_VALUES)
 							)
 						)
 					).optimizePaths(

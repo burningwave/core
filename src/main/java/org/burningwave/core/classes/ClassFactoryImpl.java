@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -55,7 +56,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 	private Supplier<ClassPathHunter> classPathHunterSupplier;
 	private ClassLoaderManager<ClassLoader> defaultClassLoaderManager;
 	private Collection<ClassRetriever> classRetrievers;
-	Properties config;
+	Map<?, ?> config;
 
 	ClassFactoryImpl(
 		ByteCodeHunter byteCodeHunter,
@@ -64,7 +65,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
 		Object defaultClassLoaderOrDefaultClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		this.byteCodeHunter = byteCodeHunter;
 		this.classPathHunterSupplier = classPathHunterSupplier;

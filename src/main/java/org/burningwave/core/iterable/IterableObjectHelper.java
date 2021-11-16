@@ -94,7 +94,7 @@ public interface IterableObjectHelper {
 		}
 	}
 
-	public static IterableObjectHelper create(Properties config) {
+	public static IterableObjectHelper create(Map<?, ?> config) {
 		IterableObjectHelperImpl iterableObjectHelper = new IterableObjectHelperImpl(config);
 		iterableObjectHelper.checkAndListenTo(config);
 		return iterableObjectHelper;

@@ -34,7 +34,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -42,7 +41,6 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
-import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -84,17 +82,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			if (config.getFilePath() == null) {
 				properties = this.config;
 			} else {
-				Properties tempProperties = new Properties();
-				Supplier<InputStream> inputStreamSupplier = 
-					config.isAbsoluteFilePath() ?
-						() -> FileSystemItem.ofPath(config.getFilePath()).toInputStream() :
-						() -> pathHelper.getResourceAsStream(config.getFilePath());	
-				Executor.run(() -> {
-					try (InputStream inputStream = inputStreamSupplier.get()) {
-						tempProperties.load(inputStream);
-					}						
-				});
-				properties = tempProperties;
+				properties = new Properties().load(config.isAbsoluteFilePath() ?
+					() -> FileSystemItem.ofPath(config.getFilePath()).toInputStream() :
+					() -> pathHelper.getResourceAsStream(config.getFilePath()));
 			}
 
 		}

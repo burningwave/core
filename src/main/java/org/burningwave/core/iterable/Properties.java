@@ -29,11 +29,10 @@
 package org.burningwave.core.iterable;
 
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
@@ -77,15 +76,14 @@ public class Properties extends ConcurrentHashMap<Object, Object> implements Man
 		return listeners;
 	}
 	
-	public Properties load(InputStream resourceAsStream) {
-		try {
-			java.util.Properties properties = new java.util.Properties();
-			properties.load(resourceAsStream);
-			putAll(properties);
-			return this;
-		} catch (IOException exc) {
-			return Driver.throwException(exc);
-		}
+	public Properties load(Supplier<InputStream> inputStreamSupplier) {
+		Streams.feelPropertiesMap(inputStreamSupplier, this);
+		return this;
+	}
+	
+	public Properties load(InputStream inputStream) {
+		Streams.feelPropertiesMap(inputStream, this);
+		return this;
 	}
 	
 	public String getDefaultValuesSeparator() {

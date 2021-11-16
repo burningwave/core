@@ -38,14 +38,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.burningwave.core.classes.ClassCriteria.TestContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.SearchContext, ClassHunter.SearchResult> implements ClassHunter {
 
 	ClassHunterImpl(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		super(
 			pathHelper,

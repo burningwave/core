@@ -41,13 +41,17 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 
+@SuppressWarnings({ "unchecked" })
 class StreamsImpl implements Streams, Identifiable, Properties.Listener, ManagedLogger {
 
 	String instanceId;
@@ -196,4 +200,29 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener, Managed
 		});
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
+	
+	@Override
+	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map) {
+		try (InputStream inputStream = inputStreamSupplier.get()) {
+			feelPropertiesMap(inputStream, map);
+		} catch (IOException exc) {
+			Driver.throwException(exc);
+		}		
+	}
+
+	@Override
+	public void feelPropertiesMap(InputStream inputStream, Map<?, ?> map) {
+		try {
+			java.util.Properties properties = new java.util.Properties();
+			properties.load(inputStream);
+			Map<Object, Object> castedMap = (Map<Object, Object>)map;
+			for (Entry<Object, Object> entry : properties.entrySet()) {
+				castedMap.put(entry.getKey(), entry.getValue());
+			}
+		} catch (IOException exc) {
+			Driver.throwException(exc);
+		}
+		
+	}
+
 }

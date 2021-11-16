@@ -62,6 +62,7 @@ import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties.Event;
 
 
@@ -70,10 +71,10 @@ class PathHelperImpl implements Component, PathHelper {
 	private static Pattern PATH_REGEX = Pattern.compile("\\/\\/(.*)\\/\\/(children|allChildren):(.*)");
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
-	private Properties config;
+	private Map<?, ?> config;
 	private QueuedTasksExecutor.Task initializerTask;
 
-	PathHelperImpl(Properties config) {
+	PathHelperImpl(Map<?, ?> config) {
 		this.config = config;
 		checkAndListenTo(config);
 		launchAllPathsLoadingTask();
@@ -109,7 +110,7 @@ class PathHelperImpl implements Component, PathHelper {
 	}
 
 	private void loadMainClassPaths() {
-		Collection<String> placeHolders = config.getAllPlaceHolders(Configuration.Key.MAIN_CLASS_PATHS);
+		Collection<String> placeHolders = IterableObjectHelper.getAllPlaceHolders(config, Configuration.Key.MAIN_CLASS_PATHS);
 		if (placeHolders.contains("${system.properties:java.class.path}")) {
 			loadAndMapPaths(Configuration.Key.MAIN_CLASS_PATHS, null);
 			addPaths(
@@ -207,18 +208,18 @@ class PathHelperImpl implements Component, PathHelper {
 			Configuration.Key.PATHS_PREFIX + pathGroupName;
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
 		synchronized(this) {
-			String currentPropertyPaths = config.getProperty(pathGroupPropertyName);
+			String currentPropertyPaths = (String)config.get(pathGroupPropertyName);
 			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
 				if (!currentPropertyPaths.endsWith(IterableObjectHelper.getDefaultValuesSeparator())) {
 					currentPropertyPaths += IterableObjectHelper.getDefaultValuesSeparator();
 				}
 				currentPropertyPaths += paths;
-				config.put(pathGroupPropertyName, currentPropertyPaths);
+				((Map<Object, Object>)config).put(pathGroupPropertyName, currentPropertyPaths);
 			} else if (Strings.isNotEmpty(paths)) {
 				currentPropertyPaths = paths;
-				config.put(pathGroupPropertyName, currentPropertyPaths);
+				((Map<Object, Object>)config).put(pathGroupPropertyName, currentPropertyPaths);
 			}
-			Collection<String> placeHolders = config.getAllPlaceHolders(pathGroupPropertyName);
+			Collection<String> placeHolders = IterableObjectHelper.getAllPlaceHolders(config, pathGroupPropertyName);
 			Map<String, String> defaultValues = new LinkedHashMap<>();
 			if (!placeHolders.isEmpty()) {
 				for (String placeHolder : placeHolders) {
@@ -251,10 +252,15 @@ class PathHelperImpl implements Component, PathHelper {
 				}
 
 			}
-			Properties configWithResolvedPaths = new Properties();
+			Map<Object, Object> configWithResolvedPaths = new HashMap<>();
 			configWithResolvedPaths.putAll(config);
 			configWithResolvedPaths.putAll(defaultValues);
-			Collection<String> computedPaths = configWithResolvedPaths.resolveStringValues(pathGroupPropertyName, IterableObjectHelper.getDefaultValuesSeparator(), true);
+			Collection<String> computedPaths = IterableObjectHelper.resolveStringValues(
+				ResolveConfig.forNamedKey(pathGroupPropertyName)
+				.on(configWithResolvedPaths)
+				.withValuesSeparator(IterableObjectHelper.getDefaultValuesSeparator())
+				.deleteUnresolvedPlaceHolder(true)
+			);
 			if (computedPaths != null) {
 				groupPaths.addAll(addPaths(pathGroupName, computedPaths));
 			}

@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
@@ -51,6 +52,7 @@ import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings({"resource", "unchecked"})
@@ -141,8 +143,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		if (fileFilterSupplier == null) {
 			fileFiltersExtenallySet = additionalFileFilterSupplier != null;
 			fileFilterSupplier = fileSystemItem -> FileSystemItem.Criteria.forClassTypeFiles(
-				classPathScanner.config.resolveStringValue(
-					classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties()
+				IterableObjectHelper.resolveStringValue(
+					ResolveConfig.forNamedKey(classPathScanner.getDefaultPathScannerClassLoaderCheckFileOptionsNameInConfigProperties())
+					.on(classPathScanner.config)
 				)
 			);
 		} else {

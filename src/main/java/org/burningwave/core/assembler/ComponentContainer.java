@@ -85,6 +85,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			public static final String AFTER_INIT = "component-container.after-init.operations";
 
 		}
+		
+		public static class Value {
+			
+			public static String FILE_NAME = "burningwave.properties";
+			
+		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
 
@@ -264,8 +270,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 								pathScannerClassLoader,
 								"classFileCriteriaAndConsumer",
 								FileSystemItem.Criteria.forClassTypeFiles(
-									config.resolveStringValue(
-										PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
+									IterableObjectHelper.resolveStringValue(
+										ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+										.on(config)
 									)
 								)
 							);
@@ -338,9 +345,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
 				), getPathHelper(),
 				FileSystemItem.Criteria.forClassTypeFiles(
-					config.resolveStringValue(
-						PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION
-					)
+						IterableObjectHelper.resolveStringValue(
+							ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+							.on(config)
+						)
 				),
 				() -> {
 					Synchronizer.execute(getMutexForComponentsId(), () -> {
@@ -604,7 +612,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 	private static class Holder {
-		private static final ComponentContainer INSTANCE = ComponentContainer.create("burningwave.properties").markAsUndestroyable();
+		private static final ComponentContainer INSTANCE = ComponentContainer.create(Configuration.Value.FILE_NAME).markAsUndestroyable();
 
 		private static ComponentContainer getComponentContainerInstance() {
 			return INSTANCE;

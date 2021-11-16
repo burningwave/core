@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunter.SearchResult> {
 
@@ -83,7 +82,7 @@ public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunt
 	public static ByteCodeHunter create(
 		PathHelper pathHelper,
 		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Properties config
+		Map<?, ?> config
 	) {
 		return new ByteCodeHunterImpl(
 			pathHelper,

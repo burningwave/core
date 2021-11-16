@@ -38,8 +38,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import org.burningwave.core.iterable.Properties;
-
 
 public interface PathHelper {
 
@@ -75,7 +73,7 @@ public interface PathHelper {
 		
 	}
 
-	public static PathHelper create(Properties config) {
+	public static PathHelper create(Map<?, ?> config) {
 		return new PathHelperImpl(config);
 	}
 

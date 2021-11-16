@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
+import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
@@ -54,17 +55,17 @@ import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.CheckingOption;
-import org.burningwave.core.iterable.Properties;
+import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 class ClassPathHelperImpl implements ClassPathHelper, Component {
 	private String instanceId;
 	private ClassPathHunter classPathHunter;
 	private FileSystemItem classPathsBasePath;
-	private Properties config;
+	private Map<?, ?> config;
 
 
 	ClassPathHelperImpl(
-		ClassPathHunter classPathHunter, Properties config
+		ClassPathHunter classPathHunter, Map<?, ?> config
 	) {
 		this.instanceId = UUID.randomUUID().toString();
 		this.classPathHunter = classPathHunter;
@@ -80,9 +81,10 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	CheckingOption getClassFileCheckingOption() {
 		return FileSystemItem.CheckingOption.forLabel(
-			config.resolveStringValue(
-				Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				Configuration.DEFAULT_VALUES
+			IterableObjectHelper.resolveStringValue(
+				ResolveConfig.forNamedKey(Configuration.Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS)
+				.on(config)
+				.withDefaultValues(Configuration.DEFAULT_VALUES)
 			)
 		);
 	}

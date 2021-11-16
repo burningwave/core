@@ -78,7 +78,6 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
-import org.burningwave.core.iterable.Properties;
 
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -87,12 +86,12 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 	ClassPathHelper classPathHelper;
 	JavaCompiler compiler;
 	FileSystemItem compiledClassesRepository;
-	Properties config;
+	Map<?, ?> config;
 
 	JavaMemoryCompilerImpl(
 		PathHelper pathHelper,
 		ClassPathHelper classPathHelper,
-		Properties config
+		Map<?, ?> config
 	) {
 		this.pathHelper = pathHelper;
 		this.classPathHelper = classPathHelper;
