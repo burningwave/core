@@ -86,7 +86,7 @@ public interface IterableObjectHelper {
 				CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
 				CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
 				BlockingQueue.class.getName() + defaultValuesSeparator +
-				ConcurrentSkipListSet.class.getName() + ";" +
+				ConcurrentSkipListSet.class.getName() + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$EntrySet" + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$KeySet" + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$Values" + defaultValuesSeparator
