@@ -78,7 +78,7 @@ public interface IterableObjectHelper {
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE, 2);
 			
 			String defaultValuesSeparator = (String)defaultValues.get(Key.DEFAULT_VALUES_SEPERATOR);
-			//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
+			//The semicolons in this value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 			defaultValues.put(
 				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
 				ConcurrentHashMap.class.getName() + "$CollectionView" + defaultValuesSeparator +
@@ -86,7 +86,7 @@ public interface IterableObjectHelper {
 				CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
 				CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
 				BlockingQueue.class.getName() + defaultValuesSeparator +
-				ConcurrentSkipListSet.class.getName() + ";" +
+				ConcurrentSkipListSet.class.getName() + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$EntrySet" + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$KeySet" + defaultValuesSeparator +
 				ConcurrentSkipListMap.class.getName() + "$Values" + defaultValuesSeparator
