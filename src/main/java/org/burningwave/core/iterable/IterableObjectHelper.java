@@ -82,7 +82,7 @@ public interface IterableObjectHelper {
 			defaultValues.put(
 				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
 				ConcurrentHashMap.class.getName() + "$CollectionView" + defaultValuesSeparator +
-				"java.util.Collections$SynchronizedCollection" + defaultValuesSeparator +
+				Collections.class.getName() + "$SynchronizedCollection" + defaultValuesSeparator +
 				CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
 				CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
 				BlockingQueue.class.getName() + defaultValuesSeparator +
@@ -187,6 +187,10 @@ public interface IterableObjectHelper {
 		throw TerminateIteration.NOTIFICATION;
 	}
 	
+	public default void terminateCurrentThreadIteration() {
+		throw TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
+	}
+	
 	public default boolean isIterationTerminatedNotification(Throwable exc) {
 		return exc instanceof TerminateIteration;
 	}
@@ -202,9 +206,11 @@ public interface IterableObjectHelper {
 		private static final long serialVersionUID = 4182825598193659018L;
 
 		public static final TerminateIteration NOTIFICATION;
+		public static final TerminateIteration ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
 
 		static {
 			NOTIFICATION = new IterableObjectHelper.TerminateIteration();
+			ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION = new IterableObjectHelper.TerminateIteration();
 		}
 
         @Override
