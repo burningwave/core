@@ -437,13 +437,16 @@ public class StaticComponentContainer {
 	}
 
 	private static void adjustConfigurationValues(Properties properties) {
+		String defaultValuesSeparator = (String)org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES.get(
+			org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR		
+		);
 		org.burningwave.core.iterable.IterableObjectHelper temporaryPropertyResolver = org.burningwave.core.iterable.IterableObjectHelper.create(properties);
 		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).checkAndUnregister(properties);
 		String propertyValue = properties.getProperty(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES);
-		propertyValue = propertyValue.replace(";", temporaryPropertyResolver.getDefaultValuesSeparator());
+		propertyValue = propertyValue.replace(defaultValuesSeparator, temporaryPropertyResolver.getDefaultValuesSeparator());
 		properties.put(org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES, propertyValue);
 		propertyValue = properties.getProperty(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR);
-		propertyValue = propertyValue.replace(";", temporaryPropertyResolver.getDefaultValuesSeparator());
+		propertyValue = propertyValue.replace(defaultValuesSeparator, temporaryPropertyResolver.getDefaultValuesSeparator());
 		properties.put(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, propertyValue);
 	}
 
