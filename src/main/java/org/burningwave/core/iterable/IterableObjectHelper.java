@@ -187,6 +187,10 @@ public interface IterableObjectHelper {
 		throw TerminateIteration.NOTIFICATION;
 	}
 	
+	public default void terminateThreadIteration() {
+		throw TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
+	}
+	
 	public default boolean isIterationTerminatedNotification(Throwable exc) {
 		return exc instanceof TerminateIteration;
 	}
@@ -202,9 +206,11 @@ public interface IterableObjectHelper {
 		private static final long serialVersionUID = 4182825598193659018L;
 
 		public static final TerminateIteration NOTIFICATION;
+		public static final TerminateIteration ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
 
 		static {
 			NOTIFICATION = new IterableObjectHelper.TerminateIteration();
+			ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION = new IterableObjectHelper.TerminateIteration();
 		}
 
         @Override

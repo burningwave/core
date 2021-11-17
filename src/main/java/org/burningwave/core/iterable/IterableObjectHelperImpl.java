@@ -737,7 +737,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 									--remainedItems;							
 								}
 							} catch (IterableObjectHelper.TerminateIteration exc) {
-								exceptionWrapper.set(exc);
+								if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+									exceptionWrapper.set(exc);
+								}
 							} finally {
 								removeTask(tasks, task);
 							}
@@ -771,7 +773,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								action.accept(item, outputItemsHandler);
 							}
 						} catch (IterableObjectHelper.TerminateIteration exc) {
-							exceptionWrapper.set(exc);
+							if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+								exceptionWrapper.set(exc);
+							}
 						} finally {
 							removeTask(tasks, task);
 						}
@@ -809,7 +813,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										--remainedItems;	
 									}																	
 								} catch (IterableObjectHelper.TerminateIteration exc) {
-									exceptionWrapper.set(exc);
+									if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+										exceptionWrapper.set(exc);
+									}
 								} finally {
 									removeTask(tasks, task);
 								}
@@ -845,7 +851,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										--remainedItems;	
 									} 							
 								} catch (IterableObjectHelper.TerminateIteration exc) {
-									exceptionWrapper.set(exc);
+									if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+										exceptionWrapper.set(exc);
+									}
 								} finally {
 									removeTask(tasks, task);
 								}
