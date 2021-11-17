@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1470402236)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1471064010)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1470402236)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1471064010)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -418,11 +418,17 @@ public class CollectionAndArrayIterator {
             IterationConfig.of(buildCollection())
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
-            //Setting up the threads priority
+            //Setting threads priority
             .withPriority(Thread.MAX_PRIORITY)
             //Setting up the output collection
             .withOutput(new ArrayList<String>())
             .withAction((number, outputCollectionSupplier) -> {
+                if (number > 500000) {
+                    //Terminating the current thread iteration early.
+                    IterableObjectHelper.terminateCurrentThreadIteration();
+                    //If you need to terminate all threads iteration (useful for a find first iteration) use
+                    //IterableObjectHelper.terminateIteration();
+                }
                 if ((number % 2) == 0) {                        
                     outputCollectionSupplier.accept(outputCollection ->
                         //Converting and adding item to output collection
@@ -449,7 +455,7 @@ public class CollectionAndArrayIterator {
 
     private static Collection<Integer> buildCollection() {
         Collection<Integer> inputCollection = new ArrayList<>();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 1; i <= 1000000; i++) {
             inputCollection.add(i);
         }
         return inputCollection;
