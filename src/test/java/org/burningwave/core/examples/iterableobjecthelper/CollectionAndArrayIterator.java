@@ -21,6 +21,13 @@ public class CollectionAndArrayIterator {
             //Setting up the output collection
             .withOutput(new ArrayList<String>())
             .withAction((number, outputCollectionSupplier) -> {
+                if (number > 500000) {
+                    ManagedLoggersRepository.logInfo(CollectionAndArrayIterator.class::getName, "Iterated number: {}", number);
+                    //Terminating the current thread iteration early.
+                    //If you need to terminate all threads iteration use
+                    //IterableObjectHelper.terminateIteration();
+                    IterableObjectHelper.terminateThreadIteration();
+                }
                 if ((number % 2) == 0) {                        
                     outputCollectionSupplier.accept(outputCollection ->
                         //Converting and adding item to output collection
@@ -47,7 +54,7 @@ public class CollectionAndArrayIterator {
 
     private static Collection<Integer> buildCollection() {
         Collection<Integer> inputCollection = new ArrayList<>();
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 1; i <= 1000000; i++) {
             inputCollection.add(i);
         }
         return inputCollection;
