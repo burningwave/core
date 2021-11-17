@@ -48,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.24.1</version>
+    <version>12.24.2</version>
 </dependency>
 ```
 
@@ -63,7 +63,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.24.1</version>
+    <version>12.24.2</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
