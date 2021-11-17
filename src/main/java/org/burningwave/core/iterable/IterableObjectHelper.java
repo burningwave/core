@@ -82,7 +82,7 @@ public interface IterableObjectHelper {
 			defaultValues.put(
 				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
 				ConcurrentHashMap.class.getName() + "$CollectionView" + defaultValuesSeparator +
-				"java.util.Collections$SynchronizedCollection" + defaultValuesSeparator +
+				Collections.class.getName() + "$SynchronizedCollection" + defaultValuesSeparator +
 				CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
 				CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
 				BlockingQueue.class.getName() + defaultValuesSeparator +
