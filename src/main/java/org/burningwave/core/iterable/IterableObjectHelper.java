@@ -187,7 +187,7 @@ public interface IterableObjectHelper {
 		throw TerminateIteration.NOTIFICATION;
 	}
 	
-	public default void terminateThreadIteration() {
+	public default void terminateCurrentThreadIteration() {
 		throw TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
 	}
 	
