@@ -22,11 +22,10 @@ public class CollectionAndArrayIterator {
             .withOutput(new ArrayList<String>())
             .withAction((number, outputCollectionSupplier) -> {
                 if (number > 500000) {
-                    ManagedLoggersRepository.logInfo(CollectionAndArrayIterator.class::getName, "Iterated number: {}", number);
                     //Terminating the current thread iteration early.
-                    //If you need to terminate all threads iteration use
-                    //IterableObjectHelper.terminateIteration();
                     IterableObjectHelper.terminateCurrentThreadIteration();
+                    //If you need to terminate all threads iteration (useful for a find first iteration) use
+                    //IterableObjectHelper.terminateIteration();
                 }
                 if ((number % 2) == 0) {                        
                     outputCollectionSupplier.accept(outputCollection ->
