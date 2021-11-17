@@ -26,7 +26,7 @@ public class CollectionAndArrayIterator {
                     //Terminating the current thread iteration early.
                     //If you need to terminate all threads iteration use
                     //IterableObjectHelper.terminateIteration();
-                    IterableObjectHelper.terminateThreadIteration();
+                    IterableObjectHelper.terminateCurrentThreadIteration();
                 }
                 if ((number % 2) == 0) {                        
                     outputCollectionSupplier.accept(outputCollection ->
