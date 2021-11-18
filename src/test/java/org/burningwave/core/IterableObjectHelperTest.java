@@ -47,7 +47,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	@Test
 	public void iterateParallelTestOne() {
 		Collection<Integer> input = new HashSet<>();
-		for (int i = 0; i < 25000000; i++) {
+		for (int i = 0; i < 1000000; i++) {
 			input.add(i);
 		}
 //		long initialTime = System.currentTimeMillis();
@@ -87,7 +87,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestTwo() {
-		int[] input = new int[25000000];
+		int[] input = new int[1000000];
 		for (int i = 0; i < input.length; i++) {
 			input[i] = i;
 		}
@@ -111,7 +111,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestThree() {
-		Object[] input = new Object[25000000];
+		Object[] input = new Object[1000000];
 		for (int i = 0; i < input.length; i++) {
 			input[i] = i;
 		}
