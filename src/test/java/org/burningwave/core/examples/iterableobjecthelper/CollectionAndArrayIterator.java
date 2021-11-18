@@ -12,14 +12,13 @@ import java.util.stream.IntStream;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 public class CollectionAndArrayIterator {
-	
-    private static Collection<Integer> buildInputCollection() {
-        return IntStream.rangeClosed(1, 1000000).boxed().collect(Collectors.toList());
-    }
-	
+
     public static void execute() {
-        List<String> output = IterableObjectHelper.iterateAndGet(
-            IterationConfig.of(buildInputCollection())
+        Collection<Integer> inputCollection =
+            IntStream.rangeClosed(1, 1000000).boxed().collect(Collectors.toList());
+        
+        List<String> outputCollection = IterableObjectHelper.iterateAndGet(
+            IterationConfig.of(inputCollection)
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
             //Setting threads priority
@@ -34,16 +33,16 @@ public class CollectionAndArrayIterator {
                     //IterableObjectHelper.terminateIteration();
                 }
                 if ((number % 2) == 0) {                        
-                    outputCollectionSupplier.accept(outputCollection ->
+                    outputCollectionSupplier.accept(outputColl ->
                         //Converting and adding item to output collection
-                        outputCollection.add(number.toString())
+                        outputColl.add(number.toString())
                     );
                 }
             })    
         );
         
         IterableObjectHelper.iterate(
-            IterationConfig.of(output)
+            IterationConfig.of(outputCollection)
             //Disabling parallel iteration
             .parallelIf(inputColl -> false)
             .withAction((number) -> {
@@ -53,7 +52,7 @@ public class CollectionAndArrayIterator {
         
         ManagedLoggersRepository.logInfo(
             CollectionAndArrayIterator.class::getName,
-            "Output collection size {}", output.size()
+            "Output collection size {}", outputCollection.size()
         );
     }
 
