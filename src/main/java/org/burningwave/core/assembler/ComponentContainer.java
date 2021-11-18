@@ -318,6 +318,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public <I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier) {
+		Map<Class<?>, Component> components = this.components;
 		T component = (T)components.get(cls);
 		if (component == null) {
 			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
