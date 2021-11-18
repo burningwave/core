@@ -4,6 +4,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,6 +14,7 @@ import org.burningwave.core.iterable.Properties;
 import org.junit.jupiter.api.Test;
 
 
+@SuppressWarnings("unused")
 public class IterableObjectHelperTest extends BaseTest {
 
 	@Test
@@ -44,7 +46,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestOne() {
-		Collection<Integer> input = new ArrayList<>();
+		Collection<Integer> input = new HashSet<>();
 		for (int i = 0; i < 25000000; i++) {
 			input.add(i);
 		}
@@ -93,7 +95,7 @@ public class IterableObjectHelperTest extends BaseTest {
 			return IterableObjectHelper.iterateAndGet(
 				IterationConfig.ofInts(input)
 				.parallelIf(inputColl -> inputColl.length > 2)
-				.withOutput(new ArrayList<>())
+				.withOutput(new HashSet<>())
 				.withAction((number, outputCollectionSupplier) -> {
 					//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
 					if ((number % 2) == 0) {						
@@ -107,43 +109,45 @@ public class IterableObjectHelperTest extends BaseTest {
 		}, false);
 	}
 	
-	//@Test
+	@Test
 	public void iterateParallelTestThree() {
-		Object[] input = new Object[100000000];
+		Object[] input = new Object[25000000];
 		for (int i = 0; i < input.length; i++) {
-			input[i] = new Object();
+			input[i] = i;
 		}
-		long initialTime = System.currentTimeMillis();
-		for (int i = 0; i < 10; i++) {
+//		long initialTime = System.currentTimeMillis();
+//		for (int i = 0; i < 10; i++) {
 			testNotEmpty(() -> {
 				return IterableObjectHelper.iterateAndGet(
 					IterationConfig.of(input)
 					.parallelIf(inputColl -> inputColl.length > 2)
-					.withOutput(new ArrayList<>())
+					.withOutput(new HashSet<Integer>())
 					.withAction((number, outputCollectionSupplier) -> {
 						//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
-						outputCollectionSupplier.accept(outputCollection -> 
-							outputCollection.add(number)
-						);
+						if (((int)number % 2) == 0) {						
+							outputCollectionSupplier.accept(outputCollection -> 
+								outputCollection.add((int)number)
+							);
+						}
 					})
 					
 				);
 			}, false);
-		}
-		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
-			getClass()::getName,
-			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
-		);
-		initialTime = System.currentTimeMillis();
-		for (int i = 0; i < 10; i++) {
-			testNotEmpty(() -> {
-				return Stream.of(input).parallel().collect(Collectors.toCollection(ArrayList::new));
-			}, false);
-		}
-		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
-			getClass()::getName,
-			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
-		);
+//		}
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//			getClass()::getName,
+//			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+//		);
+//		initialTime = System.currentTimeMillis();
+//		for (int i = 0; i < 10; i++) {
+//			testNotEmpty(() -> {
+//				return Stream.of(input).parallel().collect(Collectors.toCollection(ArrayList::new));
+//			}, false);
+//		}
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//			getClass()::getName,
+//			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
+//		);
 	}
 	
 	@Test
