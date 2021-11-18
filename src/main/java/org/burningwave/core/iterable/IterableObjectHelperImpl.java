@@ -731,10 +731,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							(itemList.size() - (splittedIteratorSize * currentIndex));
 						ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
 							try {
-								int remainedItems = itemsCount;
-								while (terminateIterationNotification.get() == null && remainedItems > 0) {
+								for (
+									int remainedItems = itemsCount;
+									terminateIterationNotification.get() == null && remainedItems > 0;
+									--remainedItems
+								) {
 									action.accept(itemIterator.next(), outputItemsHandler);
-									--remainedItems;							
 								}
 							} catch (IterableObjectHelper.TerminateIteration exc) {
 								checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
@@ -843,9 +845,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
 								try {
 									int remainedItems = itemsCount;
-									for (int itemIndex = splittedIteratorIndex; terminateIterationNotification.get() == null && remainedItems > 0; itemIndex++) {
-										action.accept(itemArray[itemIndex], outputItemsHandler);
-										--remainedItems;	
+									for (
+										int itemIndex = splittedIteratorIndex;
+										terminateIterationNotification.get() == null && remainedItems > 0;
+										--remainedItems
+									) {
+										action.accept(itemArray[itemIndex++], outputItemsHandler);
 									} 							
 								} catch (IterableObjectHelper.TerminateIteration exc) {
 									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
@@ -933,7 +938,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
+				int taskCount = Math.min((Runtime.getRuntime().availableProcessors() - 1), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
 				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
 				return taskCount;
 			}
