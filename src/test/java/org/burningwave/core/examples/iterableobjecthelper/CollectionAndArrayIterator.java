@@ -6,14 +6,20 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 public class CollectionAndArrayIterator {
-
+	
+    private static Collection<Integer> buildInputCollection() {
+        return IntStream.rangeClosed(1, 1000000).boxed().collect(Collectors.toList());
+    }
+	
     public static void execute() {
         List<String> output = IterableObjectHelper.iterateAndGet(
-            IterationConfig.of(buildCollection())
+            IterationConfig.of(buildInputCollection())
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
             //Setting threads priority
@@ -51,14 +57,6 @@ public class CollectionAndArrayIterator {
         );
     }
 
-    private static Collection<Integer> buildCollection() {
-        Collection<Integer> inputCollection = new ArrayList<>();
-        for (int i = 1; i <= 1000000; i++) {
-            inputCollection.add(i);
-        }
-        return inputCollection;
-    }
-    
     public static void main(String[] args) {
         execute();
     }
