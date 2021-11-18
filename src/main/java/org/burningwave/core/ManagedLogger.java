@@ -312,7 +312,7 @@ public interface ManagedLogger {
 				isEnabled = true;
 			}
 
-			public String addDetailsToMessage(String message, StackTraceElement stackTraceElement) {
+			String addDetailsToMessage(String message, StackTraceElement stackTraceElement) {
 				return "(" + stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber() + ") - " + message;
 			}
 

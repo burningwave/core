@@ -32,6 +32,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -40,9 +42,11 @@ import org.burningwave.core.ManagedLogger.Repository;
 
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
-
+	private SimpleDateFormat dateFormat;
+	
 	public SimpleManagedLoggerRepository(Map<?, ?> properties) {
 		super(properties);
+		dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
 	}
 
 
@@ -115,9 +119,9 @@ public class SimpleManagedLoggerRepository extends Repository.Abst {
 		String clientName = clientNameSupplier.get();
 		if (getLoggerEnabledFlag(clientName).partialyMatch(level)) {
 			if (exception == null) {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + addDetailsToMessage(text, stackTraceElement));
+				printStream.println(dateFormat.format(new Date()) + " [" + Thread.currentThread().getName() + "] - " + clientName + " - " + addDetailsToMessage(text, stackTraceElement));
 			} else {
-				printStream.println("[" + Thread.currentThread().getName() + "] - " + clientName + " - " + addDetailsToMessage(text, stackTraceElement));
+				printStream.println(dateFormat.format(new Date()) + " [" + Thread.currentThread().getName() + "] - " + clientName + " - " + addDetailsToMessage(text, stackTraceElement));
 				exception.printStackTrace(printStream);
 			}
 		}
