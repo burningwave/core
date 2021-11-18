@@ -648,7 +648,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public T runOnlyOnce(String id, Supplier<Boolean> hasBeenExecutedChecker) {
 			if (isSubmitted()) {
-				Driver.throwException(new TaskStateException(this, "is submitted"));
+				throw new TaskStateException(this, "is submitted");
 			}
 			runOnlyOnce = true;
 			this.id = id;
@@ -710,21 +710,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Driver.throwException(new TaskStateException(this, "could be dead locked"));
+									throw new TaskStateException(this, "could be dead locked");
 								}
 								if (isAborted()) {
-									Driver.throwException(new TaskStateException(this, "is aborted"));
+									throw new TaskStateException(this, "is aborted");
 								}
 								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
-								Driver.throwException(exc);
+								throw new TaskStateException(this, exc);
 							}
 						}
 					}
 				}
 			} else {
-				Driver.throwException(new TaskStateException(this, "is not submitted"));
+				throw new TaskStateException(this, "is not submitted");
 			}
 			return false;
 		}
@@ -767,10 +767,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									if (ignoreDeadLocked) {
 										return false;
 									}
-									Driver.throwException(new TaskStateException(this, "could be dead locked"));
+									throw new TaskStateException(this, "could be dead locked");
 								}
 								if (isAborted()) {
-									Driver.throwException(new TaskStateException(this, "is aborted"));
+									throw new TaskStateException(this, "is aborted");
 								}
 								wait(timeout);
 								return true;
@@ -781,7 +781,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					}
 				}
 			} else {
-				Driver.throwException(new TaskStateException(this, "is not submitted"));
+				throw new TaskStateException(this, "is not submitted");
 			}
 			return false;
 		}
@@ -939,18 +939,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public final T submit() {
 			if (aborted) {
-				Driver.throwException(new TaskStateException(this, "is aborted"));
+				throw new TaskStateException(this, "is aborted");
 			}
 			if (!submitted) {
 				synchronized(this) {
 					if (!submitted) {
 						submitted = true;
 					} else {
-						Driver.throwException(new TaskStateException(this, "is already submitted"));
+						throw new TaskStateException(this, "is already submitted");
 					}
 				}
 			} else {
-				Driver.throwException(new TaskStateException(this, "is already submitted"));
+				throw new TaskStateException(this, "is already submitted");
 			}
 			return addToQueue();
 		}
