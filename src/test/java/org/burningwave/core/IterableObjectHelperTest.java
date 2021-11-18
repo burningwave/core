@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -46,10 +46,7 @@ public class IterableObjectHelperTest extends BaseTest {
 	
 	@Test
 	public void iterateParallelTestOne() {
-		Collection<Integer> input = new HashSet<>();
-		for (int i = 0; i < 1000000; i++) {
-			input.add(i);
-		}
+		Collection<Integer> input = IntStream.rangeClosed(1, 1000000).boxed().collect(Collectors.toList());
 //		long initialTime = System.currentTimeMillis();
 //		for (int i = 0; i < 10; i++) {
 			testNotEmpty(() -> {

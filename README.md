@@ -402,20 +402,27 @@ public class TaskLauncher implements ManagedLogger {
 # <a name="Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority"></a>Iterating collections and arrays in parallel by setting thread priority
 Through the underlying configurable [**BackgroundExecutor**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** component is able to iterate a collection or an array in parallel and execute an action on each iterated item giving also the ability to set the threads priority:
 ```java
+package org.burningwave.core.examples.iterableobjecthelper;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 public class CollectionAndArrayIterator {
 
     public static void execute() {
-        List<String> output = IterableObjectHelper.iterateAndGet(
-            IterationConfig.of(buildCollection())
+        Collection<Integer> inputCollection =
+            IntStream.rangeClosed(1, 1000000).boxed().collect(Collectors.toList());
+        
+        List<String> outputCollection = IterableObjectHelper.iterateAndGet(
+            IterationConfig.of(inputCollection)
             //Enabling parallel iteration when the input collection size is greater than 2
             .parallelIf(inputColl -> inputColl.size() > 2)
             //Setting threads priority
@@ -430,16 +437,16 @@ public class CollectionAndArrayIterator {
                     //IterableObjectHelper.terminateIteration();
                 }
                 if ((number % 2) == 0) {                        
-                    outputCollectionSupplier.accept(outputCollection ->
+                    outputCollectionSupplier.accept(outputColl ->
                         //Converting and adding item to output collection
-                        outputCollection.add(number.toString())
+                        outputColl.add(number.toString())
                     );
                 }
             })    
         );
         
         IterableObjectHelper.iterate(
-            IterationConfig.of(output)
+            IterationConfig.of(outputCollection)
             //Disabling parallel iteration
             .parallelIf(inputColl -> false)
             .withAction((number) -> {
@@ -449,18 +456,10 @@ public class CollectionAndArrayIterator {
         
         ManagedLoggersRepository.logInfo(
             CollectionAndArrayIterator.class::getName,
-            "Output collection size {}", output.size()
+            "Output collection size {}", outputCollection.size()
         );
     }
 
-    private static Collection<Integer> buildCollection() {
-        Collection<Integer> inputCollection = new ArrayList<>();
-        for (int i = 1; i <= 1000000; i++) {
-            inputCollection.add(i);
-        }
-        return inputCollection;
-    }
-    
     public static void main(String[] args) {
         execute();
     }
