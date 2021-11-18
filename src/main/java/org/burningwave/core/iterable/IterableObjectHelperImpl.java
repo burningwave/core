@@ -938,7 +938,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min((Runtime.getRuntime().availableProcessors() - 1), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
+				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
 				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
 				return taskCount;
 			}
