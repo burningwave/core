@@ -775,7 +775,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
-								Driver.throwException(exc);
+								throw new TaskStateException(this, exc);
 							}
 						}
 					}
