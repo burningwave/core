@@ -397,11 +397,14 @@ class PathHelperImpl implements Component, PathHelper {
 				}
 			}
 			if (filesFound.size() > 1) {
-				Driver.throwException("Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString());
+				Driver.throwException("Found more than one resource under relative path {}:\n{}",  resourceRelativePath, filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Found more than one resource under relative path " + resourceRelativePath + ":\n" + filesInfo.toString() + "\t" +
-					System.identityHashCode(fileSystemItem) + ": " + fileSystemItem.getAbsolutePath() + "\twill be assumed\n"
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Found more than one resource under relative path {}:\n{}\t{}: {}\twill be assumed\n",
+					resourceRelativePath,
+					filesInfo.toString(),
+					System.identityHashCode(fileSystemItem),
+					fileSystemItem.getAbsolutePath()
 				);
 				return (T)fileSystemItem;
 			}
