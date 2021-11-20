@@ -470,9 +470,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 							String regExpPattern = null;
 							if (stringValue.contains(valuesSeparatorForSplitting)) {
-								regExpPattern = "([^{" + valuesSeparatorForSplitting + "}]*?" + Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
+								regExpPattern = "(.*?" + Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?" + valuesSeparatorForSplitting +")";
 							} else {
-								regExpPattern = "(.*?"+ Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
+								regExpPattern = "(.*?" + Strings.placeHolderToRegEx("${" + placeHolder + "}") + ".*?)";
 							}
 							Map<Integer, List<String>> placeHolderedValues = Strings.extractAllGroups(
 								Pattern.compile(regExpPattern), stringValue
