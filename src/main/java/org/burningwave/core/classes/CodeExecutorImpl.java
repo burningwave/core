@@ -34,7 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -97,21 +97,19 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 			}
 		}
-		String importFromConfig = retrieveValue(
+		Collection<String> importFromConfig = retrieveValue(
+			IterableObjectHelper::resolveStringValues,
 			config,
 			properties,
 			Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
 			Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
 			Configuration.Key.PROPERTIES_FILE_EXECUTOR_IMPORTS_SUFFIX
 		);
-		if (Strings.isNotEmpty(importFromConfig)) {
-			Arrays.stream(importFromConfig.replaceAll(";{2,}", ";").split(";")).forEach(imp -> {
-				if (Strings.isNotEmpty(imp)) {
-					body.useType(imp);
-				}
-			});
+		if (!importFromConfig.isEmpty()) {
+			body.useType(importFromConfig);
 		}
 		String executorName = retrieveValue(
+			IterableObjectHelper::resolveStringValue,
 			config,
 			properties,
 			Configuration.Key.PROPERTIES_FILE_CLASS_NAME_SUFFIX,
@@ -119,6 +117,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX
 		);
 		String executorSimpleName = retrieveValue(
+			IterableObjectHelper::resolveStringValue,
 			config,
 			properties,
 			Configuration.Key.PROPERTIES_FILE_CLASS_SIMPLE_NAME_SUFFIX,
@@ -161,10 +160,14 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			(E)config
 		);
 	}
-
-	private String retrieveValue(ExecuteConfig.ForProperties config, Map<?, ?> properties, String... suffixes) {
+	
+	private <R> R retrieveValue(
+		Function<ResolveConfig.ForNamedKey, R> valueResolver,
+		ExecuteConfig.ForProperties config, Map<?, ?> properties,
+		String... suffixes
+	) {
 		for (String suffix : suffixes) {
-			String value = IterableObjectHelper.resolveStringValue(
+			R value = valueResolver.apply(
 				ResolveConfig.forNamedKey(config.getPropertyName() + suffix)
 				.on(properties)
 				.deleteUnresolvedPlaceHolder(true)
@@ -177,6 +180,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		return null;
 	}
 
+	
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {
 		return execute((E)ExecuteConfig.forBodySourceGenerator(body));
