@@ -1415,7 +1415,9 @@ public class ClassHunterTest extends BaseTest {
 	        ClassHunter classHunter = componentSupplier.getClassHunter();
 
 	        SearchConfig searchConfig = SearchConfig.forPaths(
-	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar;")
+	            pathHelper.loadAndMapPaths("custom", "//${paths.custom-class-path}/ESC-Lib.ear/APP-INF/lib//children:.*?activation-1.1\\.jar" +
+	            	org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper.getDefaultValuesSeparator()
+	           )
 	        ).by(
 	            ClassCriteria.create().allThoseThatMatch((cls) -> {
 	                return cls.getPackage().getName().matches(".*?activation");

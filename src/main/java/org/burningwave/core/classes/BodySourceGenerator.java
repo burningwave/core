@@ -157,7 +157,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-
+	
 	public BodySourceGenerator useType(java.lang.Class<?>... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (java.lang.Class<?> cls : classes) {
@@ -186,6 +186,14 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 
 
 	public BodySourceGenerator useType(String... classes) {
+		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
+		for (String cls : classes) {
+			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));
+		}
+		return this;
+	}
+	
+	public BodySourceGenerator useType(Collection<String> classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (String cls : classes) {
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls, null));
