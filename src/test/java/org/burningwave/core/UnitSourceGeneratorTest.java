@@ -263,6 +263,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 
 		)
 		.setStaticInitializer(BodySourceGenerator.create().addCodeLine("serialVersionUID = 1L;"))
+		.setInitializer(BodySourceGenerator.create().addCodeLine("multiTimesTwo = new Date[0][][][];"))
 		.addMethod(
 			FunctionSourceGenerator.create("now")
 			.setTypeDeclaration(
