@@ -55,6 +55,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private Collection<FunctionSourceGenerator> methods;
 	private Collection<ClassSourceGenerator> innerClasses;
 	private BodySourceGenerator staticInitializer;
+	private BodySourceGenerator initializer;
 
 	private ClassSourceGenerator(String classType, TypeDeclarationSourceGenerator typeDeclaration) {
 		this.classType = classType;
@@ -158,6 +159,11 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		this.staticInitializer = initializer.setDelimiters("static {\n", "\n}").setElementPrefix("\t");
 		return this;
 	}
+	
+	public ClassSourceGenerator setInitializer(BodySourceGenerator initializer) {
+		this.initializer = initializer.setDelimiters("{\n", "\n}").setElementPrefix("\t");
+		return this;
+	}
 
 	public ClassSourceGenerator addOuterCodeLine(String... codes) {
 		Optional.ofNullable(this.outerCode).orElseGet(() -> this.outerCode = new ArrayList<>());
@@ -243,6 +249,10 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private String getStaticInitializer() {
 		return Optional.ofNullable(staticInitializer).map(stIn ->  "\t" + getOrEmpty(stIn).replace("\n", "\n\t")).orElseGet(() -> null);
 	}
+	
+	private String getInitializer() {
+		return Optional.ofNullable(initializer).map(in ->  "\t" + getOrEmpty(in).replace("\n", "\n\t")).orElseGet(() -> null);
+	}
 
 	private String getFunctionCode(Collection<FunctionSourceGenerator> functions) {
 		return Optional.ofNullable(functions).map(mths -> "\t" + getOrEmpty(mths, "\n\n").replace("\n", "\n\t")).orElseGet(() -> null);
@@ -281,6 +291,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	public String make() {
 		String annotations = getAnnotations();
 		String staticInitializerCode = getStaticInitializer();
+		String initializerCode = getInitializer();
 		String fieldsCode = getFieldsCode();
 		String enumConstantsCode = getEnumConstantsCode();
 		String constructorsCode = getFunctionCode(constructors);
@@ -300,6 +311,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			enumConstantsCode != null? "\n\n" + enumConstantsCode : null,
 			fieldsCode != null? "\n\n" + fieldsCode : null,
 			staticInitializerCode != null? "\n\n" + staticInitializerCode : null,
+			initializerCode != null? "\n\n" + initializerCode : null,
 			constructorsCode != null? "\n\n" + constructorsCode : null,
 			methodsCode != null? "\n\n" + methodsCode : null,
 			innerClassesCode != null? "\n\n" + innerClassesCode : null,

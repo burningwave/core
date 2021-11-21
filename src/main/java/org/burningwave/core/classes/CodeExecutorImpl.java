@@ -106,7 +106,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			Configuration.Key.PROPERTIES_FILE_EXECUTOR_IMPORTS_SUFFIX
 		);
 		if (!importFromConfig.isEmpty()) {
-			body.useType(importFromConfig);
+			body.useTypes(importFromConfig);
 		}
 		String executorName = retrieveValue(
 			IterableObjectHelper::resolveStringValue,
