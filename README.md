@@ -1140,7 +1140,7 @@ public class UseOfStaticComponentsExample {
 
 }
 ```
-### <a name="static-components-configuration-file">Configuration
+### <a name="static-components-configuration-file"></a>Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
 to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Value.FILE_NAME` before using the static component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
