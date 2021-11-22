@@ -2,7 +2,7 @@ name: Update artifact downloads
 
 on:
   schedule:
-    - cron: "30 0 20 * *"
+    - cron: "30 0 21 * *"
 
 jobs:
         
@@ -17,7 +17,7 @@ jobs:
           git config user.name "Burningwave"
           git config user.email "info@burningwave.org"
           git pull origin ${{github.ref}}
-          sed -i "s/type=svgggggg/type=svg/w changelog.txt" ./README.md
+          sed -i "s/type=svgggggggggggg/type=svg/w changelog.txt" ./README.md
           if ! [ -s changelog.txt ]; then
              sed -r -i "s%type=svg%type=svgg%" ./README.md;
           fi          
