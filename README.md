@@ -15,7 +15,7 @@
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/burningwave/core)](https://github.com/burningwave/core/issues?q=is%3Aissue+is%3Aclosed)
 
-[![Artifact downloads](https://www.burningwave.org/generators/generate-burningwave-artifact-downloads-badge.php?type=svg&artifactId=core)](https://www.burningwave.org/artifact-downloads/?show-monthly-trend-chart=false)
+[![Artifact downloads](https://www.burningwave.org/generators/generate-burningwave-artifact-downloads-badge.php?type=svgggggg&artifactId=core)](https://www.burningwave.org/artifact-downloads/?show-monthly-trend-chart=false)
 [![Repository dependents](https://badgen.net/github/dependents-repo/burningwave/core)](https://github.com/burningwave/core/network/dependents)
 
 **Burningwave Core** is an advanced, free and open source Java frameworks building library and it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified source code, iterating collections or arrays in parallel, executing tasks in parallel and much more...
@@ -1140,7 +1140,7 @@ public class UseOfStaticComponentsExample {
 
 }
 ```
-### <a name="static-components-configuration-file">Configuration
+### <a name="static-components-configuration-file"></a>Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
 to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Value.FILE_NAME` before using the static component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
