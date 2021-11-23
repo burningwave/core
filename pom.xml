@@ -31,7 +31,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>12.28.1-SNAPSHOT</version>
+	<version>12.29.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -92,13 +92,13 @@
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 
 		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
-		<logback.version>1.2.6</logback.version>
+		<logback.version>1.2.7</logback.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.1</junit-jupiter.version>
 		<junit.version>1.8.1</junit.version>
-		<burningwave-jvm-driver.version>6.5.0</burningwave-jvm-driver.version>
-		<jvm-driver.version>8.6.0</jvm-driver.version>
+		<burningwave-jvm-driver.version>6.6.0</burningwave-jvm-driver.version>
+		<jvm-driver.version>8.7.0</jvm-driver.version>
 		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
