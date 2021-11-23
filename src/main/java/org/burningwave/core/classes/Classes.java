@@ -493,7 +493,7 @@ public class Classes implements MembersRetriever {
 				return classLoader;
 			}
 			try {
-				return Constructors.newInstanceOf(
+				return Constructors.newInstanceDirectOf(
 					Driver.getClassLoaderDelegateClass(),
 					null,
 					classLoader,
