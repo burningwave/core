@@ -226,6 +226,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		for (Collection<FileSystemItem> pathColl : pathColls) {
 			pathsSupplier = pathsSupplier.andThen(classLoaderAndPaths -> {
 				for (FileSystemItem absolutePath : pathColl) {
+					if (absolutePath == null) {
+						throw new IllegalArgumentException("One of the input resources is null");
+					}
 					classLoaderAndPaths.getValue().add(absolutePath);
 				}
 				return classLoaderAndPaths;
