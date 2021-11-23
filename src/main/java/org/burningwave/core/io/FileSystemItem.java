@@ -801,7 +801,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return fileInputStream.getAbsolutePath() + IterableZipContainer.PATH_SUFFIX
 							+ retrieveConventionedRelativePath(fileInputStream.toByteBuffer(),
 									fileInputStream.getAbsolutePath(), relativePath);
-				} catch (Throwable exc) {
+				} catch (FileSystemItemNotFoundException exc) {
 					return null;
 				}
 			}

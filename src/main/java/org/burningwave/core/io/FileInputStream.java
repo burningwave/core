@@ -29,7 +29,6 @@
 package org.burningwave.core.io;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -60,7 +59,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 		try {
 			return new FileInputStream(file);
 		} catch (java.io.FileNotFoundException exc) {
-			return Driver.throwException(new FileSystemItemNotFoundException(exc));
+			throw new FileSystemItemNotFoundException(exc);
 		}
 	}
 
@@ -68,7 +67,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 		try {
 			return new FileInputStream(absolutePath);
 		} catch (java.io.FileNotFoundException exc) {
-			return Driver.throwException(new FileSystemItemNotFoundException(exc));
+			throw new FileSystemItemNotFoundException(exc);
 		}
 	}
 
