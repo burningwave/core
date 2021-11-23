@@ -149,43 +149,45 @@ public class ClassHunterTest extends BaseTest {
 	public void findRecursiveInChildrenExcludingZipAndJar() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		componentSupplier.getClassHunter().findBy(
-			SearchConfig.forPaths(
-				pathHelper.getAbsolutePathOfResource("../../src/test/external-resources")
-			).addPaths(
-				pathHelper.getPaths(path -> path.endsWith("jar"))
-			).addFileSystemItems(
-				//folder inside a compressed archive
-				pathHelper.getResource("../logback-core-1.2.6.jar/ch/qos")
-			).setFindFunction(
-				currentScannedPath -> {
-					// Check if the path is a folder outside of a zip archive
-					return currentScannedPath.isFolder()  && !currentScannedPath.isCompressed() ?
-						FileSystemItem.Find.RECURSIVE_IN_CHILDREN:
-						FileSystemItem.Find.IN_ALL_CHILDREN;
-				}
-			).setFileFilter(
-				currentScannedPath -> {
-					if (currentScannedPath.isFolder()) {
-						return FileSystemItem.Criteria.forAllFileThat(
-							fileSystemItem ->
-								fileSystemItem.isFolder() ||
-								(fileSystemItem.getExtension() != null &&
-								!fileSystemItem.getExtension().equals("zip") &&
-								!fileSystemItem.getExtension().equals("jar") &&
-								fileSystemItem.toJavaClass() != null)
-						);
+		testNotEmpty(() -> 
+			componentSupplier.getClassHunter().findBy(
+				SearchConfig.forPaths(
+					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources")
+				).addPaths(
+					pathHelper.getPaths(path -> path.endsWith("jar"))
+				).addFileSystemItems(
+					//folder inside a compressed archive
+					pathHelper.getResource("../logback-core-1.2.6.jar/ch/qos")
+				).setFindFunction(
+					currentScannedPath -> {
+						// Check if the path is a folder outside of a zip archive
+						return currentScannedPath.isFolder()  && !currentScannedPath.isCompressed() ?
+							FileSystemItem.Find.RECURSIVE_IN_CHILDREN:
+							FileSystemItem.Find.IN_ALL_CHILDREN;
 					}
-					return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
-				}
-			)
-//			.setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
-//				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
-//				anotherClass.getSuperClass();
-//				anotherClass.getInterfaces();
-//				return true;
-//			})
-			.useDefaultPathScannerClassLoaderAsParent(true)
+				).setFileFilter(
+					currentScannedPath -> {
+						if (currentScannedPath.isFolder()) {
+							return FileSystemItem.Criteria.forAllFileThat(
+								fileSystemItem ->
+									fileSystemItem.isFolder() ||
+									(fileSystemItem.getExtension() != null &&
+									!fileSystemItem.getExtension().equals("zip") &&
+									!fileSystemItem.getExtension().equals("jar") &&
+									fileSystemItem.toJavaClass() != null)
+							);
+						}
+						return FileSystemItem.Criteria.forClassTypeFiles(FileSystemItem.CheckingOption.FOR_NAME);
+					}
+				)
+	//			.setLinkedJavaClassPredicate((linkedJavaClassContainer, linkedJavaClass) -> {
+	//				LinkedJavaClass anotherClass = linkedJavaClassContainer.find(java.math.BigDecimal.class.getName());
+	//				anotherClass.getSuperClass();
+	//				anotherClass.getInterfaces();
+	//				return true;
+	//			})
+				.useDefaultPathScannerClassLoaderAsParent(true)
+			).getClasses()
 		);
 
 	}
