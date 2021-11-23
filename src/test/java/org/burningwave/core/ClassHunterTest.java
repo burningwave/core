@@ -157,7 +157,7 @@ public class ClassHunterTest extends BaseTest {
 					pathHelper.getPaths(path -> path.endsWith("jar"))
 				).addFileSystemItems(
 					//folder inside a compressed archive
-					pathHelper.getResource("../logback-core-1.2.6.jar/ch/qos")
+					pathHelper.getResource("../logback-core-1.2.7.jar/ch/qos")
 				).setFindFunction(
 					currentScannedPath -> {
 						// Check if the path is a folder outside of a zip archive
