@@ -469,7 +469,7 @@ public class Classes implements MembersRetriever {
 			if (exParent != null && Driver.isClassLoaderDelegate(exParent)) {
 				exParent = Fields.getDirect(exParent, "classLoader");
 			}
-			if (futureParent != null && Driver.isClassLoaderDelegate(futureParent)) {
+			if (Driver.getBuiltinClassLoaderClass() != null && futureParent != null && Driver.isClassLoaderDelegate(futureParent)) {
 				futureParent = Fields.getDirect(futureParent, "classLoader");
 			}
 			MemoryClassLoader exParentMC = exParent instanceof MemoryClassLoader? (MemoryClassLoader)exParent : null;
