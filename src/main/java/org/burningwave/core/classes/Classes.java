@@ -436,7 +436,7 @@ public class Classes implements MembersRetriever {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
 			ClassLoader futureParentTemp = originalFutureParent;
-			if (Driver.isBuiltinClassLoader(target) && futureParentTemp != null && !Driver.isBuiltinClassLoader(futureParentTemp)) {
+			if (Driver.isBuiltinClassLoader(target) && futureParentTemp != null) {
 				futureParentTemp = convertToBuiltinClassLoader(futureParentTemp);
 			}
 			ClassLoader targetExParent = Fields.get(target, "parent");
@@ -486,6 +486,9 @@ public class Classes implements MembersRetriever {
 		}
 
 		public ClassLoader convertToBuiltinClassLoader(ClassLoader classLoader) {
+			if (Driver.getBuiltinClassLoaderClass() == null ) {
+				return null;
+			}
 			if (Driver.isBuiltinClassLoader(classLoader)) {
 				return classLoader;
 			}
