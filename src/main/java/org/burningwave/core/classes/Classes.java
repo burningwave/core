@@ -36,7 +36,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Constructo
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -437,7 +436,7 @@ public class Classes implements MembersRetriever {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
 			ClassLoader futureParentTemp = originalFutureParent;
-			if (isBuiltinClassLoader(target) && futureParentTemp != null) {
+			if (Driver.isBuiltinClassLoader(target) && futureParentTemp != null) {
 				futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
 			}
 			ClassLoader targetExParent = Fields.get(target, "parent");
@@ -487,20 +486,22 @@ public class Classes implements MembersRetriever {
 		}
 
 		private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
-			if (!isBuiltinClassLoader(classLoader)) {
+			if (!Driver.isBuiltinClassLoader(classLoader)) {
 				try {
-					Collection<Method> methods = Members.findAll(
-						MethodCriteria.byScanUpTo(
-							cls -> cls.getName().equals(ClassLoader.class.getName())
-						).name(
-							"loadClass"::equals
-						).and().parameterTypesAreAssignableFrom(
-							String.class, boolean.class
-						), classLoader.getClass()
+					classLoader = Constructors.newInstanceOf(
+						Driver.getClassLoaderDelegateClass(),
+						null,
+						classLoader,
+						Methods.findFirstDirectHandle(
+							MethodCriteria.byScanUpTo(
+								cls -> cls.getName().equals(ClassLoader.class.getName())
+							).name(
+								"loadClass"::equals
+							).and().parameterTypesAreAssignableFrom(
+								String.class, boolean.class
+							), classLoader.getClass()
+						)
 					);
-					classLoader = (ClassLoader)Constructors.newInstanceOf(Driver.getClassLoaderDelegateClass(), null, classLoader, Methods.findDirectHandle(
-						methods.stream().findFirst().get()
-					));
 				} catch (Throwable exc) {
 					Driver.throwException(exc);
 				}
@@ -511,7 +512,7 @@ public class Classes implements MembersRetriever {
 		public ClassLoader getParent(ClassLoader classLoader) {
 			if (Driver.isClassLoaderDelegate(classLoader)) {
 				return getParent(Fields.getDirect(classLoader, "classLoader"));
-			} else if (isBuiltinClassLoader(classLoader)) {
+			} else if (Driver.isBuiltinClassLoader(classLoader)) {
 				return Executor.get(() ->(ClassLoader) builtinClassLoaderClassParentField.get(classLoader));
 			} else {
 				return classLoader.getParent();
@@ -865,7 +866,7 @@ public class Classes implements MembersRetriever {
 
 		public boolean isItPossibleToAddClassPaths(ClassLoader classLoader) {
 			if (classLoader != null) {
-				if (classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader) {
+				if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader) {
 					return true;
 				} else {
 					return isItPossibleToAddClassPaths(getParent(classLoader));
@@ -884,7 +885,7 @@ public class Classes implements MembersRetriever {
 		}
 
 		public Collection<String> addClassPaths(ClassLoader classLoader, Predicate<String> checkForAddedClasses, Collection<String>... classPathCollections) {
-			if (!(classLoader instanceof URLClassLoader || isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader)) {
+			if (!(classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader) || classLoader instanceof PathScannerClassLoader)) {
 				if (!isItPossibleToAddClassPaths(classLoader)) {
 					throw new UnsupportedException(
 						Strings.compile("Could not add class paths to {} because the type {} is not supported",
@@ -950,9 +951,6 @@ public class Classes implements MembersRetriever {
 			return paths;
 		}
 
-		public boolean isBuiltinClassLoader(ClassLoader classLoader) {
-			return Driver.isBuiltinClassLoader(classLoader);
-		}
 
 		public URL[] getURLs(ClassLoader classLoader) {
 			if (classLoader instanceof URLClassLoader) {
