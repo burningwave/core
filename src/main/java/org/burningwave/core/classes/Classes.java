@@ -436,8 +436,8 @@ public class Classes implements MembersRetriever {
 				return setAsParent(Fields.getDirect(target, "classLoader"), originalFutureParent);
 			}
 			ClassLoader futureParentTemp = originalFutureParent;
-			if (Driver.isBuiltinClassLoader(target) && futureParentTemp != null) {
-				futureParentTemp = checkAndConvertBuiltinClassLoader(futureParentTemp);
+			if (Driver.isBuiltinClassLoader(target) && futureParentTemp != null && !Driver.isBuiltinClassLoader(futureParentTemp)) {
+				futureParentTemp = convertToBuiltinClassLoader(futureParentTemp);
 			}
 			ClassLoader targetExParent = Fields.get(target, "parent");
 			ClassLoader futureParent = futureParentTemp;
@@ -485,28 +485,28 @@ public class Classes implements MembersRetriever {
 			}
 		}
 
-		private ClassLoader checkAndConvertBuiltinClassLoader(ClassLoader classLoader) {
-			if (!Driver.isBuiltinClassLoader(classLoader)) {
-				try {
-					classLoader = Constructors.newInstanceOf(
-						Driver.getClassLoaderDelegateClass(),
-						null,
-						classLoader,
-						Methods.findFirstDirectHandle(
-							MethodCriteria.byScanUpTo(
-								cls -> cls.getName().equals(ClassLoader.class.getName())
-							).name(
-								"loadClass"::equals
-							).and().parameterTypesAreAssignableFrom(
-								String.class, boolean.class
-							), classLoader.getClass()
-						)
-					);
-				} catch (Throwable exc) {
-					Driver.throwException(exc);
-				}
+		public ClassLoader convertToBuiltinClassLoader(ClassLoader classLoader) {
+			if (Driver.isBuiltinClassLoader(classLoader)) {
+				return classLoader;
 			}
-			return classLoader;
+			try {
+				return Constructors.newInstanceOf(
+					Driver.getClassLoaderDelegateClass(),
+					null,
+					classLoader,
+					Methods.findFirstDirectHandle(
+						MethodCriteria.byScanUpTo(
+							cls -> cls.getName().equals(ClassLoader.class.getName())
+						).name(
+							"loadClass"::equals
+						).and().parameterTypesAreAssignableFrom(
+							String.class, boolean.class
+						), classLoader.getClass()
+					)
+				);
+			} catch (Throwable exc) {
+				return Driver.throwException(exc);
+			}
 		}
 
 		public ClassLoader getParent(ClassLoader classLoader) {
