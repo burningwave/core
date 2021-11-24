@@ -605,7 +605,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			try {
 				ManagedLoggersRepository.logError(
 					getClass()::getName,
-					"\n\tThread of type {} named {} with executable {} is in state of {}",
+					"\n\tThread of type {} named {} with executable {} is in state of {} and it will be interrupted",
 					thread.getClass(),
 					thread.getName(),
 					thread.executable,
