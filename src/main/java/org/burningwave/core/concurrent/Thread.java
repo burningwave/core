@@ -597,7 +597,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
-								getClass()::getName, "Thread {} is already assigned",
+								getClass()::getName, "Thread '{}' is already assigned",
 								thread.getName()
 							);
 						}
@@ -607,22 +607,6 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			return null;
 		}
 
-		private void interrupt(Thread thread) {
-			try {
-				ManagedLoggersRepository.logError(
-					getClass()::getName,
-					"\n\tThread of type {} named '{}' with executable {} is in state of {} and it will be interrupted",
-					thread.getClass(),
-					thread.getName(),
-					thread.executable,
-					thread.getState().name()
-				);
-				thread.interrupt();
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
-			}
-		}
-		
 		private Thread getReversePoolableThread() {
 			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
 			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {	
@@ -638,7 +622,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}  else {
 							ManagedLoggersRepository.logInfo(
-								getClass()::getName, "Thread {} is already assigned",
+								getClass()::getName, "Thread '{}' is already assigned",
 								thread.getName()
 							);
 						}
@@ -693,7 +677,23 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				notifyToPoolableSleepingThreadCollectionWaiter();
 			}
 		}
-
+		
+		private void interrupt(Thread thread) {
+			try {
+				ManagedLoggersRepository.logError(
+					getClass()::getName,
+					"\n\tThread of type {} named '{}' with executable {} is in state of {} and it will be interrupted",
+					thread.getClass(),
+					thread.getName(),
+					thread.executable,
+					thread.getState().name()
+				);
+				thread.interrupt();
+			} catch (Throwable exc) {
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
+			}
+		}
+		
 		public void shutDownAllPoolableSleeping() {
 			for (Thread thread : poolableSleepingThreads) {
 				if (thread != null) {
