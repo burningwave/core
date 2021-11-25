@@ -86,7 +86,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
 		if (executable == null) {
 			ManagedLoggersRepository.logWarn(
-				getClass()::getName, "Executable of {} was set to null by{}",
+				getClass()::getName, "Executable of '{}' was set to null by{}",
 				getName(),
 				Strings.from(Thread.currentThread().getStackTrace(),2));
 		}
