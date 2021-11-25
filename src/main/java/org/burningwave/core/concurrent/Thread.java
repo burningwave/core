@@ -556,9 +556,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		private Integer addForwardPoolableSleepingThread(Thread.Poolable thread) {
 			addPoolableSleepingThreadFunction = addReversePoolableSleepingThreadFunction;
-			for (int i = 0; i < poolableSleepingThreads.length; i++) {
-				if (poolableSleepingThreads[i] == null && addPoolableSleepingThread(thread, i)) {
-					return i;
+			for (int index = 0; index < poolableSleepingThreads.length; index++) {
+				if (poolableSleepingThreads[index] == null && addPoolableSleepingThread(thread, index)) {
+					return index;
 				}
 			}
 			return null;		
@@ -566,19 +566,19 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		private Integer addReversePoolableSleepingThread(Thread.Poolable thread) {
 			addPoolableSleepingThreadFunction = addForwardPoolableSleepingThreadFunction;
-			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {
-				if (poolableSleepingThreads[i] == null && addPoolableSleepingThread(thread, i)) {
-					return i;
+			for (int index = poolableSleepingThreads.length - 1; index >= 0; index--) {
+				if (poolableSleepingThreads[index] == null && addPoolableSleepingThread(thread, index)) {
+					return index;
 				}
 			}
 			return null;
 		}
 		
-		private boolean addPoolableSleepingThread(Thread.Poolable thread, int currentIndex) {
-			try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + currentIndex + "]"))) {
+		private boolean addPoolableSleepingThread(Thread.Poolable thread, int index) {
+			try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + index + "]"))) {
 				synchronized(mutex) {
-					if (poolableSleepingThreads[currentIndex] == null) {
-						poolableSleepingThreads[currentIndex] = thread;
+					if (poolableSleepingThreads[index] == null) {
+						poolableSleepingThreads[index] = thread;
 						return true;
 					}
 				}
@@ -588,13 +588,13 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		
 		private Thread.Poolable getForwardPoolableThread() {
 			this.getPoolableThreadFunction = this.getReversePoolableThreadFunction;
-			for (int i = 0; i < poolableSleepingThreads.length;	i++) {
-				if (poolableSleepingThreads[i] != null) {
-					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + i + "]"))) {
+			for (int index = 0; index < poolableSleepingThreads.length;	index++) {
+				if (poolableSleepingThreads[index] != null) {
+					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + index + "]"))) {
 						synchronized(mutex) {
-							if (poolableSleepingThreads[i] != null) {
-								Thread.Poolable thread = poolableSleepingThreads[i];
-								poolableSleepingThreads[i] = null;
+							if (poolableSleepingThreads[index] != null) {
+								Thread.Poolable thread = poolableSleepingThreads[index];
+								poolableSleepingThreads[index] = null;
 								return thread;
 							}
 						}
@@ -606,13 +606,13 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 		private Thread.Poolable getReversePoolableThread() {
 			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
-			for (int i = poolableSleepingThreads.length - 1; i >= 0; i--) {
-				if (poolableSleepingThreads[i] != null) {
-					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + i + "]"))) {
+			for (int index = poolableSleepingThreads.length - 1; index >= 0; index--) {
+				if (poolableSleepingThreads[index] != null) {
+					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + index + "]"))) {
 						synchronized(mutex) {
-							if (poolableSleepingThreads[i] != null) {
-								Thread.Poolable thread = poolableSleepingThreads[i];
-								poolableSleepingThreads[i] = null;
+							if (poolableSleepingThreads[index] != null) {
+								Thread.Poolable thread = poolableSleepingThreads[index];
+								poolableSleepingThreads[index] = null;
 								return thread;
 							}
 						}
@@ -623,12 +623,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 		
 		private boolean removePoolableSleepingThread(Thread.Poolable thread) {
-			for (int i = 0; i < poolableSleepingThreads.length; i++) {
-				if (poolableSleepingThreads[i] == thread) {
-					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + i + "]"))) {
+			for (int index = 0; index < poolableSleepingThreads.length; index++) {
+				if (poolableSleepingThreads[index] == thread) {
+					try (Mutex mutex = Synchronizer.getMutex(getOperationId(addPoolableSleepingThreadOperationId+ "[" + index + "]"))) {
 						synchronized(mutex) {
-							if (poolableSleepingThreads[i] == thread) {
-								poolableSleepingThreads[i] = null;
+							if (poolableSleepingThreads[index] == thread) {
+								poolableSleepingThreads[index] = null;
 								return true;
 							}
 						}
