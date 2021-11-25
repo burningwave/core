@@ -85,7 +85,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
 		if (executable == null) {
 			ManagedLoggersRepository.logWarn(
-				getClass()::getName, "Executable of {} was set to null by {}",
+				getClass()::getName, "Executable of {} was set to null by{}",
 				getName(),
 				Strings.from(Thread.currentThread().getStackTrace(),2));
 		}
@@ -209,7 +209,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		public void interrupt() {
 			ManagedLoggersRepository.logInfo(
 				getClass()::getName,
-				"Called interrupt on {}: \n{}",
+				"Called interrupt on {}:{}",
 				getName(),
 				Strings.from(getStackTrace(), 2)
 			);
@@ -611,7 +611,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			try {
 				ManagedLoggersRepository.logError(
 					getClass()::getName,
-					"\n\tThread of type {} named {} with executable {} is in state of {} and it will be interrupted",
+					"\n\tThread of type {} named '{}' with executable {} is in state of {} and it will be interrupted",
 					thread.getClass(),
 					thread.getName(),
 					thread.executable,
