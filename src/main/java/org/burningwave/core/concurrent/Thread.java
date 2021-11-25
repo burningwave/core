@@ -83,6 +83,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
+		if (executable == null) {
+			ManagedLoggersRepository.logWarn(
+				getClass()::getName, "Executable of {} was set to null by {}",
+				getName(),
+				Strings.from(Thread.currentThread().getStackTrace(),2));
+		}
 		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
@@ -170,8 +176,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					supplier.runningThreads.remove(this);
 					executable = null;
 					originalExecutable = null;
-					setIndexedName();
 					synchronized(this) {
+						setIndexedName();
 						if (!alive) {
 							continue;
 						}
