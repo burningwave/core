@@ -508,7 +508,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								) {
 									maxThreadCount -= (maxDetachedThreadCountIncreasingStep / 2);
 									ManagedLoggersRepository.logInfo(
-										() -> this.getClass().getName(),
+										getClass()::getName,
 										"{}: decreasing maxThreadCount to {}",
 										java.lang.Thread.currentThread(), maxThreadCount
 									);
@@ -519,7 +519,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 								timeOfLastIncreaseOfMaxDetachedThreadCount = System.currentTimeMillis();
 								maxThreadCount += maxDetachedThreadCountIncreasingStep;
 								ManagedLoggersRepository.logInfo(
-									() -> this.getClass().getName(),
+									getClass()::getName,
 									"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
 									java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
 								);
