@@ -171,7 +171,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	public final static ComponentContainer create() {
-		return create((Properties)null);
+		return create((Map<?, ?>)null);
 	}
 
 	private ComponentContainer init() {
