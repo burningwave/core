@@ -170,8 +170,8 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 					supplier.runningThreads.remove(this);
 					executable = null;
 					originalExecutable = null;
-					setIndexedName();
 					synchronized(this) {
+						setIndexedName();
 						if (!alive) {
 							continue;
 						}
