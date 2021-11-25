@@ -97,7 +97,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 
 	@Override
-	public synchronized void start() {
+	public void start() {
 		if (!looper) {
 			this.executable = originalExecutable;
 		} else {
@@ -109,7 +109,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			};
 		}
 		if (alive != null) {
-			notifyAll();
+			synchronized (this) {
+				notifyAll();
+			}
 		} else {
 			this.alive = true;
 			super.start();
