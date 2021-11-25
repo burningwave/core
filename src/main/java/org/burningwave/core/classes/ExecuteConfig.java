@@ -128,12 +128,12 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 
 
 	public static class ForProperties extends ExecuteConfig<ExecuteConfig.ForProperties> {
-		private Properties properties;
+		private Map<?, ?> properties;
 		private String propertyName;
 		private String filePath;
 		private boolean isAbsoluteFilePath;
 		private boolean indentCodeActive;
-		private Map<Object, Object> defaultValues;
+		private Map<?, ?> defaultValues;
 
 		private ForProperties() {
 			super(
@@ -160,7 +160,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			if (defaultValues == null) {
 				defaultValues = new HashMap<>();
 			}
-			defaultValues.put(key, value);
+			((Map<Object, Object>)defaultValues).put(key, value);
 			return this;
 		}
 
@@ -168,11 +168,11 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 			if (this.defaultValues == null && defaultValues != null) {
 				this.defaultValues = new HashMap<>();
 			}
-			this.defaultValues.putAll(defaultValues);
+			((Map<Object, Object>)this.defaultValues).putAll(defaultValues);
 			return this;
 		}
 
-		Properties getProperties() {
+		Map<?, ?> getProperties() {
 			return properties;
 		}
 
@@ -192,7 +192,7 @@ public abstract class ExecuteConfig<C extends ExecuteConfig<C>> extends LoadOrBu
 		}
 
 
-		Map<Object, Object> getDefaultValues() {
+		Map<?, ?> getDefaultValues() {
 			return defaultValues;
 		}
 
