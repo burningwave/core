@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -47,7 +46,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
@@ -172,16 +170,10 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	@Override
 	public synchronized void closeEntry() {
 		if (currentZipEntry != null) {
-			QueuedTasksExecutor.Task closeEntryTask = BackgroundExecutor.createTask(() -> {
-				try {
-					super.closeEntry();
-				} catch (IOException exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
-				}
-			}).submit();
-			closeEntryTask.waitForFinish(25000);
-			if (!closeEntryTask.hasFinished()) {
-				Driver.throwException("Close entry timeout. Absolute path: {}", currentZipEntry.getAbsolutePath());
+			try {
+				super.closeEntry();
+			} catch (IOException exc) {
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
 			}
 			currentZipEntry.close();
 			currentZipEntry = null;
