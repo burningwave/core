@@ -577,17 +577,17 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
+			if (closeHuntersResults) {
+				componentContainer.closeHuntersSearchResults();
+			}
+			componentContainer.resetClassFactory(closeClassRetrievers);
 		}
 		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
 		System.gc();
 	}
 
 	@Override
-	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		if (closeHuntersResults) {
-			closeHuntersSearchResults();
-		}
+	public void resetClassFactory(boolean closeClassRetrievers) {
 		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 		if (classFactory != null) {
 			classFactory.reset(closeClassRetrievers);
