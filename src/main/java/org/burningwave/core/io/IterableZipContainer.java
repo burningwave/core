@@ -86,7 +86,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		try {
 			return zipFile.duplicate();
 		} catch (Throwable exc) {
-			Synchronizer.execute(ZipFile.class.getName() + "_" + absolutePath, () -> {
+			Synchronizer.execute(IterableZipContainer.class.getName() + "_" + absolutePath, () -> {
 				ZipFile oldZipFile = (ZipFile)Cache.pathForIterableZipContainers.get(absolutePath);
 				if (oldZipFile == null || oldZipFile == zipFile || oldZipFile.isDestroyed) {
 					Cache.pathForIterableZipContainers.upload(
@@ -142,7 +142,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		Collection<T> collection = supplier.get();
-		synchronized (this) {
+		Synchronizer.execute(IterableZipContainer.class.getName() + "_" + getAbsolutePath(), () -> {
 			Entry zipEntry = getCurrentZipEntry();
 			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
@@ -160,7 +160,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				}
 				closeEntry();
 			}
-		}
+		});
 		return collection;
 	}
 
@@ -191,7 +191,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		synchronized (this) {
+		return Synchronizer.execute(IterableZipContainer.class.getName() + "_" + getAbsolutePath(), () -> {
 			Entry zipEntry = getCurrentZipEntry();
 			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
@@ -211,8 +211,8 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 					return toRet;
 				}
 			}
-		}
-		return null;
+			return null;
+		});
 	}
 
 	public default <T> T findOneAndConvert(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Function<IterableZipContainer.Entry, T> tSupplier, Predicate<IterableZipContainer.Entry> loadZipEntryData) {

@@ -817,55 +817,53 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	private synchronized String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes,
 			String zipInputStreamName, String relativePath1) {
-		return Synchronizer.execute(Objects.getClassId(IterableZipContainer.class) + "_" + zipInputStreamName, () -> {
-			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
-				if (zIS == null) {
-					return Driver.throwException(
-						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
-					);
-				}
-				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
-					return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
-				};
-				String temp = relativePath1;
-				while (temp != null) {
-					int lastIndexOfSlash = temp.lastIndexOf("/");
-					final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
-					zipEntryPredicate = zipEntryPredicate
-							.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
-					if (lastIndexOfSlash == -1) {
-						temp = null;
-					} else {
-						temp = temp2;
-					}
-				}
-				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
-				if (!zipEntries.isEmpty()) {
-					IterableZipContainer.Entry zipEntry = Collections.max(
-						zipEntries,
-						Comparator.comparing(zipEntryW ->
-							zipEntryW.getName().split("/").length
-						)
-					);
-					return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath1);
-				} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
-					try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName,
-							zipInputStreamAsBytes)) {
-						if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath1 + "/"),
-								zipEntry -> false) != null) {
-							// in case of JMod files folder
-							return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
-						}
-						return Driver.throwException(new FileSystemItemNotFoundException(
-								"Absolute path \"" + absolutePath.getKey() + "\" not exists"));
-					}
+		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
+			if (zIS == null) {
+				return Driver.throwException(
+					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+				);
+			}
+			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
+				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
+			};
+			String temp = relativePath1;
+			while (temp != null) {
+				int lastIndexOfSlash = temp.lastIndexOf("/");
+				final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
+				zipEntryPredicate = zipEntryPredicate
+						.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
+				if (lastIndexOfSlash == -1) {
+					temp = null;
 				} else {
-					return Driver.throwException(
-						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
-					);
+					temp = temp2;
 				}
 			}
-		});
+			Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
+			if (!zipEntries.isEmpty()) {
+				IterableZipContainer.Entry zipEntry = Collections.max(
+					zipEntries,
+					Comparator.comparing(zipEntryW ->
+						zipEntryW.getName().split("/").length
+					)
+				);
+				return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath1);
+			} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
+				try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName,
+						zipInputStreamAsBytes)) {
+					if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath1 + "/"),
+							zipEntry -> false) != null) {
+						// in case of JMod files folder
+						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
+					}
+					return Driver.throwException(new FileSystemItemNotFoundException(
+							"Absolute path \"" + absolutePath.getKey() + "\" not exists"));
+				}
+			} else {
+				return Driver.throwException(
+					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+				);
+			}
+		}
 	}
 
 	synchronized String retrieveConventionedRelativePath(FileSystemItem fileSystemItem, IterableZipContainer iZC,
