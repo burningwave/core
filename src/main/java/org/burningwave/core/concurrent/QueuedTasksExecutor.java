@@ -1545,6 +1545,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							if (previousRegisteredStackTrace != null) {
 								if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
 									if (!task.hasFinished() && !task.isAborted()) {
+										ManagedLoggersRepository.logWarn(
+											getClass()::getName,
+											"Possible deadlock detected for task:{}",
+											task.getInfoAsString()
+										);
 										if (markAsProbableDeadLocked) {
 											task.markAsProbablyDeadLocked();
 											taskThread.setName("PROBABLE DEAD-LOCKED THREAD -> " + taskThread.getName());
@@ -1553,6 +1558,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											task.remove();
 										}
 										if (killProbableDeadLockedTasks && task.hasFinished()) {
+											ManagedLoggersRepository.logWarn(
+												getClass()::getName,
+												"Trying to abort task {}",
+												task.hashCode()
+											);
 											task.aborted = true;
 											taskThread.interrupt();
 										}
@@ -1562,10 +1572,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											}
 										}
 										ManagedLoggersRepository.logWarn(
-											() -> this.getClass().getName(),
-											"Possible deadlock detected for task:{}\n\t{}",
-											task.getInfoAsString(),
-											Synchronizer.getAllThreadsInfoAsString(true)
+											getClass()::getName,
+											Synchronizer.getAllThreadsInfoAsString(true)											
 										);
 										Synchronizer.logAllThreadsState(true);
 									}
