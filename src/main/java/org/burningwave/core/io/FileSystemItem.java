@@ -905,13 +905,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		Synchronizer.execute(instanceId, () -> {
+		//Synchronizer.execute(instanceId, () -> {
 			Cache.pathForContents.remove(absolutePath, true);
 			clearJavaClassWrapper(this);
 			if (recomputeConventionedAbsolutePath) {
 				this.absolutePath.setValue(null);
 			}
-		});
+		//});
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
@@ -1315,17 +1315,22 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try {
 					try {
 						return filterPredicate.test(childAndThis);
-					} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+					} catch (ArrayIndexOutOfBoundsException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
 						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
-						if (exc instanceof ArrayIndexOutOfBoundsException) {
-							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
+						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
+						return Synchronizer.execute(childAndThis[0].instanceId, () -> {
 							childAndThis[0].reloadContent();
-						} else if (exc instanceof NullPointerException) {
-							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+							return filterPredicate.test(childAndThis);
+						});
+					} catch (NullPointerException exc) {
+						String childAbsolutePath = childAndThis[0].getAbsolutePath();
+						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
+						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+						return Synchronizer.execute(childAndThis[0].instanceId, () -> {
 							childAndThis[0].reloadContent(true);
-						}
-						return filterPredicate.test(childAndThis);
+							return filterPredicate.test(childAndThis);
+						});
 					}
 				} catch (Throwable exc) {
 					if (exceptionHandler != null) {
