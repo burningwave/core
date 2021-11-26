@@ -905,13 +905,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		//Synchronizer.execute(instanceId, () -> {
-			Cache.pathForContents.remove(absolutePath, true);
-			clearJavaClassWrapper(this);
-			if (recomputeConventionedAbsolutePath) {
-				this.absolutePath.setValue(null);
-			}
-		//});
+		Cache.pathForContents.remove(absolutePath, true);
+		clearJavaClassWrapper(this);
+		if (recomputeConventionedAbsolutePath) {
+			this.absolutePath.setValue(null);
+		}
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
