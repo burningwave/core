@@ -836,7 +836,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			clear();
 		}
 
-		String getInfoAsString() {
+		public String getInfoAsString() {
 			if (this.getCreatorInfos() != null) {
 				Thread executor = this.executor;
 				return Strings.compile("\n\tTask hash code: {}\n\tTask status: {} {} \n\tcreated by: {}",
@@ -846,13 +846,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					Strings.from(this.getCreatorInfos(), 2)
 				);
 			}
-			return "";
+			return Strings.compile("\n\tTask hash code: {}\n\tTask status: {} {}",
+				this.hashCode(),
+				Strings.compile("\n\t\tpriority: {}\n\t\tstarted: {}\n\t\taborted: {}\n\t\tfinished: {}", priority, isStarted(), isAborted(), hasFinished()),
+				executor != null ? "\n\t" + executor + Strings.from(executor.getStackTrace(),2) : ""
+			);
 		}
 		
 		public void logInfo() {
-			if (this.getCreatorInfos() != null) {
-				ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
-			}
+			ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
 		}
 		
 		public void logException() {
