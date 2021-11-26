@@ -142,22 +142,24 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		Collection<T> collection = supplier.get();
-		Entry zipEntry = getCurrentZipEntry();
-		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
-			if (loadZipEntryData.test(zipEntry)) {
-				zipEntry.toByteBuffer();
-			}
-			collection.add(tSupplier.apply(zipEntry));
-			closeEntry();
-		}
-		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
-			if (zipEntryPredicate.test(zipEntry)) {
+		synchronized (this) {
+			Entry zipEntry = getCurrentZipEntry();
+			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
 				collection.add(tSupplier.apply(zipEntry));
+				closeEntry();
 			}
-			closeEntry();
+			while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
+				if (zipEntryPredicate.test(zipEntry)) {
+					if (loadZipEntryData.test(zipEntry)) {
+						zipEntry.toByteBuffer();
+					}
+					collection.add(tSupplier.apply(zipEntry));
+				}
+				closeEntry();
+			}
 		}
 		return collection;
 	}
@@ -189,23 +191,25 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		Entry zipEntry = getCurrentZipEntry();
-		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
-			if (loadZipEntryData.test(zipEntry)) {
-				zipEntry.toByteBuffer();
-			}
-			closeEntry();
-			return tSupplier.apply(zipEntry);
-		}
-		while((zipEntry = getNextEntry(zEntry -> false)) != null) {
-			if (zipEntryPredicate.test(zipEntry)) {
+		synchronized (this) {
+			Entry zipEntry = getCurrentZipEntry();
+			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
-
-				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
-				return toRet;
+				return tSupplier.apply(zipEntry);
+			}
+			while((zipEntry = getNextEntry(zEntry -> false)) != null) {
+				if (zipEntryPredicate.test(zipEntry)) {
+					if (loadZipEntryData.test(zipEntry)) {
+						zipEntry.toByteBuffer();
+					}
+	
+					T toRet = tSupplier.apply(zipEntry);
+					closeEntry();
+					return toRet;
+				}
 			}
 		}
 		return null;
