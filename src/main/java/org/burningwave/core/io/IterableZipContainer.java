@@ -86,7 +86,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		try {
 			return zipFile.duplicate();
 		} catch (Throwable exc) {
-			Synchronizer.execute(IterableZipContainer.class.getName() + "_" + absolutePath, () -> {
+			Synchronizer.execute(IterableZipContainer.classId + "_" + absolutePath, () -> {
 				ZipFile oldZipFile = (ZipFile)Cache.pathForIterableZipContainers.get(absolutePath);
 				if (oldZipFile == null || oldZipFile == zipFile || oldZipFile.isDestroyed) {
 					Cache.pathForIterableZipContainers.upload(

@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
-import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -94,24 +93,24 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
-//			QueuedTasksExecutor.ProducerTask<Collection<T>> task = BackgroundExecutor.createProducerTask(() -> {
+		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
+			QueuedTasksExecutor.ProducerTask<Collection<T>> task = BackgroundExecutor.createProducerTask(() -> {
 				return IterableZipContainer.super.findAllAndConvert(supplier, zipEntryPredicate, tSupplier, loadZipEntryData);
-//			}).submit();
-//			if (task.waitForFinish(60000).hasFinished()) {
-//				if (task.getException() == null) {
-//					return task.join();
-//				}
-//				return Driver.throwException(task.getException());
-//			} else {
-//				ManagedLoggersRepository.logError(
-//					getClass()::getName, "Unable to find and convert entries for {}{}",
-//					getAbsolutePath(),
-//					task.getInfoAsString()
-//				);
-//				return Driver.throwException("Unable to find and convert entries for {}", getAbsolutePath());
-//			}			
-		});
+			}).submit();
+			if (task.waitForFinish(60000).hasFinished()) {
+				if (task.getException() == null) {
+					return task.join();
+				}
+				return Driver.throwException(task.getException());
+			} else {
+				ManagedLoggersRepository.logError(
+					getClass()::getName, "Unable to find and convert entries for {}{}",
+					getAbsolutePath(),
+					task.getInfoAsString()
+				);
+				return Driver.throwException("Unable to find and convert entries for {}", getAbsolutePath());
+			}			
+		//});
 	}
 	
 	@Override
@@ -120,24 +119,24 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
-//			QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
+		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
+			QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
 				return IterableZipContainer.super.findFirstAndConvert(zipEntryPredicate, tSupplier, loadZipEntryData);
-//			}).submit();
-//			if (task.waitForFinish(60000).hasFinished()) {
-//				if (task.getException() == null) {
-//					return task.join();
-//				}
-//				return Driver.throwException(task.getException());
-//			} else {
-//				ManagedLoggersRepository.logError(
-//					getClass()::getName, "Unable to find and convert entry for {}{}",
-//					getAbsolutePath(),
-//					task.getInfoAsString()
-//				);
-//				return Driver.throwException("Unable to find and convert entry for {}", getAbsolutePath());
-//			}
-		});
+			}).submit();
+			if (task.waitForFinish(60000).hasFinished()) {
+				if (task.getException() == null) {
+					return task.join();
+				}
+				return Driver.throwException(task.getException());
+			} else {
+				ManagedLoggersRepository.logError(
+					getClass()::getName, "Unable to find and convert entry for {}{}",
+					getAbsolutePath(),
+					task.getInfoAsString()
+				);
+				return Driver.throwException("Unable to find and convert entry for {}", getAbsolutePath());
+			}
+		//});
 	}
 	
 	
