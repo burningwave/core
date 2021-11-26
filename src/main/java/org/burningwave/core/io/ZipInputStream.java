@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
@@ -258,18 +259,21 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 
 			private ByteBuffer loadContent() {
+				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>(Cache.pathForContents.get(getAbsolutePath()));
+				if (contentWrapper.get() != null) {
+					return contentWrapper.get();
+				}
+				if (zipInputStream.getCurrentZipEntry() != this) {
+					Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+				}
+				try {
+					contentWrapper.set(Streams.toByteBuffer(zipInputStream, (int)super.getSize()));
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
+					return null;
+				}
 				return Cache.pathForContents.getOrUploadIfAbsent(
-					getAbsolutePath(), () -> {
-						if (zipInputStream.getCurrentZipEntry() != this) {
-							Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
-						}
-						try {
-						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());
-						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
-							return null;
-						}
-					}
+					getAbsolutePath(), () -> contentWrapper.get()
 				);
 
 			}
