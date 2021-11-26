@@ -578,6 +578,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		resetClassFactory(closeClassRetrievers);
 		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
+		BackgroundExecutor.waitForTasksEnding();
 		System.gc();
 		return this;
 	}
