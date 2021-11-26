@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
 	ByteBufferHandlerTest.class,
 	ByteCodeHunterTest.class,
     ClassesTest.class,
-//    ClassFactoryTest.class,
+    ClassFactoryTest.class,
     ComponentContainerTest.class,
     ClassHunterTest.class,
     ClassLoadersTest.class,
@@ -37,7 +37,7 @@ import org.junit.runner.RunWith;
     SourceCodeHandlerTest.class,
     StringsTest.class,
     UnitSourceGeneratorTest.class,
-//    RepeatedClassFactoryTest.class,
+    RepeatedClassFactoryTest.class,
     RepeatedComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
