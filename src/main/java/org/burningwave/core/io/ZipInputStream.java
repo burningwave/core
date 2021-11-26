@@ -41,9 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
@@ -58,21 +56,17 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
-	Set<String> retrievedEntries;
-	public static boolean closingLoggingActive;
 	
 	
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
-		retrievedEntries = new HashSet<>();
 	}
 
 	ZipInputStream(String absolutePath, ByteBufferInputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
 		this.byteBufferInputStream = inputStream;
-		retrievedEntries = new HashSet<>();
 	}
 
 	@Override
@@ -126,11 +120,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 	@Override
     protected Entry.Attached createZipEntry(String name) {
-		//if (!retrievedEntries.contains(name)) {
-			return new Entry.Attached(name, this);
-		//} else {
-			//return Driver.throwException("Could retrieve again {}", name);
-		//}
+		return new Entry.Attached(name, this);
     }
 
 
@@ -144,12 +134,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		Executor.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
-				if (closingLoggingActive) {
-					ManagedLoggersRepository.logInfo(
-						ZipInputStream.class::getName, "opening {}",
-						Optional.ofNullable(currentZipEntry).map(currentZipEntry -> currentZipEntry.getAbsolutePath() + "-" + currentZipEntry.getName()).orElseGet(() -> "null")
-					);
-				}
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
@@ -185,12 +169,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 	@Override
 	public void closeEntry() {
-		if (closingLoggingActive) {
-			ManagedLoggersRepository.logInfo(
-				ZipInputStream.class::getName, "closing {}",
-				Optional.ofNullable(currentZipEntry).map(currentZipEntry -> currentZipEntry.getAbsolutePath() + "-" + currentZipEntry.getName()).orElseGet(() -> "null")
-			);
-		}
 		if (currentZipEntry != null) {
 			try {
 				super.closeEntry();
@@ -209,8 +187,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		absolutePath = null;
 		Executor.run(() -> super.close());
 		this.byteBufferInputStream = null;
-		retrievedEntries.clear();
-		retrievedEntries = null;
 	}
 
 	public static interface Entry extends IterableZipContainer.Entry {

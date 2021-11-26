@@ -97,7 +97,6 @@ public class PathHelperTest extends BaseTest {
 		);
 		assertEquals(paths.size(), 1);
 		assertTrue(paths.iterator().next().endsWith("/src/test/external-resources"));
-		org.burningwave.core.io.ZipInputStream.closingLoggingActive = true;
 	}
 
 }
