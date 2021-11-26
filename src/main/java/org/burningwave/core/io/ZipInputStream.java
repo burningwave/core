@@ -145,7 +145,10 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
 				if (closingLoggingActive) {
-					ManagedLoggersRepository.logInfo(ZipInputStream.class::getName, "opening {}", currentZipEntry.getAbsolutePath());
+					ManagedLoggersRepository.logInfo(
+						ZipInputStream.class::getName, "opening {}",
+						Optional.ofNullable(currentZipEntry).map(currentZipEntry -> currentZipEntry.getAbsolutePath() + "-" + currentZipEntry.getName()).orElseGet(() -> "null")
+					);
 				}
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
@@ -182,10 +185,13 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 	@Override
 	public void closeEntry() {
+		if (closingLoggingActive) {
+			ManagedLoggersRepository.logInfo(
+				ZipInputStream.class::getName, "closing {}",
+				Optional.ofNullable(currentZipEntry).map(currentZipEntry -> currentZipEntry.getAbsolutePath() + "-" + currentZipEntry.getName()).orElseGet(() -> "null")
+			);
+		}
 		if (currentZipEntry != null) {
-			if (closingLoggingActive) {
-				ManagedLoggersRepository.logInfo(ZipInputStream.class::getName, "closing {}", currentZipEntry.getAbsolutePath());
-			}
 			try {
 				super.closeEntry();
 			} catch (IOException exc) {
