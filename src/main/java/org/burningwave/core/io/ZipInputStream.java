@@ -28,12 +28,14 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -46,6 +48,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
 
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
@@ -168,17 +171,34 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 
 	@Override
 	public void closeEntry() {
-		try {
-			super.closeEntry();
-		} catch (IOException exc) {
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+		QueuedTasksExecutor.Task closingTask = BackgroundExecutor.createTask(() -> {
+			try {
+				super.closeEntry();
+			} catch (IOException exc) {
+				ManagedLoggersRepository.logWarn(
+					getClass()::getName,
+					"Exception occurred while closing zipEntry {}: {}",
+					Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage()
+				);
+			}
+		}).submit();
+		closingTask.waitForFinish(25000);
+		if (!closingTask.hasFinished()) {
+			ManagedLoggersRepository.logError(
+				getClass()::getName,
+				Strings.compile(
+					"Could not close entry {}: \n{}: ",
+					closingTask.getInfoAsString()
+				)
+			);
+			Driver.throwException("Could not close entry {}", currentZipEntry.getAbsolutePath());
 		}
 		if (currentZipEntry != null) {
 			currentZipEntry.close();
 			currentZipEntry = null;
 		}
 	}
-
+	
 	@Override
 	public void close() {
 		closeEntry();
