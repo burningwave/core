@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -70,6 +71,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.classes.JavaClass;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
@@ -86,6 +88,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	private Collection<FileSystemItem> allChildren;
 	private String instanceId;
 	private AtomicReference<JavaClass> javaClassWrapper;
+	private QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> allChildrenLoader;
+	private QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> childrenLoader;
 	
 	static {
 		instanceIdPrefix = FileSystemItem.class.getName();
@@ -375,15 +379,25 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	private Collection<FileSystemItem> getAllChildren0() {
-		Collection<FileSystemItem> allChildren = this.allChildren;
-		if (allChildren == null) {
-			allChildren = Synchronizer.execute(instanceId, () -> {
-				Collection<FileSystemItem> allChildrenTemp = this.allChildren;
-				if (allChildrenTemp == null) {
-					allChildrenTemp = this.allChildren = loadAllChildren();
+		if (this.allChildren == null) {
+			QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> loader =
+				this.allChildrenLoader;
+			if (loader != null && loader.isSubmitted()) {
+				return loader.join();
+			}
+			Synchronizer.execute(instanceId, () -> {
+				if (allChildren == null && this.allChildrenLoader == null) {
+					this.allChildrenLoader = BackgroundExecutor.createProducerTask(() -> {
+						this.allChildren = loadAllChildren();
+						this.allChildrenLoader = null;
+						return this.allChildren;
+					}).submit();
 				}
-				return allChildrenTemp;
 			});
+			loader = this.allChildrenLoader;
+			if (loader != null) {
+				return loader.join();
+			}
 		}
 		return allChildren;
 	}
@@ -393,15 +407,25 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	private Collection<FileSystemItem> getChildren0() {
-		Collection<FileSystemItem> children = this.children;
-		if (children == null) {
-			children = Synchronizer.execute(instanceId, () -> {
-				Collection<FileSystemItem> childrenTemp = this.children;
-				if (childrenTemp == null) {
-					childrenTemp = this.children = loadChildren();
+		if (this.children == null) {
+			QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> loader =
+				this.childrenLoader;
+			if (loader != null && loader.isSubmitted()) {
+				return loader.join();
+			}
+			Synchronizer.execute(instanceId, () -> {
+				if (children == null && this.childrenLoader == null) {
+					this.childrenLoader = BackgroundExecutor.createProducerTask(() -> {
+						this.children = loadChildren();
+						this.childrenLoader = null;
+						return this.children;
+					}).submit();
 				}
-				return childrenTemp;
 			});
+			loader = this.childrenLoader;
+			if (loader != null) {
+				return loader.join();
+			}
 		}
 		return children;
 	}
@@ -905,11 +929,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
 		String absolutePath = getAbsolutePath();
-		Cache.pathForContents.remove(absolutePath, true);
-		clearJavaClassWrapper(this);
-		if (recomputeConventionedAbsolutePath) {
-			this.absolutePath.setValue(null);
-		}
+		Synchronizer.execute(instanceId, () -> {
+			Cache.pathForContents.remove(absolutePath, true);
+			clearJavaClassWrapper(this);
+			if (recomputeConventionedAbsolutePath) {
+				this.absolutePath.setValue(null);
+			}
+		});
 		if (exists() && !isFolder()) {
 			if (isCompressed()) {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
