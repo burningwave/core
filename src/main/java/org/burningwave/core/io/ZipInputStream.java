@@ -126,11 +126,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 	@Override
     protected Entry.Attached createZipEntry(String name) {
-		if (!retrievedEntries.contains(name)) {
+		//if (!retrievedEntries.contains(name)) {
 			return new Entry.Attached(name, this);
-		} else {
-			return Driver.throwException("Could retrieve again {}", name);
-		}
+		//} else {
+			//return Driver.throwException("Could retrieve again {}", name);
+		//}
     }
 
 
