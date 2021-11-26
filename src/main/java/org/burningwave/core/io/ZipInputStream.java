@@ -52,14 +52,16 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
 @SuppressWarnings("unchecked")
-class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer {
+public class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer {
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
 	Set<String> retrievedEntries;
-
+	public static boolean closingLoggingActive;
+	
+	
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
@@ -124,7 +126,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 
 	@Override
     protected Entry.Attached createZipEntry(String name) {
-		if (retrievedEntries.add(name)) {
+		if (!retrievedEntries.contains(name)) {
 			return new Entry.Attached(name, this);
 		} else {
 			return Driver.throwException("Could retrieve again {}", name);
@@ -178,6 +180,9 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	@Override
 	public void closeEntry() {
 		if (currentZipEntry != null) {
+			if (closingLoggingActive) {
+				ManagedLoggersRepository.logInfo(ZipInputStream.class::getName, "closing {}", currentZipEntry.getAbsolutePath());
+			}
 			try {
 				super.closeEntry();
 			} catch (IOException exc) {
