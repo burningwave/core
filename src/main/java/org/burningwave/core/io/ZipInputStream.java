@@ -89,9 +89,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	
 	@Override
 	public <T> Collection<T> findAllAndConvert(Supplier<Collection<T>> supplier,
-		Predicate<org.burningwave.core.io.IterableZipContainer.Entry> zipEntryPredicate,
-		Function<org.burningwave.core.io.IterableZipContainer.Entry, T> tSupplier,
-		Predicate<org.burningwave.core.io.IterableZipContainer.Entry> loadZipEntryData
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
+		Function<IterableZipContainer.Entry, T> tSupplier,
+		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
 			QueuedTasksExecutor.ProducerTask<Collection<T>> task = BackgroundExecutor.createProducerTask(() -> {
@@ -103,6 +103,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				}
 				return Driver.throwException(task.getException());
 			} else {
+				ManagedLoggersRepository.logError(
+					getClass()::getName, "Unable to find and convert entries for {}{}",
+					getAbsolutePath(),
+					task.getInfoAsString()
+				);
 				return Driver.throwException("Unable to find and convert entries for {}", getAbsolutePath());
 			}			
 		//});
@@ -110,9 +115,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	
 	@Override
 	public <T> T findFirstAndConvert(
-		Predicate<org.burningwave.core.io.IterableZipContainer.Entry> zipEntryPredicate,
-		Function<org.burningwave.core.io.IterableZipContainer.Entry, T> tSupplier,
-		Predicate<org.burningwave.core.io.IterableZipContainer.Entry> loadZipEntryData
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
+		Function<IterableZipContainer.Entry, T> tSupplier,
+		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
 			QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
@@ -124,7 +129,12 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				}
 				return Driver.throwException(task.getException());
 			} else {
-				return Driver.throwException("Unable to find and convert entries for {}", getAbsolutePath());
+				ManagedLoggersRepository.logError(
+					getClass()::getName, "Unable to find and convert entry for {}{}",
+					getAbsolutePath(),
+					task.getInfoAsString()
+				);
+				return Driver.throwException("Unable to find and convert entry for {}", getAbsolutePath());
 			}
 		//});
 	}
@@ -320,12 +330,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 					ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
 					return null;
 				}
-				Cache.pathForContents.upload(
+				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						return contentWrapper.get();
-					}, true
+					}
 				);
-				return contentWrapper.get();
 			}
 
 			@Override
@@ -415,12 +424,11 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 						)
 					);
 				}
-				Cache.pathForContents.upload(
+				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						return contentWrapper.get();
-					}, true
+					}
 				);
-				return contentWrapper.get();
 			}
 
 			@Override
