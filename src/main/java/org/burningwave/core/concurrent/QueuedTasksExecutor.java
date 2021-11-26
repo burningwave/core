@@ -589,6 +589,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		volatile boolean aborted;
 		volatile boolean finished;
 		volatile boolean queueConsumerUnlockingRequested;
+		boolean exceptionHandled;
 		E executable;
 		Thread executor;
 		Throwable exc;
@@ -803,7 +804,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				} catch (Throwable exc) {
 					this.exc = exc;
 					startTime = null;
-					if (exceptionHandler == null || !exceptionHandler.test((T)this, exc)) {
+					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
 					forceAbort();
@@ -819,7 +820,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					execute0();
 				} catch (Throwable exc) {
 					this.exc = exc;
-					if (exceptionHandler == null || !exceptionHandler.test((T)this, exc)) {
+					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
 				}
@@ -998,6 +999,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		void execute0() throws Throwable {
 			this.executable.accept(this);
 		}
+		
+		public void join() {
+			join(false);
+		}
+
+		public void join(boolean ignoreDeadLocked) {
+			waitForFinish(ignoreDeadLocked);
+			Throwable exception = getException();
+			if (exception != null && !exceptionHandled) {
+				Driver.throwException(exception);
+			}
+		}
 
 	}
 
@@ -1020,6 +1033,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public T join(boolean ignoreDeadLocked) {
 			waitForFinish(ignoreDeadLocked);
+			Throwable exception = getException();
+			if (exception != null && !exceptionHandled) {
+				return Driver.throwException(exception);
+			}
 			return result;
 		}
 
