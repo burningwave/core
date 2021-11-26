@@ -287,7 +287,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return instanceId + "_components";
 	}
 
-	public void reset() {
+	public void reInit() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear();
 			init();
@@ -499,8 +499,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 	}
 
-	@Override
-	public ComponentContainer clear() {
+	public ComponentContainer reset() {
 		Map<Class<?>, Component> components = this.components;
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			this.components = new ConcurrentHashMap<>();
@@ -519,10 +518,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return this;
 	}
 
-	public static void clearAll() {
+	public static void resetAll() {
 		for (ComponentContainer componentContainer : instances) {
 			try {
-				componentContainer.clear();
+				componentContainer.reset();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
@@ -566,16 +565,32 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		System.gc();
 	}
-
-	public static void clearAllCaches() {
-		clearAllCaches(true, true, true);
+	
+	@Override
+	public ComponentContainer clear() {
+		return clear(true, true, true);
+	}
+	
+	@Override
+	public ComponentContainer clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+		if (closeHuntersResults) {
+			closeHuntersSearchResults();
+		}
+		resetClassFactory(closeClassRetrievers);
+		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
+		System.gc();
+		return this;
+	}
+	
+	public static void clearAll() {
+		clearAll(true, true, true);
 	}
 
-	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		clearAllCaches(closeHuntersResults, closeClassRetrievers, true);
+	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers) {
+		clearAll(closeHuntersResults, closeClassRetrievers, true);
 	}
 
-	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
 			if (closeHuntersResults) {
 				componentContainer.closeHuntersSearchResults();

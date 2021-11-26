@@ -50,18 +50,20 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 		return ComponentContainer.getInstance();
 	}
 	
+	public static void resetAll() {
+		ComponentContainer.resetAll();
+	}
+	
 	public static void clearAll() {
 		ComponentContainer.clearAll();
 	}
 	
-	public static void clearAllCaches() {
-		ComponentContainer.clearAllCaches();
+	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+		ComponentContainer.clearAll(closeHuntersResults, closeClassRetrievers, clearFileSystemItemReferences);
 	}
 	
-	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		ComponentContainer.clearAllCaches(closeHuntersResults, closeClassRetrievers, clearFileSystemItemReferences);
-	}
-
+	public <C extends ComponentSupplier> C clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences);
+	
 	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
 
 	public ByteCodeHunter getByteCodeHunter();
