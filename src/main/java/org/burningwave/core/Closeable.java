@@ -41,7 +41,7 @@ public interface Closeable extends AutoCloseable, Identifiable {
 
 	@Override
 	default public void close() {
-		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
+		//throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
 	}
 
 	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {
