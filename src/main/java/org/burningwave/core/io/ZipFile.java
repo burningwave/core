@@ -204,7 +204,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	}
 
 	@Override
-	public Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public synchronized Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		return (Entry)(currentZipEntry = entriesIterator.hasNext()? entriesIterator.next() : null);
 	}
 
@@ -219,7 +219,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	}
 
 	@Override
-	public void closeEntry() {
+	public synchronized void closeEntry() {
 		currentZipEntry = null;
 	}
 

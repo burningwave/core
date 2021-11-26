@@ -130,7 +130,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	}
 
 	@Override
-	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public synchronized IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		Executor.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
@@ -145,7 +145,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		return currentZipEntry;
 	}
 
-	public IterableZipContainer.Entry getNextEntryAsDetached() {
+	public synchronized IterableZipContainer.Entry getNextEntryAsDetached() {
 		return getNextEntryAsDetached(zEntry -> false);
 	}
 
@@ -168,7 +168,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 
 	@Override
-	public void closeEntry() {
+	public synchronized void closeEntry() {
 		if (currentZipEntry != null) {
 			try {
 				super.closeEntry();
