@@ -1317,18 +1317,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
 						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
 						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
-						return Synchronizer.execute(childAndThis[0].instanceId, () -> {
-							childAndThis[0].reloadContent();
-							return filterPredicate.test(childAndThis);
-						});
+						childAndThis[0].reloadContent();
+						return filterPredicate.test(childAndThis);
 					} catch (NullPointerException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
 						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
 						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
-						return Synchronizer.execute(childAndThis[0].instanceId, () -> {
-							childAndThis[0].reloadContent(true);
-							return filterPredicate.test(childAndThis);
-						});
+						childAndThis[0].reloadContent(true);
+						return filterPredicate.test(childAndThis);
 					}
 				} catch (Throwable exc) {
 					if (exceptionHandler != null) {
