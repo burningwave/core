@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 
 public interface IterableZipContainer extends Closeable, ManagedLogger {
 	public final static String classId = Objects.getClassId(IterableZipContainer.class);
@@ -141,25 +143,33 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		Collection<T> collection = supplier.get();
-		Entry zipEntry = getCurrentZipEntry();
-		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
-			if (loadZipEntryData.test(zipEntry)) {
-				zipEntry.toByteBuffer();
-			}
-			collection.add(tSupplier.apply(zipEntry));
-			closeEntry();
-		}
-		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
-			if (zipEntryPredicate.test(zipEntry)) {
+		QueuedTasksExecutor.ProducerTask<Collection<T>> task = BackgroundExecutor.createProducerTask(() -> {
+			Collection<T> collection = supplier.get();
+			Entry zipEntry = getCurrentZipEntry();
+			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
 				collection.add(tSupplier.apply(zipEntry));
+				closeEntry();
 			}
-			closeEntry();
+			while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
+				if (zipEntryPredicate.test(zipEntry)) {
+					if (loadZipEntryData.test(zipEntry)) {
+						zipEntry.toByteBuffer();
+					}
+					collection.add(tSupplier.apply(zipEntry));
+				}
+				closeEntry();
+			}
+			return collection;
+		}).submit().waitForFinish(60000);
+		if (!task.hasFinished()) {
+			return Driver.throwException("Could not find and convert entries for {}", getAbsolutePath());
+		} else if (task.getException() != null) {
+			return Driver.throwException(task.getException());
 		}
-		return collection;
+		return task.get();
 	}
 
 	public String getConventionedAbsolutePath();
@@ -189,26 +199,32 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		Entry zipEntry = getCurrentZipEntry();
-		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
-			if (loadZipEntryData.test(zipEntry)) {
-				zipEntry.toByteBuffer();
-			}
-			closeEntry();
-			return tSupplier.apply(zipEntry);
-		}
-		while((zipEntry = getNextEntry(zEntry -> false)) != null) {
-			if (zipEntryPredicate.test(zipEntry)) {
+		QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
+			Entry zipEntry = getCurrentZipEntry();
+			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
-
-				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
-				return toRet;
+				return tSupplier.apply(zipEntry);
 			}
+			while((zipEntry = getNextEntry(zEntry -> false)) != null) {
+				if (zipEntryPredicate.test(zipEntry)) {
+					if (loadZipEntryData.test(zipEntry)) {
+						zipEntry.toByteBuffer();
+					}
+	
+					T toRet = tSupplier.apply(zipEntry);
+					closeEntry();
+					return toRet;
+				}
+			}
+			return null;
+		}).submit().waitForFinish(25000);
+		if (!task.hasFinished()) {
+			Driver.throwException("Could not find and convert entry for {}", getAbsolutePath());
 		}
-		return null;
+		return task.get();
 	}
 
 	public default <T> T findOneAndConvert(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Function<IterableZipContainer.Entry, T> tSupplier, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
