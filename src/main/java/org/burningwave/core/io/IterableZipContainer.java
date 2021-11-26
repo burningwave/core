@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.BufferHand
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
-
+import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -50,9 +50,9 @@ import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
 
 public interface IterableZipContainer extends Closeable, ManagedLogger {
-
+	public final static String classId = Objects.getClassId(IterableZipContainer.class);
 	public final static String PATH_SUFFIX = "///";
-
+	
 	public static IterableZipContainer create(FileInputStream file) {
 		return create(file.getAbsolutePath(), file);
 	}
@@ -86,7 +86,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		try {
 			return zipFile.duplicate();
 		} catch (Throwable exc) {
-			Synchronizer.execute(IterableZipContainer.class.getName() + "_" + absolutePath, () -> {
+			Synchronizer.execute(classId + "_" + absolutePath, () -> {
 				ZipFile oldZipFile = (ZipFile)Cache.pathForIterableZipContainers.get(absolutePath);
 				if (oldZipFile == null || oldZipFile == zipFile || oldZipFile.isDestroyed) {
 					Cache.pathForIterableZipContainers.upload(

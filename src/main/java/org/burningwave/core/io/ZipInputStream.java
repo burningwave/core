@@ -34,6 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
+import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -130,19 +131,21 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	}
 
 	@Override
-	public synchronized IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
-		Executor.run(() -> {
-			try {
-				currentZipEntry = (Entry.Attached)super.getNextEntry();
-			} catch (ZipException exc) {
-				String message = exc.getMessage();
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
+	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+		return Synchronizer.execute(IterableZipContainer.classId, () -> {
+			Executor.run(() -> {
+				try {
+					currentZipEntry = (Entry.Attached)super.getNextEntry();
+				} catch (ZipException exc) {
+					String message = exc.getMessage();
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
+				}
+			});
+			if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
+				currentZipEntry.toByteBuffer();
 			}
+			return currentZipEntry;
 		});
-		if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
-			currentZipEntry.toByteBuffer();
-		}
-		return currentZipEntry;
 	}
 
 	public synchronized IterableZipContainer.Entry getNextEntryAsDetached() {
@@ -168,16 +171,18 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 
 
 	@Override
-	public synchronized void closeEntry() {
-		if (currentZipEntry != null) {
-			try {
-				super.closeEntry();
-			} catch (IOException exc) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+	public void closeEntry() {
+		Synchronizer.execute(IterableZipContainer.classId, () -> {
+			if (currentZipEntry != null) {
+				try {
+					super.closeEntry();
+				} catch (IOException exc) {
+					ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+				}
+				currentZipEntry.close();
+				currentZipEntry = null;
 			}
-			currentZipEntry.close();
-			currentZipEntry = null;
-		}
+		});
 	}
 
 	@Override

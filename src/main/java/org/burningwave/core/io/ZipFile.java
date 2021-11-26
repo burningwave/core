@@ -199,7 +199,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 	}
 
 	@Override
-	public <Z extends IterableZipContainer.Entry> Z getNextEntry() {
+	public synchronized <Z extends IterableZipContainer.Entry> Z getNextEntry() {
 		return (Z) (currentZipEntry = entriesIterator.hasNext()? entriesIterator.next() : null);
 	}
 
