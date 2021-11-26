@@ -526,7 +526,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
 		}
-		Cache.clear();
+		Cache.clear(false);
 	}
 
 	void close(boolean force) {
@@ -561,26 +561,22 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			}
 		}
 		if (clearCache) {
-			Cache.clear();
+			Cache.clear(false);
 		}
-		System.gc();
 	}
 	
 	@Override
-	public ComponentContainer clear() {
-		return clear(true, true, true);
+	public void clear() {
+		clear(true, true, true);
 	}
 	
 	@Override
-	public ComponentContainer clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		if (closeHuntersResults) {
 			closeHuntersSearchResults();
 		}
 		resetClassFactory(closeClassRetrievers);
 		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
-		BackgroundExecutor.waitForTasksEnding();
-		System.gc();
-		return this;
 	}
 	
 	public static void clearAll() {
@@ -599,7 +595,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			componentContainer.resetClassFactory(closeClassRetrievers);
 		}
 		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
-		System.gc();
 	}
 
 	@Override
@@ -608,7 +603,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (classFactory != null) {
 			classFactory.reset(closeClassRetrievers);
 		}
-		System.gc();
 	}
 
 	@Override

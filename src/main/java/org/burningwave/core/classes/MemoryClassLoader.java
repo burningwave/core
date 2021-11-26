@@ -414,16 +414,15 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 
 	@Override
-	public MemoryClassLoader clear () {
+	public Task clearInBackground() {
 		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
 		this.loadedByteCodes = new HashMap<>();
-		BackgroundExecutor.createTask(task -> {
+		return BackgroundExecutor.createTask(task -> {
 			IterableObjectHelper.deepClear(notLoadedByteCodes);
 			IterableObjectHelper.deepClear(loadedByteCodes);
 		}, Thread.MIN_PRIORITY).submit();
-		return this;
 	}
 
 	protected void unregister() {
@@ -476,7 +475,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this,true);
 			}
-			clear();
+			clearInBackground();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
 			Driver.getLoadedClassesRetriever(this).clear();

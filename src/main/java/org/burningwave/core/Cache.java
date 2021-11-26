@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -51,10 +52,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.Members;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
 
-@SuppressWarnings("unchecked")
+
 public class Cache implements ManagedLogger {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
@@ -93,7 +95,7 @@ public class Cache implements ManagedLogger {
 		return new Cache();
 	}
 
-	public static class ObjectAndPathForResources<T, R> implements Component {
+	public static class ObjectAndPathForResources<T, R> {
 		Map<T, PathForResources<R>> resources;
 		Supplier<PathForResources<R>> pathForResourcesSupplier;
 		String instanceId;
@@ -149,7 +151,7 @@ public class Cache implements ManagedLogger {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				pathForResources.clear(destroyItems);
+				pathForResources.clearInBackground(destroyItems).waitForFinish();
 			}
 			return pathForResources;
 		}
@@ -166,28 +168,22 @@ public class Cache implements ManagedLogger {
 			return null;
 		}
 
-		@Override
-		public ObjectAndPathForResources<T, R> clear() {
-			return clear(false);
-		}
-
-		public ObjectAndPathForResources<T, R> clear(boolean destroyItems) {
+		QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<T, PathForResources<R>> resources;
 			synchronized (this.resources) {
 				resources = this.resources;
 				this.resources = new HashMap<>();
 			}
-			BackgroundExecutor.createTask(task -> {
+			return BackgroundExecutor.createTask(task -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
-					item.getValue().clear(destroyItems);
+					item.getValue().clearInBackground(destroyItems).waitForFinish();
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY).submit();
-			return this;
+			}).submit();
 		}
 	}
 
-	public static class PathForResources<R> implements Component  {
+	public static class PathForResources<R> {
 		Map<Long, Map<String, Map<String, R>>> resources;
 		Long partitionStartLevel;
 		Function<R, R> sharer;
@@ -324,10 +320,7 @@ public class Cache implements ManagedLogger {
 			});
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.createTask(task ->
-					itemDestroyer.accept(finalPath, item),
-					Thread.MIN_PRIORITY
-				).submit();
+				itemDestroyer.accept(finalPath, item);
 			}
 			return item;
 		}
@@ -346,21 +339,15 @@ public class Cache implements ManagedLogger {
 			return count;
 		}
 
-		@Override
-		public PathForResources<R> clear() {
-			return clear(false);
-		}
-
-		public PathForResources<R> clear(boolean destroyItems) {
+		private QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<Long, Map<String, Map<String, R>>> partitions;
 			synchronized (this.resources) {
 				partitions = this.resources;
 				this.resources = new HashMap<>();
 			}
-			BackgroundExecutor.createTask(task -> {
+			return BackgroundExecutor.createTask(task -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY).submit();
-			return this;
+			}).submit();
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
@@ -381,36 +368,43 @@ public class Cache implements ManagedLogger {
 
 	}
 
-	public void clear(Cleanable... excluded) {
-		clear(false, excluded);
-	}
 
-	public void clear(boolean destroyItems, Cleanable... excluded) {
-		Set<Cleanable> toBeExcluded = excluded != null && excluded.length > 0 ?
+	public void clear(boolean destroyItems, Object... excluded) {
+		Set<Object> toBeExcluded = excluded != null && excluded.length > 0 ?
 			new HashSet<>(Arrays.asList(excluded)) :
 			null;
-		clear(pathForContents, toBeExcluded, destroyItems);
-		clear(pathForFileSystemItems, toBeExcluded, destroyItems);
-		clear(pathForIterableZipContainers, toBeExcluded, destroyItems);
-		clear(classLoaderForFields, toBeExcluded, destroyItems);
-		clear(classLoaderForMethods, toBeExcluded, destroyItems);
-		clear(classLoaderForConstructors, toBeExcluded, destroyItems);
-		clear(bindedFunctionalInterfaces, toBeExcluded, destroyItems);
-		clear(uniqueKeyForFields, toBeExcluded, destroyItems);
-		clear(uniqueKeyForConstructors, toBeExcluded, destroyItems);
-		clear(uniqueKeyForMethods, toBeExcluded, destroyItems);
-		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems);
+		Set<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+		addCleaningTask(tasks, clear(pathForContents, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(pathForFileSystemItems, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(pathForIterableZipContainers, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForFields, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForMethods, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForConstructors, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(bindedFunctionalInterfaces, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForFields, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForConstructors, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForMethods, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems));
+		for (QueuedTasksExecutor.Task task : tasks) {
+			task.waitForFinish();
+		}
+	}
+	
+	private boolean addCleaningTask(Set<QueuedTasksExecutor.Task> tasks, QueuedTasksExecutor.Task task) {
+		if (task != null) {
+			return tasks.add(task);
+		}
+		return false;
 	}
 
-	private void clear(Cleanable cache, Set<Cleanable> excluded, boolean destroyItems) {
+	private QueuedTasksExecutor.Task clear(Object cache, Set<Object> excluded, boolean destroyItems) {
 		if (excluded == null || !excluded.contains(cache)) {
-			if (!destroyItems) {
-				cache.clear();
-			} else if (cache instanceof ObjectAndPathForResources) {
-				((ObjectAndPathForResources<?,?>)cache).clear(destroyItems);
+			if (cache instanceof ObjectAndPathForResources) {
+				return ((ObjectAndPathForResources<?,?>)cache).clearInBackground(destroyItems);
 			}  else if (cache instanceof PathForResources) {
-				((PathForResources<?>)cache).clear(destroyItems);
+				return ((PathForResources<?>)cache).clearInBackground(destroyItems);
 			}
 		}
+		return null;
 	}
 }

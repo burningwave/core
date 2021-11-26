@@ -62,7 +62,7 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 		ComponentContainer.clearAll(closeHuntersResults, closeClassRetrievers, clearFileSystemItemReferences);
 	}
 	
-	public <C extends ComponentSupplier> C clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences);
+	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences);
 	
 	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
 
