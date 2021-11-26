@@ -142,25 +142,23 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
 		Collection<T> collection = supplier.get();
-		Synchronizer.execute(IterableZipContainer.class.getName() + "_" + getAbsolutePath(), () -> {
-			Entry zipEntry = getCurrentZipEntry();
-			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+		Entry zipEntry = getCurrentZipEntry();
+		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+			if (loadZipEntryData.test(zipEntry)) {
+				zipEntry.toByteBuffer();
+			}
+			collection.add(tSupplier.apply(zipEntry));
+			closeEntry();
+		}
+		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
+			if (zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
 				collection.add(tSupplier.apply(zipEntry));
-				closeEntry();
 			}
-			while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
-				if (zipEntryPredicate.test(zipEntry)) {
-					if (loadZipEntryData.test(zipEntry)) {
-						zipEntry.toByteBuffer();
-					}
-					collection.add(tSupplier.apply(zipEntry));
-				}
-				closeEntry();
-			}
-		});
+			closeEntry();
+		}
 		return collection;
 	}
 
@@ -191,28 +189,26 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		Function<IterableZipContainer.Entry, T> tSupplier,
 		Predicate<IterableZipContainer.Entry> loadZipEntryData
 	) {
-		return Synchronizer.execute(IterableZipContainer.class.getName() + "_" + getAbsolutePath(), () -> {
-			Entry zipEntry = getCurrentZipEntry();
-			if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+		Entry zipEntry = getCurrentZipEntry();
+		if (zipEntry != null && zipEntryPredicate.test(zipEntry)) {
+			if (loadZipEntryData.test(zipEntry)) {
+				zipEntry.toByteBuffer();
+			}
+			closeEntry();
+			return tSupplier.apply(zipEntry);
+		}
+		while((zipEntry = getNextEntry(zEntry -> false)) != null) {
+			if (zipEntryPredicate.test(zipEntry)) {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
+
+				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
-				return tSupplier.apply(zipEntry);
+				return toRet;
 			}
-			while((zipEntry = getNextEntry(zEntry -> false)) != null) {
-				if (zipEntryPredicate.test(zipEntry)) {
-					if (loadZipEntryData.test(zipEntry)) {
-						zipEntry.toByteBuffer();
-					}
-	
-					T toRet = tSupplier.apply(zipEntry);
-					closeEntry();
-					return toRet;
-				}
-			}
-			return null;
-		});
+		}
+		return null;
 	}
 
 	public default <T> T findOneAndConvert(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Function<IterableZipContainer.Entry, T> tSupplier, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
