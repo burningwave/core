@@ -1307,7 +1307,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true, true);
+		componentSupplier.clear();
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1330,7 +1330,7 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClassesThroughResources() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true, true);
+		componentSupplier.clear();
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forResources("org/burningwave")

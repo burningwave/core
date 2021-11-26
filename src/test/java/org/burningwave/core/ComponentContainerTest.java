@@ -28,7 +28,7 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.getCodeExecutor();
 			componentSupplier.getPathHelper();
 			GlobalProperties.put("newPropertyName", "newPropertyValue");
-			componentSupplier.reset();
+			componentSupplier.reInit();
 			componentSupplier.getClassFactory();
 			componentSupplier.getClassHunter();
 			componentSupplier.getClassPathHunter();
@@ -43,7 +43,7 @@ public class ComponentContainerTest extends BaseTest {
 	public void clearAll() {
 		testDoesNotThrow(() -> {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
-			ComponentContainer.clearAll();
+			ComponentContainer.resetAll();
 			BackgroundExecutor.waitForTasksEnding(true);
 			System.gc();
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
@@ -55,7 +55,7 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(3)
 	public void reset() {
 		testDoesNotThrow(() -> {
-			getComponentSupplier().reset();
+			getComponentSupplier().reInit();
 		});
 	}
 

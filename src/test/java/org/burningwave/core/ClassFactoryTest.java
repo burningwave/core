@@ -285,7 +285,7 @@ public class ClassFactoryTest extends BaseTest {
 			);
 			classRetriever.get("packagename." + classNameOne);
 			if (clearCache) {
-				ComponentContainer.clearAllCaches(true, true, false);
+				ComponentContainer.clearAll(true, true, false);
 			}
 			config = LoadOrBuildAndDefineConfig.forUnitSourceGenerator(unitSG2).useClassLoader(
 				classLoader
