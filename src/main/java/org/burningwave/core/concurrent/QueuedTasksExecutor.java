@@ -1557,7 +1557,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
 											task.remove();
 										}
-										if (killProbableDeadLockedTasks && task.hasFinished()) {
+										if (killProbableDeadLockedTasks && !task.hasFinished()) {
 											ManagedLoggersRepository.logWarn(
 												getClass()::getName,
 												"Trying to abort task {}",
