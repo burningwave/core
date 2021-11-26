@@ -144,6 +144,9 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		Executor.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
+				if (closingLoggingActive) {
+					ManagedLoggersRepository.logInfo(ZipInputStream.class::getName, "opening {}", currentZipEntry.getAbsolutePath());
+				}
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
 				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
