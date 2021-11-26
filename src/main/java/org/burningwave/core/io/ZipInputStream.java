@@ -41,7 +41,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
@@ -56,16 +58,19 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
+	Set<String> retrievedEntries;
 
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
+		retrievedEntries = new HashSet<>();
 	}
 
 	ZipInputStream(String absolutePath, ByteBufferInputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
 		this.byteBufferInputStream = inputStream;
+		retrievedEntries = new HashSet<>();
 	}
 
 	@Override
@@ -119,7 +124,11 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 
 	@Override
     protected Entry.Attached createZipEntry(String name) {
-    	return new Entry.Attached(name, this);
+		if (retrievedEntries.add(name)) {
+			return new Entry.Attached(name, this);
+		} else {
+			return Driver.throwException("Could retrieve again {}", name);
+		}
     }
 
 
@@ -186,6 +195,8 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		absolutePath = null;
 		Executor.run(() -> super.close());
 		this.byteBufferInputStream = null;
+		retrievedEntries.clear();
+		retrievedEntries = null;
 	}
 
 	public static interface Entry extends IterableZipContainer.Entry {
