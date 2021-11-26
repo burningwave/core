@@ -148,7 +148,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				zipEntry.toByteBuffer();
 			}
 			collection.add(tSupplier.apply(zipEntry));
-			closeEntry();
+			//closeEntry();
 		}
 		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
 			if (zipEntryPredicate.test(zipEntry)) {
@@ -157,7 +157,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				}
 				collection.add(tSupplier.apply(zipEntry));
 			}
-			closeEntry();
+			//closeEntry();
 		}
 		return collection;
 	}
@@ -194,7 +194,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 			if (loadZipEntryData.test(zipEntry)) {
 				zipEntry.toByteBuffer();
 			}
-			closeEntry();
+			//closeEntry();
 			return tSupplier.apply(zipEntry);
 		}
 		while((zipEntry = getNextEntry(zEntry -> false)) != null) {
@@ -204,7 +204,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				}
 
 				T toRet = tSupplier.apply(zipEntry);
-				closeEntry();
+				//closeEntry();
 				return toRet;
 			}
 		}
