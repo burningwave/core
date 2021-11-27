@@ -499,11 +499,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isChildOf(FileSystemItem fileSystemItem) {
-		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return this.absolutePath.getValue().startsWith(fileSystemItem.absolutePath.getValue())
-					&& !fileSystemItem.absolutePath.getValue().equals(this.absolutePath.getValue());
-		} else if (fileSystemItem.isContainer() && !this.isContainer()) {
-			return this.absolutePath.getValue().startsWith(fileSystemItem.absolutePath.getValue());
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);	
+		if (isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
+			return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath)
+				&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
+		} else if (isContainer.apply(otherConventionedAbsolutePath) && !isContainer.apply(thisConventionedAbsolutePath)) {
+			return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath);
 		}
 		return false;
 	}
@@ -525,11 +531,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
-		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return fileSystemItem.absolutePath.getValue().startsWith(this.absolutePath.getValue())
-					&& !fileSystemItem.absolutePath.getValue().equals(this.absolutePath.getValue());
-		} else if (!fileSystemItem.isContainer() && this.isContainer()) {
-			return fileSystemItem.absolutePath.getValue().startsWith(this.absolutePath.getValue());
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);		
+		if (isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
+			return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath)
+				&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
+		} else if (!isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
+			return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath);
 		}
 		return false;
 	}
