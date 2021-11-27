@@ -508,8 +508,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
 		try {
 			return conventionedAbsolutePath.endsWith("/");
-		} catch (NullPointerException e) {
-			throw new NotFoundException(Strings.compile("{} not found on the file system", absolutePath.getKey()));
+		} catch (NullPointerException exc) {
+			throw new NotFoundException(Strings.compile("Unable to load {}", absolutePath.getKey()));
 		}
 	}
 
@@ -519,8 +519,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public boolean isFolder() {
 		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/")
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+		try {
+			return conventionedAbsolutePath.endsWith("/") && 
+				!conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+		} catch (NullPointerException exc) {
+			throw new NotFoundException(Strings.compile("Unable to load {}", absolutePath.getKey()));
+		}
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
