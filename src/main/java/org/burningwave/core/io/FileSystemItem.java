@@ -86,9 +86,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	private Collection<FileSystemItem> allChildren;
 	private String instanceId;
 	private AtomicReference<JavaClass> javaClassWrapper;
-//	private QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> allChildrenLoader;
-//	private QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> childrenLoader;
-	
+
 	static {
 		instanceIdPrefix = FileSystemItem.class.getName();
 		newCollectionSupplier = ArrayList::new;
@@ -390,30 +388,6 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return allChildren;
 	}
 
-//	private Collection<FileSystemItem> getAllChildren0() {
-//		if (this.allChildren == null) {
-//			QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> loader =
-//				this.allChildrenLoader;
-//			if (loader != null && loader.isSubmitted()) {
-//				return loader.join();
-//			}
-//			Synchronizer.execute(instanceId, () -> {
-//				if (allChildren == null && this.allChildrenLoader == null) {
-//					this.allChildrenLoader = BackgroundExecutor.createProducerTask(() -> {
-//						this.allChildren = loadAllChildren();
-//						this.allChildrenLoader = null;
-//						return this.allChildren;
-//					}).submit();
-//				}
-//			});
-//			loader = this.allChildrenLoader;
-//			if (loader != null) {
-//				return loader.join();
-//			}
-//		}
-//		return allChildren;
-//	}
-
 	public Collection<FileSystemItem> getChildren() {
 		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
@@ -431,30 +405,6 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		return children;
 	}
-	
-//	private Collection<FileSystemItem> getChildren0() {
-//		if (this.children == null) {
-//			QueuedTasksExecutor.ProducerTask<Collection<FileSystemItem>> loader =
-//				this.childrenLoader;
-//			if (loader != null && loader.isSubmitted()) {
-//				return loader.join();
-//			}
-//			Synchronizer.execute(instanceId, () -> {
-//				if (children == null && this.childrenLoader == null) {
-//					this.childrenLoader = BackgroundExecutor.createProducerTask(() -> {
-//						this.children = loadChildren();
-//						this.childrenLoader = null;
-//						return this.children;
-//					}).submit();
-//				}
-//			});
-//			loader = this.childrenLoader;
-//			if (loader != null) {
-//				return loader.join();
-//			}
-//		}
-//		return children;
-//	}
 
 	public String getExtension() {
 		String extension = null;
@@ -954,15 +904,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		String absolutePath = getAbsolutePath();
-//		Synchronizer.execute(instanceId, () -> {
-//			Cache.pathForContents.remove(absolutePath, true);
-//			clearJavaClassWrapper(this);
-//			if (recomputeConventionedAbsolutePath) {
-//				this.absolutePath.setValue(null);
-//			}
-//		});
 		if (exists() && !isFolder()) {
+			String absolutePath = getAbsolutePath();
 			if (isCompressed()) {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
 					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())

@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -42,15 +41,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.zip.ZipException;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
@@ -87,59 +82,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		return parent;
 	}
 	
-//	@Override
-//	public <T> Collection<T> findAllAndConvert(Supplier<Collection<T>> supplier,
-//		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
-//		Function<IterableZipContainer.Entry, T> tSupplier,
-//		Predicate<IterableZipContainer.Entry> loadZipEntryData
-//	) {
-//		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
-//			QueuedTasksExecutor.ProducerTask<Collection<T>> task = BackgroundExecutor.createProducerTask(() -> {
-//				return IterableZipContainer.super.findAllAndConvert(supplier, zipEntryPredicate, tSupplier, loadZipEntryData);
-//			}).submit();
-//			if (task.waitForFinish(60000).hasFinished()) {
-//				if (task.getException() == null) {
-//					return task.join();
-//				}
-//				return Driver.throwException(task.getException());
-//			} else {
-//				ManagedLoggersRepository.logError(
-//					getClass()::getName, "Unable to find and convert entries for {}{}",
-//					getAbsolutePath(),
-//					task.getInfoAsString()
-//				);
-//				return Driver.throwException("Unable to find and convert entries for {}", getAbsolutePath());
-//			}			
-//		//});
-//	}
-	
-//	@Override
-//	public <T> T findFirstAndConvert(
-//		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
-//		Function<IterableZipContainer.Entry, T> tSupplier,
-//		Predicate<IterableZipContainer.Entry> loadZipEntryData
-//	) {
-//		//return Synchronizer.execute(IterableZipContainer.classId + "_" + getAbsolutePath(), () -> {
-//			QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
-//				return IterableZipContainer.super.findFirstAndConvert(zipEntryPredicate, tSupplier, loadZipEntryData);
-//			}).submit();
-//			if (task.waitForFinish(60000).hasFinished()) {
-//				if (task.getException() == null) {
-//					return task.join();
-//				}
-//				return Driver.throwException(task.getException());
-//			} else {
-//				ManagedLoggersRepository.logError(
-//					getClass()::getName, "Unable to find and convert entry for {}{}",
-//					getAbsolutePath(),
-//					task.getInfoAsString()
-//				);
-//				return Driver.throwException("Unable to find and convert entry for {}", getAbsolutePath());
-//			}
-//		//});
-//	}
-	
-	
+
 	@Override
 	public String getAbsolutePath() {
 		return absolutePath;
@@ -315,26 +258,43 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			}
 
 
+//			private ByteBuffer loadContent() {
+//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
+//				if (content != null) {
+//					return content;
+//				}
+//				if (zipInputStream.getCurrentZipEntry() != this) {
+//					Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+//				}
+//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
+//				try {
+//					contentWrapper.set(BufferHandler.shareContent(Streams.toByteBuffer(zipInputStream, (int)super.getSize())));
+//				} catch (Throwable exc) {
+//					ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
+//					return null;
+//				}
+//				return Cache.pathForContents.getOrUploadIfAbsent(
+//					getAbsolutePath(), () -> {
+//						return contentWrapper.get();
+//					}
+//				);
+//			}
+			
 			private ByteBuffer loadContent() {
-				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-				if (content != null) {
-					return content;
-				}
-				if (zipInputStream.getCurrentZipEntry() != this) {
-					Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
-				}
-				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-				try {
-					contentWrapper.set(BufferHandler.shareContent(Streams.toByteBuffer(zipInputStream, (int)super.getSize())));
-				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
-					return null;
-				}
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
-						return contentWrapper.get();
+						if (zipInputStream.getCurrentZipEntry() != this) {
+							Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+						}
+						try {
+						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());
+						} catch (Throwable exc) {
+							ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
+							return null;
+						}
 					}
 				);
+
 			}
 
 			@Override
@@ -407,28 +367,41 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return zipInputStream.duplicate();
 			}
 
+//			@Override
+//			public ByteBuffer toByteBuffer() {
+//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
+//				if (content != null) {
+//					return content;
+//				}
+//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
+//				try (IterableZipContainer zipInputStream = getParentContainer()) {
+//					contentWrapper.set(
+//						BufferHandler.shareContent(
+//							zipInputStream.findFirstAndConvert((entry) ->
+//								entry.getName().equals(getName()), zEntry ->
+//								zEntry.toByteBuffer(), zEntry -> true
+//							)
+//						)
+//					);
+//				}
+//				return Cache.pathForContents.getOrUploadIfAbsent(
+//					getAbsolutePath(), () -> {
+//						return contentWrapper.get();
+//					}
+//				);
+//			}
+			
 			@Override
 			public ByteBuffer toByteBuffer() {
-				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-				if (content != null) {
-					return content;
-				}
-				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-				try (IterableZipContainer zipInputStream = getParentContainer()) {
-					contentWrapper.set(
-						BufferHandler.shareContent(
-							zipInputStream.findFirstAndConvert((entry) ->
-								entry.getName().equals(getName()), zEntry ->
-								zEntry.toByteBuffer(), zEntry -> true
-							)
-						)
-					);
-				}
-				return Cache.pathForContents.getOrUploadIfAbsent(
-					getAbsolutePath(), () -> {
-						return contentWrapper.get();
+				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
+					try (IterableZipContainer zipInputStream = getParentContainer()) {
+						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) ->
+							entry.getName().equals(getName()), zEntry ->
+							zEntry.toByteBuffer(), zEntry -> true
+						);
+						return BufferHandler.shareContent(content);
 					}
-				);
+				});
 			}
 
 			@Override
