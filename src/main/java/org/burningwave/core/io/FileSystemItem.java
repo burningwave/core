@@ -68,6 +68,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
@@ -876,14 +877,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					);
 				}
 				iterableZipContainerTypeTemp = zIS.getClass();
-				Predicate<IterableZipContainer.Entry> zipEntryPredicateTemp = zEntry -> {
+				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 					return zEntry.getName().equals(relativePath) || zEntry.getName().equals(relativePath + "/");
 				};
 				String temp = relativePath;
 				while (temp != null) {
 					int lastIndexOfSlash = temp.lastIndexOf("/");
 					final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
-					zipEntryPredicateTemp = zipEntryPredicateTemp
+					zipEntryPredicate = zipEntryPredicate
 							.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
 					if (lastIndexOfSlash == -1) {
 						temp = null;
@@ -891,18 +892,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						temp = temp2;
 					}
 				}
-				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zipEntryPredicateTemp;				
-				Collection<IterableZipContainer.Entry> zipEntries = new HashSet<>();
-				zIS.findAll(
-					zEntry -> {
-						if (zipEntryPredicate.test(zEntry)) {
-							zipEntries.add(zEntry);
-						}
-						return true;
-					},
-					//Loading the content of all items: they will be used later
+				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(
+					zEntry -> true,
+					//Loading the content of all filtered items: they will be used later
 					zEntry -> true
-				);
+				).stream().filter(zipEntryPredicate).collect(Collectors.toSet());
 				if (!zipEntries.isEmpty()) {
 					IterableZipContainer.Entry zipEntry = Collections.max(
 						zipEntries,
