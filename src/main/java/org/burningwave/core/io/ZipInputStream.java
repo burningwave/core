@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
@@ -367,42 +368,43 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return zipInputStream.duplicate();
 			}
 
-//			@Override
-//			public ByteBuffer toByteBuffer() {
-//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-//				if (content != null) {
-//					return content;
-//				}
-//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-//				try (IterableZipContainer zipInputStream = getParentContainer()) {
-//					contentWrapper.set(
-//						BufferHandler.shareContent(
-//							zipInputStream.findFirstAndConvert((entry) ->
-//								entry.getName().equals(getName()), zEntry ->
-//								zEntry.toByteBuffer(), zEntry -> true
-//							)
-//						)
-//					);
-//				}
-//				return Cache.pathForContents.getOrUploadIfAbsent(
-//					getAbsolutePath(), () -> {
-//						return contentWrapper.get();
-//					}
-//				);
-//			}
-			
 			@Override
+			public ByteBuffer toByteBuffer() {
+				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
+				if (content != null) {
+					return content;
+				}
+				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
+				try (IterableZipContainer zipInputStream = getParentContainer()) {
+					contentWrapper.set(BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue())
+						/*BufferHandler.shareContent(
+							zipInputStream.findFirstAndConvert((entry) ->
+								entry.getName().equals(getName()), zEntry ->
+								zEntry.toByteBuffer(), zEntry -> true
+							)
+						)*/
+						
+					);
+				}
+				return Cache.pathForContents.getOrUploadIfAbsent(
+					getAbsolutePath(), () -> {
+						return contentWrapper.get();
+					}
+				);
+			}
+			
+			/*@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 					try (IterableZipContainer zipInputStream = getParentContainer()) {
-						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) ->
+						/*ByteBuffer content = zipInputStream.findFirstAndConvert((entry) ->
 							entry.getName().equals(getName()), zEntry ->
 							zEntry.toByteBuffer(), zEntry -> true
-						);
-						return BufferHandler.shareContent(content);
+						);*/
+						/*return BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue());
 					}
 				});
-			}
+			}*/
 
 			@Override
 			public String getCleanedName() {

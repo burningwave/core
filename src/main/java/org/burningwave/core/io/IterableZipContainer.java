@@ -39,8 +39,11 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -126,7 +129,21 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		}
 		return null;
 	}
-
+	
+	public default Map<String, Map.Entry<String, ByteBuffer>> toContentMap() {
+		Map<String, Map.Entry<String, ByteBuffer>> output = new HashMap<>();
+		Entry zipEntry = getCurrentZipEntry();
+		if (zipEntry != null) {
+			output.put(zipEntry.getAbsolutePath(), new AbstractMap.SimpleEntry<>(zipEntry.getName(), zipEntry.toByteBuffer()));
+			closeEntry();
+		}
+		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
+			output.put(zipEntry.getAbsolutePath(), new AbstractMap.SimpleEntry<>(zipEntry.getName(), zipEntry.toByteBuffer()));
+			closeEntry();
+		}
+		return output;
+	}
+	
 	public default <T> Collection<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
