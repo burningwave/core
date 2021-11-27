@@ -330,10 +330,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateAndGet(
 			IterationConfig.of(children)
 			.parallelIf(
-				coll -> false
-				/*filter.minimumCollectionSizeForParallelIterationPredicate != null ?
+				filter.minimumCollectionSizeForParallelIterationPredicate != null ?
 					filter.minimumCollectionSizeForParallelIterationPredicate::test :
-					null*/
+					null
 			)
 			.withPriority(filter.priority)
 			.withOutput(outputCollectionSupplier.get())
@@ -965,28 +964,32 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				this.absolutePath.setValue(null);
 			}
 //		});
-		if (exists() && !isFolder()) {
-			if (isCompressed()) {
-				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
-					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
-				) {
-					iterableZipContainer.findFirst(
-						iteratedZipEntry ->
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath),
-						iteratedZipEntry ->
-							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+		BackgroundExecutor.createTask(() -> {
+			if (exists() && !isFolder()) {
+				if (isCompressed()) {
+					try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
+						getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
+					) {
+						iterableZipContainer.findFirst(
+							iteratedZipEntry ->
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath),
+							iteratedZipEntry ->
+								iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+						);
+					}
+				} else {
+					Cache.pathForContents.getOrUploadIfAbsent(
+						absolutePath, () -> {
+							try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
+								return fIS.toByteBuffer();
+							}
+						}
 					);
 				}
-			} else {
-				Cache.pathForContents.getOrUploadIfAbsent(
-					absolutePath, () -> {
-						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
-							return fIS.toByteBuffer();
-						}
-					}
-				);
 			}
-		}
+		}).runOnlyOnce(instanceId, () -> 
+			Cache.pathForContents.get(absolutePath) != null
+		).submit().waitForFinish();
 		return this;
 	}
 
