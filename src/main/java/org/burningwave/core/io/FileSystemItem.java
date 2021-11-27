@@ -876,14 +876,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					);
 				}
 				iterableZipContainerTypeTemp = zIS.getClass();
-				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
+				Predicate<IterableZipContainer.Entry> zipEntryPredicateTemp = zEntry -> {
 					return zEntry.getName().equals(relativePath) || zEntry.getName().equals(relativePath + "/");
 				};
 				String temp = relativePath;
 				while (temp != null) {
 					int lastIndexOfSlash = temp.lastIndexOf("/");
 					final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
-					zipEntryPredicate = zipEntryPredicate
+					zipEntryPredicateTemp = zipEntryPredicateTemp
 							.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
 					if (lastIndexOfSlash == -1) {
 						temp = null;
@@ -891,9 +891,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						temp = temp2;
 					}
 				}
-				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(
-					zipEntryPredicate,
-					//Loading the content of all filtered items: they will be used later
+				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zipEntryPredicateTemp;				
+				Collection<IterableZipContainer.Entry> zipEntries = new HashSet<>();
+				zIS.findAll(
+					zEntry -> {
+						if (zipEntryPredicate.test(zEntry)) {
+							zipEntries.add(zEntry);
+						}
+						return true;
+					},
+					//Loading the content of all items: they will be used later
 					zEntry -> true
 				);
 				if (!zipEntries.isEmpty()) {
