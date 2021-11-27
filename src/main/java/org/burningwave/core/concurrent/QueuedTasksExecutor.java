@@ -1001,14 +1001,25 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public void join() {
-			join(false);
+			join(false, 0);
+		}
+		
+		public void join(long timeout) {
+			join(false, timeout);
+		}
+		
+		public void join(boolean ignoreDeadLocked) {
+			join(ignoreDeadLocked, 0);
 		}
 
-		public void join(boolean ignoreDeadLocked) {
-			waitForFinish(ignoreDeadLocked);
+		public void join(boolean ignoreDeadLocked, long timeout) {
+			waitForFinish(ignoreDeadLocked, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
 				Driver.throwException(exception);
+			}
+			if (!hasFinished()) {
+				throw new TaskStateException(this, "is not completed");
 			}
 		}
 
@@ -1025,17 +1036,27 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		void execute0() throws Throwable {
 			result = executable.apply(this);
 		}
-
+		
 		public T join() {
-			return join(false);
+			return join(false, 0);
+		}
+		
+		public T join(long timeout) {
+			return join(false, timeout);
+		}
+		
+		public T join(boolean ignoreDeadLocked) {
+			return join(ignoreDeadLocked, 0);
 		}
 
-
-		public T join(boolean ignoreDeadLocked) {
-			waitForFinish(ignoreDeadLocked);
+		public T join(boolean ignoreDeadLocked, long timeout) {
+			waitForFinish(ignoreDeadLocked, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
 				return Driver.throwException(exception);
+			}
+			if (!hasFinished()) {
+				throw new TaskStateException(this, "is not completed");
 			}
 			return result;
 		}
