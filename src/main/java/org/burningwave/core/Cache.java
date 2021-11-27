@@ -386,7 +386,7 @@ public class Cache implements ManagedLogger {
 		addCleaningTask(tasks, clear(uniqueKeyForMethods, toBeExcluded, destroyItems));
 		addCleaningTask(tasks, clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems));
 		for (QueuedTasksExecutor.Task task : tasks) {
-			task.waitForFinish();
+			task.join();
 		}
 	}
 	

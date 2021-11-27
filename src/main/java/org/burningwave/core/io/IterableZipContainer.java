@@ -39,11 +39,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Synchroniz
 import java.io.File;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.AbstractMap;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -130,19 +127,28 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		return null;
 	}
 	
-	public default Map<String, Map.Entry<String, ByteBuffer>> toContentMap() {
-		Map<String, Map.Entry<String, ByteBuffer>> output = new HashMap<>();
-		Entry zipEntry = getCurrentZipEntry();
-		if (zipEntry != null) {
-			output.put(zipEntry.getAbsolutePath(), new AbstractMap.SimpleEntry<>(zipEntry.getName(), zipEntry.toByteBuffer()));
-			closeEntry();
-		}
-		while((zipEntry = getNextEntry((zEntry) -> false)) != null) {
-			output.put(zipEntry.getAbsolutePath(), new AbstractMap.SimpleEntry<>(zipEntry.getName(), zipEntry.toByteBuffer()));
-			closeEntry();
-		}
-		return output;
+
+	public String getConventionedAbsolutePath();
+
+	public String getAbsolutePath();
+
+	public IterableZipContainer getParent();
+
+	public ByteBuffer toByteBuffer();
+
+	public <Z extends Entry> Z getNextEntry();
+
+	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData);
+
+	public default IterableZipContainer duplicate() {
+		return IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
 	}
+
+	public Entry getCurrentZipEntry();
+
+	public Function<Entry, Entry> getEntrySupplier();
+
+	public void closeEntry();
 	
 	public default <T> Collection<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
@@ -179,28 +185,6 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		return collection;
 	}
 
-	public String getConventionedAbsolutePath();
-
-	public String getAbsolutePath();
-
-	public IterableZipContainer getParent();
-
-	public ByteBuffer toByteBuffer();
-
-	public <Z extends Entry> Z getNextEntry();
-
-	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData);
-
-	public default IterableZipContainer duplicate() {
-		return IterableZipContainer.create(getAbsolutePath(), toByteBuffer());
-	}
-
-	public Entry getCurrentZipEntry();
-
-	public Function<Entry, Entry> getEntrySupplier();
-
-	public void closeEntry();
-
 	public default <T> T findFirstAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,
@@ -219,7 +203,6 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 				if (loadZipEntryData.test(zipEntry)) {
 					zipEntry.toByteBuffer();
 				}
-
 				T toRet = tSupplier.apply(zipEntry);
 				closeEntry();
 				return toRet;
@@ -248,7 +231,10 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		);
 	}
 
-	public default IterableZipContainer.Entry findFirst(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public default IterableZipContainer.Entry findFirst(
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
+		Predicate<IterableZipContainer.Entry> loadZipEntryData
+	) {
 		return findFirstAndConvert(
 			zipEntryPredicate,
 			getEntrySupplier(),
@@ -256,7 +242,10 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		);
 	}
 
-	public default Collection<IterableZipContainer.Entry> findAll(Predicate<IterableZipContainer.Entry> zipEntryPredicate, Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public default Collection<IterableZipContainer.Entry> findAll(
+		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
+		Predicate<IterableZipContainer.Entry> loadZipEntryData
+	) {
 		return findAll(HashSet::new, zipEntryPredicate, loadZipEntryData);
 	}
 
@@ -282,7 +271,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 		destroy(true);
 	}
 
-	public static interface Entry extends Component{
+	public static interface Entry extends Component {
 
 		public IterableZipContainer getParentContainer();
 

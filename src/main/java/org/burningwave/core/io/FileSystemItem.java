@@ -891,7 +891,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						temp = temp2;
 					}
 				}
-				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
+				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(
+					zipEntryPredicate,
+					//Loading the content of all filtered items: they will be used later
+					zEntry -> true
+				);
 				if (!zipEntries.isEmpty()) {
 					IterableZipContainer.Entry zipEntry = Collections.max(
 						zipEntries,

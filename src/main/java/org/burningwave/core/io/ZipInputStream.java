@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.zip.ZipException;
@@ -368,43 +367,47 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return zipInputStream.duplicate();
 			}
 
-			@Override
-			public ByteBuffer toByteBuffer() {
-				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-				if (content != null) {
-					return content;
-				}
-				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-				try (IterableZipContainer zipInputStream = getParentContainer()) {
-					contentWrapper.set(BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue())
-						/*BufferHandler.shareContent(
-							zipInputStream.findFirstAndConvert((entry) ->
-								entry.getName().equals(getName()), zEntry ->
-								zEntry.toByteBuffer(), zEntry -> true
-							)
-						)*/
-						
-					);
-				}
-				return Cache.pathForContents.getOrUploadIfAbsent(
-					getAbsolutePath(), () -> {
-						return contentWrapper.get();
-					}
-				);
-			}
+//			@Override
+//			public ByteBuffer toByteBuffer() {
+//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
+//				if (content != null) {
+//					return content;
+//				}
+//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
+//				try (IterableZipContainer zipInputStream = getParentContainer()) {
+//					//Load and cache all parent entries
+//					zipInputStream.findAll(
+//						zipEntry -> {
+//							if (zipEntry.getName().equals(name)) {
+//								contentWrapper.set(
+//									zipEntry.toByteBuffer()
+//								);
+//								Cache.pathForContents.upload(
+//									absolutePath,
+//									contentWrapper::get,
+//									true
+//								);								
+//							}
+//							return true;
+//						},
+//						zipEntry -> true
+//					);
+//				}
+//				return contentWrapper.get();
+//			}
 			
-			/*@Override
+			@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 					try (IterableZipContainer zipInputStream = getParentContainer()) {
-						/*ByteBuffer content = zipInputStream.findFirstAndConvert((entry) ->
+						return zipInputStream.findFirstAndConvert((entry) ->
 							entry.getName().equals(getName()), zEntry ->
 							zEntry.toByteBuffer(), zEntry -> true
-						);*/
-						/*return BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue());
+						);
+						//return BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue());
 					}
 				});
-			}*/
+			}
 
 			@Override
 			public String getCleanedName() {
