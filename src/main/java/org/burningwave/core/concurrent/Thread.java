@@ -133,7 +133,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		try {
 			wait(millis);
 		} catch (InterruptedException exc) {
-			ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+			ManagedLoggersRepository.logError(getClass()::getName, exc);
 		}
 	}
 
@@ -166,7 +166,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
 				}
 				try {
 					supplier.runningThreads.remove(this);
@@ -181,7 +181,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							ManagedLoggersRepository.logWarn(
 								getClass()::getName,
 								"Could not add thread '{}' to poolable sleeping container: it will be shutted down",
-								getName()
+								this
 							);
 							this.shutDown();
 							continue;
@@ -211,7 +211,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				getClass()::getName,
 				"Called interrupt by:{}\n\n\ton '{}' (executable: {}):{}",
 				Strings.from(Methods.retrieveExternalCallersInfo(), 1),
-				getName(),
+				this,
 				executable,
 				Strings.from(getStackTrace(), 1)
 			);
@@ -254,7 +254,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				supplier.runningThreads.add(this);
 				executable.accept(this);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+				ManagedLoggersRepository.logError(getClass()::getName, exc);
 			}
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadCount;
@@ -527,7 +527,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 							}
 						}
 					} catch (InterruptedException exc) {
-						ManagedLoggersRepository.logError(() -> Thread.class.getName(), exc);
+						ManagedLoggersRepository.logError(Thread.class::getName, exc);
 					}
 				}
 			} else if (poolableThreadCount >= maxPoolableThreadCount) {
