@@ -148,7 +148,7 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		Iterator<Entry<java.lang.Thread, StackTraceElement[]>> allStackTracesItr = java.lang.Thread.getAllStackTraces().entrySet().iterator();
 		while(allStackTracesItr.hasNext()) {
 			Map.Entry<java.lang.Thread, StackTraceElement[]> threadAndStackTrace = allStackTracesItr.next();
-			log.append("\t" + threadAndStackTrace.getKey() + " (" + threadAndStackTrace.getKey().getState().name() + ")");
+			log.append("\t" + threadAndStackTrace.getKey() + "\n\tstate: " + threadAndStackTrace.getKey().getState().name().toLowerCase().replace("_", " "));
 			log.append(Strings.from(threadAndStackTrace.getValue(), 2));
 			if (allStackTracesItr.hasNext()) {
 				log.append("\n\n");
