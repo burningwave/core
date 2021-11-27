@@ -75,7 +75,25 @@ import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 @SuppressWarnings("resource")
 public class FileSystemItem implements Comparable<FileSystemItem> {
-
+	
+	private final static Function<String, Boolean> isContainer = conventionedAbsolutePath -> 
+		conventionedAbsolutePath.endsWith("/");
+	
+	private final static Function<String, Boolean> isFolder = conventionedAbsolutePath -> 
+		conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX); 
+	
+	private final static Function<String, Boolean> isCompressed = conventionedAbsolutePath -> 
+		(conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+			&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
+			|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+					&& conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX)
+					&& conventionedAbsolutePath
+							.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
+									.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
+	
+	private final static Function<String, Boolean> isArchive = conventionedAbsolutePath ->
+		conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+	
 	private final static String instanceIdPrefix;
 	private final static Supplier<Collection<FileSystemItem>> newCollectionSupplier;
 	
@@ -477,40 +495,25 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isArchive() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+		return computeConventionedAbsolutePathAndExecute(isArchive);
 	}
 
 	public boolean isChildOf(FileSystemItem fileSystemItem) {
-		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
-		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
 		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02)
-					&& !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
+			return this.absolutePath.getValue().startsWith(fileSystemItem.absolutePath.getValue())
+					&& !fileSystemItem.absolutePath.getValue().equals(this.absolutePath.getValue());
 		} else if (fileSystemItem.isContainer() && !this.isContainer()) {
-			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02);
+			return this.absolutePath.getValue().startsWith(fileSystemItem.absolutePath.getValue());
 		}
 		return false;
 	}
 
 	public boolean isCompressed() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
-				|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
-						&& conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX)
-						&& conventionedAbsolutePath
-								.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
-										.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
+		return computeConventionedAbsolutePathAndExecute(isCompressed);
 	}
-
+	
 	public boolean isContainer() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		try {
-			return conventionedAbsolutePath.endsWith("/");
-		} catch (NullPointerException exc) {
-			throw new NotFoundException(Strings.compile("Unable to load {}", absolutePath.getKey()));
-		}
+		return computeConventionedAbsolutePathAndExecute(isContainer);
 	}
 
 	public boolean isFile() {
@@ -518,23 +521,15 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isFolder() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		try {
-			return conventionedAbsolutePath.endsWith("/") && 
-				!conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
-		} catch (NullPointerException exc) {
-			throw new NotFoundException(Strings.compile("Unable to load {}", absolutePath.getKey()));
-		}
+		return computeConventionedAbsolutePathAndExecute(isFolder);
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
-		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
-		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
 		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01)
-					&& !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
+			return fileSystemItem.absolutePath.getValue().startsWith(this.absolutePath.getValue())
+					&& !fileSystemItem.absolutePath.getValue().equals(this.absolutePath.getValue());
 		} else if (!fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01);
+			return fileSystemItem.absolutePath.getValue().startsWith(this.absolutePath.getValue());
 		}
 		return false;
 	}
@@ -545,6 +540,28 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	private boolean isRoot(String absolutePathStr) {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
+	}
+	
+	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function) {
+		return computeConventionedAbsolutePathAndExecute(function, null);
+	}
+	
+	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function, NullPointerException exception){
+		try {
+			String conventionedAbsolutePath = computeConventionedAbsolutePath();
+			return function.apply(conventionedAbsolutePath);
+		} catch (NullPointerException exc) {
+			if (exception == null) {
+				ManagedLoggersRepository.logWarn(
+					getClass()::getName,
+					"Exception occurred while trying to compute conventioned absolute path of {}. Trying to repeat the operation.",
+					absolutePath.getKey() 
+				);
+				return computeConventionedAbsolutePathAndExecute(function, exc);
+			} else {
+				throw exception;
+			}
+		}
 	}
 
 	Collection<FileSystemItem> loadAllChildren() {
