@@ -505,10 +505,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
 			conventionedAbsolutePath.toString()
 		);	
-		if (isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
-			return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath)
-				&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
-		} else if (isContainer.apply(otherConventionedAbsolutePath) && !isContainer.apply(thisConventionedAbsolutePath)) {
+		if (isContainer.apply(otherConventionedAbsolutePath)) {
+			if (isContainer.apply(thisConventionedAbsolutePath)) {
+				return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath)
+					&& !thisConventionedAbsolutePath.equals(otherConventionedAbsolutePath);
+			}
 			return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath);
 		}
 		return false;
@@ -536,11 +537,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		);
 		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
 			conventionedAbsolutePath.toString()
-		);		
-		if (isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
-			return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath)
-				&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
-		} else if (!isContainer.apply(otherConventionedAbsolutePath) && isContainer.apply(thisConventionedAbsolutePath)) {
+		);
+		if (isContainer.apply(thisConventionedAbsolutePath)) {
+			if (isContainer.apply(otherConventionedAbsolutePath)) {
+				return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath)
+					&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
+			}
 			return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath);
 		}
 		return false;
