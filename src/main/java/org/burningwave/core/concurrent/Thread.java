@@ -153,6 +153,11 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return super.toString() + " - state: " + getState().name().toLowerCase().replace("_", " ");
+	}
+	
 	private static class Poolable extends Thread {
 		
 		private Poolable(Thread.Supplier supplier, long number) {
