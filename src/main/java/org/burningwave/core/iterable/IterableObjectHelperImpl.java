@@ -872,7 +872,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					}
 				}
 				for (QueuedTasksExecutor.Task task : tasks) {
-					task.join(120000);
+					task.join();
 				}
 				return output;
 			} 
