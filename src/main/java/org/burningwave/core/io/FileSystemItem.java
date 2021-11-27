@@ -969,11 +969,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
 					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
 				) {
-					iterableZipContainer.findFirst(
+					IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
 						iteratedZipEntry ->
 							iteratedZipEntry.getAbsolutePath().equals(absolutePath),
 						iteratedZipEntry ->
 							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
+					);
+					Cache.pathForContents.upload(
+						absolutePath, () -> {
+							return zipEntry.toByteBuffer();
+						}, true
 					);
 				}
 			} else {
