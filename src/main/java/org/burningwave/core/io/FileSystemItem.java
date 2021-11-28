@@ -68,7 +68,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
@@ -893,10 +892,10 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					}
 				}
 				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(
-					zEntry -> true,
+					zipEntryPredicate,
 					//Loading the content of all filtered items: they will be used later
 					zEntry -> true
-				).stream().filter(zipEntryPredicate).collect(Collectors.toSet());
+				);
 				if (!zipEntries.isEmpty()) {
 					IterableZipContainer.Entry zipEntry = Collections.max(
 						zipEntries,
