@@ -572,18 +572,16 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			if (closeHuntersResults) {
-				closeHuntersSearchResults();
-			}
-			resetClassFactory(closeClassRetrievers);
-			Cache.clear(true, Cache.pathForFileSystemItems);
-			if (clearFileSystemItemReferences) {
-				Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
-					fileSystemItem.reset();
-				});
-			}
-		});
+		if (closeHuntersResults) {
+			closeHuntersSearchResults();
+		}
+		resetClassFactory(closeClassRetrievers);
+		Cache.clear(true, Cache.pathForFileSystemItems);
+		if (clearFileSystemItemReferences) {
+			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
+				fileSystemItem.reset();
+			});
+		}
 	}
 	
 	public static void clearAll() {
@@ -596,12 +594,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public synchronized static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
-			Synchronizer.execute(componentContainer.getMutexForComponentsId(), () -> {
-				if (closeHuntersResults) {
-					componentContainer.closeHuntersSearchResults();
-				}
-				componentContainer.resetClassFactory(closeClassRetrievers);
-			});
+			if (closeHuntersResults) {
+				componentContainer.closeHuntersSearchResults();
+			}
+			componentContainer.resetClassFactory(closeClassRetrievers);
 		}
 		Cache.clear(true, Cache.pathForFileSystemItems);
 		if (clearFileSystemItemReferences) {
