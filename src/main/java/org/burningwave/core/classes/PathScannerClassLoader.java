@@ -191,7 +191,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return null;
 	}
-
+	
+	public void refresh() {
+		for (String loadedPath : loadedPaths.keySet()) {
+			FileSystemItem.ofPath(loadedPath).reset();
+		}
+	}
+	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
 		Collection<URL> resourcesFound = Resources.getAll(name, this.allParents);
