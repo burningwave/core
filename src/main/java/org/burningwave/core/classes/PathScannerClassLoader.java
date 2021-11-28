@@ -192,10 +192,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return null;
 	}
 	
-	public void refresh() {
-		for (String loadedPath : loadedPaths.keySet()) {
+	public PathScannerClassLoader refresh() {
+		Collection<String> loadedPaths = this.loadedPaths.keySet();
+		for (String loadedPath : loadedPaths) {
 			FileSystemItem.ofPath(loadedPath).reset();
 		}
+		scanPathsAndAddAllByteCodesFound(loadedPaths);
+		return this;
 	}
 	
 	@Override
