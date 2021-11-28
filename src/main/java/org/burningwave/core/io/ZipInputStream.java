@@ -257,29 +257,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return size;
 			}
 
-
-//			private ByteBuffer loadContent() {
-//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-//				if (content != null) {
-//					return content;
-//				}
-//				if (zipInputStream.getCurrentZipEntry() != this) {
-//					Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
-//				}
-//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-//				try {
-//					contentWrapper.set(BufferHandler.shareContent(Streams.toByteBuffer(zipInputStream, (int)super.getSize())));
-//				} catch (Throwable exc) {
-//					ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
-//					return null;
-//				}
-//				return Cache.pathForContents.getOrUploadIfAbsent(
-//					getAbsolutePath(), () -> {
-//						return contentWrapper.get();
-//					}
-//				);
-//			}
-			
 			private ByteBuffer loadContent() {
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
@@ -366,36 +343,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
-
-//			@Override
-//			public ByteBuffer toByteBuffer() {
-//				ByteBuffer content = Cache.pathForContents.get(getAbsolutePath());
-//				if (content != null) {
-//					return content;
-//				}
-//				AtomicReference<ByteBuffer> contentWrapper = new AtomicReference<>();
-//				try (IterableZipContainer zipInputStream = getParentContainer()) {
-//					//Load and cache all parent entries
-//					zipInputStream.findAll(
-//						zipEntry -> {
-//							if (zipEntry.getName().equals(name)) {
-//								contentWrapper.set(
-//									zipEntry.toByteBuffer()
-//								);
-//								Cache.pathForContents.upload(
-//									absolutePath,
-//									contentWrapper::get,
-//									true
-//								);								
-//							}
-//							return true;
-//						},
-//						zipEntry -> true
-//					);
-//				}
-//				return contentWrapper.get();
-//			}
-			
+		
 			@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
@@ -404,7 +352,6 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 							entry.getName().equals(getName()), zEntry ->
 							zEntry.toByteBuffer(), zEntry -> true
 						);
-						//return BufferHandler.shareContent(zipInputStream.toContentMap().get(absolutePath).getValue());
 					}
 				});
 			}
