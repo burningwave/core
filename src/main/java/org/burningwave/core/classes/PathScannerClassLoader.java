@@ -121,9 +121,13 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
-
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
+	
+	public Collection<String> scanPathsWithoutRefreshingAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
+	}
+	
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
+		return scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
 	}
 
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
