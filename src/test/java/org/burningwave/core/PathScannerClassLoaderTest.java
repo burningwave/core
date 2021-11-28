@@ -17,6 +17,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathScannerClassLoader classLoader = componentSupplier.getPathScannerClassLoader();
+			classLoader.refresh();
 			classLoader.scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
