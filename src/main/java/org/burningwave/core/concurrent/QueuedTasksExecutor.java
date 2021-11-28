@@ -1592,9 +1592,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											task.markAsProbablyDeadLocked();
 											taskThread.setName("PROBABLE DEAD-LOCKED THREAD -> " + taskThread.getName());
 										}
-										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-											task.remove();
-										}
 										if (killProbableDeadLockedTasks && !task.hasFinished()) {
 											ManagedLoggersRepository.logWarn(
 												getClass()::getName,
@@ -1603,6 +1600,9 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											);
 											task.aborted = true;
 											taskThread.interrupt();
+										}
+										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+											task.remove();
 										}
 										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
 											synchronized(task) {
