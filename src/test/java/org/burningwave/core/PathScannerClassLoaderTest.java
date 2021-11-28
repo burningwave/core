@@ -36,7 +36,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 			classLoader.scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				), fis -> true
+				)
 			);
 			return Collections.list(classLoader.getResources("org/burningwave/core/Component.class"));
 		}, true);
