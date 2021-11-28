@@ -268,7 +268,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 						if (pathScannerClassLoader != null) {
 							Fields.setDirect(
 								pathScannerClassLoader,
-								"classFileCriteriaAndConsumer",
+								"fileFilterAndProcessor",
 								FileSystemItem.Criteria.forClassTypeFiles(
 									IterableObjectHelper.resolveStringValue(
 										ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
@@ -290,6 +290,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public void reInit() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear();
+			reset();
 			init();
 		});
 	}
@@ -572,11 +573,18 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		if (closeHuntersResults) {
-			closeHuntersSearchResults();
-		}
-		resetClassFactory(closeClassRetrievers);
-		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
+		Synchronizer.execute(getMutexForComponentsId(), () -> {
+			if (closeHuntersResults) {
+				closeHuntersSearchResults();
+			}
+			resetClassFactory(closeClassRetrievers);
+			Cache.clear(true, Cache.pathForFileSystemItems);
+			if (clearFileSystemItemReferences) {
+				Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
+					fileSystemItem.reset();
+				});
+			}
+		});
 	}
 	
 	public static void clearAll() {
