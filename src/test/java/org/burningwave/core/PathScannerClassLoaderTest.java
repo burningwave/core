@@ -17,7 +17,6 @@ public class PathScannerClassLoaderTest extends BaseTest {
 		testNotEmpty(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathScannerClassLoader classLoader = componentSupplier.getPathScannerClassLoader();
-			classLoader.refresh();
 			classLoader.scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
@@ -48,7 +47,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathScannerClassLoader classLoader = componentSupplier.getPathScannerClassLoader();
-			classLoader.scanPathsAndAddAllByteCodesFound(
+			classLoader.refresh().scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)
