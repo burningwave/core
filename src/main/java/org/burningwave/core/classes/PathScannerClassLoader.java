@@ -122,6 +122,15 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
 	
+	public PathScannerClassLoader refresh() {
+		Collection<String> loadedPaths = this.loadedPaths.keySet();
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).reset();
+		}
+		scanPathsAndAddAllByteCodesFound(loadedPaths);
+		return this;
+	}
+	
 	public Collection<String> scanPathsWithoutRefreshingAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
 	}
@@ -129,7 +138,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
 	}
-
+	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
@@ -182,7 +191,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(this.classFileCriteriaAndConsumer.getExceptionHandler());
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
 			if (inputStreamWrapper.get() != null) {
@@ -190,15 +199,6 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		}
 		return null;
-	}
-	
-	public PathScannerClassLoader refresh() {
-		Collection<String> loadedPaths = this.loadedPaths.keySet();
-		for (String loadedPath : loadedPaths) {
-			FileSystemItem.ofPath(loadedPath).reset();
-		}
-		scanPathsAndAddAllByteCodesFound(loadedPaths);
-		return this;
 	}
 	
 	@Override
@@ -210,7 +210,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(this.classFileCriteriaAndConsumer.getExceptionHandler());
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
 		}
@@ -231,7 +231,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(this.classFileCriteriaAndConsumer.getExceptionHandler());
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
 			if (inputStreamWrapper.get() != null) {
