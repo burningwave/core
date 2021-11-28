@@ -1321,7 +1321,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return this;
 		}
 
-		public final Criteria setDefaultExceptionHandler() {
+		public final Criteria enableDefaultExceptionHandler() {
 			return setExceptionHandler((exception, childAndParent) -> {
 				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 				return false;
