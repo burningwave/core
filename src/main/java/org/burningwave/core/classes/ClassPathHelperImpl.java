@@ -384,7 +384,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 								return true;
 							}
 							return false;
-						}).setDefaultExceptionHandler()
+						}).enableDefaultExceptionHandler()
 					);
 				}
 				return classPaths;
