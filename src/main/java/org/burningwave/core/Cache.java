@@ -35,26 +35,27 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.Members;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.function.TriConsumer;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
+import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 
 public class Cache implements ManagedLogger {
@@ -113,7 +114,7 @@ public class Cache implements ManagedLogger {
 		}
 
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
-			this.resources = new HashMap<>();
+			this.resources = new ConcurrentHashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer, itemDestroyer);
 			this.instanceId = Objects.getId(this);
 		}
@@ -172,7 +173,7 @@ public class Cache implements ManagedLogger {
 			Map<T, PathForResources<R>> resources;
 			synchronized (this.resources) {
 				resources = this.resources;
-				this.resources = new HashMap<>();
+				this.resources = new ConcurrentHashMap<>();
 			}
 			return BackgroundExecutor.createTask(task -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
@@ -180,6 +181,26 @@ public class Cache implements ManagedLogger {
 				}
 				resources.clear();
 			}).submit();
+		}
+		
+		public void iterate(TriConsumer<T, String, R> itemConsumer) {
+			iterate(false, itemConsumer);
+		}
+		
+		public void iterateParallel(TriConsumer<T, String, R> itemConsumer) {
+			iterate(true, itemConsumer);
+		}
+		
+		void iterate(boolean parallel, TriConsumer<T, String, R> itemConsumer) {
+			IterableObjectHelper.iterate(
+				IterationConfig.of(
+					this.resources.entrySet()
+				).withAction(entry -> {
+					entry.getValue().iterate(parallel, (path, item) ->
+						itemConsumer.accept(entry.getKey(), path, item)
+					);
+				}).parallelIf(coll -> parallel)
+			);
 		}
 	}
 
@@ -221,7 +242,7 @@ public class Cache implements ManagedLogger {
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
-			this.resources = new HashMap<>();
+			this.resources = new ConcurrentHashMap<>();
 			this.itemDestroyer = itemDestroyer;
 			this.instanceId = this.toString();
 		}
@@ -238,7 +259,7 @@ public class Cache implements ManagedLogger {
 				innerPartion = Synchronizer.execute(instanceId + "_mutexManagerForPartitions_" + finalPartitionKey, () -> {
 					Map<String, R> innerPartionTemp = partion.get(finalPartitionKey);
 					if (innerPartionTemp == null) {
-						partion.put(finalPartitionKey, innerPartionTemp = new HashMap<>());
+						partion.put(finalPartitionKey, innerPartionTemp = new ConcurrentHashMap<>());
 					}
 					return innerPartionTemp;
 				});
@@ -282,7 +303,7 @@ public class Cache implements ManagedLogger {
 				resources = Synchronizer.execute(instanceId + "_mutexManagerForPartitionedResources_" + partitionIndex.toString(), () -> {
 					Map<String, Map<String, R>> resourcesTemp = partitionedResources.get(partitionIndex);
 					if (resourcesTemp == null) {
-						partitionedResources.put(partitionIndex, resourcesTemp = new HashMap<>());
+						partitionedResources.put(partitionIndex, resourcesTemp = new ConcurrentHashMap<>());
 					}
 					return resourcesTemp;
 				});
@@ -343,7 +364,7 @@ public class Cache implements ManagedLogger {
 			Map<Long, Map<String, Map<String, R>>> partitions;
 			synchronized (this.resources) {
 				partitions = this.resources;
-				this.resources = new HashMap<>();
+				this.resources = new ConcurrentHashMap<>();
 			}
 			return BackgroundExecutor.createTask(task -> {
 				clearResources(partitions, destroyItems);
@@ -364,6 +385,36 @@ public class Cache implements ManagedLogger {
 				partition.getValue().clear();
 			}
 			partitions.clear();
+		}
+		
+		public void iterate(BiConsumer<String, R> itemConsumer) {
+			iterate(false, itemConsumer);
+		}
+		
+		public void iterateParallel(BiConsumer<String, R> itemConsumer) {
+			iterate(true, itemConsumer);
+		}
+		
+		void iterate(boolean parallel, BiConsumer<String, R> itemConsumer) {
+			IterableObjectHelper.iterate(
+				IterationConfig.of(
+					this.resources.entrySet()
+				).withAction(entryOne -> {
+					IterableObjectHelper.iterate(
+						IterationConfig.of(
+							entryOne.getValue().entrySet()
+						).withAction(entryTwo -> {
+							IterableObjectHelper.iterate(
+								IterationConfig.of(
+									entryTwo.getValue().entrySet()
+								).withAction(entryThree -> {
+									itemConsumer.accept(entryThree.getKey(), entryThree.getValue());
+								}).parallelIf(coll -> parallel)
+							);
+						}).parallelIf(coll -> parallel)
+					);
+				}).parallelIf(coll -> parallel)
+			);
 		}
 
 	}
