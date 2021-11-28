@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -184,20 +185,30 @@ public class Cache implements ManagedLogger {
 		}
 		
 		public void iterate(TriConsumer<T, String, R> itemConsumer) {
-			iterate(false, itemConsumer);
+			iterate(false, itemConsumer, new AtomicReference<>());
 		}
 		
 		public void iterateParallel(TriConsumer<T, String, R> itemConsumer) {
-			iterate(true, itemConsumer);
+			iterate(true, itemConsumer, new AtomicReference<>());
 		}
 		
-		void iterate(boolean parallel, TriConsumer<T, String, R> itemConsumer) {
+		void iterate(
+			boolean parallel,
+			TriConsumer<T, String, R> itemConsumer,
+			AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper
+		) {
+			
 			IterableObjectHelper.iterate(
 				IterationConfig.of(
 					this.resources.entrySet()
 				).withAction(entry -> {
-					entry.getValue().iterate(parallel, (path, item) ->
-						itemConsumer.accept(entry.getKey(), path, item)
+					PathForResources<R> pathForResources = entry.getValue();
+					pathForResources.checkAndThrow(terminateExceptionWrapper);
+					pathForResources.iterate(
+						parallel,
+						(path, item) ->
+							itemConsumer.accept(entry.getKey(), path, item),
+						terminateExceptionWrapper
 					);
 				}).parallelIf(coll -> parallel)
 			);
@@ -388,33 +399,53 @@ public class Cache implements ManagedLogger {
 		}
 		
 		public void iterate(BiConsumer<String, R> itemConsumer) {
-			iterate(false, itemConsumer);
+			iterate(false, itemConsumer, new AtomicReference<>());
 		}
 		
 		public void iterateParallel(BiConsumer<String, R> itemConsumer) {
-			iterate(true, itemConsumer);
+			iterate(true, itemConsumer, new AtomicReference<>());
 		}
 		
-		void iterate(boolean parallel, BiConsumer<String, R> itemConsumer) {
+		void iterate(
+			boolean parallel,
+			BiConsumer<String, R> itemConsumer,
+			AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper
+		) {
 			IterableObjectHelper.iterate(
 				IterationConfig.of(
 					this.resources.entrySet()
 				).withAction(entryOne -> {
+					checkAndThrow(terminateExceptionWrapper);
 					IterableObjectHelper.iterate(
 						IterationConfig.of(
 							entryOne.getValue().entrySet()
 						).withAction(entryTwo -> {
+							checkAndThrow(terminateExceptionWrapper);
 							IterableObjectHelper.iterate(
 								IterationConfig.of(
 									entryTwo.getValue().entrySet()
 								).withAction(entryThree -> {
-									itemConsumer.accept(entryThree.getKey(), entryThree.getValue());
+									try {
+										itemConsumer.accept(entryThree.getKey(), entryThree.getValue());
+									} catch (org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration exception) {
+										if (exception == org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+											terminateExceptionWrapper.set(exception);
+										}
+										throw exception;
+									}
 								}).parallelIf(coll -> parallel)
 							);
 						}).parallelIf(coll -> parallel)
 					);
 				}).parallelIf(coll -> parallel)
 			);
+		}
+
+		void checkAndThrow(AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper) {
+			org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration terminateException = terminateExceptionWrapper.get();
+			if (terminateException != null) {
+				throw terminateException;
+			}
 		}
 
 	}
