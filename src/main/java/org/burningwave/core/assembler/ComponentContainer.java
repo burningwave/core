@@ -527,7 +527,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
 		}
-		Cache.clear(false);
 	}
 
 	void close(boolean force) {
@@ -595,14 +594,21 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		clearAll(closeHuntersResults, closeClassRetrievers, true);
 	}
 
-	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+	public synchronized static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
-			if (closeHuntersResults) {
-				componentContainer.closeHuntersSearchResults();
-			}
-			componentContainer.resetClassFactory(closeClassRetrievers);
+			Synchronizer.execute(componentContainer.getMutexForComponentsId(), () -> {
+				if (closeHuntersResults) {
+					componentContainer.closeHuntersSearchResults();
+				}
+				componentContainer.resetClassFactory(closeClassRetrievers);
+			});
 		}
-		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
+		Cache.clear(true, Cache.pathForFileSystemItems);
+		if (clearFileSystemItemReferences) {
+			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
+				fileSystemItem.reset();
+			});
+		}
 	}
 
 	@Override
