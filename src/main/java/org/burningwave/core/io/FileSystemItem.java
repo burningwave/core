@@ -857,17 +857,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			String zipInputStreamName,
 			String relativePath
     ) {
-		return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, null, null);
+		return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, null);
 	}
 	
 	private synchronized String retrieveConventionedRelativePath(
 		ByteBuffer zipInputStreamAsBytes,
 		String zipInputStreamName,
 		String relativePath,
-		Class<? extends IterableZipContainer> iterableZipContainerType,
 		NullPointerException initialException
 	) {
-		Class<? extends IterableZipContainer> iterableZipContainerTypeTemp = null;
+		Class<? extends IterableZipContainer> iterableZipContainerType = null;
 		try {
 			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
 				if (zIS == null) {
@@ -875,7 +874,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 					);
 				}
-				iterableZipContainerTypeTemp = zIS.getClass();
+				iterableZipContainerType = zIS.getClass();
 				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
 					return zEntry.getName().equals(relativePath) || zEntry.getName().equals(relativePath + "/");
 				};
@@ -906,7 +905,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath);
 				} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
 					try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)) {
-						iterableZipContainerTypeTemp = zIS2.getClass();
+						iterableZipContainerType = zIS2.getClass();
 						if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath + "/"),
 								zipEntry -> false) != null) {
 							// in case of JMod files folder
@@ -928,11 +927,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			} else {
 				ManagedLoggersRepository.logWarn(
 					getClass()::getName,
-					"Exception occurred while trying to compute conventioned relative path on {} (IterableZipContainer path: {})(relative path: {})(IterableZipContainer type:{}). Trying to repeat the operation.",
+					"Exception occurred while trying to compute conventioned relative path on {} (IterableZipContainer path: {})(relative path: {})(IterableZipContainer type: {}). Trying to repeat the operation.",
 					absolutePath.getKey(), zipInputStreamName, relativePath,
 					Optional.ofNullable(iterableZipContainerType).map(Class::getName).orElseGet(() -> "null") 
 				);
-				return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, iterableZipContainerTypeTemp, exc);
+				return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, exc);
 			}
 		}
 	}
