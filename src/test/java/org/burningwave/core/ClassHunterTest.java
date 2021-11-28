@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+
 import java.io.Closeable;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -1307,7 +1309,9 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clear();
+		componentSupplier.clear(true, true, false);
+		//Destroy all FileSystemItems
+		Cache.clear(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1330,7 +1334,9 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClassesThroughResources() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clear();
+		componentSupplier.clear(true, true, false);
+		//Destroy all FileSystemItems
+		Cache.clear(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forResources("org/burningwave")
