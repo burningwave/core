@@ -8,6 +8,7 @@ import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.PathScannerClassLoader;
+import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -116,7 +117,11 @@ public class ComponentContainerTest extends BaseTest {
 				"ManagedLoggersRepository.logInfo(getClass()::getName, \"ClassLoader {} succesfully created\", classLoader);" +
 				"return classLoader;"
 			);
-			componentContainer.getClassHunter().find();
+			componentContainer.getClassHunter().findBy(
+				SearchConfig.forPaths(
+					componentContainer.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
+				)
+			);
 		});
 	}
 	
