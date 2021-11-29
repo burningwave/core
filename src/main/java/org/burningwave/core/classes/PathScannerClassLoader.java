@@ -118,7 +118,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			JavaClass javaClass = child.toJavaClass();
 			addByteCode0(javaClass.getName(), javaClass.getByteCode());
 			return true;
-		}).setExceptionHandler(exceptionHandler);
+		}).setExceptionHandler(scanFileCriteria.getExceptionHandler() != null ? scanFileCriteria.getExceptionHandler() : exceptionHandler);
 	}
 	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
