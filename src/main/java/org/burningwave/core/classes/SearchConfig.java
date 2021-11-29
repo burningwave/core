@@ -75,7 +75,10 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
+	
 	Long defaultTimedFindTime;
+	BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler;
+	
 	boolean waitForSearchEnding;
 	Integer priority;
 	boolean optimizePaths;
@@ -367,6 +370,20 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		this.defaultTimedFindTime = timeout;
 		return this;
 	}
+	
+	public SearchConfig withExceptionHandlerForFileFilter(BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler) {
+		if (fileFilterExceptionHandler != null) {
+			this.fileFilterExceptionHandler = fileFilterExceptionHandler;
+		} else {
+			this.fileFilterExceptionHandler = (exception, childAndParent) -> {
+				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				return Driver.throwException(exception);
+			};
+		}
+		return this;
+	}
+	
+	
 
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;
@@ -453,6 +470,13 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		if (this.defaultTimedFindTime != null && !fileFilter.hasFindFunctionBeenSetFromExternal()) {
 			fileFilter.enableTimedFind(this.defaultTimedFindTime);
 		}
+		if (fileFilter.getExceptionHandler() == null) {
+			if (this.fileFilterExceptionHandler != null) {
+				fileFilter.setExceptionHandler(this.fileFilterExceptionHandler);
+			} else {
+				fileFilter.enableDefaultExceptionHandler();
+			}
+		}
 		return fileFilter;
 	}
 
@@ -490,6 +514,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.priority = this.priority;
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 		destConfig.defaultTimedFindTime = this.defaultTimedFindTime;
+		destConfig.fileFilterExceptionHandler = this.fileFilterExceptionHandler;
 		return destConfig;
 	}
 
@@ -511,5 +536,6 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		priority = null;
 		minimumCollectionSizeForParallelIterationPredicate = null;
 		defaultTimedFindTime = null;
+		fileFilterExceptionHandler = null;
 	}
 }
