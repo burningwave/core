@@ -75,8 +75,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
-
-
+	Long defaultTimedFindTime;
 	boolean waitForSearchEnding;
 	Integer priority;
 	boolean optimizePaths;
@@ -363,6 +362,11 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		additionalFileFilterSupplier = fileSystemItem -> previousAdditionalFileFilterSupplier.apply(fileSystemItem).and(filter);
 		return this;
 	}
+	
+	public SearchConfig enableTimedSearchForEveryScannedPath(long timeout) {
+		this.defaultTimedFindTime = timeout;
+		return this;
+	}
 
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;
@@ -432,10 +436,12 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	}
 
 	FileSystemItem.Criteria getAllFileFilters(FileSystemItem currentScannedPath){
+		FileSystemItem.Criteria fileFilter = null;
 		if (additionalFileFilterSupplier != null) {
-			return fileFilterSupplier.apply(currentScannedPath).and(additionalFileFilterSupplier.apply(currentScannedPath));
+			fileFilter = fileFilterSupplier.apply(currentScannedPath).and(additionalFileFilterSupplier.apply(currentScannedPath));
+		} else {
+			fileFilter = fileFilterSupplier.apply(currentScannedPath);
 		}
-		FileSystemItem.Criteria fileFilter = fileFilterSupplier.apply(currentScannedPath);
 		if (fileFilter.getMinimumCollectionSizeForParallelIterationPredicate() == null) {
 			fileFilter.setMinimumCollectionSizeForParallelIteration(
 				this.minimumCollectionSizeForParallelIterationPredicate
@@ -443,6 +449,9 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		}
 		if (fileFilter.getPriority() == null) {
 			fileFilter.withPriority(this.priority);
+		}
+		if (this.defaultTimedFindTime != null && !fileFilter.hasFindFunctionBeenSetFromExternal()) {
+			fileFilter.enableTimedFind(this.defaultTimedFindTime);
 		}
 		return fileFilter;
 	}
@@ -480,6 +489,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		destConfig.priority = this.priority;
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
+		destConfig.defaultTimedFindTime = this.defaultTimedFindTime;
 		return destConfig;
 	}
 
@@ -490,16 +500,16 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	@Override
 	public void close() {
 		this.classCriteria.close();
-		this.classCriteria = null;
-		this.findFunctionSupplier = null;
-		this.pathsRetriever = null;
-		this.refreshPathIf = null;
-		this.fileFilterSupplier = null;
-		this.pathsSupplier = null;
-		this.additionalFileFilterSupplier = null;
-		this.parentClassLoaderForPathScannerClassLoader = null;
-		this.pathScannerClassLoader = null;
-		this.minimumCollectionSizeForParallelIterationPredicate = null;
-		this.priority = null;
+		pathsRetriever = null;
+		findFunctionSupplier = null;
+		refreshPathIf = null;
+		fileFilterSupplier = null;
+		additionalFileFilterSupplier = null;
+		pathsSupplier = null;
+		parentClassLoaderForPathScannerClassLoader = null;
+		pathScannerClassLoader = null;
+		priority = null;
+		minimumCollectionSizeForParallelIterationPredicate = null;
+		defaultTimedFindTime = null;
 	}
 }

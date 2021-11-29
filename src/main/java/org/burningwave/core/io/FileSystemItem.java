@@ -1310,7 +1310,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		private Integer priority;
 		
 		private Criteria() {
-			findInFunction = findIn;
+			this.findInFunction = findIn;
 		}
 		
 		public static Criteria create() {
@@ -1404,13 +1404,26 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			});
 		}
 		
+		public final boolean isTimedFindEnabled() {
+			return this.findInFunction == timedFindIn;
+		}
+		
+		public final boolean hasFindFunctionBeenSetFromExternal() {
+			return this.findInFunction == timedFindIn || this.findInFunction != findIn;
+		}
+		
 		public final Criteria enableTimedFind(long timeout) {
 			if (timeout >  0) {
 				this.findInFunction = timedFindIn;
 			} else {
-				this.findInFunction = findIn;
+				throw new IllegalArgumentException("Timeout must be greater than 0");
 			}
 			this.timeoutForTimedFindIn = timeout;
+			return this;
+		}
+		
+		public final Criteria disableTimedFind() {
+			this.findInFunction = FileSystemItem::findIn;
 			return this;
 		}
 
@@ -1462,7 +1475,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			targetCriteria.setMinimumCollectionSizeForParallelIteration(minimumCollectionSizeForParallelIterationPredicate);
 			targetCriteria.priority = rightCriteria.priority == null ?
 				leftCriteria.priority : rightCriteria.priority;
-			targetCriteria.findInFunction = rightCriteria.findInFunction == null ?
+			//Check if the right criteria using the default find function
+			targetCriteria.findInFunction = rightCriteria.findInFunction == findIn ?
 					leftCriteria.findInFunction : rightCriteria.findInFunction;
 			targetCriteria.timeoutForTimedFindIn = rightCriteria.timeoutForTimedFindIn == null ?
 					leftCriteria.timeoutForTimedFindIn : rightCriteria.timeoutForTimedFindIn;
