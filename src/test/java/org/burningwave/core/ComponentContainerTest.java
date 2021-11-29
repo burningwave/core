@@ -122,9 +122,10 @@ public class ComponentContainerTest extends BaseTest {
 						"FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME" +
 					")" +
 				");" +
-				"ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), \"ClassLoader {} succesfully created\", classLoader);" +
+				"ManagedLoggersRepository.logInfo(getClass()::getName, \"ClassLoader {} succesfully created\", classLoader);" +
 				"return classLoader;"
 			);
+			componentContainer.getClassHunter().find();
 		});
 	}
 }
