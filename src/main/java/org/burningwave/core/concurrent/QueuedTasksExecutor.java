@@ -270,8 +270,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			try {
 				task.creator = Thread.currentThread();
 				tasksQueue.add(task);
-				Collection<TaskAbst<?,?>> childrenTask = taskCreatorThreadsForChildTasks.computeIfAbsent(task.creator, key -> ConcurrentHashMap.newKeySet());
-				childrenTask.add(task);
+				Synchronizer.execute(Objects.getId(task.creator), () -> {
+					Collection<TaskAbst<?,?>> childrenTask = taskCreatorThreadsForChildTasks.computeIfAbsent(task.creator, key -> ConcurrentHashMap.newKeySet());
+					childrenTask.add(task);
+				});
 				synchronized(executableCollectionFillerMutex) {
 					executableCollectionFillerMutex.notifyAll();
 				}
@@ -958,10 +960,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 			executable = null;
 			if (this.creator != null) {
-				Collection<TaskAbst<?, ?>> childTasks = taskCreatorThreadsForChildTasks.remove(this.creator);
-				if (childTasks != null) {
-					childTasks.clear();
-				}
+				Collection<TaskAbst<?, ?>> creatorChildTasks = taskCreatorThreadsForChildTasks.get(this.creator);
+				creatorChildTasks.remove(this);
+				Synchronizer.execute(Objects.getId(creator), () -> {
+					if (creatorChildTasks.isEmpty()) {
+						taskCreatorThreadsForChildTasks.remove(this.creator);
+					}
+				});
 			}
 			creator = null;
 			executor = null;
