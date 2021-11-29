@@ -1290,10 +1290,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			Collection<FileSystemItem>
 		> timedFindIn;
 		
-		static {
-			findIn = FileSystemItem::findIn;
-			timedFindIn = FileSystemItem::timedFindIn;
-		}
+		private final static BiFunction<Throwable, FileSystemItem[], Boolean> defaultExceptionHandler;
 		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
@@ -1306,8 +1303,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		> findInFunction;
 		
 		private Long timeoutForTimedFindIn;
-		
 		private Integer priority;
+		
+		static {
+			findIn = FileSystemItem::findIn;
+			timedFindIn = FileSystemItem::timedFindIn;
+			defaultExceptionHandler = (exception, childAndParent) -> {
+				ManagedLoggersRepository.logError(FileSystemItem.Criteria.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				return false;
+			};
+		}
 		
 		private Criteria() {
 			this.findInFunction = findIn;
@@ -1398,10 +1403,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 
 		public final Criteria enableDefaultExceptionHandler() {
-			return setExceptionHandler((exception, childAndParent) -> {
-				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
-				return false;
-			});
+			return setExceptionHandler(defaultExceptionHandler);
 		}
 		
 		public final boolean isTimedFindEnabled() {
@@ -1462,9 +1464,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 
 		@Override
-		protected Criteria logicOperation(Criteria leftCriteria, Criteria rightCriteria,
-				Function<Predicate<FileSystemItem[]>, Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
-				Criteria targetCriteria) {
+		protected Criteria logicOperation(
+			Criteria leftCriteria, Criteria rightCriteria,
+			Function<Predicate<FileSystemItem[]>,
+			Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
+			Criteria targetCriteria
+		) {
 			targetCriteria = super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
 			targetCriteria.exceptionHandler = rightCriteria.exceptionHandler == null ?
 					leftCriteria.exceptionHandler : rightCriteria.exceptionHandler;

@@ -57,7 +57,10 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"resource", "unchecked"})
 public class SearchConfig implements Closeable, ManagedLogger {
-
+	
+	private final static BiFunction<Throwable, FileSystemItem[], Boolean> exceptionThrowerForFileFilter;
+	
+	
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	Function<FileSystemItem, FileSystemItem.Find> findFunctionSupplier;
 	Predicate<FileSystemItem> refreshPathIf;
@@ -82,7 +85,14 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	boolean waitForSearchEnding;
 	Integer priority;
 	boolean optimizePaths;
-
+	
+	static {
+		exceptionThrowerForFileFilter = (exception, childAndParent) -> {
+			ManagedLoggersRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+			return IterableObjectHelper.terminateIteration();
+		};
+	}
+	
 	SearchConfig() {
 		pathsSupplier = classLoader -> {
 			return new AbstractMap.SimpleEntry<>(classLoader, ConcurrentHashMap.newKeySet());
@@ -375,15 +385,10 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		if (fileFilterExceptionHandler != null) {
 			this.fileFilterExceptionHandler = fileFilterExceptionHandler;
 		} else {
-			this.fileFilterExceptionHandler = (exception, childAndParent) -> {
-				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
-				return IterableObjectHelper.terminateIteration();
-			};
+			this.fileFilterExceptionHandler = exceptionThrowerForFileFilter;
 		}
 		return this;
-	}
-	
-	
+	}	
 
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;
