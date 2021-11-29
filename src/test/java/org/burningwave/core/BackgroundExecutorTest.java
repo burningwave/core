@@ -2,6 +2,7 @@ package org.burningwave.core;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,23 +14,24 @@ public class BackgroundExecutorTest extends BaseTest {
 
 	@Test
 	public void killTestOne() {
-		testDoesNotThrow(() -> {
+		assertTrue(
 			BackgroundExecutor.createTask(() -> {
 				while(true) {}		
-			}).submit().waitForFinish(5000).kill();
-		});
+			}).submit().waitForFinish(5000).kill().isAborted()
+		);
 	}
 	
 	@Test
 	public void killTestTwo() {
-		testDoesNotThrow(() -> {
-			AtomicBoolean executed = new AtomicBoolean();
+		AtomicBoolean executed = new AtomicBoolean();
+		assertTrue(			
 			BackgroundExecutor.createTask(() -> {
-				while(true) {}			
+				Thread.sleep(100000);		
+				executed.set(true);
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
-			).submit().waitForFinish(5000).kill();
-		});
+			).submit().waitForFinish(5000).kill().isAborted()
+		);
 	}
 
 }
