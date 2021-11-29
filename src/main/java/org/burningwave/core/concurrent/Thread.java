@@ -214,7 +214,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		public void interrupt() {
 			ManagedLoggersRepository.logWarn(
 				getClass()::getName,
-				"Called interrupt by:{}\n\ton '{}' (executable: {}):{}",
+				"Called interrupt by:{}\n\ton {} (executable: {}):{}",
 				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
 				this,
 				executable,
