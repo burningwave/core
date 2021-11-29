@@ -939,13 +939,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		private void logException(Throwable exc) {
 			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
-				"Exception occurred while executing {}: \n{}: {}{}{}",
+				"Exception occurred while executing {} ({}): \n\t\t{}: {}{}",
 				this,
+				this.executor,
 				exc.toString(),
-				exc.getMessage(),
-				Strings.from(exc.getStackTrace()),
+				Strings.from(exc.getStackTrace(), 2),
 				this.getCreatorInfos() != null ?
-					"\nthat was created:" + Strings.from(this.getCreatorInfos())
+					"\n\tthat was created at:" + Strings.from(this.getCreatorInfos(), 2)
 					: ""
 			));
 		}
