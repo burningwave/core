@@ -1,6 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
@@ -15,50 +16,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
-
-
-	@Test
-	@Order(5)
-	public void resetAndCloseTest() {
-		testDoesNotThrow(() -> {
-			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
-			componentSupplier.getClassFactory();
-			componentSupplier.getClassHunter();
-			componentSupplier.getClassPathHunter();
-			componentSupplier.getCodeExecutor();
-			componentSupplier.getPathHelper();
-			GlobalProperties.put("newPropertyName", "newPropertyValue");
-			componentSupplier.reInit();
-			componentSupplier.getClassFactory();
-			componentSupplier.getClassHunter();
-			componentSupplier.getClassPathHunter();
-			componentSupplier.getCodeExecutor();
-			componentSupplier.getPathHelper();
-			componentSupplier.close();
-		});
-	}
-
-	@Test
-	@Order(17)
-	public void clearAll() {
-		testDoesNotThrow(() -> {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
-			ComponentContainer.resetAll();
-			BackgroundExecutor.waitForTasksEnding(true);
-			System.gc();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
-		});
-	}
-
-
-	@Test
-	@Order(3)
-	public void reset() {
-		testDoesNotThrow(() -> {
-			getComponentSupplier().reInit();
-		});
-	}
-
+	
 	@Test
 	@Order(1)
 	public void putPropertyOne() {
@@ -87,6 +45,17 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
+	
+
+	@Test
+	@Order(3)
+	public void reset() {
+		testDoesNotThrow(() -> {
+			getComponentSupplier().reInit();
+		});
+	}
+
+
 
 	@Test
 	@Order(4)
@@ -107,7 +76,29 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
+	
 
+	@Test
+	@Order(5)
+	public void resetAndCloseTest() {
+		testDoesNotThrow(() -> {
+			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
+			componentSupplier.getClassFactory();
+			componentSupplier.getClassHunter();
+			componentSupplier.getClassPathHunter();
+			componentSupplier.getCodeExecutor();
+			componentSupplier.getPathHelper();
+			GlobalProperties.put("newPropertyName", "newPropertyValue");
+			componentSupplier.reInit();
+			componentSupplier.getClassFactory();
+			componentSupplier.getClassHunter();
+			componentSupplier.getClassPathHunter();
+			componentSupplier.getCodeExecutor();
+			componentSupplier.getPathHelper();
+			componentSupplier.close();
+		});
+	}
+	
 	@Test
 	@Order(6)
 	public void putPropertyFour() {
@@ -128,4 +119,18 @@ public class ComponentContainerTest extends BaseTest {
 			componentContainer.getClassHunter().find();
 		});
 	}
+	
+	@Test
+	@Order(7)
+	public void clearAll() {
+		testDoesNotThrow(() -> {
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			ComponentContainer.resetAll();
+			Cache.clear(true);
+			BackgroundExecutor.waitForTasksEnding(true);
+			System.gc();
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+		});
+	}
+
 }
