@@ -258,6 +258,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return task.join(timeout);
 			} catch (TaskStateException exc) {
 				if (!task.hasFinished()) {
+					ManagedLoggersRepository.logWarn(
+						getClass()::getName, "Operation timeout on {}: the task will be killed and the operation will be repeated after reset."
+					);
 					task.kill();
 					if (isCompressed()) {
 						getParentContainer().reset();
@@ -1301,6 +1304,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			Supplier<Collection<FileSystemItem>>,
 			Collection<FileSystemItem>
 		> findInFunction;
+		
 		private Long timeoutForTimedFindIn;
 		
 		private Integer priority;
