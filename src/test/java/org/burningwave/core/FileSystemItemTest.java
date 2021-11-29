@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.assembler.StaticComponentContainer;
@@ -290,7 +289,7 @@ public class FileSystemItemTest extends BaseTest {
 		).findInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
-			).enableTimedFind(60000)
+			).enableTimedFind(60000).enableDefaultExceptionHandler()
 		),
 		false);
 	}
