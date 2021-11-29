@@ -365,7 +365,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				synchronized(task) {
 					task.notifyAll();
 				}
-				task.aborted = task.hasFinished();
+				task.aborted = !task.hasFinished();
 			}
 		} else {
 			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
@@ -383,8 +383,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							synchronized(task) {
 								task.notifyAll();
 							}
-							queuedTask.aborted = task.hasFinished(); 
-							task.aborted = task.hasFinished();
+							queuedTask.aborted = !task.hasFinished(); 
+							task.aborted = !task.hasFinished();
 							return task.aborted;
 						}
 					}
