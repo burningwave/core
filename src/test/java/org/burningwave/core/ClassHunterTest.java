@@ -835,7 +835,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				)
+				).enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) ->
 				result.getClasses()
