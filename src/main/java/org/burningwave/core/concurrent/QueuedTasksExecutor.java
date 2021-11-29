@@ -376,7 +376,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				synchronized(task) {
 					task.notifyAll();
 				}
-				task.killed = task.aborted = !task.hasFinished();
+				task.killed = task.aborted = !task.executed;
 			}
 		} else {
 			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
@@ -400,7 +400,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							synchronized(task) {
 								task.notifyAll();
 							}
-							task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !queuedTask.hasFinished(); 
+							task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !task.executed; 
 							return task.aborted;
 						}
 					}
@@ -648,6 +648,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		volatile boolean aborted;
 		volatile boolean killed;
 		volatile boolean finished;
+		volatile boolean executed;
 		volatile boolean queueConsumerUnlockingRequested;
 		boolean exceptionHandled;
 		E executable;
@@ -724,6 +725,14 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		
 		public boolean wasKilled() {
 			return killed;
+		}
+		
+		public boolean wasExecuted() {
+			return executed;
+		}
+		
+		public boolean wasExecutedWithException() {
+			return finished && exc != null;
 		}
 
 		public boolean isSubmitted() {
@@ -883,18 +892,17 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			try {
 				try {
 					execute0();
-					markAsFinished();
+					executed = true;
 				} catch (Throwable exc) {
 					this.exc = exc;
 					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
-					markAsFinished();
 				}
 			} catch (Throwable exc) {
 				logException(exc);
 			} finally {
-				clear();
+				markAsFinished();
 			}
 		}
 
@@ -970,6 +978,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				synchronized(this) {
 					notifyAll();
 				}
+				clear();
 			}
 		}
 
