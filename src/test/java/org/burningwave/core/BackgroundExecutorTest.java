@@ -51,8 +51,13 @@ public class BackgroundExecutorTest extends BaseTest {
 		}).runOnlyOnce(
 			UUID.randomUUID().toString(), executed::get
 		).submit().waitForFinish(2500).kill();
-		assertTrue(			
-			mainTask.wasKilled() && childTask.get().wasKilled()
+		assertTrue(
+			mainTask.getInfoAsString(),
+			mainTask.wasKilled()
+		);
+		assertTrue(
+			childTask.get().getInfoAsString(),
+			childTask.get().wasKilled()
 		);
 	}
 
