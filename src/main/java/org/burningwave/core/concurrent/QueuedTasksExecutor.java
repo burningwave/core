@@ -883,16 +883,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			try {
 				try {
 					execute0();
+					markAsFinished();
 				} catch (Throwable exc) {
 					this.exc = exc;
 					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
+					markAsFinished();
 				}
 			} catch (Throwable exc) {
 				logException(exc);
 			} finally {
-				markAsFinished();
+				clear();
 			}
 		}
 
@@ -968,7 +970,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				synchronized(this) {
 					notifyAll();
 				}
-				clear();
 			}
 		}
 
