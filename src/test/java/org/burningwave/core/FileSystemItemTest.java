@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.assembler.StaticComponentContainer;
@@ -195,7 +196,11 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
-		).findInAllChildren(FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> fileSystemItem.getName().endsWith(".class"))),
+		).findInAllChildren(
+			FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> {			
+				return fileSystemItem.getName().endsWith(".class");
+			})
+		),
 		false);
 	}
 
