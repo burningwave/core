@@ -1404,7 +1404,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			});
 		}
 		
-		public final Criteria enableTimedFindIn(long timeout) {
+		public final Criteria enableTimedFind(long timeout) {
 			if (timeout >  0) {
 				this.findInFunction = timedFindIn;
 			} else {
