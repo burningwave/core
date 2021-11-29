@@ -68,7 +68,7 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Closeable, ManagedLogger {
-	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasksToBeExecuted;
+	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	Thread.Supplier threadSupplier;
 	String name;
 	java.lang.Thread tasksLauncher;
@@ -89,7 +89,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	Object terminatingMutex;
 
 	static {
-		runOnlyOnceTasksToBeExecuted = new ConcurrentHashMap<>();
+		runOnlyOnceTasks = new ConcurrentHashMap<>();
 	}
 
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
@@ -281,7 +281,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		Object[] bag = new Object[]{task, true};
 		if (task.runOnlyOnce) {
 			bag[1] =(!task.hasBeenExecutedChecker.get() &&
-				Optional.ofNullable(runOnlyOnceTasksToBeExecuted.putIfAbsent(
+				Optional.ofNullable(runOnlyOnceTasks.putIfAbsent(
 					task.id, task
 				)).map(taskk -> {
 					bag[0] = taskk;
@@ -331,7 +331,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									synchronized(task) {
 										task.notifyAll();
 									}
-									runOnlyOnceTasksToBeExecuted.remove(queuedTask.id);
 									return task.aborted;
 								}
 							}
@@ -345,6 +344,47 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					task.notifyAll();
 					task.clear();
 					return task.aborted;
+				}
+			}
+		}
+		return task.aborted;
+	}
+	
+	public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
+		if (abort(task)) {
+			return true;
+		}
+		if (!task.runOnlyOnce) {
+			if (tasksInExecution.remove(task)) {
+				task.aborted = true;
+				Thread taskThread = task.executor;
+				if (taskThread != null) {
+					taskThread.interrupt();
+				}			
+				task.clear();
+				synchronized(task) {
+					task.notifyAll();
+				}
+			}
+		} else {
+			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
+				if (task.id.equals(queuedTask.id)) {
+					synchronized (queuedTask) {
+						if (tasksInExecution.remove(queuedTask)) {
+							task.aborted = queuedTask.aborted = true;
+							Thread taskThread = queuedTask.executor;
+							if (taskThread != null) {
+								taskThread.interrupt();
+							}
+							queuedTask.clear();
+							task.clear();
+							queuedTask.notifyAll();
+							synchronized(task) {
+								task.notifyAll();
+							}
+							return task.aborted;
+						}
+					}
 				}
 			}
 		}
@@ -886,7 +926,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			queuedTasksExecutor.tasksInExecution.remove(this);
 			if (runOnlyOnce) {
-				runOnlyOnceTasksToBeExecuted.remove(id);
+				runOnlyOnceTasks.remove(id);
 			}
 		}
 
@@ -901,7 +941,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					notifyAll();
 				}
 				if (runOnlyOnce) {
-					runOnlyOnceTasksToBeExecuted.remove(id);
+					runOnlyOnceTasks.remove(id);
 				}
 			}
 		}
@@ -981,6 +1021,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public T abort() {
 			getQueuedTasksExecutor().abort((T)this);
+			return (T)this;
+		}
+		
+		public T kill() {
+			getQueuedTasksExecutor().kill((T)this);
 			return (T)this;
 		}
 
@@ -1491,6 +1536,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
 			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				if (queuedTasksExecutorBox.getValue().abort(task)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
+			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+				if (queuedTasksExecutorBox.getValue().kill(task)) {
 					return true;
 				}
 			}

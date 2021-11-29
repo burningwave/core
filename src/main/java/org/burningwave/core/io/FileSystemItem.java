@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -70,7 +71,11 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.classes.JavaClass;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.TaskStateException;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.function.PentaFunction;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 @SuppressWarnings("resource")
@@ -243,25 +248,49 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		}
 	}
-
+	
+	private <T> T timedExecute(ThrowingSupplier<T, Throwable> executable, long timeout) {
+		QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
+			return executable.get();
+		}).submit();
+		try {
+			try {
+				return task.join(timeout);
+			} catch (TaskStateException exc) {
+				if (!task.hasFinished()) {
+					task.kill();
+					if (isCompressed()) {
+						getParentContainer().reset();
+					} else {
+						reset();
+					}
+					return executable.get();
+				}
+			}
+		} catch (Throwable exc) {
+			Driver.throwException(exc);
+		}
+		return task.join(); 
+	}
+	
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);		
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
 			Supplier<Collection<FileSystemItem>> setSupplier) {
-		return findIn(this::getAllChildren0, filter, false, setSupplier);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, false, setSupplier);
 	}
 
 	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 
 	public Collection<FileSystemItem> findInChildren(
 		FileSystemItem.Criteria filter,
 		Supplier<Collection<FileSystemItem>> setSupplier
 	) {
-		return findIn(this::getChildren0, filter, false, setSupplier);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, false, setSupplier);
 	}
 
 	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
@@ -276,7 +305,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {
 		Collection<FileSystemItem> outputCollection = outputCollectionSupplier.get();
-		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
+		for (FileSystemItem filteredItem : filter.findInFunction.apply(this, this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
 			outputCollection.add(filteredItem);
 			if (filteredItem.isContainer()) {
 				filteredItem.findRecursiveInChildren(filter, outputCollectionSupplier);
@@ -284,7 +313,18 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		return outputCollection;
 	}
-
+	
+	private Collection<FileSystemItem> timedFindIn(
+		Supplier<Collection<FileSystemItem>> childrenSupplier,
+		FileSystemItem.Criteria filter,
+		boolean firstMatch,
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
+	) {
+		return timedExecute(() -> {
+			return findIn(childrenSupplier, filter, firstMatch, outputCollectionSupplier);
+		}, filter.timeoutForTimedFindIn);
+	}
+	
 	private Collection<FileSystemItem> findIn(
 		Supplier<Collection<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
@@ -373,7 +413,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public FileSystemItem findFirstInChildren() {
@@ -381,7 +421,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public String getAbsolutePath() {
@@ -1231,10 +1271,44 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
+		private final static PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> findIn;
+		
+		private final static PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> timedFindIn;
+		
+		static {
+			findIn = FileSystemItem::findIn;
+			timedFindIn = FileSystemItem::timedFindIn;
+		}
+		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
+		private PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> findInFunction;
+		private Long timeoutForTimedFindIn;
+		
 		private Integer priority;
-
+		
+		private Criteria() {
+			findInFunction = findIn;
+		}
+		
 		public static Criteria create() {
 			return new Criteria();
 		}
@@ -1325,6 +1399,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return false;
 			});
 		}
+		
+		public final Criteria enableTimedFindIn(long timeout) {
+			if (timeout >  0) {
+				this.findInFunction = timedFindIn;
+			} else {
+				this.findInFunction = findIn;
+			}
+			this.timeoutForTimedFindIn = timeout;
+			return this;
+		}
 
 		public boolean hasNoExceptionHandler() {
 			return this.exceptionHandler == null;
@@ -1365,7 +1449,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				Function<Predicate<FileSystemItem[]>, Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
 				Criteria targetCriteria) {
 			targetCriteria = super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
-			targetCriteria.setExceptionHandler(rightCriteria.exceptionHandler);
+			targetCriteria.exceptionHandler = rightCriteria.exceptionHandler == null ?
+					leftCriteria.exceptionHandler : rightCriteria.exceptionHandler;
 			Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate =
 				rightCriteria.minimumCollectionSizeForParallelIterationPredicate == null ?
 						leftCriteria.minimumCollectionSizeForParallelIterationPredicate :
@@ -1373,6 +1458,10 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			targetCriteria.setMinimumCollectionSizeForParallelIteration(minimumCollectionSizeForParallelIterationPredicate);
 			targetCriteria.priority = rightCriteria.priority == null ?
 				leftCriteria.priority : rightCriteria.priority;
+			targetCriteria.findInFunction = rightCriteria.findInFunction == null ?
+					leftCriteria.findInFunction : rightCriteria.findInFunction;
+			targetCriteria.timeoutForTimedFindIn = rightCriteria.timeoutForTimedFindIn == null ?
+					leftCriteria.timeoutForTimedFindIn : rightCriteria.timeoutForTimedFindIn;
 			return targetCriteria;
 		}
 
@@ -1412,6 +1501,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			copy.exceptionHandler = this.exceptionHandler;
 			copy.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 			copy.priority = this.priority;
+			copy.findInFunction = this.findInFunction;
+			copy.timeoutForTimedFindIn = this.timeoutForTimedFindIn;
 			return copy;
 		}
 
