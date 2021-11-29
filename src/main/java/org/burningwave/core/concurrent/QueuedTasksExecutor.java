@@ -69,6 +69,7 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 @SuppressWarnings({"unchecked", "resource"})
 public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
+	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
 	Thread.Supplier threadSupplier;
 	String name;
 	java.lang.Thread tasksLauncher;
@@ -90,6 +91,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 	static {
 		runOnlyOnceTasks = new ConcurrentHashMap<>();
+		taskCreatorThreadsForChildTasks = new ConcurrentHashMap<>();
 	}
 
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
@@ -266,7 +268,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		Object[] canBeExecutedBag = null;
 		if (skipCheck || (Boolean)(canBeExecutedBag = canBeExecuted(task))[1]) {
 			try {
+				task.creator = Thread.currentThread();
 				tasksQueue.add(task);
+				Collection<TaskAbst<?,?>> childrenTask = taskCreatorThreadsForChildTasks.computeIfAbsent(task.creator, key -> ConcurrentHashMap.newKeySet());
+				childrenTask.add(task);
 				synchronized(executableCollectionFillerMutex) {
 					executableCollectionFillerMutex.notifyAll();
 				}
@@ -360,12 +365,18 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				Thread taskThread = task.executor;
 				if (taskThread != null) {
 					taskThread.interrupt();
+					Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
+					if (childTasks != null) {
+						for (TaskAbst<?,?> childTask : childTasks) {
+							childTask.kill();
+						}
+					}
 				}			
 				task.clear();
 				synchronized(task) {
 					task.notifyAll();
 				}
-				task.aborted = !task.hasFinished();
+				task.killed = task.aborted = !task.hasFinished();
 			}
 		} else {
 			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
@@ -376,6 +387,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							Thread taskThread = queuedTask.executor;
 							if (taskThread != null) {
 								taskThread.interrupt();
+								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
+								if (childTasks != null) {
+									for (TaskAbst<?,?> childTask : childTasks) {
+										childTask.kill();
+									}
+								}
 							}
 							queuedTask.clear();
 							task.clear();
@@ -383,8 +400,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							synchronized(task) {
 								task.notifyAll();
 							}
-							queuedTask.aborted = !task.hasFinished(); 
-							task.aborted = !task.hasFinished();
+							task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !queuedTask.hasFinished(); 
 							return task.aborted;
 						}
 					}
@@ -469,7 +485,9 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		return createTask(
 			(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>)task ->
 				supended = Boolean.TRUE
-		).runOnlyOnce(getOperationId("suspend"),	() -> supended).changePriority(priority);
+		).runOnlyOnce(getOperationId("suspend"), () -> 
+			supended
+		).changePriority(priority);
 	}
 
 	void waitForTasksInExecutionEnding(int priority, boolean ignoreDeadLocked) {
@@ -478,8 +496,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			//logInfo("{}", queueConsumer);
-			//task.logInfo();
 			task.waitForFinish(ignoreDeadLocked);
 		});
 	}
@@ -630,10 +646,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		volatile Long startTime;
 		volatile boolean submitted;
 		volatile boolean aborted;
+		volatile boolean killed;
 		volatile boolean finished;
 		volatile boolean queueConsumerUnlockingRequested;
 		boolean exceptionHandled;
 		E executable;
+		java.lang.Thread creator;
 		Thread executor;
 		Throwable exc;
 		ThrowingBiPredicate<T, Throwable, Throwable> exceptionHandler;
@@ -702,6 +720,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		public boolean isAborted() {
 			return aborted;
+		}
+		
+		public boolean wasKilled() {
+			return killed;
 		}
 
 		public boolean isSubmitted() {
@@ -919,18 +941,21 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		void clear() {
-			remove();
-			executable = null;
-			executor = null;
-			queuedTasksExecutor = null;
-		}
-		
-		private void remove() {
 			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			queuedTasksExecutor.tasksInExecution.remove(this);
 			if (runOnlyOnce) {
 				runOnlyOnceTasks.remove(id);
 			}
+			executable = null;
+			if (this.creator != null) {
+				Collection<TaskAbst<?, ?>> childTasks = taskCreatorThreadsForChildTasks.remove(this.creator);
+				if (childTasks != null) {
+					childTasks.clear();
+				}
+			}
+			creator = null;
+			executor = null;
+			this.queuedTasksExecutor = null;
 		}
 
 		void markAsFinished() {
@@ -943,9 +968,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				synchronized(this) {
 					notifyAll();
 				}
-				if (runOnlyOnce) {
-					runOnlyOnceTasks.remove(id);
-				}
+				clear();
 			}
 		}
 
@@ -1652,16 +1675,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 										if (killProbableDeadLockedTasks && !task.hasFinished()) {
 											ManagedLoggersRepository.logWarn(
 												getClass()::getName,
-												"Trying to abort task {}",
+												"Trying to kill task {}",
 												task.hashCode()
 											);
-											task.aborted = true;
-											taskThread.interrupt();
+											task.kill();
 										}
-										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
-											task.remove();
-										}
-										if (markAsProbableDeadLocked || killProbableDeadLockedTasks) {
+										if (markAsProbableDeadLocked && !task.hasFinished()) {
+											task.clear();
 											synchronized(task) {
 												task.notifyAll();
 											}
