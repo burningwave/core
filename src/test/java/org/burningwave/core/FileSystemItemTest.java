@@ -285,7 +285,7 @@ public class FileSystemItemTest extends BaseTest {
 		).findInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
-			)
+			).enableTimedFindIn(60000)
 		),
 		false);
 	}
