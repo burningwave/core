@@ -17,7 +17,7 @@ public class BackgroundExecutorTest extends BaseTest {
 		assertTrue(
 			BackgroundExecutor.createTask(() -> {
 				while(true) {}		
-			}).submit().waitForFinish(5000).kill().isAborted()
+			}).submit().waitForFinish(2500).kill().isAborted()
 		);
 	}
 	
@@ -26,11 +26,11 @@ public class BackgroundExecutorTest extends BaseTest {
 		AtomicBoolean executed = new AtomicBoolean();
 		assertTrue(			
 			BackgroundExecutor.createTask(() -> {
-				Thread.sleep(100000);		
+				Thread.sleep(5000);		
 				executed.set(true);
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
-			).submit().waitForFinish(5000).kill().isAborted()
+			).submit().waitForFinish(2500).kill().isAborted()
 		);
 	}
 
