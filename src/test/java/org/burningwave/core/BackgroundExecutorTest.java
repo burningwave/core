@@ -46,7 +46,7 @@ public class BackgroundExecutorTest extends BaseTest {
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
 			).submit());
-			Thread.sleep(30000);
+			Thread.sleep(150000);
 			executed.set(true);
 		}).runOnlyOnce(
 			UUID.randomUUID().toString(), executed::get
