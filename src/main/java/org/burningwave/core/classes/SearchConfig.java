@@ -377,7 +377,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		} else {
 			this.fileFilterExceptionHandler = (exception, childAndParent) -> {
 				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
-				return Driver.throwException(exception);
+				return IterableObjectHelper.terminateIteration();
 			};
 		}
 		return this;
