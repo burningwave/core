@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.function.ThrowingFunction;
@@ -367,22 +368,23 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	
 	private <E, T extends TaskAbst<E, T>> boolean terminate(T task, Consumer<Thread> terminateOperation, Consumer<TaskAbst<?,?>> childTerminateOperation) {
 		if (abort(task)) {
-			return true;
+			return task.aborted;
 		}
 		if (!task.runOnlyOnce) {
 			if (tasksInExecution.remove(task)) {
 				task.aborted = true;
 				Thread taskThread = task.executor;
 				if (taskThread != null) {
-					taskThread.setPriority(Thread.MIN_PRIORITY);
 					terminateOperation.accept(taskThread);
+					task.executorOrTerminatedExecutorFlag = taskThread;
+					taskThread.setPriority(Thread.MIN_PRIORITY);
 					Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
 					if (childTasks != null) {
 						for (TaskAbst<?,?> childTask : childTasks) {
 							childTerminateOperation.accept(childTask);
 						}
 					}
-					task.killed = task.aborted = !task.executed;
+					task.aborted = !task.executed;
 				}			
 				task.clear();
 				synchronized(task) {
@@ -397,15 +399,17 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							task.aborted = queuedTask.aborted = true;
 							Thread queuedTaskThread = queuedTask.executor;
 							if (queuedTaskThread != null) {
-								queuedTaskThread.setPriority(Thread.MIN_PRIORITY);
 								terminateOperation.accept(queuedTaskThread);
+								task.executorOrTerminatedExecutorFlag = queuedTaskThread;
+								queuedTask.executorOrTerminatedExecutorFlag = queuedTaskThread;
+								queuedTaskThread.setPriority(Thread.MIN_PRIORITY);
 								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(queuedTaskThread);
 								if (childTasks != null) {
 									for (TaskAbst<?,?> childTask : childTasks) {
 										childTerminateOperation.accept(childTask);
 									}
 								}
-								task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !task.executed; 
+								task.aborted = queuedTask.aborted = !task.executed; 
 							}
 							queuedTask.clear();
 							task.clear();
@@ -658,13 +662,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		volatile Long startTime;
 		volatile boolean submitted;
 		volatile boolean aborted;
-		volatile boolean killed;
 		volatile boolean finished;
 		volatile boolean executed;
 		boolean exceptionHandled;
 		E executable;
 		java.lang.Thread creator;
 		Thread executor;
+		Object executorOrTerminatedExecutorFlag;
 		Throwable exc;
 		ThrowingBiPredicate<T, Throwable, Throwable> exceptionHandler;
 		QueuedTasksExecutor queuedTasksExecutor;
@@ -729,13 +733,74 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			this.hasBeenExecutedChecker = hasBeenExecutedChecker;
 			return (T)this;
 		}
-
+		
 		public boolean isAborted() {
-			return aborted;
+			Thread executor = this.executor;
+			return aborted && !executed && (executor == null || !executor.isAlive());
 		}
 		
-		public boolean wasKilled() {
-			return killed;
+		private boolean isExecutorTerminated() {
+			Object executorOrTerminatedExecutorFlag = this.executorOrTerminatedExecutorFlag;	
+			if (executorOrTerminatedExecutorFlag instanceof Boolean) {
+				return(Boolean)executorOrTerminatedExecutorFlag; 
+			}					
+			if (executorOrTerminatedExecutorFlag != null) {
+				boolean isAlive = ((Thread)executorOrTerminatedExecutorFlag).isAlive();
+				if (!isAlive) {
+					return (Boolean)(this.executorOrTerminatedExecutorFlag = !isAlive);
+				}
+				return !isAlive;				
+			}
+			return false;
+		}
+		
+		public boolean isTerminatedThreadNotAlive() {
+			return isTerminatedThreadNotAlive(0);
+		}
+		
+		public boolean isTerminatedThreadNotAlive(long waitingTime) {
+			if (checkSubmitted() && isExecutorTerminated()) {
+				return true;
+			}
+			if (waitingTime > 0) {
+				try {
+					Thread.sleep(waitingTime);
+				} catch (InterruptedException exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, exc);
+				}
+			}
+			return isExecutorTerminated();
+		}
+		
+		public T waitForTerminatedThreadNotAlive(long pingTime) {
+			return waitForTerminatedThreadNotAlive(pingTime, 0);
+		}
+		
+		public T waitForTerminatedThreadNotAlive(long pingTime, long tentative) {
+			if (tentative > 0) {
+				while(!isTerminatedThreadNotAlive(pingTime) && tentative-- > 0) {}
+			} else {
+				while(!isTerminatedThreadNotAlive(pingTime)) {}
+			}
+			return (T)this;
+		}
+		
+		public <EXC extends Throwable> T waitForTerminatedThreadNotAlive(long pingTime, ThrowingConsumer<Integer, EXC> consumer) {
+			return waitForTerminatedThreadNotAlive(pingTime, 0, consumer);
+		}
+		
+		public <EXC extends Throwable> T waitForTerminatedThreadNotAlive(long pingTime, long tentative, ThrowingConsumer<Integer, EXC> consumer) {
+			Integer tentativeCount = 0;
+			if (tentative > 0) {
+				while(!isTerminatedThreadNotAlive(pingTime) && tentative-- > 0) {
+					Executor.accept(consumer, ++tentativeCount);
+				}
+			} else {
+				while(!isTerminatedThreadNotAlive(pingTime)) {
+					Executor.accept(consumer, ++tentativeCount);
+				}
+			}
+			return (T)this;
 		}
 		
 		public boolean wasExecuted() {
@@ -787,7 +852,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (currentThread == this.executor) {
 				return false;
 			}
-			if (isSubmitted()) {
+			if (checkSubmitted()) {
 				if (!isStarted()) {
 					synchronized (this) {
 						if (!isStarted()) {
@@ -809,10 +874,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						}
 					}
 				}
-			} else {
-				throw new TaskStateException(this, "is not submitted");
 			}
 			return false;
+		}
+		
+		private boolean checkSubmitted() {
+			if (!isSubmitted()) {
+				throw new TaskStateException(this, "is not submitted");
+			}
+			return true;
 		}
 
 		public T waitForFinish() {
@@ -844,7 +914,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (currentThread == this.executor) {
 				return false;
 			}
-			if (isSubmitted()) {
+			if (checkSubmitted()) {
 				if (!hasFinished()) {
 					synchronized (this) {
 						if (!hasFinished()) {
@@ -866,8 +936,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						}
 					}
 				}
-			} else {
-				throw new TaskStateException(this, "is not submitted");
 			}
 			return false;
 		}
@@ -882,7 +950,9 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							return;
 						}
 					}
-					preparingToExecute();
+					queuedTasksExecutor = getQueuedTasksExecutor();
+					startTime = System.currentTimeMillis();
+					queuedTasksExecutor.tasksInExecution.add(this);
 					synchronized (this) {
 						notifyAll();
 					}
@@ -894,13 +964,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					}
 					forceAbort();
 					return;
-				}	
-			} catch (Throwable exc) {
-				logException(exc);
-				forceAbort();
-				return;
-			}
-			try {
+				}
 				try {
 					execute0();
 					executed = true;
@@ -912,6 +976,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				}
 			} catch (Throwable exc) {
 				logException(exc);
+				forceAbort();
+				return;
 			} finally {
 				markAsFinished();
 			}
@@ -1031,7 +1097,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		public final T submit() {
-			if (aborted) {
+			if (isAborted()) {
 				throw new TaskStateException(this, "is aborted");
 			}
 			if (!submitted) {
@@ -1050,12 +1116,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		T addToQueue() {
 			return getQueuedTasksExecutor().addToQueue((T)this, false);
-		}
-
-		void preparingToExecute() {
-			queuedTasksExecutor = getQueuedTasksExecutor();
-			startTime = System.currentTimeMillis();
-			queuedTasksExecutor.tasksInExecution.add(this);
 		}
 
 		public T abortOrWaitForFinish() {

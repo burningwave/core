@@ -261,7 +261,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					ManagedLoggersRepository.logWarn(
 						getClass()::getName, "Operation timeout on {}: the task will be killed and the operation will be repeated after reset."
 					);
-					task.kill();
+					task.kill().waitForTerminatedThreadNotAlive(
+						1000,
+						tentativeCount -> {
+							ManagedLoggersRepository.logWarn(
+								getClass()::getName, "Waiting for the termination of the task {}", task.getInfoAsString()
+							);
+						}
+					);
 					if (isCompressed()) {
 						getParentContainer().reset();
 					} else {

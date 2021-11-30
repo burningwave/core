@@ -58,6 +58,14 @@ public interface Executor {
 			Driver.throwException(exc);
 		}
 	}
+    
+    static <I, E extends Throwable> void accept(ThrowingConsumer<I, E> consumer, I input) {
+		try {
+			consumer.accept(input);
+		} catch (Throwable exc) {
+			Driver.throwException(exc);
+		}
+	}
 
     static <E extends Throwable> void run(ThrowingRunnable<E> runnable, int attemptsNumber) {
 		while (true) {
