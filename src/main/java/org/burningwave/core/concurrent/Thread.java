@@ -169,7 +169,9 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	
 	@Override
 	public String toString() {
-		return super.toString() + " (" + Strings.capitalizeFirstCharacter(getState().name().toLowerCase().replace("_", " ")) + ")";
+		return super.toString() + Optional.ofNullable(getState()).map(threadState ->
+			" (" + Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")) + ")"
+		).orElseGet(() -> "");
 	}
 	
 	private static class Poolable extends Thread {
