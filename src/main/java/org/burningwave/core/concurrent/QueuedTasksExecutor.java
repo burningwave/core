@@ -1775,13 +1775,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						Thread.State threadState = Optional.ofNullable(taskThread).map(java.lang.Thread::getState).orElseGet(() -> null);
 						if (taskThread != null &&
 						(Thread.State.BLOCKED.equals(threadState) ||
-						Thread.State.WAITING.equals(taskThread) ||
-						Thread.State.TIMED_WAITING.equals(taskThread))) {
+						Thread.State.WAITING.equals(threadState) ||
+						Thread.State.TIMED_WAITING.equals(threadState))) {
 							StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
 							StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
 							if (previousRegisteredStackTrace != null) {
 								if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
-									if (!task.hasFinished() && !task.isAborted()) {
+									if (!task.hasFinished()) {
 										ManagedLoggersRepository.logWarn(
 											getClass()::getName,
 											"Possible deadlock detected for task:{}",
