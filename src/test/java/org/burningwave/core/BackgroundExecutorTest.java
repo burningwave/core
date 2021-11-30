@@ -19,46 +19,54 @@ public class BackgroundExecutorTest extends BaseTest {
 		assertTrue(
 			BackgroundExecutor.createTask(() -> {
 				while(true) {}		
-			}).submit().waitForFinish(2500).kill().isAborted()
+			}).submit()
+			.waitForStarting()
+			.kill()
+			.waitForTerminatedThreadNotAlive(100)
+			.isTerminatedThreadNotAlive()
 		);
 	}
 	
 	@Test
 	public void killTestTwo() {
 		AtomicBoolean executed = new AtomicBoolean();
-		assertTrue(			
-			BackgroundExecutor.createTask(() -> {
-				Thread.sleep(10000);		
-				executed.set(true);
+		AtomicReference<QueuedTasksExecutor.Task> childTask = new AtomicReference<>();
+		QueuedTasksExecutor.Task mainTask = BackgroundExecutor.createTask(() -> {
+			childTask.set(BackgroundExecutor.createTask(() -> {
+				while(true){}
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
-			).submit().waitForFinish(2500).kill().isAborted()
+			).submit());
+			Thread.sleep(30000);
+			executed.set(true);
+		}).runOnlyOnce(
+			UUID.randomUUID().toString(), executed::get
+		).submit().waitForStarting().kill();
+		assertTrue(
+			mainTask.getInfoAsString(),
+			mainTask.waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
+		);
+		assertTrue(
+			childTask.get().getInfoAsString(),
+			childTask.get().waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
 		);
 	}
 	
 	@Test
-	public void killTestThree() {
+	public void interruptTestOne() {
 		AtomicBoolean executed = new AtomicBoolean();
-		AtomicReference<QueuedTasksExecutor.Task> childTask = new AtomicReference<>();
-		QueuedTasksExecutor.Task mainTask = BackgroundExecutor.createTask(() -> {
-			childTask.set(BackgroundExecutor.createTask(() -> {
-				while(true) {}
+		assertTrue(			
+			!BackgroundExecutor.createTask(() -> {
+				Thread.sleep(10000);		
+				executed.set(true);
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
-			).submit());
-			Thread.sleep(150000);
-			executed.set(true);
-		}).runOnlyOnce(
-			UUID.randomUUID().toString(), executed::get
-		).submit().waitForFinish(2500).kill();
-		assertTrue(
-			mainTask.getInfoAsString(),
-			mainTask.wasKilled()
-		);
-		assertTrue(
-			childTask.get().getInfoAsString(),
-			childTask.get().wasKilled()
+			).submit()
+			.waitForStarting()
+			.interrupt()
+			.waitForFinish()
+			.wasExecuted()
 		);
 	}
-
+	
 }
