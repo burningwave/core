@@ -154,7 +154,10 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 	}
 	
 	public void kill() {
-		terminate(thread -> Methods.invoke(thread, "stop0", new ThreadDeath()), "stop");
+		terminate(thread -> 
+			Methods.invokeDirect(thread, "stop0", new ThreadDeath()), 
+			"stop"
+		);
 	}
 	
 	@Override
@@ -234,16 +237,26 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			);
 			shutDown();
 			removePermanently();
-			try {
-				operation.accept(this);
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
+			java.lang.Thread currentThread = Thread.currentThread();
+			if (this != currentThread) {	
+				try {
+					operation.accept(this);
+				} catch (Throwable exc) {
+					ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);						
+				}
 			}
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
 			}
 			synchronized(this) {
 				notifyAll();
+			}
+			if (this == currentThread) {	
+				Thread killer = supplier.getOrCreate().setExecutable(thread -> {
+					operation.accept(this);
+				});
+				killer.setPriority(currentThread.getPriority());
+				killer.start();
 			}
 		}
 

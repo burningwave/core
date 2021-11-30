@@ -740,6 +740,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								}
 							} catch (IterableObjectHelper.TerminateIteration exc) {
 								checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
+							} catch (Throwable exc) {
+								terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
+								throw exc;
 							} finally {
 								removeTask(tasks, task);
 							}
@@ -774,6 +777,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 						} catch (IterableObjectHelper.TerminateIteration exc) {
 							checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
+						} catch (Throwable exc) {
+							terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
+							throw exc;
 						} finally {
 							removeTask(tasks, task);
 						}
@@ -815,6 +821,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 									}																	
 								} catch (IterableObjectHelper.TerminateIteration exc) {
 									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
+								} catch (Throwable exc) {
+									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
+									throw exc;
 								} finally {
 									removeTask(tasks, task);
 								}
@@ -854,6 +863,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 									} 							
 								} catch (IterableObjectHelper.TerminateIteration exc) {
 									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
+								} catch (Throwable exc) {
+									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
+									throw exc;
 								} finally {
 									removeTask(tasks, task);
 								}
@@ -901,9 +913,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				}
 			} catch (IterableObjectHelper.TerminateIteration t) {
 			
-			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
-			} 
+			}
 		} finally {
 			if (initialThreadPriority != priority) {
 				currentThread.setPriority(initialThreadPriority);
