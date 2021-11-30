@@ -373,14 +373,27 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean interrupt(T task) {
-		return terminate(task, Thread::interrupt, TaskAbst::interrupt);
+		return terminate(task, Thread::interrupt, TaskAbst::interrupt, true);
 	}
 	
 	public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
-		return terminate(task, Thread::kill, TaskAbst::kill);
+		return terminate(task, Thread::kill, TaskAbst::kill, true);
 	}
 	
-	private <E, T extends TaskAbst<E, T>> boolean terminate(T task, Consumer<Thread> terminateOperation, Consumer<TaskAbst<?,?>> childTerminateOperation) {
+	public <E, T extends TaskAbst<E, T>> boolean interrupt(T task, boolean terminateChildren) {
+		return terminate(task, Thread::interrupt, TaskAbst::interrupt, terminateChildren);
+	}
+	
+	public <E, T extends TaskAbst<E, T>> boolean kill(T task, boolean terminateChildren) {
+		return terminate(task, Thread::kill, TaskAbst::kill, terminateChildren);
+	}
+	
+	private <E, T extends TaskAbst<E, T>> boolean terminate(
+		T task,
+		Consumer<Thread> terminateOperation,
+		Consumer<TaskAbst<?,?>> childTerminateOperation,
+		boolean terminateChildren
+	) {
 		if (abort(task)) {
 			return task.aborted;
 		}
@@ -392,10 +405,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					terminateOperation.accept(taskThread);
 					task.executorOrTerminatedExecutorFlag = taskThread;
 					taskThread.setPriority(Thread.MIN_PRIORITY);
-					Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
-					if (childTasks != null) {
-						for (TaskAbst<?,?> childTask : childTasks) {
-							childTerminateOperation.accept(childTask);
+					if (terminateChildren) {
+						Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
+						if (childTasks != null) {
+							for (TaskAbst<?,?> childTask : childTasks) {
+								childTerminateOperation.accept(childTask);
+							}
 						}
 					}
 					task.aborted = !task.executed;
@@ -417,10 +432,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								task.executorOrTerminatedExecutorFlag = queuedTaskThread;
 								queuedTask.executorOrTerminatedExecutorFlag = queuedTaskThread;
 								queuedTaskThread.setPriority(Thread.MIN_PRIORITY);
-								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(queuedTaskThread);
-								if (childTasks != null) {
-									for (TaskAbst<?,?> childTask : childTasks) {
-										childTerminateOperation.accept(childTask);
+								if (terminateChildren) {
+									Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(queuedTaskThread);
+									if (childTasks != null) {
+										for (TaskAbst<?,?> childTask : childTasks) {
+											childTerminateOperation.accept(childTask);
+										}
 									}
 								}
 								task.aborted = queuedTask.aborted = !task.executed; 
@@ -1150,12 +1167,20 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public T kill() {
-			getQueuedTasksExecutor().kill((T)this);
-			return (T)this;
+			return (T)kill(true);
 		}
 		
 		public T interrupt() {
-			getQueuedTasksExecutor().interrupt((T)this);
+			return (T)interrupt(true);
+		}
+		
+		public T kill(boolean terminateChildren) {
+			getQueuedTasksExecutor().kill((T)this, terminateChildren);
+			return (T)this;
+		}
+		
+		public T interrupt(boolean terminateChildren) {
+			getQueuedTasksExecutor().interrupt((T)this, terminateChildren);
 			return (T)this;
 		}
 
