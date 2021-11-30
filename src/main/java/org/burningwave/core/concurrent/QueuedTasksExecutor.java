@@ -1069,9 +1069,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (creator != null) {
 				Synchronizer.execute(Objects.getId(creator), () -> {
 					Collection<TaskAbst<?, ?>> creatorChildTasks = taskCreatorThreadsForChildTasks.get(creator);
-					creatorChildTasks.remove(this);
-					if (creatorChildTasks.isEmpty()) {
-						taskCreatorThreadsForChildTasks.remove(creator);
+					if (creatorChildTasks != null) {
+						creatorChildTasks.remove(this);
+						if (creatorChildTasks.isEmpty()) {
+							taskCreatorThreadsForChildTasks.remove(creator);
+						}
 					}
 				});
 			}
