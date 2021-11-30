@@ -661,7 +661,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		volatile boolean killed;
 		volatile boolean finished;
 		volatile boolean executed;
-		volatile boolean queueConsumerUnlockingRequested;
 		boolean exceptionHandled;
 		E executable;
 		java.lang.Thread creator;
