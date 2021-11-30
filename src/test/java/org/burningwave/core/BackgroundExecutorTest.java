@@ -32,26 +32,29 @@ public class BackgroundExecutorTest extends BaseTest {
 	@Test
 	public void killTestTwo() {
 		testDoesNotThrow(() -> {
-			AtomicBoolean executed = new AtomicBoolean();
-			AtomicReference<QueuedTasksExecutor.Task> childTask = new AtomicReference<>();
-			QueuedTasksExecutor.Task mainTask = BackgroundExecutor.createTask(() -> {
-				childTask.set(BackgroundExecutor.createTask(() -> {
-					while(true){}
-				}).runOnlyOnce(
+			AtomicBoolean executed = new AtomicBoolean(false);
+			AtomicReference<QueuedTasksExecutor.Task> mainTaskWrapper = new AtomicReference<>();
+			QueuedTasksExecutor.Task childTask = BackgroundExecutor.createTask(task -> {
+				Thread.sleep(2500);
+				mainTaskWrapper.get().kill();
+				while(true){}
+			});
+			mainTaskWrapper.set(BackgroundExecutor.createTask(task -> {
+				childTask.runOnlyOnce(
 					UUID.randomUUID().toString(), executed::get
-				).submit());
-				Thread.sleep(30000);
+				).submit();
+				Thread.sleep(5000);
 				executed.set(true);
 			}).runOnlyOnce(
 				UUID.randomUUID().toString(), executed::get
-			).submit().waitForStarting().kill();
+			).submit().waitForStarting());
 			assertTrue(
-				mainTask.getInfoAsString(),
-				mainTask.waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
+				mainTaskWrapper.get().getInfoAsString(),
+				mainTaskWrapper.get().waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive() && !executed.get()
 			);
 			assertTrue(
-				childTask.get().getInfoAsString(),
-				childTask.get().waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
+				childTask.getInfoAsString(),
+				childTask.waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
 			);
 		});
 	}
