@@ -100,7 +100,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
 			tasksQueue = new CopyOnWriteArrayList<>();
-			tasksInExecution = new ConcurrentHashMap<>() {
+			tasksInExecution = new ConcurrentHashMap<TaskAbst<?, ?>, TaskAbst<?, ?>>() {
 
 				private static final long serialVersionUID = 4138691488536653865L;
 				
