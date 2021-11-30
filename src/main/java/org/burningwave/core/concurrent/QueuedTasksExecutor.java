@@ -851,6 +851,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 		synchronized void markAsProbablyDeadLocked() {
 			probablyDeadLocked = true;
+			executor.setName("PROBABLE DEAD-LOCKED THREAD -> " + executor.getName());
 		}
 		
 		public T waitForStarting() {
@@ -981,9 +982,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							return;
 						}
 					}
-					queuedTasksExecutor = getQueuedTasksExecutor();
 					startTime = System.currentTimeMillis();
-					queuedTasksExecutor.tasksInExecution.put(this, this);
+					getQueuedTasksExecutor().tasksInExecution.put(this, this);
 					synchronized (this) {
 						notifyAll();
 					}
@@ -1059,8 +1059,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		void clear() {
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-			queuedTasksExecutor.tasksInExecution.remove(this);
+			getQueuedTasksExecutor().tasksInExecution.remove(this);
 			if (runOnlyOnce) {
 				runOnlyOnceTasks.remove(id);
 			}
@@ -1082,9 +1081,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		void markAsFinished() {
 			try {
 				finished = true;
-				QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
-				queuedTasksExecutor.tasksInExecution.remove(this);
-				++queuedTasksExecutor.executedTasksCount;
+				++getQueuedTasksExecutor().executedTasksCount;
 			} finally {
 				synchronized(this) {
 					notifyAll();
@@ -1791,7 +1788,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 										);
 										if (markAsProbableDeadLocked) {
 											task.markAsProbablyDeadLocked();
-											taskThread.setName("PROBABLE DEAD-LOCKED THREAD -> " + taskThread.getName());
 										}
 										if (terminateProbableDeadLockedTasksFunction != null && !task.hasFinished()) {
 											ManagedLoggersRepository.logWarn(
@@ -1801,7 +1797,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											);
 											terminateProbableDeadLockedTasksFunction.accept(task);
 										}
-										if (markAsProbableDeadLocked && !task.hasFinished()) {
+										if (markAsProbableDeadLocked) {
 											task.clear();
 											synchronized(task) {
 												task.notifyAll();
