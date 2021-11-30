@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -71,11 +70,12 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
+	private final static Map<TaskAbst<?, ?>, TaskAbst<?, ?>> allTasksInExecution;
+	Map<TaskAbst<?, ?>, TaskAbst<?, ?>> tasksInExecution;
 	Thread.Supplier threadSupplier;
 	String name;
 	java.lang.Thread tasksLauncher;
 	List<TaskAbst<?, ?>> tasksQueue;
-	Set<TaskAbst<?, ?>> tasksInExecution;
 	Boolean supended;
 	volatile int defaultPriority;
 	long executedTasksCount;
@@ -93,13 +93,27 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	static {
 		runOnlyOnceTasks = new ConcurrentHashMap<>();
 		taskCreatorThreadsForChildTasks = new ConcurrentHashMap<>();
+		allTasksInExecution = new ConcurrentHashMap<>();
 	}
 
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
 			tasksQueue = new CopyOnWriteArrayList<>();
-			tasksInExecution = ConcurrentHashMap.newKeySet();
+			tasksInExecution = new ConcurrentHashMap<>() {
+
+				private static final long serialVersionUID = 4138691488536653865L;
+				
+			    public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
+			    	allTasksInExecution.put(key, value);
+			        return super.put(key, value);
+			    }
+			    
+			    public TaskAbst<?, ?> remove(Object key) {
+			    	allTasksInExecution.remove(key);
+			    	return super.remove(key); 
+			    }
+			};
 			this.resumeCallerMutex = new Object();
 			this.executingFinishedWaiterMutex = new Object();
 			this.suspensionCallerMutex = new Object();
@@ -248,7 +262,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		task.priority = this.defaultPriority;
 		return task;
 	}
-
+	
 	<T> Function<ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>, Task> getTaskSupplier() {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
 
@@ -310,7 +324,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
 		changePriorityToAllTaskBeforeAndWaitThem(task, priority, ignoreDeadLocked);
-		task.waitForFinish(ignoreDeadLocked);
+		task.waitForFinish(ignoreDeadLocked, false);
 		return this;
 	}
 
@@ -371,7 +385,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return task.aborted;
 		}
 		if (!task.runOnlyOnce) {
-			if (tasksInExecution.remove(task)) {
+			if (tasksInExecution.remove(task) != null) {
 				task.aborted = true;
 				Thread taskThread = task.executor;
 				if (taskThread != null) {
@@ -392,10 +406,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				}
 			}
 		} else {
-			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
+			for (TaskAbst<?, ?> queuedTask : tasksInExecution.keySet()) {
 				if (task.id.equals(queuedTask.id)) {
 					synchronized (queuedTask) {
-						if (tasksInExecution.remove(queuedTask)) {
+						if (tasksInExecution.remove(queuedTask) != null) {
 							task.aborted = queuedTask.aborted = true;
 							Thread queuedTaskThread = queuedTask.executor;
 							if (queuedTaskThread != null) {
@@ -491,7 +505,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 			Task supendingTask = createSuspendingTask(priority);
 			changePriorityToAllTaskBeforeAndWaitThem(supendingTask.addToQueue(), priority, ignoreDeadLocked);
-			supendingTask.waitForFinish(ignoreDeadLocked);
+			supendingTask.waitForFinish(ignoreDeadLocked, false);
 		}
 		tasksLauncher.setPriority(this.defaultPriority);
 		return this;
@@ -507,12 +521,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	}
 
 	void waitForTasksInExecutionEnding(int priority, boolean ignoreDeadLocked) {
-		tasksInExecution.stream().forEach(task -> {
+		tasksInExecution.keySet().stream().forEach(task -> {
 			Thread taskExecutor = task.executor;
 			if (taskExecutor != null) {
 				taskExecutor.setPriority(priority);
 			}
-			task.waitForFinish(ignoreDeadLocked);
+			task.waitForFinish(ignoreDeadLocked, false);
 		});
 	}
 
@@ -577,7 +591,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 	public void logStatus() {
 		List<TaskAbst<?, ?>> tasks = new ArrayList<>(tasksQueue);
-		tasks.addAll(this.tasksInExecution);
+		tasks.addAll(this.tasksInExecution.keySet());
 		logStatus(this.executedTasksCount, tasks);
 	}
 
@@ -610,7 +624,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				log.append("\n" + task.getInfoAsString());
 			}
 		}
-		tasksQueue = this.tasksInExecution;
+		tasksQueue = this.tasksInExecution.keySet();
 		if (!tasksQueue.isEmpty()) {
 			log.append("\n\n");
 			log.append(Strings.compile("{} - Tasks in execution:", tasksLauncher));
@@ -822,37 +836,37 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		synchronized void markAsProbablyDeadLocked() {
 			probablyDeadLocked = true;
 		}
-
+		
 		public T waitForStarting() {
-			return waitForStarting(false, 0);
+			return waitForStarting(false, false, 0);
 		}
-
+		
 		public T waitForStarting(long timeout) {
-			return waitForStarting(false, timeout);
+			return waitForStarting(false, false, timeout);
+		}
+		
+		public T waitForStarting(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck) {
+			return waitForStarting(ignoreDeadLocked, ignoreSubmittedCheck, 0);
 		}
 
-		public T waitForStarting(boolean ignoreDeadLocked) {
-			return waitForStarting(ignoreDeadLocked, 0);
-		}
-
-		public T waitForStarting(boolean ignoreDeadLocked, long timeout) {
+		public T waitForStarting(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			if (timeout <= 0) {
-				while(waitForStarting0(ignoreDeadLocked, 0));
+				while(waitForStarting0(ignoreDeadLocked, ignoreSubmittedCheck, 0));
 				return (T)this;
 			}
 			long timeAtStartWaiting = System.currentTimeMillis();
-			while(waitForStarting0(ignoreDeadLocked, timeout) &&
+			while(waitForStarting0(ignoreDeadLocked, ignoreSubmittedCheck, timeout) &&
 				System.currentTimeMillis() - timeAtStartWaiting < timeout
 			) {}
 			return (T)this;
 		}
 
-		private boolean waitForStarting0(boolean ignoreDeadLocked, long timeout) {
+		private boolean waitForStarting0(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
 			}
-			if (checkSubmitted()) {
+			if (ignoreSubmittedCheck || checkSubmitted()) {
 				if (!isStarted()) {
 					synchronized (this) {
 						if (!isStarted()) {
@@ -886,35 +900,35 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		public T waitForFinish() {
-			return waitForFinish(false);
+			return waitForFinish(false, false, 0);
 		}
 
 		public T waitForFinish(long timeout) {
-			return waitForFinish(false, timeout);
+			return waitForFinish(false, false, timeout);
 		}
-
-		public T waitForFinish(boolean ignoreDeadLocked) {
-			return waitForFinish(ignoreDeadLocked, 0);
+		
+		public T waitForFinish(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck) {
+			return waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, 0);
 		}
-
-		public T waitForFinish(boolean ignoreDeadLocked, long timeout) {
+		
+		public T waitForFinish(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			if (timeout <= 0) {
-				while(waitForFinish0(ignoreDeadLocked, 0));
+				while(waitForFinish0(ignoreDeadLocked, ignoreSubmittedCheck, 0));
 				return (T)this;
 			}
 			long timeAtStartWaiting = System.currentTimeMillis();
-			while(waitForFinish0(ignoreDeadLocked, timeout) &&
+			while(waitForFinish0(ignoreDeadLocked, ignoreSubmittedCheck, timeout) &&
 				System.currentTimeMillis() - timeAtStartWaiting < timeout
 			) {}
 			return (T)this;
 		}
 
-		private boolean waitForFinish0(boolean ignoreDeadLocked, long timeout) {
+		private boolean waitForFinish0(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			java.lang.Thread currentThread = java.lang.Thread.currentThread();
 			if (currentThread == this.executor) {
 				return false;
 			}
-			if (checkSubmitted()) {
+			if (ignoreSubmittedCheck || checkSubmitted()) {
 				if (!hasFinished()) {
 					synchronized (this) {
 						if (!hasFinished()) {
@@ -953,7 +967,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					}
 					queuedTasksExecutor = getQueuedTasksExecutor();
 					startTime = System.currentTimeMillis();
-					queuedTasksExecutor.tasksInExecution.add(this);
+					queuedTasksExecutor.tasksInExecution.put(this, this);
 					synchronized (this) {
 						notifyAll();
 					}
@@ -1120,12 +1134,12 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		public T abortOrWaitForFinish() {
-			return abortOrWaitForFinish(false);
+			return abortOrWaitForFinish(false, false);
 		}
 
-		public T abortOrWaitForFinish(boolean ignoreDeadLocked) {
+		public T abortOrWaitForFinish(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck) {
 			if (!abort().isAborted()) {
-				waitForFinish(ignoreDeadLocked);
+				waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck);
 			}
 			return (T)this;
 		}
@@ -1162,19 +1176,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public void join() {
-			join(false, 0);
+			join(false, false, 0);
 		}
 		
 		public void join(long timeout) {
-			join(false, timeout);
-		}
-		
-		public void join(boolean ignoreDeadLocked) {
-			join(ignoreDeadLocked, 0);
+			join(false, false, timeout);
 		}
 
-		public void join(boolean ignoreDeadLocked, long timeout) {
-			waitForFinish(ignoreDeadLocked, timeout);
+		public void join(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
+			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
 				Driver.throwException(exception);
@@ -1199,19 +1209,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public T join() {
-			return join(false, 0);
+			return join(false, false, 0);
 		}
 		
 		public T join(long timeout) {
-			return join(false, timeout);
-		}
-		
-		public T join(boolean ignoreDeadLocked) {
-			return join(ignoreDeadLocked, 0);
+			return join(false, false, timeout);
 		}
 
-		public T join(boolean ignoreDeadLocked, long timeout) {
-			waitForFinish(ignoreDeadLocked, timeout);
+		public T join(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
+			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
 				return Driver.throwException(exception);
@@ -1533,10 +1539,10 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								}
 							}
 						}
-						tasksInExecution.stream().forEach(task -> {
+						tasksInExecution.keySet().stream().forEach(task -> {
 							//logInfo("{}", queueConsumer);
 							//task.logInfo();
-							task.waitForFinish(ignoreDeadLocked);
+							task.waitForFinish(ignoreDeadLocked, false);
 						});
 					} else {
 						tasksQueue.stream().forEach(executable ->
@@ -1549,7 +1555,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 				@Override
 				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
-					task.waitForFinish(ignoreDeadLocked);
+					task.waitForFinish(ignoreDeadLocked, false);
 					return this;
 				}
 
@@ -1559,6 +1565,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						supended = Boolean.TRUE
 					);
 				}
+				
 			};
 		}
 
@@ -1628,7 +1635,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (task.getPriority() != priority) {
 				task.changePriority(priority);
 			}
-			task.waitForFinish(ignoreDeadLocked);
+			task.waitForFinish(ignoreDeadLocked, false);
 			return this;
 		}
 
@@ -1671,7 +1678,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			Collection<TaskAbst<?, ?>> tasksInExecution = new HashSet<>();
 			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				tasksInExecution.addAll(
-					queuedTasksExecutorBox.getValue().tasksInExecution
+					queuedTasksExecutorBox.getValue().tasksInExecution.keySet()
 				);
 			}
 			return tasksInExecution;
