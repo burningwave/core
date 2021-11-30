@@ -357,7 +357,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		return task.aborted;
 	}
 	
+	public <E, T extends TaskAbst<E, T>> boolean interrupt(T task) {
+		return terminate(task, Thread::interrupt, TaskAbst::interrupt);
+	}
+	
 	public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
+		return terminate(task, Thread::kill, TaskAbst::kill);
+	}
+	
+	private <E, T extends TaskAbst<E, T>> boolean terminate(T task, Consumer<Thread> terminateOperation, Consumer<TaskAbst<?,?>> childTerminateOperation) {
 		if (abort(task)) {
 			return true;
 		}
@@ -367,19 +375,19 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				Thread taskThread = task.executor;
 				if (taskThread != null) {
 					taskThread.setPriority(Thread.MIN_PRIORITY);
-					taskThread.kill();
+					terminateOperation.accept(taskThread);
 					Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
 					if (childTasks != null) {
 						for (TaskAbst<?,?> childTask : childTasks) {
-							childTask.kill();
+							childTerminateOperation.accept(childTask);
 						}
 					}
+					task.killed = task.aborted = !task.executed;
 				}			
 				task.clear();
 				synchronized(task) {
 					task.notifyAll();
 				}
-				task.killed = task.aborted = !task.executed;
 			}
 		} else {
 			for (TaskAbst<?, ?> queuedTask : tasksInExecution) {
@@ -387,16 +395,17 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					synchronized (queuedTask) {
 						if (tasksInExecution.remove(queuedTask)) {
 							task.aborted = queuedTask.aborted = true;
-							Thread taskThread = queuedTask.executor;
-							if (taskThread != null) {
-								taskThread.setPriority(Thread.MIN_PRIORITY);
-								taskThread.kill();
-								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
+							Thread queuedTaskThread = queuedTask.executor;
+							if (queuedTaskThread != null) {
+								queuedTaskThread.setPriority(Thread.MIN_PRIORITY);
+								terminateOperation.accept(queuedTaskThread);
+								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(queuedTaskThread);
 								if (childTasks != null) {
 									for (TaskAbst<?,?> childTask : childTasks) {
-										childTask.kill();
+										childTerminateOperation.accept(childTask);
 									}
 								}
+								task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !task.executed; 
 							}
 							queuedTask.clear();
 							task.clear();
@@ -404,7 +413,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							synchronized(task) {
 								task.notifyAll();
 							}
-							task.killed = queuedTask.killed = task.aborted = queuedTask.aborted = !task.executed; 
 							return task.aborted;
 						}
 					}
@@ -1071,6 +1079,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			getQueuedTasksExecutor().kill((T)this);
 			return (T)this;
 		}
+		
+		public T interrupt() {
+			getQueuedTasksExecutor().interrupt((T)this);
+			return (T)this;
+		}
 
 		abstract QueuedTasksExecutor getQueuedTasksExecutor();
 
@@ -1658,7 +1671,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			void checkAndHandleProbableDeadLockedTasks(
 				long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked,
 				boolean markAsProbableDeadLocked,
-				boolean killProbableDeadLockedTasks
+				Consumer<TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction
 			) {
 				Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
 				while (tasksAndStackTracesIterator.hasNext()) {
@@ -1689,13 +1702,13 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											task.markAsProbablyDeadLocked();
 											taskThread.setName("PROBABLE DEAD-LOCKED THREAD -> " + taskThread.getName());
 										}
-										if (killProbableDeadLockedTasks && !task.hasFinished()) {
+										if (terminateProbableDeadLockedTasksFunction != null && !task.hasFinished()) {
 											ManagedLoggersRepository.logWarn(
 												getClass()::getName,
-												"Trying to kill task {}",
+												"Trying to terminate task {}",
 												task.hashCode()
 											);
-											task.kill();
+											terminateProbableDeadLockedTasksFunction.accept(task);
 										}
 										if (markAsProbableDeadLocked && !task.hasFinished()) {
 											task.clear();
@@ -1751,7 +1764,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							checkAndHandleProbableDeadLockedTasks(
 								config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
 								config.isMarkAsProablyDeadLockedEnabled(),
-								config.isKillProablyDeadLockedTasksEnabled()
+								config.getTerminateProablyDeadLockedTasksFunction()
 							);
 						} catch (Throwable exc) {
 							ManagedLoggersRepository.logError(
@@ -1792,7 +1805,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				private long interval;
 				private long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
 				private boolean markAsProbableDeadLocked;
-				private boolean killProbableDeadLockedTasks;
+				private Consumer<TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction;
 				private boolean allTasksLoggerEnabled;
 
 				public long getInterval() {
@@ -1818,17 +1831,25 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					return markAsProbableDeadLocked;
 				}
 
-				public TasksMonitorer.Config setMarkAsProbableDeadLocked(boolean markAsProablyDeadLocked) {
-					this.markAsProbableDeadLocked = markAsProablyDeadLocked;
+				public TasksMonitorer.Config setMarkAsProbableDeadLocked(String policy) {
+					this.markAsProbableDeadLocked = policy.toLowerCase().contains("mark as probable dead locked");
 					return this;
 				}
 
-				public boolean isKillProablyDeadLockedTasksEnabled() {
-					return killProbableDeadLockedTasks;
+				public boolean isTerminateProablyDeadLockedTasksEnabled() {
+					return terminateProbableDeadLockedTasksFunction != null;
 				}
-
-				public TasksMonitorer.Config setKillProbableDeadLockedTasks(boolean killProablyDeadLockedTasks) {
-					this.killProbableDeadLockedTasks = killProablyDeadLockedTasks;
+				
+				public Consumer<TaskAbst<?, ?>> getTerminateProablyDeadLockedTasksFunction() {
+					return terminateProbableDeadLockedTasksFunction;
+				}
+				
+				public TasksMonitorer.Config setTerminateProbableDeadLockedTasksOperation(String policy) {
+					this.terminateProbableDeadLockedTasksFunction = policy.toLowerCase().contains("interrupt") ?
+						TaskAbst::interrupt :
+							policy.toLowerCase().contains("kill") ?
+								TaskAbst::kill : 
+								null;
 					return this;
 				}
 
