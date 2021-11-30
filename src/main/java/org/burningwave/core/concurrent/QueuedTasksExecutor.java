@@ -926,7 +926,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									throw new TaskStateException(this, "could be dead locked");
 								}
 								if (isAborted()) {
-									throw new TaskStateException(this, "is aborted");
+									ManagedLoggersRepository.logWarn(getClass()::getName, "Task is aborted:{} ", getInfoAsString());
+									return false;
 								}
 								wait(timeout);
 								return true;
@@ -1035,9 +1036,9 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 			executable = null;
 			if (this.creator != null) {
-				Collection<TaskAbst<?, ?>> creatorChildTasks = taskCreatorThreadsForChildTasks.get(this.creator);
-				creatorChildTasks.remove(this);
 				Synchronizer.execute(Objects.getId(creator), () -> {
+					Collection<TaskAbst<?, ?>> creatorChildTasks = taskCreatorThreadsForChildTasks.get(this.creator);
+					creatorChildTasks.remove(this);
 					if (creatorChildTasks.isEmpty()) {
 						taskCreatorThreadsForChildTasks.remove(this.creator);
 					}
@@ -1123,7 +1124,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 
 		public T abortOrWaitForFinish(boolean ignoreDeadLocked) {
-			if (!abort().isAborted() && isStarted()) {
+			if (!abort().isAborted()) {
 				waitForFinish(ignoreDeadLocked);
 			}
 			return (T)this;
@@ -1178,7 +1179,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (exception != null && !exceptionHandled) {
 				Driver.throwException(exception);
 			}
-			if (!hasFinished()) {
+			if (!wasExecuted()) {
 				throw new TaskStateException(this, "is not completed");
 			}
 		}
@@ -1215,7 +1216,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			if (exception != null && !exceptionHandled) {
 				return Driver.throwException(exception);
 			}
-			if (!hasFinished()) {
+			if (!wasExecuted()) {
 				throw new TaskStateException(this, "is not completed");
 			}
 			return result;
