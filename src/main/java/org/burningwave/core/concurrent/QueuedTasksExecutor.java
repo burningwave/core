@@ -406,12 +406,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					task.executorOrTerminatedExecutorFlag = taskThread;
 					taskThread.setPriority(Thread.MIN_PRIORITY);
 					if (terminateChildren) {
-						Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
-						if (childTasks != null) {
-							for (TaskAbst<?,?> childTask : childTasks) {
-								childTerminateOperation.accept(childTask);
-							}
-						}
+						terminateChildren(childTerminateOperation, taskThread);
 					}
 					task.aborted = !task.executed;
 				}			
@@ -433,12 +428,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								queuedTask.executorOrTerminatedExecutorFlag = queuedTaskThread;
 								queuedTaskThread.setPriority(Thread.MIN_PRIORITY);
 								if (terminateChildren) {
-									Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(queuedTaskThread);
-									if (childTasks != null) {
-										for (TaskAbst<?,?> childTask : childTasks) {
-											childTerminateOperation.accept(childTask);
-										}
-									}
+									terminateChildren(childTerminateOperation, queuedTaskThread);
 								}
 								task.aborted = queuedTask.aborted = !task.executed; 
 							}
@@ -455,6 +445,15 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 		}
 		return task.aborted;
+	}
+
+	private void terminateChildren(Consumer<TaskAbst<?, ?>> childTerminateOperation, Thread taskThread) {
+		Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
+		if (childTasks != null) {
+			for (TaskAbst<?,?> childTask : childTasks) {
+				childTerminateOperation.accept(childTask);
+			}
+		}
 	}
 
 	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
