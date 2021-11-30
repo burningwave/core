@@ -999,6 +999,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				try {
 					execute0();
 					executed = true;
+					++getQueuedTasksExecutor().executedTasksCount;
 				} catch (Throwable exc) {
 					this.exc = exc;
 					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
@@ -1081,7 +1082,6 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		void markAsFinished() {
 			try {
 				finished = true;
-				++getQueuedTasksExecutor().executedTasksCount;
 			} finally {
 				synchronized(this) {
 					notifyAll();
