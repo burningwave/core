@@ -1764,7 +1764,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
 				while (tasksAndStackTracesIterator.hasNext()) {
 					TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
-					if(task.hasFinished() || task.isAborted()) {
+					if(task.hasFinished()) {
 						tasksAndStackTracesIterator.remove();
 					}
 				}

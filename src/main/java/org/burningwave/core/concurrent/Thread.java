@@ -187,7 +187,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggersRepository.logError(getClass()::getName, this.toString(), exc);
 				}
 				try {
 					supplier.runningThreads.remove(this);
