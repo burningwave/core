@@ -153,6 +153,17 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 	}
 	
+	public void kill() {
+		terminate(thread -> Methods.invoke(thread, "stop0", new ThreadDeath()), "stop");
+	}
+	
+	@Override
+	public void interrupt() {
+		terminate(thread -> super.interrupt(), "interrupt");
+	}
+	
+	abstract void terminate(Consumer<Thread> operation, String operationName);
+	
 	@Override
 	public String toString() {
 		return super.toString() + " (" + Strings.capitalizeFirstCharacter(getState().name().toLowerCase().replace("_", " ")) + ")";
@@ -209,12 +220,12 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 				notifyAll();
 			}
 		}
-
-		@Override
-		public void interrupt() {
+		
+		void terminate(Consumer<Thread> operation, String operationName) {
 			ManagedLoggersRepository.logWarn(
 				getClass()::getName,
-				"Called interrupt by {}{}\n\ton {} (executable: {}):{}",
+				"Called {} by {}{}\n\ton {} (executable: {}):{}",
+				operationName,
 				Thread.currentThread(),
 				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
 				this,
@@ -224,7 +235,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			shutDown();
 			removePermanently();
 			try {
-				super.interrupt();
+				operation.accept(this);
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 			}
@@ -274,13 +285,23 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 		}
 
 		@Override
-		public void interrupt() {
+		void terminate(Consumer<Thread> operation, String operationName) {
+			ManagedLoggersRepository.logWarn(
+				getClass()::getName,
+				"Called {} by {}{}\n\ton {} (executable: {}):{}",
+				operationName,
+				Thread.currentThread(),
+				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
+				this,
+				executable,
+				Strings.from(getStackTrace(), 2)
+			);
 			shutDown();
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadCount;
 			}
 			try {
-				super.interrupt();
+				operation.accept(this);
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
 			}

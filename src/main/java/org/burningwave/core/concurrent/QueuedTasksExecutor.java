@@ -366,7 +366,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				task.aborted = true;
 				Thread taskThread = task.executor;
 				if (taskThread != null) {
-					taskThread.interrupt();
+					taskThread.setPriority(Thread.MIN_PRIORITY);
+					taskThread.kill();
 					Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
 					if (childTasks != null) {
 						for (TaskAbst<?,?> childTask : childTasks) {
@@ -388,7 +389,8 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							task.aborted = queuedTask.aborted = true;
 							Thread taskThread = queuedTask.executor;
 							if (taskThread != null) {
-								taskThread.interrupt();
+								taskThread.setPriority(Thread.MIN_PRIORITY);
+								taskThread.kill();
 								Collection<TaskAbst<?,?>> childTasks = taskCreatorThreadsForChildTasks.get(taskThread);
 								if (childTasks != null) {
 									for (TaskAbst<?,?> childTask : childTasks) {
