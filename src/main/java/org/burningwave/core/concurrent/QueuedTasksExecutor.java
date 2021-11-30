@@ -1636,7 +1636,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 					}
 				}
-				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks);
+				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
