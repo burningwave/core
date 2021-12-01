@@ -464,7 +464,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		closeResources();
 	}
 
-	Task closeResources() {
+	protected Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {

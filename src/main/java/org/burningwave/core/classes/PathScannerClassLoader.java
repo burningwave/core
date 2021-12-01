@@ -51,6 +51,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -259,16 +260,21 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return false;
 	}
-
+	
 	@Override
-	public void close() {
-		closeResources(() -> this.loadedPaths == null, task -> {
-			super.close();
-			this.loadedPaths.clear();
-			this.loadedPaths = null;
-			pathHelper = null;
-			fileFilterAndProcessor = null;
-		});
+	protected Task closeResources() {
+		return closeResources(
+			PathScannerClassLoader.class.getName() + "@" + System.identityHashCode(this),
+			() -> 
+				this.loadedPaths == null,
+			task -> {
+				super.closeResources().waitForFinish();
+				this.loadedPaths.clear();
+				this.loadedPaths = null;
+				pathHelper = null;
+				fileFilterAndProcessor = null;
+			}
+		);
 	}
 
 }
