@@ -30,10 +30,10 @@ package org.burningwave.core.classes;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.IOException;
@@ -104,7 +104,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			if (!isClosed) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
-				Driver.throwException(exc);
+				throw new IllegalStateException(Strings.compile("Could not execute the operation: {} is closed"));
 			}
 			return false;
 		};
