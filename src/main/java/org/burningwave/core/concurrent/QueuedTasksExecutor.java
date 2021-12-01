@@ -529,12 +529,13 @@ public class QueuedTasksExecutor implements Closeable {
 	}
 
 	Task createSuspendingTask(int priority) {
-		return createTask(
-			(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>)task ->
-				supended = Boolean.TRUE
+		Task tsk = createTask((ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>)task ->
+			supended = Boolean.TRUE
 		).runOnlyOnce(getOperationId("suspend"), () -> 
 			supended
-		).changePriority(priority);
+		);
+		tsk.changePriority(priority);
+		return tsk;
 	}
 
 	void waitForTasksInExecutionEnding(int priority, boolean ignoreDeadLocked) {
@@ -1121,15 +1122,16 @@ public class QueuedTasksExecutor implements Closeable {
 			return (T)this;
 		}
 
-		public T changePriority(int priority) {
+		public boolean changePriority(int priority) {
 			this.priority = priority;
 			if (executor != null) {
 				executor.setPriority(this.priority);
+				return true;
 			}
-			return (T)this;
+			return false;
 		}
 
-		public T setPriorityToCurrentThreadPriority() {
+		public boolean setPriorityToCurrentThreadPriority() {
 			return changePriority(java.lang.Thread.currentThread().getPriority());
 		}
 
@@ -1527,9 +1529,8 @@ public class QueuedTasksExecutor implements Closeable {
 						}
 
 						@Override
-						public QueuedTasksExecutor.ProducerTask<T> changePriority(int priority) {
-							Group.this.changePriority(this, priority);
-							return this;
+						public boolean changePriority(int priority) {
+							return Group.this.changePriority(this, priority);
 						}
 
 						@Override
@@ -1551,9 +1552,8 @@ public class QueuedTasksExecutor implements Closeable {
 						}
 
 						@Override
-						public QueuedTasksExecutor.Task changePriority(int priority) {
-							Group.this.changePriority(this, priority);
-							return this;
+						public boolean changePriority(int priority) {
+							return Group.this.changePriority(this, priority);
 						}
 
 						@Override
@@ -1607,7 +1607,7 @@ public class QueuedTasksExecutor implements Closeable {
 			};
 		}
 
-		<E, T extends TaskAbst<E, T>> Group changePriority(T task, int priority) {
+		<E, T extends TaskAbst<E, T>> boolean changePriority(T task, int priority) {
 			int oldPriority = task.priority;
 			int newPriority = checkAndCorrectPriority(priority);
 			if (oldPriority != priority) {
@@ -1618,10 +1618,11 @@ public class QueuedTasksExecutor implements Closeable {
 						task.queuedTasksExecutor = null;
 						task.executor = null;
 						queuedTasksExecutor.addToQueue(task, true);
+						return true;
 					}
 				}
 			}
-			return this;
+			return false;
 		}
 
 		public boolean isClosed() {
