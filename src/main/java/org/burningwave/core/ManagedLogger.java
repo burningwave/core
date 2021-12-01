@@ -135,7 +135,7 @@ public interface ManagedLogger {
 				
 				//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-					ComponentContainer.PathScannerClassLoader.class.getName() + defaultValuesSeparator +
+					ComponentContainer.class.getName() + "$PathScannerClassLoader" + defaultValuesSeparator +
 					MemoryClassLoader.class.getName() + defaultValuesSeparator +
 					PathScannerClassLoader.class.getName() + defaultValuesSeparator
 				);
