@@ -1047,10 +1047,23 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		private void logException(Throwable exc) {
+			java.lang.Thread executor = this.executor;
+			if (executor != null) {
+				ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
+					"Exception occurred while executing {} ({}): \n\t\t{}: {}{}",
+					this,
+					this.executor,
+					exc.toString(),
+					Strings.from(exc.getStackTrace(), 2),
+					this.getCreatorInfos() != null ?
+						"\n\tthat was created at:" + Strings.from(this.getCreatorInfos(), 2)
+						: ""
+				));
+				return;
+			}			
 			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
-				"Exception occurred while executing {} ({}): \n\t\t{}: {}{}",
+				"Exception occurred while executing {}: \n\t\t{}: {}{}",
 				this,
-				this.executor,
 				exc.toString(),
 				Strings.from(exc.getStackTrace(), 2),
 				this.getCreatorInfos() != null ?
