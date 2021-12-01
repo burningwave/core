@@ -30,7 +30,7 @@ package org.burningwave.core.iterable;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.InputStream;
@@ -41,12 +41,11 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings("unchecked")
-public class Properties extends ConcurrentHashMap<Object, Object> implements ManagedLogger {
+public class Properties extends ConcurrentHashMap<Object, Object> {
 	private static final long serialVersionUID = -350748766178421942L;
 
 	public static enum Event {
@@ -303,7 +302,7 @@ public class Properties extends ConcurrentHashMap<Object, Object> implements Man
 			try  {
 				listener.processChangeNotification(this, event, key, newValue, oldValue);
 			} catch (Throwable exc){
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
 			}
 		}
 	}

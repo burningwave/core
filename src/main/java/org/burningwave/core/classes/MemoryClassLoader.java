@@ -34,7 +34,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -64,6 +64,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	Map<String, ByteBuffer> loadedByteCodes;
 	Collection<Object> clients;
 	protected boolean isClosed;
+	private boolean markedAsCloseable;
 	String instanceId;
 	ClassLoader[] allParents;
 
@@ -107,7 +108,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCode on class named {} because {} has been closed", className, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute addByteCode on class named {} because {} has been closed", className, this.toString());
     		}
     	}
     }
@@ -127,7 +128,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute getNotLoadedByteCode on class named {} because {} has been closed", className, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute getNotLoadedByteCode on class named {} because {} has been closed", className, this.toString());
     		}
     	}
     	return null;
@@ -140,7 +141,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute getByteCodeOf on class named {} because {} has been closed", className, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute getByteCodeOf on class named {} because {} has been closed", className, this.toString());
     		}
     	}
     	return null;
@@ -157,7 +158,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", byteCodes.toString(), this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", byteCodes.toString(), this.toString());
     		}
     	}
 
@@ -174,7 +175,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
     		}
     	}
 	}
@@ -190,7 +191,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute addByteCodes on {} because {} has been closed", classes.toString(), this.toString());
     		}
     	}
 	}
@@ -210,7 +211,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
 		    			implVersion, implVendor, sealBase);
 			} catch (IllegalArgumentException exc) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + packageName + " already defined");
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Package " + packageName + " already defined");
 				pkg = ClassLoaders.retrieveLoadedPackage(this, packageName);
 			}
     	}
@@ -299,7 +300,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute getByteCode on {} because {} has been closed", classRelativePath, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute getByteCode on {} because {} has been closed", classRelativePath, this.toString());
     		}
     	}
 		return null;
@@ -313,7 +314,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute addLoadedByteCode on {} because {} has been closed", className, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute addLoadedByteCode on {} because {} has been closed", className, this.toString());
     		}
     	}
     }
@@ -368,7 +369,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 
 	protected void logWarn(String className, String message) {
-		ManagedLoggersRepository.logWarn(getClass()::getName, message);
+		ManagedLoggerRepository.logWarn(getClass()::getName, message);
 	}
 
 	Class<?> _defineClass(String className, java.nio.ByteBuffer byteCode, ProtectionDomain protectionDomain) {
@@ -387,7 +388,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
     		if (!isClosed) {
     			throw exc;
     		} else {
-    			ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute removeNotLoadedBytecode on class named {} because {} has been closed", className, this.toString());
+    			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute removeNotLoadedBytecode on class named {} because {} has been closed", className, this.toString());
     		}
     	}
 	}
@@ -407,7 +408,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			try {
 				loadedClasses.add(loadClass(entry.getKey()));
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not load class " + entry.getKey(), exc.getMessage());
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Could not load class " + entry.getKey(), exc.getMessage());
 			}
 		}
 		return loadedClasses;
@@ -438,25 +439,34 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this, true);
 	}
 
-	public synchronized boolean register(Object client) {
+	public synchronized void register(Object client) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.add(client);
-			return true;
+			return;
 		}
-		return false;
+		throw new IllegalStateException(
+			Strings.compile("Could not register client {} to {}: it is closed", client, this)
+		);
 	}
-
-	public synchronized boolean unregister(Object client, boolean close) {
+	
+	public boolean unregister(Object client, boolean close) {
+		return unregister(client, close, false);
+	}
+	
+	public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+		if (markAsCloseable) {
+			markedAsCloseable = markAsCloseable;
+		}
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.remove(client);
-			if (clients.isEmpty() && close) {
+			if (clients.isEmpty() && (close || markedAsCloseable)) {
 				close();
 				return true;
 			}
 		}
-		return false;
+		return isClosed;
 	}
 
 	@Override
@@ -464,16 +474,18 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		closeResources();
 	}
 
-	Task closeResources() {
+	protected Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
-				Driver.throwException("Could not close {} because there are {} registered clients", this, clients.size());
+				throw new IllegalStateException(
+					Strings.compile("Could not close {} because there are {} registered clients", this, clients.size())
+				);
 			}
 			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)parentClassLoader).unregister(this,true);
+				((MemoryClassLoader)parentClassLoader).unregister(this, true, false);
 			}
 			clearInBackground();
 			notLoadedByteCodes = null;
@@ -482,6 +494,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			unregister();
 			this.clients.clear();
 			this.clients = null;
+			if (this.getClass().equals(MemoryClassLoader.class)) {
+				ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+			}
 		});
 	}
 }

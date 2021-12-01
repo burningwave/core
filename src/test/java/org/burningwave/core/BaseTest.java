@@ -81,13 +81,13 @@ public class BaseTest implements Component {
 		long initialTime = System.currentTimeMillis();
 		Object object = null;
 		try {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - start execution");
 			object = supplier.get();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - end execution");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - end execution");
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
-		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 			getClass()::getName,
 			getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 		);
@@ -104,17 +104,17 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try {
 			coll = supplier.get();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				for (Object obj : coll) {
 					if (obj != null) {
-						org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, "{}", obj);
+						org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, "{}", obj);
 					}
 				}
 			}
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 		assertTrue(coll != null && !coll.isEmpty());
 	}
@@ -140,23 +140,23 @@ public class BaseTest implements Component {
 		boolean isNotEmpty = false;
 		try (T collectionSupplier = autoCloaseableSupplier.get()){
 			coll = collSupplier.apply(collectionSupplier);
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - Found " + coll.size() + " items in " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 			isNotEmpty = !coll.isEmpty();
 			if (isNotEmpty && printAllElements) {
 				int line = 0;
 				Iterator<?> collIterator = coll.iterator();
 				while (collIterator.hasNext()) {
 					Object obj = collIterator.next();
-					org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(
+					org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(
 						getClass()::getName,
 						++line + " " + (obj != null ? obj.toString() : "null")
 					);
 				}
 			}
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
-		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 			getClass()::getName,
 			getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 		);
@@ -171,9 +171,9 @@ public class BaseTest implements Component {
 		long initialTime = System.currentTimeMillis();
 		try (T autoCloseable = autoCloseableSupplier.get()) {
 			assertNotNull(objectSupplier.apply(autoCloseable));
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 		}
 	}
 
@@ -182,11 +182,11 @@ public class BaseTest implements Component {
 		Throwable throwable = null;
 		long initialTime = System.currentTimeMillis();
 		try {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
 			executable.execute();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
 			throwable = exc;
 		}
 		assertNull(throwable);

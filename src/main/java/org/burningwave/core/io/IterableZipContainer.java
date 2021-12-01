@@ -31,7 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -47,9 +47,8 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
-import org.burningwave.core.ManagedLogger;
 
-public interface IterableZipContainer extends Closeable, ManagedLogger {
+public interface IterableZipContainer extends Closeable {
 	public final static String classId = Objects.getClassId(IterableZipContainer.class);
 	public final static String PATH_SUFFIX = "///";
 	
@@ -121,7 +120,7 @@ public interface IterableZipContainer extends Closeable, ManagedLogger {
 					iS.close();
 				}
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(IterableZipContainer.class::getName, exc);
+				ManagedLoggerRepository.logError(IterableZipContainer.class::getName, exc);
 			}
 		}
 		return null;

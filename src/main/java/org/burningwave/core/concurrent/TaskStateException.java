@@ -30,14 +30,14 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
-public class TaskStateException extends RuntimeException {
+public class TaskStateException extends IllegalStateException {
 
 	private static final long serialVersionUID = -6504561450589871045L;
 
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message, Throwable exception) {
 		super(
 			Strings.compile(
-				"{} {} and was created by:{}\nException stacktrace:",
+				"{} {} and was created at:{}\nException stacktrace:",
 				task,
 				message,
 				Strings.from(task.getCreatorInfos(), 1)
@@ -49,7 +49,7 @@ public class TaskStateException extends RuntimeException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message) {
 		super(
 			Strings.compile(
-				"{} {} and was created by:{}\nException stacktrace:",
+				"{} {} and was created at:{}\nException stacktrace:",
 				task,
 				message,
 				Strings.from(task.getCreatorInfos(), 1)

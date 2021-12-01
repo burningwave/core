@@ -209,6 +209,6 @@ public class ByteCodeHunterTest extends BaseTest {
 				return result.getClasses();
 			}
 		);
-		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, "Items total size: " + bytesWrapper.get() + " bytes");
+		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, "Items total size: " + bytesWrapper.get() + " bytes");
 	}
 }

@@ -30,7 +30,7 @@ package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
@@ -67,7 +66,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
-public class QueuedTasksExecutor implements Closeable, ManagedLogger {
+public class QueuedTasksExecutor implements Closeable {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
 	private final static Map<TaskAbst<?, ?>, TaskAbst<?, ?>> allTasksInExecution;
@@ -104,12 +103,14 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 				private static final long serialVersionUID = 4138691488536653865L;
 				
-			    public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
+			    @Override
+				public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
 			    	allTasksInExecution.put(key, value);
 			        return super.put(key, value);
 			    }
 			    
-			    public TaskAbst<?, ?> remove(Object key) {
+			    @Override
+				public TaskAbst<?, ?> remove(Object key) {
 			    	allTasksInExecution.remove(key);
 			    	return super.remove(key); 
 			    }
@@ -165,7 +166,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									executableCollectionFillerMutex.wait();
 								}
 							} catch (InterruptedException exc) {
-								ManagedLoggersRepository.logError(getClass()::getName, exc);
+								ManagedLoggerRepository.logError(getClass()::getName, exc);
 							}
 						}
 					}
@@ -192,7 +193,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					resumeCallerMutex.wait();
 					return true;
 				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 				}
 			}
 		}
@@ -293,7 +294,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					executableCollectionFillerMutex.notifyAll();
 				}
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
 		}
 		return canBeExecutedBag != null ? (T)canBeExecutedBag[0] : task;
@@ -475,7 +476,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					try {
 						executingFinishedWaiterMutex.wait();
 					} catch (InterruptedException exc) {
-						ManagedLoggersRepository.logError(getClass()::getName, exc);
+						ManagedLoggerRepository.logError(getClass()::getName, exc);
 					}
 				}
 			}
@@ -514,7 +515,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					}
 					suspensionCallerMutex.wait();
 				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 				}
 			}
 		} else {
@@ -572,7 +573,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				supended = Boolean.FALSE;
 				resumeCallerMutex.notifyAll();
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
 		}
 		return this;
@@ -596,7 +597,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 					try {
 						terminatingMutex.wait();
 					} catch (InterruptedException exc) {
-						ManagedLoggersRepository.logError(getClass()::getName, exc);
+						ManagedLoggerRepository.logError(getClass()::getName, exc);
 					}
 				}
 			}
@@ -627,7 +628,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			log.append(":\n\t")
 			.append(String.join("\n\t", executablesLog));
 		}
-		ManagedLoggersRepository.logInfo(getClass()::getName, log.toString());
+		ManagedLoggerRepository.logInfo(getClass()::getName, log.toString());
 	}
 
 	public String getInfoAsString() {
@@ -654,7 +655,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 	public void logInfo() {
 		String message = getInfoAsString();
 		if (!message.isEmpty()) {
-			ManagedLoggersRepository.logInfo(getClass()::getName, message);
+			ManagedLoggerRepository.logInfo(getClass()::getName, message);
 		}
 	}
 
@@ -675,11 +676,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		executingFinishedWaiterMutex = null;
 		suspensionCallerMutex = null;
 		executableCollectionFillerMutex = null;
-		ManagedLoggersRepository.logInfo(getClass()::getName, "All resources of '{}' have been closed", name);
+		ManagedLoggerRepository.logInfo(getClass()::getName, "All resources of '{}' have been closed", name);
 		name = null;
 	}
 
-	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
+	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> {
 
 		String name;
 		StackTraceElement[] stackTraceOnCreation;
@@ -726,7 +727,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 						)
 					);
 				} else {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Tasks creation tracking was disabled when {} was created", this);
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Tasks creation tracking was disabled when {} was created", this);
 				}
 			}
 			return creatorInfos;
@@ -796,7 +797,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				try {
 					Thread.sleep(waitingTime);
 				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 				}
 			}
 			return isExecutorTerminated();
@@ -957,7 +958,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									throw new TaskStateException(this, "could be dead locked");
 								}
 								if (isAborted()) {
-									ManagedLoggersRepository.logWarn(getClass()::getName, "Task is aborted:{} ", getInfoAsString());
+									ManagedLoggerRepository.logWarn(getClass()::getName, "Task is aborted:{} ", getInfoAsString());
 									return false;
 								}
 								wait(timeout);
@@ -1039,7 +1040,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public void logInfo() {
-			ManagedLoggersRepository.logInfo(getClass()::getName, getInfoAsString());
+			ManagedLoggerRepository.logInfo(getClass()::getName, getInfoAsString());
 		}
 		
 		public void logException() {
@@ -1049,7 +1050,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		private void logException(Throwable exc) {
 			java.lang.Thread executor = this.executor;
 			if (executor != null) {
-				ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
+				ManagedLoggerRepository.logError(getClass()::getName, Strings.compile(
 					"Exception occurred while executing {} ({}): \n\t\t{}: {}{}",
 					this,
 					this.executor,
@@ -1061,7 +1062,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 				));
 				return;
 			}			
-			ManagedLoggersRepository.logError(getClass()::getName, Strings.compile(
+			ManagedLoggerRepository.logError(getClass()::getName, Strings.compile(
 				"Exception occurred while executing {}: \n\t\t{}: {}{}",
 				this,
 				exc.toString(),
@@ -1179,11 +1180,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public T kill() {
-			return (T)kill(true);
+			return kill(true);
 		}
 		
 		public T interrupt() {
-			return (T)interrupt(true);
+			return interrupt(true);
 		}
 		
 		public T kill(boolean terminateChildren) {
@@ -1571,7 +1572,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 									try {
 										executingFinishedWaiterMutex.wait();
 									} catch (InterruptedException exc) {
-										ManagedLoggersRepository.logError(getClass()::getName, exc);
+										ManagedLoggerRepository.logError(getClass()::getName, exc);
 									}
 								}
 							}
@@ -1680,7 +1681,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			String loggableMessage = getInfoAsString();
 			loggableMessage = getInfoAsString();
 			if (!loggableMessage.isEmpty()) {
-				ManagedLoggersRepository.logInfo(getClass()::getName, loggableMessage);
+				ManagedLoggerRepository.logInfo(getClass()::getName, loggableMessage);
 			}
 			return this;
 		}
@@ -1761,7 +1762,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return true;
 		}
 
-		public static class TasksMonitorer implements Closeable, ManagedLogger {
+		public static class TasksMonitorer implements Closeable {
 			Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
 			QueuedTasksExecutor.Group queuedTasksExecutorGroup;
 			TasksMonitorer.Config config;
@@ -1798,7 +1799,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 							if (previousRegisteredStackTrace != null) {
 								if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
 									if (!task.hasFinished()) {
-										ManagedLoggersRepository.logWarn(
+										ManagedLoggerRepository.logWarn(
 											getClass()::getName,
 											"Possible deadlock detected for task:{}",
 											task.getInfoAsString()
@@ -1807,7 +1808,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 											task.markAsProbablyDeadLocked();
 										}
 										if (terminateProbableDeadLockedTasksFunction != null && !task.hasFinished()) {
-											ManagedLoggersRepository.logWarn(
+											ManagedLoggerRepository.logWarn(
 												getClass()::getName,
 												"Trying to terminate task {}",
 												task.hashCode()
@@ -1820,7 +1821,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 												task.notifyAll();
 											}
 										}
-										ManagedLoggersRepository.logWarn(
+										ManagedLoggerRepository.logWarn(
 											getClass()::getName,
 											Synchronizer.getAllThreadsInfoAsString(true)											
 										);
@@ -1854,7 +1855,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 
 			public TasksMonitorer start() {
-				ManagedLoggersRepository.logInfo(
+				ManagedLoggerRepository.logInfo(
 					() -> this.getClass().getName(),
 					"Starting {}", getName()
 				);
@@ -1871,7 +1872,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								config.getTerminateProablyDeadLockedTasksFunction()
 							);
 						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(
+							ManagedLoggerRepository.logError(
 								() -> this.getClass().getName(),
 								"Exception occurred while checking dead locked tasks", exc
 							);
@@ -1886,7 +1887,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			}
 
 			public void stop(boolean waitThreadToFinish) {
-				ManagedLoggersRepository.logInfo(
+				ManagedLoggerRepository.logInfo(
 					() -> this.getClass().getName(),
 					"Starting {}", getName()
 				);

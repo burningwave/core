@@ -36,7 +36,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.Arrays;
@@ -55,7 +56,6 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
@@ -66,17 +66,19 @@ import org.burningwave.core.classes.CodeExecutor;
 import org.burningwave.core.classes.ExecuteConfig;
 import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
+import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
-import org.burningwave.core.io.FileSystemItem.Criteria;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
 
+
 @SuppressWarnings({"unchecked", "resource"})
-public class ComponentContainer implements ComponentSupplier, Properties.Listener, ManagedLogger {
+public class ComponentContainer implements ComponentSupplier, Properties.Listener {
 
 	public static class Configuration {
 
@@ -138,16 +140,16 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		try {
 			return new ComponentContainer(() -> {
 				try {
-					Set<ClassLoader> classLoaders = new HashSet<>();
+					Set<java.lang.ClassLoader> classLoaders = new HashSet<>();
 					classLoaders.add(ComponentContainer.class.getClassLoader());
 					classLoaders.add(Thread.currentThread().getContextClassLoader());
 					java.util.Properties config = io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
 						configFileName,
 						"priority-of-this-configuration-file",
-						classLoaders.toArray(new ClassLoader[classLoaders.size()])
+						classLoaders.toArray(new java.lang.ClassLoader[classLoaders.size()])
 					);
 					if (config.isEmpty()) {
-						ManagedLoggersRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
+						ManagedLoggerRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 					}
 					return config;
 				} catch (Throwable exc) {
@@ -155,7 +157,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				}
 			}).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			return Driver.throwException(exc);
 		}
 	}
@@ -164,7 +166,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			return Driver.throwException(exc);
 		}
 	}
@@ -263,7 +265,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
-		ManagedLoggersRepository.logInfo(getClass()::getName,
+		ManagedLoggerRepository.logInfo(getClass()::getName,
 			"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
 			componentContainerConfig.toPrettyString(2)
 		);
@@ -288,7 +290,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					if (key instanceof String) {
 						String keyAsString = (String)key;
 						if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
-							PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+							ClassLoader pathScannerClassLoader = (ClassLoader)components.get(ClassLoader.class);
 							if (pathScannerClassLoader != null) {
 								ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
 									this.config,
@@ -296,7 +298,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 								));
 							}
 						} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
-							PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+							ClassLoader pathScannerClassLoader = (ClassLoader)components.get(ClassLoader.class);
 							if (pathScannerClassLoader != null) {
 								Fields.setDirect(
 									pathScannerClassLoader,
@@ -392,34 +394,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	@Override
-	public PathScannerClassLoader getPathScannerClassLoader() {
+	public org.burningwave.core.classes.PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(
-			PathScannerClassLoader.class, 
+			ClassLoader.class, 
 			() -> {
-				PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
-					resolveProperty(
-						this.config,
-						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
-					),
-					this.components,
-					getPathHelper(),
-					FileSystemItem.Criteria.forClassTypeFiles(
-							IterableObjectHelper.resolveStringValue(
-								ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
-								.on(config)
-							)
-					),
-					components -> {
-						Synchronizer.execute(getMutexForComponentsId(), () -> {
-							PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
-							if (cL != null) {
-								cL.unregister(this, true);
-							}
-						});
-					}
-				);
-				classLoader.register(this);
-				return classLoader;
+				return new ComponentContainer.ClassLoader(this);
 			}
 		);
 	}
@@ -567,10 +546,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			if (!components.isEmpty()) {
 				BackgroundExecutor.createTask(task ->
 					IterableObjectHelper.deepClear(components, (type, component) -> {
-						if (!(component instanceof PathScannerClassLoader)) {
+						if (!(component instanceof ClassLoader)) {
 							component.close();
 						} else {
-							((PathScannerClassLoader)component).unregister(this, true);
+							((ClassLoader)component).unregister(this, true, false);
 						}
 					}),Thread.MIN_PRIORITY
 				).submit();
@@ -585,7 +564,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			try {
 				componentContainer.reset();
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
+				ManagedLoggerRepository.logError(
+					ComponentContainer.class::getName,
+					"Exception occurred while executing reset on {}",
+					exc, 
+					componentContainer.toString()
+				);
 			}
 		}
 	}
@@ -618,7 +602,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			try {
 				componentContainer.close(true);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
+				ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
 		if (clearCache) {
@@ -715,32 +699,82 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 
-	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
+	private static class ClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
+		private ComponentContainer componentContainer;
 		private Map<Class<?>, Component> components;
+		
+		
 		static {
 	        ClassLoader.registerAsParallelCapable();
 	    }
 
-		Consumer<Map<Class<?>, Component>> markAsCloseableAlgorithm;
-		PathScannerClassLoader(
-			ClassLoader parentClassLoader,
-			Map<Class<?>, Component> components,
-			PathHelper pathHelper,
-			Criteria scanFileCriteria,
-			Consumer<Map<Class<?>, Component>> markAsCloseableAlgorithm
+		
+		ClassLoader(
+			ComponentContainer componentContainer
 		) {
-			super(parentClassLoader, pathHelper, scanFileCriteria);
-			this.markAsCloseableAlgorithm = markAsCloseableAlgorithm;
+			super(
+				componentContainer.resolveProperty(
+					componentContainer.config,
+					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
+				),
+				componentContainer.getPathHelper(),
+				FileSystemItem.Criteria.forClassTypeFiles(
+					IterableObjectHelper.resolveStringValue(
+						ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+						.on(componentContainer.config)
+					)
+				)
+			);
+			this.components = componentContainer.components;
+			this.componentContainer = componentContainer;
+			register(componentContainer);
 		}
 
-		public void markAsCloseable() {
-			markAsCloseableAlgorithm.accept(components);
+
+		@Override
+		public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+			boolean closeCalled = super.unregister(client, close, markAsCloseable);
+			if ((!isClosed || !closeCalled) && markAsCloseable) {
+				Map<Class<?>, Component> components = this.components;
+				ComponentContainer componentContainer = this.componentContainer;
+				if (components == null || componentContainer == null) {
+					if (!isClosed) {
+						throw new IllegalStateException(Strings.compile("components map is null but {} is not closed", this));
+					}
+					return isClosed;
+				}
+				closeCalled = Synchronizer.execute(
+					componentContainer.getMutexForComponentsId(), 
+					() -> {
+						ClassLoader cL = (ClassLoader)components.remove(ClassLoader.class);
+						if (cL != null) {
+							if (cL != this) {
+								throw new IllegalStateException(Strings.compile("{} is not the same instance of {} in the components map", this, cL));
+							}
+							return super.unregister(componentContainer, close, markAsCloseable);
+						}
+						return false;
+					}
+				);
+			}
+			return isClosed || closeCalled;
 		}
 		
 		@Override
-		public void close() {
-			super.close();
-			components = null;
+		protected Task closeResources() {
+			return closeResources(
+				ComponentContainer.ClassLoader.class.getName() + "@" + System.identityHashCode(this),
+				() -> 
+					this.componentContainer == null,
+				task -> {
+					super.closeResources().waitForFinish();
+					components = null;
+					componentContainer = null;
+					if (this.getClass().equals(ClassLoader.class)) {
+						ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+					}
+				}
+			);
 		}
 	}
 }

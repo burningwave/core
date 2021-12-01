@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -279,7 +279,7 @@ class PathHelperImpl implements Component, PathHelper {
 					try {
 						fileSystemItemParent = FileSystemItem.ofPath(fileSystemItemParentPath);
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logWarn(getClass()::getName, "could not add path '" + path + "': parent path '" + fileSystemItemParentPath + "' could not be loaded");
+						ManagedLoggerRepository.logWarn(getClass()::getName, "could not add path '" + path + "': parent path '" + fileSystemItemParentPath + "' could not be loaded");
 						continue;
 					}
 					if (fileSystemItemParent.exists()) {
@@ -338,7 +338,7 @@ class PathHelperImpl implements Component, PathHelper {
 		).map(resource -> {
 			return resource.getAbsolutePath();
 		}).orElseGet(() -> {
-			ManagedLoggersRepository.logInfo(getClass()::getName, "Could not find file {}", resourceRelativePath);
+			ManagedLoggerRepository.logInfo(getClass()::getName, "Could not find file {}", resourceRelativePath);
 			return null;
 		});
 	}
@@ -400,7 +400,7 @@ class PathHelperImpl implements Component, PathHelper {
 				Driver.throwException("Found more than one resource under relative path {}:\n{}",  resourceRelativePath, filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Found more than one resource under relative path {}:\n{}\t{}: {}\twill be assumed\n",
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Found more than one resource under relative path {}:\n{}\t{}: {}\twill be assumed\n",
 					resourceRelativePath,
 					filesInfo.toString(),
 					System.identityHashCode(fileSystemItem),

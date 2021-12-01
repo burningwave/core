@@ -31,7 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -137,7 +137,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
 			} catch (ZipException exc) {
 				String message = exc.getMessage();
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Could not open zipEntry of {}: {}", absolutePath, message);
 			}
 		});
 		if (currentZipEntry != null && loadZipEntryData.test(currentZipEntry)) {
@@ -174,7 +174,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			try {
 				super.closeEntry();
 			} catch (IOException exc) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
 			}
 			currentZipEntry.close();
 			currentZipEntry = null;
@@ -266,7 +266,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 						try {
 						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());
 						} catch (Throwable exc) {
-							ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
+							ManagedLoggerRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, getName(), zipInputStream.getAbsolutePath());
 							return null;
 						}
 					}

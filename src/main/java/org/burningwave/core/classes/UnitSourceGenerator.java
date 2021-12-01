@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
@@ -91,7 +91,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 			if (Modifier.isPublic(cls.getModifiers())) {
 				this.addImport(normalize(cls.getName()));
 			} else {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", cls.getName());
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", cls.getName());
 			}
 		}
 		return this;
@@ -124,7 +124,7 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 					});
 				}
 			} else {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", className);
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Could not import {} because its modifier is not public", className);
 			}
 		});
 		Collections.sort(imports);

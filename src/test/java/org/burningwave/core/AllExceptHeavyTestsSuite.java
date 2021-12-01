@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
     FunctionalInterfaceFactoryTest.class,
     IterableObjectHelperTest.class,
     IterableZipContainerTest.class,
-    ManagedLoggersRepositoryTest.class,
+    ManagedLoggerRepositoryTest.class,
     MembersTest.class,
     MemoryClassLoaderTest.class,
     MethodsTest.class,

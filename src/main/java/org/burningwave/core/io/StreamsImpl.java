@@ -47,12 +47,11 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Identifiable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 
 @SuppressWarnings({ "unchecked" })
-class StreamsImpl implements Streams, Identifiable, Properties.Listener, ManagedLogger {
+class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 
 	String instanceId;
 

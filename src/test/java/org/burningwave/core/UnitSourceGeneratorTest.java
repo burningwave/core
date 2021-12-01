@@ -115,7 +115,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 					.addMethod(method)).addOuterCodeLine("@Annotation").addOuterCodeLine("@Annotation2");
 			unit.addClass(cls);
 			unit.addClass(cls);
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, unit.make());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, unit.make());
 		});
 	}
 

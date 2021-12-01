@@ -31,7 +31,7 @@ package org.burningwave.core.jvm;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.reflect.Field;
@@ -123,7 +123,7 @@ public class BufferHandler implements Component {
 				this.defaultBufferSize = Integer.valueOf(value);
 			}
 		}
-		ManagedLoggersRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
+		ManagedLoggerRepository.logInfo(getClass()::getName, "default buffer size: {} bytes", this.defaultBufferSize);
 	}
 
 	private void setDefaultByteBufferAllocationMode(Map<?, ?> config) {
@@ -134,10 +134,10 @@ public class BufferHandler implements Component {
 		);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocator = this::allocateInHeap;
-			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");
+			ManagedLoggerRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");
 		} else {
 			this.defaultByteBufferAllocator = this::allocateDirect;
-			ManagedLoggersRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocateDirect");
+			ManagedLoggerRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocateDirect");
 		}
 	}
 

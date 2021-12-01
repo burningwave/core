@@ -29,7 +29,7 @@
 package org.burningwave.core.function;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 public interface Executor {
 
@@ -38,7 +38,7 @@ public interface Executor {
     	try {
 			runnable.run();
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(() -> Executor.class.getName(), exc);
+			ManagedLoggerRepository.logError(() -> Executor.class.getName(), exc);
 		}
 	}
 

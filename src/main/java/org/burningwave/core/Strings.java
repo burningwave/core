@@ -28,7 +28,7 @@
  */
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 
-public class Strings implements ManagedLogger {
+public class Strings {
 
 	public final Pattern PLACE_HOLDER_NAME_EXTRACTOR_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
 	public final Pattern PLACE_HOLDER_EXTRACTOR_PATTERN = Pattern.compile("(\\$\\{[\\w\\d\\.\\:\\-]*\\})");
@@ -180,7 +180,7 @@ public class Strings implements ManagedLogger {
 					}
 					foundString.add(matcher.group(i));
 				} catch (IndexOutOfBoundsException exc) {
-					ManagedLoggersRepository.logInfo(getClass()::getName, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
+					ManagedLoggerRepository.logInfo(getClass()::getName, "group " + i + " not found on string \"" + target + "\" using pattern " + pattern.pattern());
 				}
 			}
 		}

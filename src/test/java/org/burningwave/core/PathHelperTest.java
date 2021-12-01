@@ -63,7 +63,7 @@ public class PathHelperTest extends BaseTest {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathHelper pathHelper = componentSupplier.getPathHelper();
 			StringBuffer fileAsString = pathHelper.getResourceAsStringBuffer("burningwave.properties");
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, fileAsString.toString());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, fileAsString.toString());
 			return fileAsString;
 		});
 	}

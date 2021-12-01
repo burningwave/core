@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -46,7 +46,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
@@ -131,7 +130,7 @@ public interface ClassFactory {
 
 	public void reset(boolean closeClassRetrievers);
 
-	public static class ClassRetriever implements Closeable, ManagedLogger {
+	public static class ClassRetriever implements Closeable {
 		ClassLoader classLoader;
 		ClassFactory classFactory;
 		Supplier<Compilation.Config> compilationConfigSupplier;
@@ -404,7 +403,7 @@ public interface ClassFactory {
  				try {
  					((ClassFactoryImpl)this.classFactory).unregister(this);
 				} catch (NullPointerException exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Exception while unregistering {}: classFactory is closed", this);
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Exception while unregistering {}: classFactory is closed", this);
 				}
  				this.classFactory = null;
 			});

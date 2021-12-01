@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
 import java.util.AbstractMap;
@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
@@ -56,7 +55,7 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings({"resource", "unchecked"})
-public class SearchConfig implements Closeable, ManagedLogger {
+public class SearchConfig implements Closeable {
 	
 	private final static BiFunction<Throwable, FileSystemItem[], Boolean> exceptionThrowerForFileFilter;
 	
@@ -88,7 +87,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 	
 	static {
 		exceptionThrowerForFileFilter = (exception, childAndParent) -> {
-			ManagedLoggersRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+			ManagedLoggerRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 			return IterableObjectHelper.terminateIteration();
 		};
 	}
@@ -191,7 +190,7 @@ public class SearchConfig implements Closeable, ManagedLogger {
 		pathsRetriever = () -> {
 			Collection<FileSystemItem> pathsToBeScanned = pathsSupplier.apply(finalPathScannerClassLoader).getValue();
 			if (pathsToBeScanned.isEmpty()) {
-				ManagedLoggersRepository.logInfo(getClass()::getName, "The input paths are not present: the search will be performed on the default configured paths");
+				ManagedLoggerRepository.logInfo(getClass()::getName, "The input paths are not present: the search will be performed on the default configured paths");
 				pathsToBeScanned.addAll(classPathScanner.pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS)
 					.stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
 			}

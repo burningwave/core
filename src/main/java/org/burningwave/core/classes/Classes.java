@@ -35,7 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -233,7 +233,7 @@ public class Classes implements MembersRetriever {
 				try {
 					return Driver.getDeclaredFields(cls);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Could not retrieve fields of class {}. Cause: {}", cls.getName(), exc.getMessage());
 					return emtpyFieldsArray;
 				}
 			}
@@ -248,7 +248,7 @@ public class Classes implements MembersRetriever {
 				try {
 					return Driver.getDeclaredConstructors(cls);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Could not retrieve constructors of class {}. Cause: {}", cls.getName(), exc.getMessage());
 					return emptyConstructorsArray;
 				}
 			}
@@ -263,7 +263,7 @@ public class Classes implements MembersRetriever {
 				try {
 					return Driver.getDeclaredMethods(cls);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Could not retrieve methods of class {}. Cause: {}", cls.getName(), exc.getMessage());
 					return emptyMethodsArray;
 				}
 			}
@@ -361,7 +361,7 @@ public class Classes implements MembersRetriever {
 				try {
 					listener.receive(context);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(
+					ManagedLoggerRepository.logError(
 						getClass()::getName, "Could not notify parent change to listener {}", exc, listener
 					);
 				}
@@ -784,7 +784,7 @@ public class Classes implements MembersRetriever {
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
 			} catch (java.lang.LinkageError exc) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Class {} is already defined", className);
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Class {} is already defined", className);
 				return (Class<T>)classLoader.loadClass(className);
 			} catch (Throwable exc) {
 				if (byteCode == null) {
@@ -808,7 +808,7 @@ public class Classes implements MembersRetriever {
 						implTitle, implVersion, implVendor, sealBase
 					);
 				} catch (IllegalArgumentException exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Package " + name + " already defined");
 					return retrieveLoadedPackage(classLoader, name);
 				}
 			});

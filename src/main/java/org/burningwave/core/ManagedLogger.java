@@ -31,7 +31,7 @@ package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 
 import java.util.Collections;
@@ -50,55 +50,55 @@ import org.burningwave.core.iterable.Properties.Event;
 public interface ManagedLogger {
 
 	default void logTrace(String message) {
-		ManagedLoggersRepository.logTrace(getClass()::getName, message);
+		ManagedLoggerRepository.logTrace(getClass()::getName, message);
 	}
 
 	default void logTrace(String message, Object... arguments) {
-		ManagedLoggersRepository.logTrace(getClass()::getName, message, arguments);
+		ManagedLoggerRepository.logTrace(getClass()::getName, message, arguments);
 	}
 
 	default void logDebug(String message) {
-		ManagedLoggersRepository.logDebug(getClass()::getName, message);
+		ManagedLoggerRepository.logDebug(getClass()::getName, message);
 	}
 
 	default void logDebug(String message, Object... arguments) {
-		ManagedLoggersRepository.logDebug(getClass()::getName, message, arguments);
+		ManagedLoggerRepository.logDebug(getClass()::getName, message, arguments);
 	}
 
 	default void logInfo(String message) {
-		ManagedLoggersRepository.logInfo(getClass()::getName, message);
+		ManagedLoggerRepository.logInfo(getClass()::getName, message);
 	}
 
 	default void logInfo(String message, Object... arguments) {
-		ManagedLoggersRepository.logInfo(getClass()::getName, message, arguments);
+		ManagedLoggerRepository.logInfo(getClass()::getName, message, arguments);
 	}
 
 	default void logWarn(String message) {
-		ManagedLoggersRepository.logWarn(getClass()::getName, message);
+		ManagedLoggerRepository.logWarn(getClass()::getName, message);
 	}
 
 	default void logWarn(String message, Object... arguments) {
-		ManagedLoggersRepository.logWarn(getClass()::getName, message, arguments);
+		ManagedLoggerRepository.logWarn(getClass()::getName, message, arguments);
 	}
 
 	default void logError(String message, Throwable exc, Object... arguments) {
-		ManagedLoggersRepository.logError(getClass()::getName, message, exc, arguments);
+		ManagedLoggerRepository.logError(getClass()::getName, message, exc, arguments);
 	}
 
 	default void logError(String message, Object... arguments) {
-		ManagedLoggersRepository.logError(getClass()::getName, message, arguments);
+		ManagedLoggerRepository.logError(getClass()::getName, message, arguments);
 	}
 
 	default void logError(String message, Throwable exc) {
-		ManagedLoggersRepository.logError(getClass()::getName, message, exc);
+		ManagedLoggerRepository.logError(getClass()::getName, message, exc);
 	}
 
 	default void logError(String message) {
-		ManagedLoggersRepository.logError(() -> this.getClass().getName(), message);
+		ManagedLoggerRepository.logError(() -> this.getClass().getName(), message);
 	}
 
 	default void logError(Throwable exc) {
-		ManagedLoggersRepository.logError(() -> this.getClass().getName(), exc);
+		ManagedLoggerRepository.logError(() -> this.getClass().getName(), exc);
 	}
 
 
@@ -135,7 +135,7 @@ public interface ManagedLogger {
 				
 				//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-					ComponentContainer.PathScannerClassLoader.class.getName() + defaultValuesSeparator +
+					ComponentContainer.class.getName() + "$ClassLoader" + defaultValuesSeparator +
 					MemoryClassLoader.class.getName() + defaultValuesSeparator +
 					PathScannerClassLoader.class.getName() + defaultValuesSeparator
 				);
