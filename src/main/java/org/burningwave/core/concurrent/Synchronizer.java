@@ -29,7 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
@@ -162,7 +162,7 @@ public class Synchronizer implements Closeable {
 	}
 
 	public void logAllThreadsState(boolean logMutexes) {
-		ManagedLoggersRepository.logInfo(
+		ManagedLoggerRepository.logInfo(
 			() -> this.getClass().getName(),
 			getAllThreadsInfoAsString(logMutexes)
 		);

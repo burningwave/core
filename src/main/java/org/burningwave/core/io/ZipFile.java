@@ -31,7 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -101,12 +101,12 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			 return Streams.toByteBuffer(zipEntryIS);
 		} catch (Throwable exc) {
 			if (recursive) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Exception occurred while building zip entry {} of {}: {}", zipEntry.getName(), absolutePath, exc.getMessage());
 				this.originalZipFile = null;
-				ManagedLoggersRepository.logInfo(getClass()::getName, "Trying recursive call");
+				ManagedLoggerRepository.logInfo(getClass()::getName, "Trying recursive call");
 				return buildZipEntry(absolutePath, content, zipEntry, false);
 			}
-			ManagedLoggersRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, zipEntry.getName(), absolutePath);
+			ManagedLoggerRepository.logError(getClass()::getName, "Could not load content of {} of {}", exc, zipEntry.getName(), absolutePath);
 			return null;
 		}
 	}
@@ -231,7 +231,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			try {
 				originalZipFile.close();
 			} catch (IOException exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception while closing " + getAbsolutePath(), exc);
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception while closing " + getAbsolutePath(), exc);
 			}
 		}
 		this.absolutePath = null;

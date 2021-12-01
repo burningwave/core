@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.BufferHand
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -258,13 +258,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				return task.join(timeout);
 			} catch (TaskStateException exc) {
 				if (!task.hasFinished()) {
-					ManagedLoggersRepository.logWarn(
+					ManagedLoggerRepository.logWarn(
 						getClass()::getName, "Operation timeout on {}: the task will be killed and the operation will be repeated after reset."
 					);
 					task.kill().waitForTerminatedThreadNotAlive(
 						1000,
 						tentativeCount -> {
-							ManagedLoggersRepository.logWarn(
+							ManagedLoggerRepository.logWarn(
 								getClass()::getName, "Waiting for the termination of the task {}", task.getInfoAsString()
 							);
 						}
@@ -345,8 +345,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			children = childrenSupplier.get();
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
-			ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
+			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
+			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
 			reset();
 			children = childrenSupplier.get();
 		}
@@ -616,7 +616,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return function.apply(conventionedAbsolutePath);
 		} catch (NullPointerException exc) {
 			if (exception == null) {
-				ManagedLoggersRepository.logWarn(
+				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
 					"Exception occurred while trying to compute conventioned absolute path of {}. Trying to repeat the operation.",
 					absolutePath.getKey() 
@@ -876,7 +876,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							return realAbsolutePath;
 						}
 					} catch (IOException exc) {
-						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(),
+						ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while calling isArchive on file {}: {}", file.getAbsolutePath(),
 								exc.getMessage());
 						return realAbsolutePath;
 					}
@@ -974,7 +974,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			if (initialException != null) {
 				return Driver.throwException(initialException);
 			} else {
-				ManagedLoggersRepository.logWarn(
+				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
 					"Exception occurred while trying to compute conventioned relative path on {} (IterableZipContainer path: {})(relative path: {})(IterableZipContainer type: {}). Trying to repeat the operation.",
 					absolutePath.getKey(), zipInputStreamName, relativePath,
@@ -1316,7 +1316,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			findIn = FileSystemItem::findIn;
 			timedFindIn = FileSystemItem::timedFindIn;
 			defaultExceptionHandler = (exception, childAndParent) -> {
-				ManagedLoggersRepository.logError(FileSystemItem.Criteria.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				ManagedLoggerRepository.logError(FileSystemItem.Criteria.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 				return false;
 			};
 		}
@@ -1504,14 +1504,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 						return filterPredicate.test(childAndThis);
 					} catch (ArrayIndexOutOfBoundsException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
-						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
-						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
+						ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
+						ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
 						childAndThis[0].reloadContent();
 						return filterPredicate.test(childAndThis);
 					} catch (NullPointerException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
-						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
-						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+						ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
+						ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
 						childAndThis[0].reloadContent(true);
 						return filterPredicate.test(childAndThis);
 					}

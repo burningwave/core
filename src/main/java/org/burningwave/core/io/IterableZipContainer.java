@@ -31,7 +31,7 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -120,7 +120,7 @@ public interface IterableZipContainer extends Closeable {
 					iS.close();
 				}
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(IterableZipContainer.class::getName, exc);
+				ManagedLoggerRepository.logError(IterableZipContainer.class::getName, exc);
 			}
 		}
 		return null;

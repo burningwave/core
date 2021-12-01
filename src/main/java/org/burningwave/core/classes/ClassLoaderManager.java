@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.util.function.Supplier;
@@ -72,7 +72,7 @@ class ClassLoaderManager<C extends ClassLoader> implements Closeable {
 								((MemoryClassLoader)classLoaderTemp).register(this);
 								((MemoryClassLoader)classLoaderTemp).register(client);
 							} catch (IllegalStateException exc) {
-								ManagedLoggersRepository.logWarn(getClass()::getName, "Could not register {} to {} because it is closed", this, classLoaderTemp);
+								ManagedLoggerRepository.logWarn(getClass()::getName, "Could not register {} to {} because it is closed", this, classLoaderTemp);
 								classLoaderTemp = get(client);
 							}
 						}

@@ -32,7 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoade
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -403,7 +403,7 @@ public interface ClassFactory {
  				try {
  					((ClassFactoryImpl)this.classFactory).unregister(this);
 				} catch (NullPointerException exc) {
-					ManagedLoggersRepository.logWarn(getClass()::getName, "Exception while unregistering {}: classFactory is closed", this);
+					ManagedLoggerRepository.logWarn(getClass()::getName, "Exception while unregistering {}: classFactory is closed", this);
 				}
  				this.classFactory = null;
 			});

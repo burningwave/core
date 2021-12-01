@@ -1,7 +1,7 @@
 package org.burningwave.core.examples.iterableobjecthelper;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,11 +46,11 @@ public class CollectionAndArrayIterator {
             //Disabling parallel iteration
             .parallelIf(inputColl -> false)
             .withAction((number) -> {
-                ManagedLoggersRepository.logInfo(CollectionAndArrayIterator.class::getName, "Iterated number: {}", number);
+                ManagedLoggerRepository.logInfo(CollectionAndArrayIterator.class::getName, "Iterated number: {}", number);
             })    
         );
         
-        ManagedLoggersRepository.logInfo(
+        ManagedLoggerRepository.logInfo(
             CollectionAndArrayIterator.class::getName,
             "Output collection size {}", outputCollection.size()
         );

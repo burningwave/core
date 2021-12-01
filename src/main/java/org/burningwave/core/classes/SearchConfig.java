@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 
 import java.util.AbstractMap;
@@ -87,7 +87,7 @@ public class SearchConfig implements Closeable {
 	
 	static {
 		exceptionThrowerForFileFilter = (exception, childAndParent) -> {
-			ManagedLoggersRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+			ManagedLoggerRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 			return IterableObjectHelper.terminateIteration();
 		};
 	}
@@ -190,7 +190,7 @@ public class SearchConfig implements Closeable {
 		pathsRetriever = () -> {
 			Collection<FileSystemItem> pathsToBeScanned = pathsSupplier.apply(finalPathScannerClassLoader).getValue();
 			if (pathsToBeScanned.isEmpty()) {
-				ManagedLoggersRepository.logInfo(getClass()::getName, "The input paths are not present: the search will be performed on the default configured paths");
+				ManagedLoggerRepository.logInfo(getClass()::getName, "The input paths are not present: the search will be performed on the default configured paths");
 				pathsToBeScanned.addAll(classPathScanner.pathHelper.getPaths(ClassPathScanner.Configuration.Key.DEFAULT_SEARCH_CONFIG_PATHS)
 					.stream().map(FileSystemItem::ofPath).collect(Collectors.toSet()));
 			}

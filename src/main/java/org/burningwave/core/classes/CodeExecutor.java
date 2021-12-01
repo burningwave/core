@@ -71,7 +71,7 @@ public interface CodeExecutor {
 
 			defaultValues.put(Key.COMMON_IMPORTS,
 				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggersRepository" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggerRepository" + IterableObjectHelper.getDefaultValuesSeparator() +
 				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + IterableObjectHelper.getDefaultValuesSeparator() +
  				ComponentSupplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
 				Function.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +

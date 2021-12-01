@@ -36,7 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -149,7 +149,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 						classLoaders.toArray(new java.lang.ClassLoader[classLoaders.size()])
 					);
 					if (config.isEmpty()) {
-						ManagedLoggersRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
+						ManagedLoggerRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 					}
 					return config;
 				} catch (Throwable exc) {
@@ -157,7 +157,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				}
 			}).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			return Driver.throwException(exc);
 		}
 	}
@@ -166,7 +166,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		try {
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
-			ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
+			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			return Driver.throwException(exc);
 		}
 	}
@@ -265,7 +265,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		Properties componentContainerConfig = new Properties();
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
-		ManagedLoggersRepository.logInfo(getClass()::getName,
+		ManagedLoggerRepository.logInfo(getClass()::getName,
 			"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
 			componentContainerConfig.toPrettyString(2)
 		);
@@ -564,7 +564,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			try {
 				componentContainer.reset();
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(
+				ManagedLoggerRepository.logError(
 					ComponentContainer.class::getName,
 					"Exception occurred while executing reset on {}",
 					exc, 
@@ -602,7 +602,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			try {
 				componentContainer.close(true);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
+				ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while closing " + componentContainer, exc);
 			}
 		}
 		if (clearCache) {
@@ -771,7 +771,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					components = null;
 					componentContainer = null;
 					if (this.getClass().equals(ClassLoader.class)) {
-						ManagedLoggersRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+						ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
 					}
 				}
 			);

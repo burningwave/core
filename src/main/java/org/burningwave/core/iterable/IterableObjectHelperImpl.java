@@ -31,7 +31,7 @@ package org.burningwave.core.iterable;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -202,7 +202,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				itr.remove();
 				itemDestroyer.accept(entry.getKey(), entry.getValue());
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName,"Exception occurred while removing and cleraring " + entry.getValue(), exc);
+				ManagedLoggerRepository.logError(getClass()::getName,"Exception occurred while removing and cleraring " + entry.getValue(), exc);
 			}
 			
 		}
@@ -935,7 +935,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		try {
 			iterator.accept(null);
 		} catch (Throwable exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, exc);
+			ManagedLoggerRepository.logError(getClass()::getName, exc);
 		}
 	}
 

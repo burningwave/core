@@ -405,7 +405,7 @@ public class FileSystemItemTest extends BaseTest {
 			URL url = FileSystemItem.ofPath(
 				basePath + "/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
 			).getURL();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logDebug(getClass()::getName, url.toString());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, url.toString());
 			return url;
 		});
 	}

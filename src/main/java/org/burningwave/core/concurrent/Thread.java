@@ -29,7 +29,7 @@
 package org.burningwave.core.concurrent;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -132,7 +132,7 @@ public abstract class Thread extends java.lang.Thread {
 		try {
 			wait(millis);
 		} catch (InterruptedException exc) {
-			ManagedLoggersRepository.logError(getClass()::getName, exc);
+			ManagedLoggerRepository.logError(getClass()::getName, exc);
 		}
 	}
 
@@ -147,7 +147,7 @@ public abstract class Thread extends java.lang.Thread {
 			try {
 				join();
 			} catch (InterruptedException exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
 		}
 	}
@@ -186,7 +186,7 @@ public abstract class Thread extends java.lang.Thread {
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, this.toString(), exc);
+					ManagedLoggerRepository.logError(getClass()::getName, this.toString(), exc);
 				}
 				try {
 					supplier.runningThreads.remove(this);
@@ -198,7 +198,7 @@ public abstract class Thread extends java.lang.Thread {
 					}
 					synchronized(this) {
 						if (supplier.addPoolableSleepingThreadFunction.apply(this) == null) {
-							ManagedLoggersRepository.logWarn(
+							ManagedLoggerRepository.logWarn(
 								getClass()::getName,
 								"Could not add thread '{}' to poolable sleeping container: it will be shutted down",
 								this
@@ -212,7 +212,7 @@ public abstract class Thread extends java.lang.Thread {
 						wait();
 					}
 				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 					this.shutDown();
 				}
 			}
@@ -227,7 +227,7 @@ public abstract class Thread extends java.lang.Thread {
 		
 		@Override
 		void terminate(Consumer<Thread> operation, String operationName) {
-			ManagedLoggersRepository.logWarn(
+			ManagedLoggerRepository.logWarn(
 				getClass()::getName,
 				"Called {} by {}{}\n\ton {} (executable: {}):{}",
 				operationName,
@@ -244,7 +244,7 @@ public abstract class Thread extends java.lang.Thread {
 				try {
 					operation.accept(this);
 				} catch (Throwable exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);						
+					ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred", exc);						
 				}
 			}
 			synchronized(supplier.poolableSleepingThreads) {
@@ -286,7 +286,7 @@ public abstract class Thread extends java.lang.Thread {
 				supplier.runningThreads.add(this);
 				executable.accept(this);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadCount;
@@ -301,7 +301,7 @@ public abstract class Thread extends java.lang.Thread {
 
 		@Override
 		void terminate(Consumer<Thread> operation, String operationName) {
-			ManagedLoggersRepository.logWarn(
+			ManagedLoggerRepository.logWarn(
 				getClass()::getName,
 				"Called {} by {}{}\n\ton {} (executable: {}):{}",
 				operationName,
@@ -318,7 +318,7 @@ public abstract class Thread extends java.lang.Thread {
 			try {
 				operation.accept(this);
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred", exc);
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred", exc);
 			}
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
@@ -549,7 +549,7 @@ public abstract class Thread extends java.lang.Thread {
 										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount
 								) {
 									maxThreadCount -= (maxDetachedThreadCountIncreasingStep / 2);
-									ManagedLoggersRepository.logInfo(
+									ManagedLoggerRepository.logInfo(
 										getClass()::getName,
 										"{}: decreasing maxThreadCount to {}",
 										java.lang.Thread.currentThread(), maxThreadCount
@@ -560,7 +560,7 @@ public abstract class Thread extends java.lang.Thread {
 							} else {
 								timeOfLastIncreaseOfMaxDetachedThreadCount = System.currentTimeMillis();
 								maxThreadCount += maxDetachedThreadCountIncreasingStep;
-								ManagedLoggersRepository.logInfo(
+								ManagedLoggerRepository.logInfo(
 									getClass()::getName,
 									"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
 									java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
@@ -569,7 +569,7 @@ public abstract class Thread extends java.lang.Thread {
 							}
 						}
 					} catch (InterruptedException exc) {
-						ManagedLoggersRepository.logError(Thread.class::getName, exc);
+						ManagedLoggerRepository.logError(Thread.class::getName, exc);
 					}
 				}
 			} else if (poolableThreadCount >= maxPoolableThreadCount) {
@@ -745,7 +745,7 @@ public abstract class Thread extends java.lang.Thread {
 			int poolableThreadCount = this.poolableThreadCount;
 			int poolableSleepingThreadCount = getPoolableSleepingThreadCount();
 			int detachedThreadCount = threadCount - poolableThreadCount;
-			ManagedLoggersRepository.logInfo(
+			ManagedLoggerRepository.logInfo(
 				getClass()::getName,
 				"\n" + 
 				"\tThread count: {}" +
@@ -823,7 +823,7 @@ public abstract class Thread extends java.lang.Thread {
 					try {
 						executable.accept(thread);
 					} catch (Throwable exc) {
-						ManagedLoggersRepository.logError(getClass()::getName, exc);
+						ManagedLoggerRepository.logError(getClass()::getName, exc);
 					}
 				}, isLooper);
 				if (threadName != null) {
@@ -859,7 +859,7 @@ public abstract class Thread extends java.lang.Thread {
 				try {
 					thr.join();
 				} catch (InterruptedException exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 				}
 			}
 		}

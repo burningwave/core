@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 //    IterableObjectHelperTest.class,
 //    IterableZipContainerTest.class,
 //    LowLevelObjectsHandlerTest.class,
-    ManagedLoggersRepositoryTest.class,
+    ManagedLoggerRepositoryTest.class,
 //    MembersTest.class,
 //    MemoryClassLoaderTest.class,
 //    MethodsTest.class,

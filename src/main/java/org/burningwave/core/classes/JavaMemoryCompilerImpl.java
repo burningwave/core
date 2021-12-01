@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -161,7 +161,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 		Map<String, String> extraOptions
 	) {
 		ProducerTask<JavaMemoryCompiler.Compilation.Result> tsk = BackgroundExecutor.createProducerTask(task -> {
-			ManagedLoggersRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
+			ManagedLoggerRepository.logInfo(getClass()::getName, "Try to compile: \n\n{}\n", String.join("\n", SourceCodeHandler.addLineCounter(sources)));
 			Collection<MemorySource> memorySources = new ArrayList<>();
 			sourcesToMemorySources(sources, memorySources);
 			try (Compilation.Context context = Compilation.Context.create(
@@ -181,7 +181,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					});
 				}
 				Collection<String> classNames = compiledFiles.keySet();
-				ManagedLoggersRepository.logInfo(getClass()::getName,
+				ManagedLoggerRepository.logInfo(getClass()::getName,
 					classNames.size() > 1?
 						"Classes {} have been succesfully compiled":
 						"Class {} has been succesfully compiled",
@@ -225,7 +225,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 
 	private Map<String, ByteBuffer> compile(Compilation.Context context) {
 		if (!context.classPaths.isEmpty()) {
-			ManagedLoggersRepository.logInfo(getClass()::getName, "... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
+			ManagedLoggerRepository.logInfo(getClass()::getName, "... Using class paths:\n\t{}",String.join("\n\t", context.classPaths));
 		}
 		List<String> options = new ArrayList<>();
 		if (!context.options.isEmpty()) {
@@ -327,7 +327,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				try {
 					fsObjects = context.findForClassName(javaClassPredicate);
 				} catch (Exception exc) {
-					ManagedLoggersRepository.logError(getClass()::getName, exc);
+					ManagedLoggerRepository.logError(getClass()::getName, exc);
 				}
 			} else {
 				String packageName = null;
@@ -344,7 +344,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					try {
 						fsObjects = context.findForPackageName(packageName);
 					} catch (Exception exc) {
-						ManagedLoggersRepository.logError(getClass()::getName, exc);
+						ManagedLoggerRepository.logError(getClass()::getName, exc);
 					}
 				} else {
 					throw new JavaMemoryCompiler.Compilation.Exception(message);
@@ -498,7 +498,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
             try {
             	javaFileManager.setLocation(location, paths);
             } catch (IllegalArgumentException exc) {
-            	ManagedLoggersRepository.logWarn(getClass()::getName, exc.getMessage());
+            	ManagedLoggerRepository.logWarn(getClass()::getName, exc.getMessage());
             }
 
 		}
@@ -563,7 +563,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			void addToClassPath(String path) {
 				if (Strings.isNotBlank(path)) {
 					if (blackListedClassPaths.contains(path)) {
-						ManagedLoggersRepository.logWarn(getClass()::getName, "Could not add {} to class path because it is black listed", path);
+						ManagedLoggerRepository.logWarn(getClass()::getName, "Could not add {} to class path because it is black listed", path);
 						return;
 					}
 					String classPath = Paths.clean(path);

@@ -30,7 +30,7 @@ package org.burningwave.core.iterable;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
 import java.io.InputStream;
@@ -302,7 +302,7 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 			try  {
 				listener.processChangeNotification(this, event, key, newValue, oldValue);
 			} catch (Throwable exc){
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred while notifying: " + event.name() + " -> (" + key + " - " + newValue + ") to " + listener, exc);
 			}
 		}
 	}

@@ -72,7 +72,7 @@ public class ComponentContainerTest extends BaseTest {
 						"FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME" +
 					")" +
 				");" +
-				"ManagedLoggersRepository.logInfo(() -> this.getClass().getName(), \"ClassLoader {} succesfully created\", classLoader);" +
+				"ManagedLoggerRepository.logInfo(() -> this.getClass().getName(), \"ClassLoader {} succesfully created\", classLoader);" +
 				"return classLoader;"
 			);
 		});
@@ -114,7 +114,7 @@ public class ComponentContainerTest extends BaseTest {
 						"FileSystemItem.CheckingOption.FOR_SIGNATURE_AND_NAME" +
 					")" +
 				");" +
-				"ManagedLoggersRepository.logInfo(getClass()::getName, \"ClassLoader {} succesfully created\", classLoader);" +
+				"ManagedLoggerRepository.logInfo(getClass()::getName, \"ClassLoader {} succesfully created\", classLoader);" +
 				"return classLoader;"
 			);
 			componentContainer.getClassHunter().findBy(
@@ -129,13 +129,13 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(7)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.resetAll();
 			Cache.clear(true);
 			BackgroundExecutor.waitForTasksEnding(true);
 			System.gc();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
 		});
 	}
 

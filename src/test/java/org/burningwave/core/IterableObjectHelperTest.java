@@ -55,7 +55,7 @@ public class IterableObjectHelperTest extends BaseTest {
 					.parallelIf(inputColl -> inputColl.size() > 2)
 					.withOutput(new ArrayList<>())
 					.withAction((number, outputCollectionSupplier) -> {
-						//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
+						//ManagedLoggerRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
 						if ((number % 2) == 0) {						
 							outputCollectionSupplier.accept(outputCollection -> 
 								outputCollection.add(number)
@@ -66,7 +66,7 @@ public class IterableObjectHelperTest extends BaseTest {
 				).submit().join();
 			}, false);
 //		}
-//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 //			getClass()::getName,
 //			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 //		);
@@ -76,7 +76,7 @@ public class IterableObjectHelperTest extends BaseTest {
 //				return input.parallelStream().filter(number -> (number % 2) == 0).collect(Collectors.toCollection(ArrayList::new));
 //			}, false);
 //		}
-//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 //			getClass()::getName,
 //			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 //		);
@@ -94,7 +94,7 @@ public class IterableObjectHelperTest extends BaseTest {
 				.parallelIf(inputColl -> inputColl.length > 2)
 				.withOutput(new HashSet<>())
 				.withAction((number, outputCollectionSupplier) -> {
-					//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
+					//ManagedLoggerRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
 					if ((number % 2) == 0) {						
 						outputCollectionSupplier.accept(outputCollection -> 
 							outputCollection.add(number)
@@ -120,7 +120,7 @@ public class IterableObjectHelperTest extends BaseTest {
 					.parallelIf(inputColl -> inputColl.length > 2)
 					.withOutput(new HashSet<Integer>())
 					.withAction((number, outputCollectionSupplier) -> {
-						//ManagedLoggersRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
+						//ManagedLoggerRepository.logDebug(getClass()::getName, "Iterated number: {}", number);
 						if (((int)number % 2) == 0) {						
 							outputCollectionSupplier.accept(outputCollection -> 
 								outputCollection.add((int)number)
@@ -131,7 +131,7 @@ public class IterableObjectHelperTest extends BaseTest {
 				);
 			}, false);
 //		}
-//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 //			getClass()::getName,
 //			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 //		);
@@ -141,7 +141,7 @@ public class IterableObjectHelperTest extends BaseTest {
 //				return Stream.of(input).parallel().collect(Collectors.toCollection(ArrayList::new));
 //			}, false);
 //		}
-//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(
+//		org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(
 //			getClass()::getName,
 //			"Total - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(),initialTime)
 //		);

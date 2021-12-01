@@ -31,7 +31,7 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -103,7 +103,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		this.loadedPaths = new ConcurrentHashMap<>();
 		this.exceptionHandler = (exc, childAndPath) -> {
 			if (!isClosed) {
-				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
 				throw new IllegalStateException(Strings.compile("Could not execute the operation: {} is closed", this));
 			}
@@ -168,7 +168,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			}
 		} catch (Throwable exc) {
 			if (isClosed) {
-				ManagedLoggersRepository.logWarn(getClass()::getName, "Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Could not execute scanPathsAndAddAllByteCodesFound because {} has been closed", this.toString());
 			} else {
 				throw exc;
 			}
@@ -274,7 +274,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				pathHelper = null;
 				fileFilterAndProcessor = null;
 				if (this.getClass().equals(PathScannerClassLoader.class)) {
-					ManagedLoggersRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+					ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
 				}
 			}
 		);
