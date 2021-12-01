@@ -37,7 +37,7 @@ public class TaskStateException extends IllegalStateException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message, Throwable exception) {
 		super(
 			Strings.compile(
-				"{} {} and was created by:{}\nException stacktrace:",
+				"{} {} and was created at:{}\nException stacktrace:",
 				task,
 				message,
 				Strings.from(task.getCreatorInfos(), 1)
@@ -49,7 +49,7 @@ public class TaskStateException extends IllegalStateException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message) {
 		super(
 			Strings.compile(
-				"{} {} and was created by:{}\nException stacktrace:",
+				"{} {} and was created at:{}\nException stacktrace:",
 				task,
 				message,
 				Strings.from(task.getCreatorInfos(), 1)
