@@ -64,6 +64,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	Map<String, ByteBuffer> loadedByteCodes;
 	Collection<Object> clients;
 	protected boolean isClosed;
+	private boolean markedAsCloseable;
 	String instanceId;
 	ClassLoader[] allParents;
 
@@ -438,25 +439,34 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this, true);
 	}
 
-	public synchronized boolean register(Object client) {
+	public synchronized void register(Object client) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.add(client);
-			return true;
+			return;
 		}
-		return false;
+		throw new IllegalStateException(
+			Strings.compile("Could not register client {} to {}: it is closed", client, this)
+		);
 	}
-
-	public synchronized boolean unregister(Object client, boolean close) {
+	
+	public boolean unregister(Object client, boolean close) {
+		return unregister(client, close, false);
+	}
+	
+	public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+		if (markAsCloseable) {
+			markedAsCloseable = markAsCloseable;
+		}
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
 			clients.remove(client);
-			if (clients.isEmpty() && close) {
+			if (clients.isEmpty() && (close || markedAsCloseable)) {
 				close();
 				return true;
 			}
 		}
-		return false;
+		return isClosed;
 	}
 
 	@Override
@@ -468,12 +478,14 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
-				Driver.throwException("Could not close {} because there are {} registered clients", this, clients.size());
+				throw new IllegalStateException(
+					Strings.compile("Could not close {} because there are {} registered clients", this, clients.size())
+				);
 			}
 			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)parentClassLoader).unregister(this,true);
+				((MemoryClassLoader)parentClassLoader).unregister(this, true, false);
 			}
 			clearInBackground();
 			notLoadedByteCodes = null;
@@ -482,6 +494,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			unregister();
 			this.clients.clear();
 			this.clients = null;
+			if (this.getClass().equals(MemoryClassLoader.class)) {
+				ManagedLoggersRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+			}
 		});
 	}
 }

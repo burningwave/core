@@ -273,6 +273,9 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				this.loadedPaths = null;
 				pathHelper = null;
 				fileFilterAndProcessor = null;
+				if (this.getClass().equals(PathScannerClassLoader.class)) {
+					ManagedLoggersRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+				}
 			}
 		);
 	}
