@@ -1249,6 +1249,7 @@ public class ClassHunterTest extends BaseTest {
 				).waitForSearchEnding(
 					false
 				).useNewIsolatedClassLoader()
+				.enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) -> {
 				result.waitForSearchEnding();
