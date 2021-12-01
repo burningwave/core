@@ -46,7 +46,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
@@ -131,7 +130,7 @@ public interface ClassFactory {
 
 	public void reset(boolean closeClassRetrievers);
 
-	public static class ClassRetriever implements Closeable, ManagedLogger {
+	public static class ClassRetriever implements Closeable {
 		ClassLoader classLoader;
 		ClassFactory classFactory;
 		Supplier<Compilation.Config> compilationConfigSupplier;

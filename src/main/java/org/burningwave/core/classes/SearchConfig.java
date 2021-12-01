@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.SearchContext.InitContext;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.Criteria;
@@ -56,7 +55,7 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings({"resource", "unchecked"})
-public class SearchConfig implements Closeable, ManagedLogger {
+public class SearchConfig implements Closeable {
 	
 	private final static BiFunction<Throwable, FileSystemItem[], Boolean> exceptionThrowerForFileFilter;
 	

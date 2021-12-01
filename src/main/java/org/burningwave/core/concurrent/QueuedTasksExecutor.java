@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingBiPredicate;
 import org.burningwave.core.function.ThrowingConsumer;
@@ -67,7 +66,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
-public class QueuedTasksExecutor implements Closeable, ManagedLogger {
+public class QueuedTasksExecutor implements Closeable {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
 	private final static Map<TaskAbst<?, ?>, TaskAbst<?, ?>> allTasksInExecution;
@@ -104,12 +103,14 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 
 				private static final long serialVersionUID = 4138691488536653865L;
 				
-			    public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
+			    @Override
+				public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
 			    	allTasksInExecution.put(key, value);
 			        return super.put(key, value);
 			    }
 			    
-			    public TaskAbst<?, ?> remove(Object key) {
+			    @Override
+				public TaskAbst<?, ?> remove(Object key) {
 			    	allTasksInExecution.remove(key);
 			    	return super.remove(key); 
 			    }
@@ -679,7 +680,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		name = null;
 	}
 
-	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> implements ManagedLogger {
+	public static abstract class TaskAbst<E, T extends TaskAbst<E, T>> {
 
 		String name;
 		StackTraceElement[] stackTraceOnCreation;
@@ -1179,11 +1180,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		}
 		
 		public T kill() {
-			return (T)kill(true);
+			return kill(true);
 		}
 		
 		public T interrupt() {
-			return (T)interrupt(true);
+			return interrupt(true);
 		}
 		
 		public T kill(boolean terminateChildren) {
@@ -1761,7 +1762,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 			return true;
 		}
 
-		public static class TasksMonitorer implements Closeable, ManagedLogger {
+		public static class TasksMonitorer implements Closeable {
 			Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
 			QueuedTasksExecutor.Group queuedTasksExecutorGroup;
 			TasksMonitorer.Config config;

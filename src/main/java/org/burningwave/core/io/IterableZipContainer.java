@@ -47,9 +47,8 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
-import org.burningwave.core.ManagedLogger;
 
-public interface IterableZipContainer extends Closeable, ManagedLogger {
+public interface IterableZipContainer extends Closeable {
 	public final static String classId = Objects.getClassId(IterableZipContainer.class);
 	public final static String PATH_SUFFIX = "///";
 	

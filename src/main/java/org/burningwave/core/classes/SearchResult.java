@@ -39,11 +39,10 @@ import java.util.Optional;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 
 
-public class SearchResult<E> implements Closeable, ManagedLogger {
+public class SearchResult<E> implements Closeable {
 	SearchContext<E> context;
 	ClassPathScanner.Abst<E, ?, ?> classPathScanner;
 

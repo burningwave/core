@@ -56,7 +56,6 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.ByteCodeHunter;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
@@ -79,7 +78,7 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 @SuppressWarnings({"unchecked", "resource"})
-public class ComponentContainer implements ComponentSupplier, Properties.Listener, ManagedLogger {
+public class ComponentContainer implements ComponentSupplier, Properties.Listener {
 
 	public static class Configuration {
 

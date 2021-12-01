@@ -44,14 +44,13 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
 
-public class Synchronizer implements Closeable, ManagedLogger {
+public class Synchronizer implements Closeable {
 	Map<String, Mutex> mutexes;
 	String name;
 	ThreadsMonitorer allThreadsMonitorer;

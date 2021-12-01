@@ -59,7 +59,7 @@ import org.burningwave.core.io.IterableZipContainer;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 
-public class Cache implements ManagedLogger {
+public class Cache {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
 	public final PathForResources<IterableZipContainer> pathForIterableZipContainers;

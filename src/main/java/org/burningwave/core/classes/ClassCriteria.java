@@ -47,11 +47,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Criteria;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.function.PentaPredicate;
 
 @SuppressWarnings("unchecked")
-public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Class<?>, ClassCriteria, ClassCriteria.TestContext> implements ManagedLogger {
+public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Class<?>, ClassCriteria, ClassCriteria.TestContext> {
 	Map<String, MemberCriteria<?, ?, ?>> memberCriterias;
 	PentaPredicate<ClassCriteria, TestContext, MemberCriteria<?, ?, ?>, String, Class<?>> membersPredicate;
 	private boolean collectMembers;

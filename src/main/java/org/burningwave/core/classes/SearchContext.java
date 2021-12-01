@@ -40,12 +40,11 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Context;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
-class SearchContext<T> implements Closeable, ManagedLogger {
+class SearchContext<T> implements Closeable {
 
 	SearchConfig searchConfig;
 	Map<String, T> itemsFoundFlatMap;

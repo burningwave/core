@@ -41,12 +41,11 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 
 @SuppressWarnings("unchecked")
-public class Properties extends ConcurrentHashMap<Object, Object> implements ManagedLogger {
+public class Properties extends ConcurrentHashMap<Object, Object> {
 	private static final long serialVersionUID = -350748766178421942L;
 
 	public static enum Event {

@@ -47,12 +47,11 @@ import java.util.function.Function;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.concurrent.Synchronizer.Mutex;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
-public abstract class Thread extends java.lang.Thread implements ManagedLogger {
+public abstract class Thread extends java.lang.Thread {
 	
 	ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
 	ThrowingConsumer<Thread, ? extends Throwable> executable;
@@ -226,6 +225,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 			}
 		}
 		
+		@Override
 		void terminate(Consumer<Thread> operation, String operationName) {
 			ManagedLoggersRepository.logWarn(
 				getClass()::getName,
@@ -765,7 +765,7 @@ public abstract class Thread extends java.lang.Thread implements ManagedLogger {
 
 	}
 	
-	public static class Holder implements Closeable, ManagedLogger {
+	public static class Holder implements Closeable {
 		private Supplier threadSupplier;
 		private Map<String, Thread> threads;
 

@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.function.Executor;
 
-public class Strings implements ManagedLogger {
+public class Strings {
 
 	public final Pattern PLACE_HOLDER_NAME_EXTRACTOR_PATTERN = Pattern.compile("\\$\\{([\\w\\d\\.\\:\\-]*)\\}");
 	public final Pattern PLACE_HOLDER_EXTRACTOR_PATTERN = Pattern.compile("(\\$\\{[\\w\\d\\.\\:\\-]*\\})");
