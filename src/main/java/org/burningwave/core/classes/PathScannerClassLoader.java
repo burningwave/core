@@ -104,7 +104,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			if (!isClosed) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
-				throw new IllegalStateException(Strings.compile("Could not execute the operation: {} is closed"));
+				throw new IllegalStateException(Strings.compile("Could not execute the operation: {} is closed", this));
 			}
 			return false;
 		};
