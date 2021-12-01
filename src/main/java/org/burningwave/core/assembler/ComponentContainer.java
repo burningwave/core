@@ -203,7 +203,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return this;
 	}
 
-	private ComponentContainer launchAfterInitTask() {
+	private ComponentContainer setAndlaunchAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.afterInitTask = BackgroundExecutor.createTask(task -> {
@@ -223,14 +223,27 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return this;
 	}
 	
-	public void waitForAfterInitTask() {
+	private Map<Class<?>, Component> checkAndInitComponentMapAndAfterInitTask() {
+		if (this.components == null) {
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				if (this.components == null) {
+					this.components = new ConcurrentHashMap<>();
+					setAndlaunchAfterInitTask();
+				}
+			});
+		}
+		return this.components;
+	}
+	
+	public ComponentContainer waitForAfterInitTask() {
 		if (!waitForAfterInitTaskIfNotNull()) {
-			//Ensure that component map was initialized and after init task launched
+			//Ensure that component map was initialized and that the after init task was launched
 			executeOnComponentMap(components -> {
 				components.toString();
 			});
 			waitForAfterInitTaskIfNotNull();
 		}
+		return this;
 	}
 	
 	private boolean waitForAfterInitTaskIfNotNull() {
@@ -363,7 +376,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				throw exc;
 			}		
 		}
-		executor.accept(checkAndInitComponentMap());
+		executor.accept(checkAndInitComponentMapAndAfterInitTask());
 	}
 	
 	private <T> T executeOnComponentMap(Function<Map<Class<?>, Component>, T> executor) {
@@ -375,19 +388,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				throw exc;
 			}		
 		}
-		return executor.apply(checkAndInitComponentMap());
-	}
-
-	private Map<Class<?>, Component> checkAndInitComponentMap() {
-		if (this.components == null) {
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
-				if (this.components == null) {
-					this.components = new ConcurrentHashMap<>();
-					launchAfterInitTask();
-				}
-			});
-		}
-		return this.components;
+		return executor.apply(checkAndInitComponentMapAndAfterInitTask());
 	}
 
 	@Override
