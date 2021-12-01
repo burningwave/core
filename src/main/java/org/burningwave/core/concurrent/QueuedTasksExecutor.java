@@ -839,7 +839,7 @@ public class QueuedTasksExecutor implements Closeable {
 		}
 		
 		public boolean wasExecutedWithException() {
-			return finished && exc != null;
+			return isStarted() && exc != null;
 		}
 
 		public boolean isSubmitted() {
