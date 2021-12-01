@@ -223,11 +223,22 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return this;
 	}
 	
-	private void waitForAfterInitTask() {
+	public void waitForAfterInitTask() {
+		if (!waitForAfterInitTaskIfNotNull()) {
+			//Ensure that component map was initialized and after init task launched
+			executeOnComponentMap(components -> {
+				components.toString();
+			});
+			waitForAfterInitTaskIfNotNull();
+		}
+	}
+	
+	private boolean waitForAfterInitTaskIfNotNull() {
 		QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
 		if (afterInitTask != null) {
-			afterInitTask.waitForFinish();
+			return afterInitTask.waitForFinish() != null;
 		}
+		return false;
 	}
 
 	public ComponentContainer preAfterInit(Consumer<ComponentContainer> preAfterInitCall) {
@@ -548,7 +559,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public ComponentContainer reset() {
 		return executeOnComponentMap(components -> {
-			waitForAfterInitTask();
+			waitForAfterInitTaskIfNotNull();
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.components = new ConcurrentHashMap<>();
 			});
@@ -621,11 +632,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		waitForAfterInitTask();
+		waitForAfterInitTaskIfNotNull();
 		if (closeHuntersResults) {
 			closeHuntersSearchResults();
 		}
 		resetClassFactory(closeClassRetrievers);
+		waitForAfterInitTaskIfNotNull();
 		Cache.clear(true, Cache.pathForFileSystemItems);
 		if (clearFileSystemItemReferences) {
 			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
@@ -644,7 +656,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public synchronized static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		for (ComponentContainer componentContainer : instances) {
-			componentContainer.waitForAfterInitTask();
+			componentContainer.waitForAfterInitTaskIfNotNull();
 			if (closeHuntersResults) {
 				componentContainer.closeHuntersSearchResults();
 			}
@@ -661,6 +673,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	@Override
 	public void resetClassFactory(boolean closeClassRetrievers) {
 		executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
 			ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
 			if (classFactory != null) {
 				classFactory.reset(closeClassRetrievers);
@@ -671,6 +684,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	@Override
 	public void closeHuntersSearchResults() {
 		executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
 			ClassPathScanner.Abst<?, ?, ?> hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ByteCodeHunter.class);
 			if (hunter != null) {
 				hunter.closeSearchResults();
