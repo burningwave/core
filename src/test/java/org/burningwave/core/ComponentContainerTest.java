@@ -129,12 +129,13 @@ public class ComponentContainerTest extends BaseTest {
 	@Order(7)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory before clearAll {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.resetAll();
 			Cache.clear(true);
 			BackgroundExecutor.waitForTasksEnding(true);
 			System.gc();
-			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logWarn(getClass()::getName, "Total memory after clearAll {}", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
 		});
 	}
 
