@@ -284,11 +284,11 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 		if (skipCheck || (Boolean)(canBeExecutedBag = canBeExecuted(task))[1]) {
 			try {
 				task.creator = Thread.currentThread();
-				tasksQueue.add(task);
 				Synchronizer.execute(Objects.getId(task.creator), () -> {
 					Collection<TaskAbst<?,?>> childrenTask = taskCreatorThreadsForChildTasks.computeIfAbsent(task.creator, key -> ConcurrentHashMap.newKeySet());
 					childrenTask.add(task);
 				});
+				tasksQueue.add(task);
 				synchronized(executableCollectionFillerMutex) {
 					executableCollectionFillerMutex.notifyAll();
 				}
@@ -900,7 +900,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
-								throw new TaskStateException(this, exc);
+								throw new TaskStateException(this, "has been interrupted", exc);
 							}
 						}
 					}
@@ -963,7 +963,7 @@ public class QueuedTasksExecutor implements Closeable, ManagedLogger {
 								wait(timeout);
 								return true;
 							} catch (InterruptedException exc) {
-								throw new TaskStateException(this, exc);
+								throw new TaskStateException(this, "has been interrupted", exc);
 							}
 						}
 					}
