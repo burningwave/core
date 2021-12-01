@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 
 public class RepeatedComponentContainerTest extends ComponentContainerTest {
 	
-	//@Test
-	//@Order(6)
-	public void putPropertyFour() {
-		testDoesNotThrow(() -> {
-			assertTrue(true);
-		});
-	}
+//	//@Test
+//	//@Order(6)
+//	public void putPropertyFour() {
+//		testDoesNotThrow(() -> {
+//			assertTrue(true);
+//		});
+//	}
 
 }
