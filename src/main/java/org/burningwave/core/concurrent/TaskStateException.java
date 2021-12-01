@@ -37,10 +37,10 @@ public class TaskStateException extends RuntimeException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message, Throwable exception) {
 		super(
 			Strings.compile(
-				"{} {} and was created:{}",
+				"{} {} and was created by:{}\nException stacktrace:",
 				task,
 				message,
-				Strings.from(task.getCreatorInfos(), 2)
+				Strings.from(task.getCreatorInfos(), 1)
 			),
 			exception
 		);
@@ -49,10 +49,10 @@ public class TaskStateException extends RuntimeException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message) {
 		super(
 			Strings.compile(
-				"{} {} and was created:{}",
+				"{} {} and was created by:{}\nException stacktrace:",
 				task,
 				message,
-				Strings.from(task.getCreatorInfos(), 2)
+				Strings.from(task.getCreatorInfos(), 1)
 			)
 		);
 	}
