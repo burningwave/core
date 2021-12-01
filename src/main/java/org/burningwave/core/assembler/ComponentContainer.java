@@ -586,7 +586,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			try {
 				componentContainer.reset();
 			} catch (Throwable exc) {
-				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
+				ManagedLoggersRepository.logError(
+					ComponentContainer.class::getName,
+					"Exception occurred while executing reset on {}",
+					exc, 
+					componentContainer.toString()
+				);
 			}
 		}
 	}
