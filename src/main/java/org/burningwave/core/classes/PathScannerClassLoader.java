@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -57,8 +58,9 @@ import org.burningwave.core.io.PathHelper;
 public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryClassLoader {
 	Map<String, Boolean> loadedPaths;
 	PathHelper pathHelper;
-	FileSystemItem.Criteria classFileCriteriaAndConsumer;
-
+	FileSystemItem.Criteria fileFilterAndProcessor;
+	BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
+	
 	public static class Configuration {
 		public static class Key {
 
@@ -98,34 +100,48 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.loadedPaths = new ConcurrentHashMap<>();
-		if (fileFilter != null) {
-			setFileFilter(fileFilter);
-		}
-	}
-
-	void setFileFilter(FileSystemItem.Criteria scanFileCriteria) {
-		this.classFileCriteriaAndConsumer = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
-			JavaClass javaClass = child.toJavaClass();
-			addByteCode0(javaClass.getName(), javaClass.getByteCode());
-			return true;
-		}).setExceptionHandler((exc, childAndPath) -> {
+		this.exceptionHandler = (exc, childAndPath) -> {
 			if (!isClosed) {
 				ManagedLoggersRepository.logError(getClass()::getName, "Exception occurred while scanning {}", exc, childAndPath[0].getAbsolutePath());
 			} else {
 				Driver.throwException(exc);
 			}
 			return false;
-		});
+		};
+		if (fileFilter != null) {
+			setFileFilter(fileFilter);
+		}
 	}
 
+	void setFileFilter(FileSystemItem.Criteria scanFileCriteria) {
+		this.fileFilterAndProcessor = scanFileCriteria.createCopy().and().allFileThat((child, pathFIS) -> {
+			JavaClass javaClass = child.toJavaClass();
+			addByteCode0(javaClass.getName(), javaClass.getByteCode());
+			return true;
+		}).setExceptionHandler(scanFileCriteria.getExceptionHandler() != null ? scanFileCriteria.getExceptionHandler() : exceptionHandler);
+	}
+	
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
-
-	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
+	
+	public PathScannerClassLoader refresh() {
+		Collection<String> loadedPaths = this.loadedPaths.keySet();
+		for (String loadedPath : loadedPaths) {
+			FileSystemItem.ofPath(loadedPath).reset();
+		}
+		scanPathsAndAddAllByteCodesFound(loadedPaths);
+		return this;
+	}
+	
+	public Collection<String> scanPathsWithoutRefreshingAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
 	}
-
+	
+	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
+		return scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
+	}
+	
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
@@ -137,7 +153,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							if (checkForAddedClasses.test(path)) {
 								pathFIS.refresh();
 							}
-							Predicate<FileSystemItem[]> classFilePredicateAndConsumer = classFileCriteriaAndConsumer.getPredicateOrTruePredicateIfPredicateIsNull();
+							Predicate<FileSystemItem[]> classFilePredicateAndConsumer = fileFilterAndProcessor.getPredicateOrTruePredicateIfPredicateIsNull();
 							for (FileSystemItem child : pathFIS.getAllChildren()) {
 								classFilePredicateAndConsumer.test(
 									new FileSystemItem [] {child, pathFIS}
@@ -178,7 +194,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(exceptionHandler);
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
 			if (inputStreamWrapper.get() != null) {
@@ -187,7 +203,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return null;
 	}
-
+	
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
 		Collection<URL> resourcesFound = Resources.getAll(name, this.allParents);
@@ -197,7 +213,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(exceptionHandler);
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findInAllChildren(scanFileCriteria);
 		}
@@ -218,7 +234,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 				return true;
 			}
 			return false;
-		});
+		}).setExceptionHandler(exceptionHandler);
 		for (String loadedPath : loadedPaths.keySet()) {
 			FileSystemItem.ofPath(loadedPath).findFirstInAllChildren(scanFileCriteria);
 			if (inputStreamWrapper.get() != null) {
@@ -251,7 +267,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			this.loadedPaths.clear();
 			this.loadedPaths = null;
 			pathHelper = null;
-			classFileCriteriaAndConsumer = null;
+			fileFilterAndProcessor = null;
 		});
 	}
 

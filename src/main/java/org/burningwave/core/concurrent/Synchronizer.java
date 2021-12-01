@@ -40,10 +40,13 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.function.ThrowingConsumer;
+import org.burningwave.core.function.ThrowingFunction;
 import org.burningwave.core.function.ThrowingRunnable;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -96,11 +99,27 @@ public class Synchronizer implements Closeable, ManagedLogger {
 			}
 		}
 	}
+	
+	public <E extends Throwable> void execute(String id, Consumer<Mutex> executable) throws E {
+		try (Mutex mutex = getMutex(id);) {
+			synchronized (mutex) {
+				executable.accept(mutex);
+			}
+		}
+	}
 
 	public <E extends Throwable> void executeThrower(String id, ThrowingRunnable<E> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				executable.run();
+			}
+		}
+	}
+	
+	public <E extends Throwable> void executeThrower(String id, ThrowingConsumer<Mutex, E> executable) throws E {
+		try (Mutex mutex = getMutex(id);) {
+			synchronized (mutex) {
+				executable.accept(mutex);
 			}
 		}
 	}
@@ -117,6 +136,14 @@ public class Synchronizer implements Closeable, ManagedLogger {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
 				return executable.get();
+			}
+		}
+	}
+	
+	public <T, E extends Throwable> T executeThrower(String id, ThrowingFunction<Mutex, T, E> executable) throws E {
+		try (Mutex mutex = getMutex(id);) {
+			synchronized (mutex) {
+				return executable.apply(mutex);
 			}
 		}
 	}

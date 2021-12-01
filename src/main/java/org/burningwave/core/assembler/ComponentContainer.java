@@ -128,7 +128,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	ComponentContainer(Supplier<Map<?, ?>> propertySupplier) {
 		this.instanceId = getId();
 		this.propertySupplier = propertySupplier;
-		this.components = new ConcurrentHashMap<>();
 		this.config = new Properties();
 		checkAndListenTo(GlobalProperties);
 		checkAndListenTo(this.config);
@@ -175,6 +174,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	private ComponentContainer init() {
+		this.components = null;
 		Properties config = new Properties();
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
 		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
@@ -200,11 +200,10 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		});
 
 		logConfigProperties();
-		setAfterInitTask();
 		return this;
 	}
 
-	private ComponentContainer setAfterInitTask() {
+	private ComponentContainer setAndlaunchAfterInitTask() {
 		if (config.getProperty(Configuration.Key.AFTER_INIT) != null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.afterInitTask = BackgroundExecutor.createTask(task -> {
@@ -217,10 +216,42 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 							iteratedTask.waitForFinish();
 						}
 					}
-				});
+					this.afterInitTask = null;
+				}).submit();
 			});
 		}
 		return this;
+	}
+	
+	private Map<Class<?>, Component> checkAndInitComponentMapAndAfterInitTask() {
+		if (this.components == null) {
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				if (this.components == null) {
+					this.components = new ConcurrentHashMap<>();
+					setAndlaunchAfterInitTask();
+				}
+			});
+		}
+		return this.components;
+	}
+	
+	public ComponentContainer waitForAfterInitTask() {
+		if (!waitForAfterInitTaskIfNotNull()) {
+			//Ensure that component map was initialized and that the after init task was launched
+			executeOnComponentMap(components -> {
+				components.toString();
+			});
+			waitForAfterInitTaskIfNotNull();
+		}
+		return this;
+	}
+	
+	private boolean waitForAfterInitTaskIfNotNull() {
+		QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
+		if (afterInitTask != null) {
+			return afterInitTask.waitForFinish() != null;
+		}
+		return false;
 	}
 
 	public ComponentContainer preAfterInit(Consumer<ComponentContainer> preAfterInitCall) {
@@ -245,51 +276,54 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public void processChangeNotification(Properties properties, Event event, Object key, Object newValue, Object oldValue) {
-		if (properties == GlobalProperties) {
-			if (event.name().equals(Event.PUT.name())) {
-				config.put(key, newValue);
-			} else if (event.name().equals(Event.REMOVE.name())) {
-				config.remove(key);
-			}
-		} else if (properties == this.config) {
-			if (event.name().equals(Event.PUT.name())) {
-				if (key instanceof String) {
-					String keyAsString = (String)key;
-					if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
-						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
-						if (pathScannerClassLoader != null) {
-							ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
-								this.config,
-								PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
-							));
-						}
-					} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
-						PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
-						if (pathScannerClassLoader != null) {
-							Fields.setDirect(
-								pathScannerClassLoader,
-								"classFileCriteriaAndConsumer",
-								FileSystemItem.Criteria.forClassTypeFiles(
-									IterableObjectHelper.resolveStringValue(
-										ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
-										.on(config)
+		executeOnComponentMap(components -> {
+			if (properties == GlobalProperties) {
+				if (event.name().equals(Event.PUT.name())) {
+					config.put(key, newValue);
+				} else if (event.name().equals(Event.REMOVE.name())) {
+					config.remove(key);
+				}
+			} else if (properties == this.config) {
+				if (event.name().equals(Event.PUT.name())) {
+					if (key instanceof String) {
+						String keyAsString = (String)key;
+						if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER)) {
+							PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+							if (pathScannerClassLoader != null) {
+								ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
+									this.config,
+									PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
+								));
+							}
+						} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
+							PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)components.get(PathScannerClassLoader.class);
+							if (pathScannerClassLoader != null) {
+								Fields.setDirect(
+									pathScannerClassLoader,
+									"fileFilterAndProcessor",
+									FileSystemItem.Criteria.forClassTypeFiles(
+										IterableObjectHelper.resolveStringValue(
+											ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+											.on(config)
+										)
 									)
-								)
-							);
+								);
+							}
 						}
 					}
 				}
 			}
-		}
+		});
 	}
 
 	private String getMutexForComponentsId() {
 		return instanceId + "_components";
 	}
 
-	public void reset() {
+	public void reInit() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
 			clear();
+			reset();
 			init();
 		});
 	}
@@ -318,51 +352,76 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public <I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier) {
-		Map<Class<?>, Component> components = this.components;
-		T component = (T)components.get(cls);
-		if (component == null) {
-			component = Synchronizer.execute(getMutexForComponentsId(), () -> {
-				T componentTemp = (T)components.get(cls);
-				if (componentTemp == null) {
-					QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
-					if (afterInitTask != null) {
-						this.afterInitTask = null;
-						afterInitTask.submit();
-					}
+		return executeOnComponentMap(components -> {
+			T component = (T)components.get(cls);
+			if (component != null) {
+				return component;				
+			}
+			return Synchronizer.execute(getMutexForComponentsId() + "_" + cls.getName(), () -> {
+				T componentTemp;
+				if ((componentTemp = (T)components.get(cls)) == null) {
 					components.put(cls, componentTemp = (T)componentSupplier.get());
 				}
 				return componentTemp;
 			});
+		});
+	}
+	
+	private void executeOnComponentMap(Consumer<Map<Class<?>, Component>> executor) {
+		Map<Class<?>, Component> components = this.components;
+		try {
+			executor.accept(components);
+		} catch (NullPointerException exc) {
+			if (components != null) {
+				throw exc;
+			}		
 		}
-		return component;
+		executor.accept(checkAndInitComponentMapAndAfterInitTask());
+	}
+	
+	private <T> T executeOnComponentMap(Function<Map<Class<?>, Component>, T> executor) {
+		Map<Class<?>, Component> components = this.components;
+		try {
+			return executor.apply(components);
+		} catch (NullPointerException exc) {
+			if (components != null) {
+				throw exc;
+			}		
+		}
+		return executor.apply(checkAndInitComponentMapAndAfterInitTask());
 	}
 
 	@Override
 	public PathScannerClassLoader getPathScannerClassLoader() {
-		return getOrCreate(PathScannerClassLoader.class, () -> {
-			PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
-				resolveProperty(
-					this.config,
-					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
-				), getPathHelper(),
-				FileSystemItem.Criteria.forClassTypeFiles(
-						IterableObjectHelper.resolveStringValue(
-							ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
-							.on(config)
-						)
-				),
-				() -> {
-					Synchronizer.execute(getMutexForComponentsId(), () -> {
-						PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
-						if (cL != null) {
-							cL.unregister(this, true);
-						}
-					});
-				}
-			);
-			classLoader.register(this);
-			return classLoader;
-		});
+		return getOrCreate(
+			PathScannerClassLoader.class, 
+			() -> {
+				PathScannerClassLoader classLoader = new ComponentContainer.PathScannerClassLoader(
+					resolveProperty(
+						this.config,
+						PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
+					),
+					this.components,
+					getPathHelper(),
+					FileSystemItem.Criteria.forClassTypeFiles(
+							IterableObjectHelper.resolveStringValue(
+								ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+								.on(config)
+							)
+					),
+					components -> {
+						Synchronizer.execute(getMutexForComponentsId(), () -> {
+							PathScannerClassLoader cL = (PathScannerClassLoader)components.remove(PathScannerClassLoader.class);
+							if (cL != null) {
+								cL.unregister(this, true);
+							}
+						});
+					}
+				);
+				classLoader.register(this);
+				return classLoader;
+			}
+		);
 	}
 
 	@Override
@@ -499,35 +558,36 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 	}
 
-	@Override
-	public ComponentContainer clear() {
-		Map<Class<?>, Component> components = this.components;
-		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			this.components = new ConcurrentHashMap<>();
+	public ComponentContainer reset() {
+		return executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
+				this.components = new ConcurrentHashMap<>();
+			});
+			if (!components.isEmpty()) {
+				BackgroundExecutor.createTask(task ->
+					IterableObjectHelper.deepClear(components, (type, component) -> {
+						if (!(component instanceof PathScannerClassLoader)) {
+							component.close();
+						} else {
+							((PathScannerClassLoader)component).unregister(this, true);
+						}
+					}),Thread.MIN_PRIORITY
+				).submit();
+			}
+			return this;
 		});
-		if (!components.isEmpty()) {
-			BackgroundExecutor.createTask(task ->
-				IterableObjectHelper.deepClear(components, (type, component) -> {
-					if (!(component instanceof PathScannerClassLoader)) {
-						component.close();
-					} else {
-						((PathScannerClassLoader)component).unregister(this, true);
-					}
-				}),Thread.MIN_PRIORITY
-			).submit();
-		}
-		return this;
+
 	}
 
-	public static void clearAll() {
+	public static void resetAll() {
 		for (ComponentContainer componentContainer : instances) {
 			try {
-				componentContainer.clear();
+				componentContainer.reset();
 			} catch (Throwable exc) {
 				ManagedLoggersRepository.logError(() -> ComponentContainer.class.getName(), "Exception occurred while executing clear on " + componentContainer.toString(), exc);
 			}
 		}
-		Cache.clear();
 	}
 
 	void close(boolean force) {
@@ -562,53 +622,83 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			}
 		}
 		if (clearCache) {
-			Cache.clear();
+			Cache.clear(false);
 		}
-		System.gc();
 	}
-
-	public static void clearAllCaches() {
-		clearAllCaches(true, true, true);
-	}
-
-	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers) {
-		clearAllCaches(closeHuntersResults, closeClassRetrievers, true);
-	}
-
-	public static void clearAllCaches(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		for (ComponentContainer componentContainer : instances) {
-			componentContainer.clearCache(closeHuntersResults, closeClassRetrievers);
-		}
-		Cache.clear(true, clearFileSystemItemReferences ? null : Cache.pathForFileSystemItems);
-		System.gc();
-	}
-
+	
 	@Override
-	public void clearCache(boolean closeHuntersResults, boolean closeClassRetrievers) {
+	public void clear() {
+		clear(true, true, true);
+	}
+	
+	@Override
+	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+		waitForAfterInitTaskIfNotNull();
 		if (closeHuntersResults) {
 			closeHuntersSearchResults();
 		}
-		ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
-		if (classFactory != null) {
-			classFactory.reset(closeClassRetrievers);
+		resetClassFactory(closeClassRetrievers);
+		waitForAfterInitTaskIfNotNull();
+		Cache.clear(true, Cache.pathForFileSystemItems);
+		if (clearFileSystemItemReferences) {
+			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
+				fileSystemItem.reset();
+			});
 		}
-		System.gc();
+	}
+	
+	public static void clearAll() {
+		clearAll(true, true, true);
+	}
+
+	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers) {
+		clearAll(closeHuntersResults, closeClassRetrievers, true);
+	}
+
+	public synchronized static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
+		for (ComponentContainer componentContainer : instances) {
+			componentContainer.waitForAfterInitTaskIfNotNull();
+			if (closeHuntersResults) {
+				componentContainer.closeHuntersSearchResults();
+			}
+			componentContainer.resetClassFactory(closeClassRetrievers);
+		}
+		Cache.clear(true, Cache.pathForFileSystemItems);
+		if (clearFileSystemItemReferences) {
+			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
+				fileSystemItem.reset();
+			});
+		}
+	}
+
+	@Override
+	public void resetClassFactory(boolean closeClassRetrievers) {
+		executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
+			ClassFactory classFactory = (ClassFactory)components.get(ClassFactory.class);
+			if (classFactory != null) {
+				classFactory.reset(closeClassRetrievers);
+			}
+		});
 	}
 
 	@Override
 	public void closeHuntersSearchResults() {
-		ClassPathScanner.Abst<?, ?, ?> hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ByteCodeHunter.class);
-		if (hunter != null) {
-			hunter.closeSearchResults();
-		}
-		 hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassHunter.class);
-		if (hunter != null) {
-			hunter.closeSearchResults();
-		}
-		hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassPathHunter.class);
-		if (hunter != null) {
-			hunter.closeSearchResults();
-		}
+		executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
+			ClassPathScanner.Abst<?, ?, ?> hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ByteCodeHunter.class);
+			if (hunter != null) {
+				hunter.closeSearchResults();
+			}
+			 hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassHunter.class);
+			if (hunter != null) {
+				hunter.closeSearchResults();
+			}
+			hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassPathHunter.class);
+			if (hunter != null) {
+				hunter.closeSearchResults();
+			}
+		});
 	}
 
 
@@ -626,21 +716,31 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 	public static class PathScannerClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
-
+		private Map<Class<?>, Component> components;
 		static {
 	        ClassLoader.registerAsParallelCapable();
 	    }
 
-		Runnable markAsCloseableAlgorithm;
-		PathScannerClassLoader(ClassLoader parentClassLoader, PathHelper pathHelper,
-			Criteria scanFileCriteria, Runnable markAsCloseableAlgorithm
+		Consumer<Map<Class<?>, Component>> markAsCloseableAlgorithm;
+		PathScannerClassLoader(
+			ClassLoader parentClassLoader,
+			Map<Class<?>, Component> components,
+			PathHelper pathHelper,
+			Criteria scanFileCriteria,
+			Consumer<Map<Class<?>, Component>> markAsCloseableAlgorithm
 		) {
 			super(parentClassLoader, pathHelper, scanFileCriteria);
 			this.markAsCloseableAlgorithm = markAsCloseableAlgorithm;
 		}
 
 		public void markAsCloseable() {
-			markAsCloseableAlgorithm.run();
+			markAsCloseableAlgorithm.accept(components);
+		}
+		
+		@Override
+		public void close() {
+			super.close();
+			components = null;
 		}
 	}
 }

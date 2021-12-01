@@ -40,7 +40,7 @@ public interface Closeable extends AutoCloseable, Identifiable {
 
 	@Override
 	default public void close() {
-
+		
 	}
 
 	default public Task createCloseResoucesTask(String objectId, Supplier<Boolean> isClosedPredicate, ThrowingConsumer<QueuedTasksExecutor.Task, ?> closingFunction) {

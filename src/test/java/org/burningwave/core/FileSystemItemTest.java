@@ -195,7 +195,11 @@ public class FileSystemItemTest extends BaseTest {
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
 		testNotEmpty(() -> FileSystemItem.ofPath(
 			basePath + "/../../src/test/external-resources/libs-for-test.zip"
-		).findInAllChildren(FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> fileSystemItem.getName().endsWith(".class"))),
+		).findInAllChildren(
+			FileSystemItem.Criteria.forAllFileThat((fileSystemItem) -> {			
+				return fileSystemItem.getName().endsWith(".class");
+			})
+		),
 		false);
 	}
 
@@ -285,7 +289,7 @@ public class FileSystemItemTest extends BaseTest {
 		).findInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
-			)
+			).enableTimedFind(60000).enableDefaultExceptionHandler()
 		),
 		false);
 	}

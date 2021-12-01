@@ -41,20 +41,24 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.Members;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.function.TriConsumer;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
+import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
-@SuppressWarnings("unchecked")
+
 public class Cache implements ManagedLogger {
 	public final PathForResources<ByteBuffer> pathForContents;
 	public final PathForResources<FileSystemItem> pathForFileSystemItems;
@@ -93,7 +97,7 @@ public class Cache implements ManagedLogger {
 		return new Cache();
 	}
 
-	public static class ObjectAndPathForResources<T, R> implements Component {
+	public static class ObjectAndPathForResources<T, R> {
 		Map<T, PathForResources<R>> resources;
 		Supplier<PathForResources<R>> pathForResourcesSupplier;
 		String instanceId;
@@ -111,7 +115,7 @@ public class Cache implements ManagedLogger {
 		}
 
 		public ObjectAndPathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
-			this.resources = new HashMap<>();
+			this.resources = new ConcurrentHashMap<>();
 			this.pathForResourcesSupplier = () -> new PathForResources<>(partitionStartLevel, sharer, itemDestroyer);
 			this.instanceId = Objects.getId(this);
 		}
@@ -149,7 +153,7 @@ public class Cache implements ManagedLogger {
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
 			if (pathForResources != null && destroyItems) {
-				pathForResources.clear(destroyItems);
+				pathForResources.clearInBackground(destroyItems).waitForFinish();
 			}
 			return pathForResources;
 		}
@@ -166,28 +170,52 @@ public class Cache implements ManagedLogger {
 			return null;
 		}
 
-		@Override
-		public ObjectAndPathForResources<T, R> clear() {
-			return clear(false);
-		}
-
-		public ObjectAndPathForResources<T, R> clear(boolean destroyItems) {
+		QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<T, PathForResources<R>> resources;
 			synchronized (this.resources) {
 				resources = this.resources;
-				this.resources = new HashMap<>();
+				this.resources = new ConcurrentHashMap<>();
 			}
-			BackgroundExecutor.createTask(task -> {
+			return BackgroundExecutor.createTask(task -> {
 				for (Entry<T, PathForResources<R>> item : resources.entrySet()) {
-					item.getValue().clear(destroyItems);
+					item.getValue().clearInBackground(destroyItems).waitForFinish();
 				}
 				resources.clear();
-			}, Thread.MIN_PRIORITY).submit();
-			return this;
+			}).submit();
+		}
+		
+		public void iterate(TriConsumer<T, String, R> itemConsumer) {
+			iterate(false, itemConsumer, new AtomicReference<>());
+		}
+		
+		public void iterateParallel(TriConsumer<T, String, R> itemConsumer) {
+			iterate(true, itemConsumer, new AtomicReference<>());
+		}
+		
+		void iterate(
+			boolean parallel,
+			TriConsumer<T, String, R> itemConsumer,
+			AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper
+		) {
+			
+			IterableObjectHelper.iterate(
+				IterationConfig.of(
+					this.resources.entrySet()
+				).withAction(entry -> {
+					PathForResources<R> pathForResources = entry.getValue();
+					pathForResources.checkAndThrow(terminateExceptionWrapper);
+					pathForResources.iterate(
+						parallel,
+						(path, item) ->
+							itemConsumer.accept(entry.getKey(), path, item),
+						terminateExceptionWrapper
+					);
+				}).parallelIf(coll -> parallel)
+			);
 		}
 	}
 
-	public static class PathForResources<R> implements Component  {
+	public static class PathForResources<R> {
 		Map<Long, Map<String, Map<String, R>>> resources;
 		Long partitionStartLevel;
 		Function<R, R> sharer;
@@ -225,7 +253,7 @@ public class Cache implements ManagedLogger {
 		private PathForResources(Long partitionStartLevel, Function<R, R> sharer, BiConsumer<String, R> itemDestroyer) {
 			this.partitionStartLevel = partitionStartLevel;
 			this.sharer = sharer;
-			this.resources = new HashMap<>();
+			this.resources = new ConcurrentHashMap<>();
 			this.itemDestroyer = itemDestroyer;
 			this.instanceId = this.toString();
 		}
@@ -242,7 +270,7 @@ public class Cache implements ManagedLogger {
 				innerPartion = Synchronizer.execute(instanceId + "_mutexManagerForPartitions_" + finalPartitionKey, () -> {
 					Map<String, R> innerPartionTemp = partion.get(finalPartitionKey);
 					if (innerPartionTemp == null) {
-						partion.put(finalPartitionKey, innerPartionTemp = new HashMap<>());
+						partion.put(finalPartitionKey, innerPartionTemp = new ConcurrentHashMap<>());
 					}
 					return innerPartionTemp;
 				});
@@ -286,7 +314,7 @@ public class Cache implements ManagedLogger {
 				resources = Synchronizer.execute(instanceId + "_mutexManagerForPartitionedResources_" + partitionIndex.toString(), () -> {
 					Map<String, Map<String, R>> resourcesTemp = partitionedResources.get(partitionIndex);
 					if (resourcesTemp == null) {
-						partitionedResources.put(partitionIndex, resourcesTemp = new HashMap<>());
+						partitionedResources.put(partitionIndex, resourcesTemp = new ConcurrentHashMap<>());
 					}
 					return resourcesTemp;
 				});
@@ -324,10 +352,7 @@ public class Cache implements ManagedLogger {
 			});
 			if (itemDestroyer != null && destroy && item != null) {
 				String finalPath = path;
-				BackgroundExecutor.createTask(task ->
-					itemDestroyer.accept(finalPath, item),
-					Thread.MIN_PRIORITY
-				).submit();
+				itemDestroyer.accept(finalPath, item);
 			}
 			return item;
 		}
@@ -346,21 +371,15 @@ public class Cache implements ManagedLogger {
 			return count;
 		}
 
-		@Override
-		public PathForResources<R> clear() {
-			return clear(false);
-		}
-
-		public PathForResources<R> clear(boolean destroyItems) {
+		private QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<Long, Map<String, Map<String, R>>> partitions;
 			synchronized (this.resources) {
 				partitions = this.resources;
-				this.resources = new HashMap<>();
+				this.resources = new ConcurrentHashMap<>();
 			}
-			BackgroundExecutor.createTask(task -> {
+			return BackgroundExecutor.createTask(task -> {
 				clearResources(partitions, destroyItems);
-			}, Thread.MIN_PRIORITY).submit();
-			return this;
+			}).submit();
 		}
 
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
@@ -378,39 +397,96 @@ public class Cache implements ManagedLogger {
 			}
 			partitions.clear();
 		}
+		
+		public void iterate(BiConsumer<String, R> itemConsumer) {
+			iterate(false, itemConsumer, new AtomicReference<>());
+		}
+		
+		public void iterateParallel(BiConsumer<String, R> itemConsumer) {
+			iterate(true, itemConsumer, new AtomicReference<>());
+		}
+		
+		void iterate(
+			boolean parallel,
+			BiConsumer<String, R> itemConsumer,
+			AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper
+		) {
+			IterableObjectHelper.iterate(
+				IterationConfig.of(
+					this.resources.entrySet()
+				).withAction(entryOne -> {
+					checkAndThrow(terminateExceptionWrapper);
+					IterableObjectHelper.iterate(
+						IterationConfig.of(
+							entryOne.getValue().entrySet()
+						).withAction(entryTwo -> {
+							checkAndThrow(terminateExceptionWrapper);
+							IterableObjectHelper.iterate(
+								IterationConfig.of(
+									entryTwo.getValue().entrySet()
+								).withAction(entryThree -> {
+									try {
+										itemConsumer.accept(entryThree.getKey(), entryThree.getValue());
+									} catch (org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration exception) {
+										if (exception == org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+											terminateExceptionWrapper.set(exception);
+										}
+										throw exception;
+									}
+								}).parallelIf(coll -> parallel)
+							);
+						}).parallelIf(coll -> parallel)
+					);
+				}).parallelIf(coll -> parallel)
+			);
+		}
 
-	}
-
-	public void clear(Cleanable... excluded) {
-		clear(false, excluded);
-	}
-
-	public void clear(boolean destroyItems, Cleanable... excluded) {
-		Set<Cleanable> toBeExcluded = excluded != null && excluded.length > 0 ?
-			new HashSet<>(Arrays.asList(excluded)) :
-			null;
-		clear(pathForContents, toBeExcluded, destroyItems);
-		clear(pathForFileSystemItems, toBeExcluded, destroyItems);
-		clear(pathForIterableZipContainers, toBeExcluded, destroyItems);
-		clear(classLoaderForFields, toBeExcluded, destroyItems);
-		clear(classLoaderForMethods, toBeExcluded, destroyItems);
-		clear(classLoaderForConstructors, toBeExcluded, destroyItems);
-		clear(bindedFunctionalInterfaces, toBeExcluded, destroyItems);
-		clear(uniqueKeyForFields, toBeExcluded, destroyItems);
-		clear(uniqueKeyForConstructors, toBeExcluded, destroyItems);
-		clear(uniqueKeyForMethods, toBeExcluded, destroyItems);
-		clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems);
-	}
-
-	private void clear(Cleanable cache, Set<Cleanable> excluded, boolean destroyItems) {
-		if (excluded == null || !excluded.contains(cache)) {
-			if (!destroyItems) {
-				cache.clear();
-			} else if (cache instanceof ObjectAndPathForResources) {
-				((ObjectAndPathForResources<?,?>)cache).clear(destroyItems);
-			}  else if (cache instanceof PathForResources) {
-				((PathForResources<?>)cache).clear(destroyItems);
+		void checkAndThrow(AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper) {
+			org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration terminateException = terminateExceptionWrapper.get();
+			if (terminateException != null) {
+				throw terminateException;
 			}
 		}
+
+	}
+
+
+	public void clear(boolean destroyItems, Object... excluded) {
+		Set<Object> toBeExcluded = excluded != null && excluded.length > 0 ?
+			new HashSet<>(Arrays.asList(excluded)) :
+			null;
+		Set<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+		addCleaningTask(tasks, clear(pathForContents, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(pathForFileSystemItems, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(pathForIterableZipContainers, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForFields, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForMethods, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(classLoaderForConstructors, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(bindedFunctionalInterfaces, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForFields, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForConstructors, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForMethods, toBeExcluded, destroyItems));
+		addCleaningTask(tasks, clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems));
+		for (QueuedTasksExecutor.Task task : tasks) {
+			task.join();
+		}
+	}
+	
+	private boolean addCleaningTask(Set<QueuedTasksExecutor.Task> tasks, QueuedTasksExecutor.Task task) {
+		if (task != null) {
+			return tasks.add(task);
+		}
+		return false;
+	}
+
+	private QueuedTasksExecutor.Task clear(Object cache, Set<Object> excluded, boolean destroyItems) {
+		if (excluded == null || !excluded.contains(cache)) {
+			if (cache instanceof ObjectAndPathForResources) {
+				return ((ObjectAndPathForResources<?,?>)cache).clearInBackground(destroyItems);
+			}  else if (cache instanceof PathForResources) {
+				return ((PathForResources<?>)cache).clearInBackground(destroyItems);
+			}
+		}
+		return null;
 	}
 }

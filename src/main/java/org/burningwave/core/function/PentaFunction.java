@@ -26,19 +26,18 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.burningwave.core;
+package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import java.util.Objects;
+import java.util.function.Function;
 
-public interface Cleanable {
+@FunctionalInterface
+public interface PentaFunction<P0, P1, P2, P3, P4, R> {
 
-	public default void clear() {
-		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
-	}
-	
-	public default QueuedTasksExecutor.Task clearInBackground() {
-		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
-	}
+    R apply(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4);
 
+    default <V> PentaFunction<P0, P1, P2, P3, P4, V> andThen(Function<? super R, ? extends V> after) {
+    	Objects.requireNonNull(after);
+    	return (P0 p0, P1 p1, P2 p2, P3 p3, P4 p4) -> after.apply(apply(p0, p1, p2, p3, p4));
+    }
 }

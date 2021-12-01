@@ -34,15 +34,13 @@ public class TaskStateException extends RuntimeException {
 
 	private static final long serialVersionUID = -6504561450589871045L;
 
-	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, InterruptedException exception) {
+	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message, Throwable exception) {
 		super(
 			Strings.compile(
-				"{} {}{}",
+				"{} {} and was created by:{}\nException stacktrace:",
 				task,
-				"was interrupted",
-				task.getCreatorInfos() != null ?
-					" and was created:" + Strings.from(task.getCreatorInfos())
-					: ""
+				message,
+				Strings.from(task.getCreatorInfos(), 1)
 			),
 			exception
 		);
@@ -51,12 +49,10 @@ public class TaskStateException extends RuntimeException {
 	public TaskStateException(QueuedTasksExecutor.TaskAbst<?, ?> task, String message) {
 		super(
 			Strings.compile(
-				"{} {}{}",
+				"{} {} and was created by:{}\nException stacktrace:",
 				task,
 				message,
-				task.getCreatorInfos() != null ?
-					" and was created:" + Strings.from(task.getCreatorInfos())
-					: ""
+				Strings.from(task.getCreatorInfos(), 1)
 			)
 		);
 	}

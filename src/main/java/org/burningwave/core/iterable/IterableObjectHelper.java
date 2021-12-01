@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -183,12 +184,12 @@ public interface IterableObjectHelper {
 
 	public <K, V> String toString(Map<K, V> map, int marginTabCount);
 	
-	public default void terminateIteration() {
-		throw TerminateIteration.NOTIFICATION;
+	public default <T> T terminateIteration() {
+		return Driver.throwException(TerminateIteration.NOTIFICATION);
 	}
 	
-	public default void terminateCurrentThreadIteration() {
-		throw TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION;
+	public default <T> T terminateCurrentThreadIteration() {
+		return Driver.throwException(TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION);
 	}
 	
 	public default boolean isIterationTerminatedNotification(Throwable exc) {

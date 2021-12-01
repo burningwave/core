@@ -44,7 +44,7 @@ public class PathHelperTest extends BaseTest {
 			for (Thread thread : threads) {
 				thread.join();
 			}
-			return pathHelper .getResource("../../src/test/external-resources/libs-for-test.zip");
+			return pathHelper.getResource("../../src/test/external-resources/libs-for-test.zip");
 		});
 	}
 

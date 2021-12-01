@@ -20,7 +20,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 			classLoader.scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				)
+				), fis -> true
 			);
 			return Collections.list(classLoader.getResources("META-INF/MANIFEST.MF")).stream().map(url ->
 				Paths.convertURLPathToAbsolutePath(url.getPath())).collect(Collectors.toSet()
@@ -47,7 +47,7 @@ public class PathScannerClassLoaderTest extends BaseTest {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
 			PathScannerClassLoader classLoader = componentSupplier.getPathScannerClassLoader();
-			classLoader.scanPathsAndAddAllByteCodesFound(
+			classLoader.refresh().scanPathsAndAddAllByteCodesFound(
 				Arrays.asList(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
 				)

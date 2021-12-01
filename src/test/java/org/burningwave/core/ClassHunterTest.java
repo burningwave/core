@@ -1,5 +1,7 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
+
 import java.io.Closeable;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -129,7 +131,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-				).checkForAddedClasses()
+				).checkForAddedClasses().enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) ->
 				result.getClasses()
@@ -138,7 +140,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				)
+				).enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) ->
 				result.getClasses()
@@ -833,7 +835,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				)
+				).enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) ->
 				result.getClasses()
@@ -1247,6 +1249,7 @@ public class ClassHunterTest extends BaseTest {
 				).waitForSearchEnding(
 					false
 				).useNewIsolatedClassLoader()
+				.enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) -> {
 				result.waitForSearchEnding();
@@ -1307,7 +1310,9 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClasses() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true, true);
+		componentSupplier.clear(true, true, false);
+		//Destroy all FileSystemItems
+		Cache.clear(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
@@ -1330,7 +1335,9 @@ public class ClassHunterTest extends BaseTest {
 	@Test
 	public void findAllBurningWaveClassesThroughResources() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
-		componentSupplier.clearCache(true, true);
+		componentSupplier.clear(true, true, false);
+		//Destroy all FileSystemItems
+		Cache.clear(true);
 		testNotEmpty(
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forResources("org/burningwave")

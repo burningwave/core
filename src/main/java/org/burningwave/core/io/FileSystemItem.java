@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.io;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -70,12 +71,34 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.classes.JavaClass;
+import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.TaskStateException;
 import org.burningwave.core.function.Executor;
+import org.burningwave.core.function.PentaFunction;
+import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 @SuppressWarnings("resource")
 public class FileSystemItem implements Comparable<FileSystemItem> {
-
+	
+	private final static Function<String, Boolean> isContainer = conventionedAbsolutePath -> 
+		conventionedAbsolutePath.endsWith("/");
+	
+	private final static Function<String, Boolean> isFolder = conventionedAbsolutePath -> 
+		conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX); 
+	
+	private final static Function<String, Boolean> isCompressed = conventionedAbsolutePath -> 
+		(conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+			&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
+			|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
+					&& conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX)
+					&& conventionedAbsolutePath
+							.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
+									.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
+	
+	private final static Function<String, Boolean> isArchive = conventionedAbsolutePath ->
+		conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+	
 	private final static String instanceIdPrefix;
 	private final static Supplier<Collection<FileSystemItem>> newCollectionSupplier;
 	
@@ -86,7 +109,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	private Collection<FileSystemItem> allChildren;
 	private String instanceId;
 	private AtomicReference<JavaClass> javaClassWrapper;
-	
+
 	static {
 		instanceIdPrefix = FileSystemItem.class.getName();
 		newCollectionSupplier = ArrayList::new;
@@ -225,25 +248,59 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		}
 	}
-
+	
+	private <T> T timedExecute(ThrowingSupplier<T, Throwable> executable, long timeout) {
+		QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
+			return executable.get();
+		}).submit();
+		try {
+			try {
+				return task.join(timeout);
+			} catch (TaskStateException exc) {
+				if (!task.hasFinished()) {
+					ManagedLoggersRepository.logWarn(
+						getClass()::getName, "Operation timeout on {}: the task will be killed and the operation will be repeated after reset."
+					);
+					task.kill().waitForTerminatedThreadNotAlive(
+						1000,
+						tentativeCount -> {
+							ManagedLoggersRepository.logWarn(
+								getClass()::getName, "Waiting for the termination of the task {}", task.getInfoAsString()
+							);
+						}
+					);
+					if (isCompressed()) {
+						getParentContainer().reset();
+					} else {
+						reset();
+					}
+					return executable.get();
+				}
+			}
+		} catch (Throwable exc) {
+			Driver.throwException(exc);
+		}
+		return task.join(); 
+	}
+	
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);		
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
 			Supplier<Collection<FileSystemItem>> setSupplier) {
-		return findIn(this::getAllChildren0, filter, false, setSupplier);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, false, setSupplier);
 	}
 
 	public Collection<FileSystemItem> findInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 
 	public Collection<FileSystemItem> findInChildren(
 		FileSystemItem.Criteria filter,
 		Supplier<Collection<FileSystemItem>> setSupplier
 	) {
-		return findIn(this::getChildren0, filter, false, setSupplier);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, false, setSupplier);
 	}
 
 	public Collection<FileSystemItem> findRecursiveInChildren(FileSystemItem.Criteria filter) {
@@ -258,7 +315,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {
 		Collection<FileSystemItem> outputCollection = outputCollectionSupplier.get();
-		for (FileSystemItem filteredItem : findIn(this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
+		for (FileSystemItem filteredItem : filter.findInFunction.apply(this, this::getChildren0, filter, false, ConcurrentHashMap::newKeySet)) {
 			outputCollection.add(filteredItem);
 			if (filteredItem.isContainer()) {
 				filteredItem.findRecursiveInChildren(filter, outputCollectionSupplier);
@@ -266,7 +323,18 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		return outputCollection;
 	}
-
+	
+	private Collection<FileSystemItem> timedFindIn(
+		Supplier<Collection<FileSystemItem>> childrenSupplier,
+		FileSystemItem.Criteria filter,
+		boolean firstMatch,
+		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
+	) {
+		return timedExecute(() -> {
+			return findIn(childrenSupplier, filter, firstMatch, outputCollectionSupplier);
+		}, filter.timeoutForTimedFindIn);
+	}
+	
 	private Collection<FileSystemItem> findIn(
 		Supplier<Collection<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
@@ -355,7 +423,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return filter.findInFunction.apply(this, this::getAllChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public FileSystemItem findFirstInChildren() {
@@ -363,7 +431,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem findFirstInChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
+		return filter.findInFunction.apply(this, this::getChildren0, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public String getAbsolutePath() {
@@ -373,7 +441,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public Collection<FileSystemItem> getAllChildren() {
 		return Optional.ofNullable(getAllChildren0()).map(children ->  Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
-
+	
 	private Collection<FileSystemItem> getAllChildren0() {
 		Collection<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
@@ -391,7 +459,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public Collection<FileSystemItem> getChildren() {
 		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
-
+	
 	private Collection<FileSystemItem> getChildren0() {
 		Collection<FileSystemItem> children = this.children;
 		if (children == null) {
@@ -477,40 +545,32 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isArchive() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+		return computeConventionedAbsolutePathAndExecute(isArchive);
 	}
 
 	public boolean isChildOf(FileSystemItem fileSystemItem) {
-		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
-		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
-		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02)
-					&& !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
-		} else if (fileSystemItem.isContainer() && !this.isContainer()) {
-			return conventionedAbsolutePath_01.startsWith(conventionedAbsolutePath_02);
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);	
+		if (isContainer.apply(otherConventionedAbsolutePath)) {
+			if (isContainer.apply(thisConventionedAbsolutePath)) {
+				return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath)
+					&& !thisConventionedAbsolutePath.equals(otherConventionedAbsolutePath);
+			}
+			return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath);
 		}
 		return false;
 	}
 
 	public boolean isCompressed() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
-				|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
-						&& conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX)
-						&& conventionedAbsolutePath
-								.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
-										.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
+		return computeConventionedAbsolutePathAndExecute(isCompressed);
 	}
-
+	
 	public boolean isContainer() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		try {
-			return conventionedAbsolutePath.endsWith("/");
-		} catch (NullPointerException e) {
-			throw new NotFoundException(Strings.compile("{} not found on the file system", absolutePath.getKey()));
-		}
+		return computeConventionedAbsolutePathAndExecute(isContainer);
 	}
 
 	public boolean isFile() {
@@ -518,19 +578,22 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isFolder() {
-		String conventionedAbsolutePath = computeConventionedAbsolutePath();
-		return conventionedAbsolutePath.endsWith("/")
-				&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+		return computeConventionedAbsolutePathAndExecute(isFolder);
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
-		String conventionedAbsolutePath_01 = this.computeConventionedAbsolutePath();
-		String conventionedAbsolutePath_02 = fileSystemItem.computeConventionedAbsolutePath();
-		if (fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01)
-					&& !conventionedAbsolutePath_02.equals(conventionedAbsolutePath_01);
-		} else if (!fileSystemItem.isContainer() && this.isContainer()) {
-			return conventionedAbsolutePath_02.startsWith(conventionedAbsolutePath_01);
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+			conventionedAbsolutePath.toString()
+		);
+		if (isContainer.apply(thisConventionedAbsolutePath)) {
+			if (isContainer.apply(otherConventionedAbsolutePath)) {
+				return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath)
+					&& !otherConventionedAbsolutePath.equals(thisConventionedAbsolutePath);
+			}
+			return otherConventionedAbsolutePath.startsWith(thisConventionedAbsolutePath);
 		}
 		return false;
 	}
@@ -541,6 +604,28 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	private boolean isRoot(String absolutePathStr) {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
+	}
+	
+	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function) {
+		return computeConventionedAbsolutePathAndExecute(function, null);
+	}
+	
+	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function, NullPointerException exception){
+		try {
+			String conventionedAbsolutePath = computeConventionedAbsolutePath();
+			return function.apply(conventionedAbsolutePath);
+		} catch (NullPointerException exc) {
+			if (exception == null) {
+				ManagedLoggersRepository.logWarn(
+					getClass()::getName,
+					"Exception occurred while trying to compute conventioned absolute path of {}. Trying to repeat the operation.",
+					absolutePath.getKey() 
+				);
+				return computeConventionedAbsolutePathAndExecute(function, exc);
+			} else {
+				throw exception;
+			}
+		}
 	}
 
 	Collection<FileSystemItem> loadAllChildren() {
@@ -798,9 +883,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				}
 			} else {
 				try (FileInputStream fileInputStream = FileInputStream.create(file)) {
-					return fileInputStream.getAbsolutePath() + IterableZipContainer.PATH_SUFFIX
-							+ retrieveConventionedRelativePath(fileInputStream.toByteBuffer(),
-									fileInputStream.getAbsolutePath(), relativePath);
+					return fileInputStream.getAbsolutePath() + IterableZipContainer.PATH_SUFFIX + retrieveConventionedRelativePath(
+						fileInputStream.toByteBuffer(),
+						fileInputStream.getAbsolutePath(),
+						relativePath
+					);
 				} catch (FileSystemItemNotFoundException exc) {
 					return null;
 				}
@@ -814,59 +901,91 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return null;
 		}
 	}
-
-	private synchronized String retrieveConventionedRelativePath(ByteBuffer zipInputStreamAsBytes,
-			String zipInputStreamName, String relativePath1) {
-		try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
-			if (zIS == null) {
-				return Driver.throwException(
-					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
-				);
-			}
-			Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
-				return zEntry.getName().equals(relativePath1) || zEntry.getName().equals(relativePath1 + "/");
-			};
-			String temp = relativePath1;
-			while (temp != null) {
-				int lastIndexOfSlash = temp.lastIndexOf("/");
-				final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
-				zipEntryPredicate = zipEntryPredicate
-						.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
-				if (lastIndexOfSlash == -1) {
-					temp = null;
-				} else {
-					temp = temp2;
+	
+	private String retrieveConventionedRelativePath(
+			ByteBuffer zipInputStreamAsBytes,
+			String zipInputStreamName,
+			String relativePath
+    ) {
+		return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, null);
+	}
+	
+	private synchronized String retrieveConventionedRelativePath(
+		ByteBuffer zipInputStreamAsBytes,
+		String zipInputStreamName,
+		String relativePath,
+		NullPointerException initialException
+	) {
+		Class<? extends IterableZipContainer> iterableZipContainerType = null;
+		try {
+			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
+				if (zIS == null) {
+					return Driver.throwException(
+						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+					);
 				}
-			}
-			Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(zipEntryPredicate, zEntry -> false);
-			if (!zipEntries.isEmpty()) {
-				IterableZipContainer.Entry zipEntry = Collections.max(
-					zipEntries,
-					Comparator.comparing(zipEntryW ->
-						zipEntryW.getName().split("/").length
-					)
-				);
-				return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath1);
-			} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
-				try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName,
-						zipInputStreamAsBytes)) {
-					if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath1 + "/"),
-							zipEntry -> false) != null) {
-						// in case of JMod files folder
-						return retrieveConventionedRelativePath(this, zIS2, null, relativePath1);
+				iterableZipContainerType = zIS.getClass();
+				Predicate<IterableZipContainer.Entry> zipEntryPredicate = zEntry -> {
+					return zEntry.getName().equals(relativePath) || zEntry.getName().equals(relativePath + "/");
+				};
+				String temp = relativePath;
+				while (temp != null) {
+					int lastIndexOfSlash = temp.lastIndexOf("/");
+					final String temp2 = lastIndexOfSlash != -1 ? temp.substring(0, lastIndexOfSlash) : temp;
+					zipEntryPredicate = zipEntryPredicate
+							.or(zEntry -> zEntry.getName().equals(temp2) || zEntry.getName().equals(temp2 + "/"));
+					if (lastIndexOfSlash == -1) {
+						temp = null;
+					} else {
+						temp = temp2;
 					}
-					return Driver.throwException(new FileSystemItemNotFoundException(
-							"Absolute path \"" + absolutePath.getKey() + "\" not exists"));
 				}
-			} else {
-				return Driver.throwException(
-					new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
+				Collection<IterableZipContainer.Entry> zipEntries = zIS.findAll(
+					zipEntryPredicate,
+					zEntry -> false
 				);
+				if (!zipEntries.isEmpty()) {
+					IterableZipContainer.Entry zipEntry = Collections.max(
+						zipEntries,
+						Comparator.comparing(zipEntryW ->
+							zipEntryW.getName().split("/").length
+						)
+					);
+					return retrieveConventionedRelativePath(this, zIS, zipEntry, relativePath);
+				} else if (Streams.isJModArchive(zipInputStreamAsBytes)) {
+					try (IterableZipContainer zIS2 = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes)) {
+						iterableZipContainerType = zIS2.getClass();
+						if (zIS2.findFirst(zipEntry -> zipEntry.getName().startsWith(relativePath + "/"),
+								zipEntry -> false) != null) {
+							// in case of JMod files folder
+							return retrieveConventionedRelativePath(this, zIS2, null, relativePath);
+						}
+						return Driver.throwException(
+							new FileSystemItemNotFoundException(
+								Strings.compile("Absolute path \"{}\" not exists", absolutePath.getKey())
+							)
+						);
+					}
+				} else {
+					throw new FileSystemItemNotFoundException(Strings.compile("Absolute path \"{}\" not exists", absolutePath.getKey()));
+				}
+			}
+		} catch (NullPointerException exc) {
+			if (initialException != null) {
+				return Driver.throwException(initialException);
+			} else {
+				ManagedLoggersRepository.logWarn(
+					getClass()::getName,
+					"Exception occurred while trying to compute conventioned relative path on {} (IterableZipContainer path: {})(relative path: {})(IterableZipContainer type: {}). Trying to repeat the operation.",
+					absolutePath.getKey(), zipInputStreamName, relativePath,
+					Optional.ofNullable(iterableZipContainerType).map(Class::getName).orElseGet(() -> "null") 
+				);
+				return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, exc);
 			}
 		}
 	}
 
-	synchronized String retrieveConventionedRelativePath(FileSystemItem fileSystemItem, IterableZipContainer iZC,
+	private synchronized String retrieveConventionedRelativePath(FileSystemItem fileSystemItem, IterableZipContainer iZC,
 			IterableZipContainer.Entry zipEntry, String relativePath1) {
 		if (zipEntry != null) {
 			String zipEntryCleanedName = zipEntry.getCleanedName();
@@ -888,7 +1007,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 								: "");
 			} else {
 				return zipEntryCleanedName + IterableZipContainer.PATH_SUFFIX + retrieveConventionedRelativePath(
-					zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2);
+					zipEntry.toByteBuffer(), zipEntry.getAbsolutePath(), relativePath2
+				);
 			}
 			// in case of JMod files folder
 		} else {
@@ -904,33 +1024,31 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem reloadContent(boolean recomputeConventionedAbsolutePath) {
-		String absolutePath = getAbsolutePath();
-		Synchronizer.execute(instanceId, () -> {
-			Cache.pathForContents.remove(absolutePath, true);
-			clearJavaClassWrapper(this);
-			if (recomputeConventionedAbsolutePath) {
-				this.absolutePath.setValue(null);
-			}
-		});
 		if (exists() && !isFolder()) {
+			String absolutePath = getAbsolutePath();
 			if (isCompressed()) {
 				try (IterableZipContainer iterableZipContainer = IterableZipContainer.create(
 					getParentContainer().reloadContent(recomputeConventionedAbsolutePath).getAbsolutePath())
 				) {
-					iterableZipContainer.findFirst(
+					IterableZipContainer.Entry zipEntry = iterableZipContainer.findFirst(
 						iteratedZipEntry ->
 							iteratedZipEntry.getAbsolutePath().equals(absolutePath),
 						iteratedZipEntry ->
 							iteratedZipEntry.getAbsolutePath().equals(absolutePath)
 					);
+					Cache.pathForContents.upload(
+						absolutePath, () -> {
+							return zipEntry.toByteBuffer();
+						}, true
+					);
 				}
 			} else {
-				Cache.pathForContents.getOrUploadIfAbsent(
+				Cache.pathForContents.upload(
 					absolutePath, () -> {
 						try (FileInputStream fIS = FileInputStream.create(getAbsolutePath())) {
 							return fIS.toByteBuffer();
 						}
-					}
+					}, true
 				);
 			}
 		}
@@ -1163,10 +1281,50 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
+		private final static PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> findIn;
+		
+		private final static PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> timedFindIn;
+		
+		private final static BiFunction<Throwable, FileSystemItem[], Boolean> defaultExceptionHandler;
+		
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
+		private PentaFunction<
+			FileSystemItem,
+			Supplier<Collection<FileSystemItem>>,
+			FileSystemItem.Criteria, Boolean,
+			Supplier<Collection<FileSystemItem>>,
+			Collection<FileSystemItem>
+		> findInFunction;
+		
+		private Long timeoutForTimedFindIn;
 		private Integer priority;
-
+		
+		static {
+			findIn = FileSystemItem::findIn;
+			timedFindIn = FileSystemItem::timedFindIn;
+			defaultExceptionHandler = (exception, childAndParent) -> {
+				ManagedLoggersRepository.logError(FileSystemItem.Criteria.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
+				return false;
+			};
+		}
+		
+		private Criteria() {
+			this.findInFunction = findIn;
+		}
+		
 		public static Criteria create() {
 			return new Criteria();
 		}
@@ -1251,11 +1409,31 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return this;
 		}
 
-		public final Criteria setDefaultExceptionHandler() {
-			return setExceptionHandler((exception, childAndParent) -> {
-				ManagedLoggersRepository.logError(this.getClass()::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
-				return false;
-			});
+		public final Criteria enableDefaultExceptionHandler() {
+			return setExceptionHandler(defaultExceptionHandler);
+		}
+		
+		public final boolean isTimedFindEnabled() {
+			return this.findInFunction == timedFindIn;
+		}
+		
+		public final boolean hasFindFunctionBeenSetFromExternal() {
+			return this.findInFunction == timedFindIn || this.findInFunction != findIn;
+		}
+		
+		public final Criteria enableTimedFind(long timeout) {
+			if (timeout >  0) {
+				this.findInFunction = timedFindIn;
+			} else {
+				throw new IllegalArgumentException("Timeout must be greater than 0");
+			}
+			this.timeoutForTimedFindIn = timeout;
+			return this;
+		}
+		
+		public final Criteria disableTimedFind() {
+			this.findInFunction = FileSystemItem::findIn;
+			return this;
 		}
 
 		public boolean hasNoExceptionHandler() {
@@ -1293,11 +1471,15 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 
 		@Override
-		protected Criteria logicOperation(Criteria leftCriteria, Criteria rightCriteria,
-				Function<Predicate<FileSystemItem[]>, Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
-				Criteria targetCriteria) {
+		protected Criteria logicOperation(
+			Criteria leftCriteria, Criteria rightCriteria,
+			Function<Predicate<FileSystemItem[]>,
+			Function<Predicate<? super FileSystemItem[]>, Predicate<FileSystemItem[]>>> binaryOperator,
+			Criteria targetCriteria
+		) {
 			targetCriteria = super.logicOperation(leftCriteria, rightCriteria, binaryOperator, targetCriteria);
-			targetCriteria.setExceptionHandler(rightCriteria.exceptionHandler);
+			targetCriteria.exceptionHandler = rightCriteria.exceptionHandler == null ?
+					leftCriteria.exceptionHandler : rightCriteria.exceptionHandler;
 			Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate =
 				rightCriteria.minimumCollectionSizeForParallelIterationPredicate == null ?
 						leftCriteria.minimumCollectionSizeForParallelIterationPredicate :
@@ -1305,6 +1487,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			targetCriteria.setMinimumCollectionSizeForParallelIteration(minimumCollectionSizeForParallelIterationPredicate);
 			targetCriteria.priority = rightCriteria.priority == null ?
 				leftCriteria.priority : rightCriteria.priority;
+			//Check if the right criteria using the default find function
+			targetCriteria.findInFunction = rightCriteria.findInFunction == findIn ?
+					leftCriteria.findInFunction : rightCriteria.findInFunction;
+			targetCriteria.timeoutForTimedFindIn = rightCriteria.timeoutForTimedFindIn == null ?
+					leftCriteria.timeoutForTimedFindIn : rightCriteria.timeoutForTimedFindIn;
 			return targetCriteria;
 		}
 
@@ -1315,16 +1502,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				try {
 					try {
 						return filterPredicate.test(childAndThis);
-					} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
+					} catch (ArrayIndexOutOfBoundsException exc) {
 						String childAbsolutePath = childAndThis[0].getAbsolutePath();
 						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
-						if (exc instanceof ArrayIndexOutOfBoundsException) {
-							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
-							childAndThis[0].reloadContent();
-						} else if (exc instanceof NullPointerException) {
-							ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
-							childAndThis[0].reloadContent(true);
-						}
+						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content of {} and test it again", childAbsolutePath);
+						childAndThis[0].reloadContent();
+						return filterPredicate.test(childAndThis);
+					} catch (NullPointerException exc) {
+						String childAbsolutePath = childAndThis[0].getAbsolutePath();
+						ManagedLoggersRepository.logWarn(this.getClass()::getName, "Exception occurred while analyzing {}", childAbsolutePath);
+						ManagedLoggersRepository.logInfo(this.getClass()::getName, "Trying to reload content and conventioned absolute path of {} and test it again", childAbsolutePath);
+						childAndThis[0].reloadContent(true);
 						return filterPredicate.test(childAndThis);
 					}
 				} catch (Throwable exc) {
@@ -1343,6 +1531,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			copy.exceptionHandler = this.exceptionHandler;
 			copy.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
 			copy.priority = this.priority;
+			copy.findInFunction = this.findInFunction;
+			copy.timeoutForTimedFindIn = this.timeoutForTimedFindIn;
 			return copy;
 		}
 

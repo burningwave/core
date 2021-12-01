@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggersRepository;
 
 import java.nio.ByteBuffer;
@@ -111,13 +110,9 @@ class SearchContext<T> implements Closeable, ManagedLogger {
 	}
 
 	void waitForSearchEnding() {
-		try {
-			QueuedTasksExecutor.Task searchTask = this.searchTask;
-			if (searchTask != null) {
-				searchTask.waitForFinish();
-			}
-		} catch (Throwable exc) {
-			Driver.throwException(exc);
+		QueuedTasksExecutor.Task searchTask = this.searchTask;
+		if (searchTask != null) {
+			searchTask.join();
 		}
 	}
 

@@ -50,13 +50,14 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ZipInputStream.Entry.Attached;
 
 @SuppressWarnings("unchecked")
-class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer {
+public class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZipContainer {
 	String absolutePath;
 	String conventionedAbsolutePath;
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
-
+	
+	
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
@@ -80,6 +81,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		}
 		return parent;
 	}
+	
 
 	@Override
 	public String getAbsolutePath() {
@@ -119,7 +121,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 
 	@Override
     protected Entry.Attached createZipEntry(String name) {
-    	return new Entry.Attached(name, this);
+		return new Entry.Attached(name, this);
     }
 
 
@@ -129,7 +131,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 	}
 
 	@Override
-	public IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
+	public synchronized IterableZipContainer.Entry getNextEntry(Predicate<IterableZipContainer.Entry> loadZipEntryData) {
 		Executor.run(() -> {
 			try {
 				currentZipEntry = (Entry.Attached)super.getNextEntry();
@@ -144,7 +146,7 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 		return currentZipEntry;
 	}
 
-	public IterableZipContainer.Entry getNextEntryAsDetached() {
+	public synchronized IterableZipContainer.Entry getNextEntryAsDetached() {
 		return getNextEntryAsDetached(zEntry -> false);
 	}
 
@@ -167,18 +169,18 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 
 
 	@Override
-	public void closeEntry() {
-		try {
-			super.closeEntry();
-		} catch (IOException exc) {
-			ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
-		}
+	public synchronized void closeEntry() {
 		if (currentZipEntry != null) {
+			try {
+				super.closeEntry();
+			} catch (IOException exc) {
+				ManagedLoggersRepository.logWarn(getClass()::getName, "Exception occurred while closing zipEntry {}: {}", Optional.ofNullable(getCurrentZipEntry()).map((zipEntry) -> zipEntry.getAbsolutePath()).orElseGet(() -> "null"), exc.getMessage());
+			}
 			currentZipEntry.close();
 			currentZipEntry = null;
 		}
 	}
-
+	
 	@Override
 	public void close() {
 		closeEntry();
@@ -254,7 +256,6 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 				}
 				return size;
 			}
-
 
 			private ByteBuffer loadContent() {
 				return Cache.pathForContents.getOrUploadIfAbsent(
@@ -342,16 +343,15 @@ class ZipInputStream extends java.util.zip.ZipInputStream implements IterableZip
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
-
+		
 			@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {
 					try (IterableZipContainer zipInputStream = getParentContainer()) {
-						ByteBuffer content = zipInputStream.findFirstAndConvert((entry) ->
+						return zipInputStream.findFirstAndConvert((entry) ->
 							entry.getName().equals(getName()), zEntry ->
 							zEntry.toByteBuffer(), zEntry -> true
 						);
-						return BufferHandler.shareContent(content);
 					}
 				});
 			}
