@@ -98,7 +98,7 @@ public class QueuedTasksExecutor implements Closeable {
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
-			tasksQueue = new CopyOnWriteArrayList<>() {
+			tasksQueue = new CopyOnWriteArrayList<TaskAbst<?, ?>>() {
 				private static final long serialVersionUID = -176528742161426076L;
 				int min = 1500;
 				int max = 2000;
