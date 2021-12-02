@@ -10,11 +10,11 @@ public class RepeatedComponentContainerTest extends ComponentContainerTest {
 //	}
 	
 	
-	//@org.junit.jupiter.api.Test
-	//@org.junit.jupiter.api.Order(5)
-	@Override
-	public void resetAndCloseTest() {
-		
-	}
+//	@org.junit.jupiter.api.Test
+//	@org.junit.jupiter.api.Order(5)
+//	@Override
+//	public void resetAndCloseTest() {
+//		
+//	}
 
 }
