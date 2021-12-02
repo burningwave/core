@@ -333,9 +333,7 @@ public abstract class Thread extends java.lang.Thread {
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
-			if (supplier.runningThreads.remove(this)) {
-				--supplier.threadCount;
-			}
+			removePermanently();
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
 			}
