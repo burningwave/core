@@ -38,8 +38,8 @@ import org.junit.runner.RunWith;
     SourceCodeHandlerTest.class,
     StringsTest.class,
     UnitSourceGeneratorTest.class,
-//    RepeatedClassFactoryTest.class,
-//    RepeatedComponentContainerTest.class
+    RepeatedClassFactoryTest.class,
+    RepeatedComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
 public class AllExceptHeavyTestsSuite {
