@@ -101,7 +101,7 @@ public abstract class Thread extends java.lang.Thread {
 	public void start() {
 		if (this.originalExecutable == null) {
 			this.originalExecutable = thread -> {
-				ManagedLoggerRepository.logError(getClass()::getName, "Executable of {} is null", this);
+				ManagedLoggerRepository.logError(getClass()::getName, "Executable is null");
 			};
 			this.looper = false;
 			startExecution();		
