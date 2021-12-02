@@ -5,9 +5,12 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.burningwave.core.concurrent.QueuedTasksExecutor;
@@ -32,18 +35,41 @@ public class BackgroundExecutorTest extends BaseTest {
 	}
 	
 	//@Test
-	public void stressTest() {
+	public void stressTestOne() {
+		testDoesNotThrow(() -> {
+			AtomicInteger remainedRequestCountWrapper = new AtomicInteger(100_000_000);
+			Random random = new Random();
+			Collection<QueuedTasksExecutor.Task> tasks = new LinkedHashSet<>();
+			for (int i = 0; i < 10; i++) {
+				tasks.add(
+					BackgroundExecutor.createTask(tsk -> {
+						while (remainedRequestCountWrapper.get() > 0) {
+							BackgroundExecutor.createTask(task -> {
+								int remainedRequestCount = remainedRequestCountWrapper.getAndDecrement();
+								if (remainedRequestCount % 100_000 == 0) {
+									ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCount);
+								}
+							}, random.ints(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY + 1).findFirst().getAsInt()).submit();
+						}
+					}).submit()
+				);
+			}
+			tasks.forEach(QueuedTasksExecutor.Task::waitForFinish);
+		});
+	}
+	
+	//@Test
+	public void stressTestTwo() {
 		testDoesNotThrow(() -> {
 			int remainedRequestCount = 100_000_000;
 			Random random = new Random();
-			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
-			while (remainedRequestCount-- > 0 && exceptionWrapper.get() == null) {
+			while (remainedRequestCount-- > 0) {
 				final int remainedRequestCountTemp = remainedRequestCount;
 				BackgroundExecutor.createTask(task -> {
-					//if (remainedRequestCountTemp % 100_000 == 0) {
+					if (remainedRequestCountTemp % 100_000 == 0) {
 						ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCountTemp);
-					//}
-				}, random.nextInt(Thread.MAX_PRIORITY) + 1).submit();
+					}
+				}, random.ints(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY + 1).findFirst().getAsInt()).submit();
 			}			
 		});
 	}
