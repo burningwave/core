@@ -189,7 +189,8 @@ public abstract class Thread extends java.lang.Thread {
 		);
 	}
 	
-	public static void waitFor(long millis) {
+	public static long waitFor(long millis) {
+		long initialTime = System.currentTimeMillis();
 		if (millis > 0) {
 			try {
 				Object object;
@@ -199,7 +200,8 @@ public abstract class Thread extends java.lang.Thread {
 			} catch (InterruptedException exc) {
 				ManagedLoggerRepository.logError(Thread.class::getName, exc);
 			}
-		}		
+		}
+		return System.currentTimeMillis() - initialTime;
 	}
 	
 	private static class Poolable extends Thread {
