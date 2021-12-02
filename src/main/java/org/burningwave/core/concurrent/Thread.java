@@ -185,14 +185,16 @@ public abstract class Thread extends java.lang.Thread {
 	}
 	
 	public static void waitFor(long millis) {
-		try {
-			Object object = new Object();
-			synchronized(object) {
-				object.wait(millis);
+		if (millis > 0) {
+			try {
+				Object object;
+				synchronized(object = new Object()) {
+					object.wait(millis);
+				}
+			} catch (InterruptedException exc) {
+				ManagedLoggerRepository.logError(Thread.class::getName, exc);
 			}
-		} catch (InterruptedException exc) {
-			ManagedLoggerRepository.logError(Thread.class::getName, exc);
-		}
+		}		
 	}
 	
 	private static class Poolable extends Thread {
