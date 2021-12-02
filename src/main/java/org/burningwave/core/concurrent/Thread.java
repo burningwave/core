@@ -53,8 +53,8 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public abstract class Thread extends java.lang.Thread {
 	
-	ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
-	ThrowingConsumer<Thread, ? extends Throwable> executable;
+	volatile ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
+	volatile ThrowingConsumer<Thread, ? extends Throwable> executable;
 	boolean looper;
 	boolean looping;
 	private long number;
