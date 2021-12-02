@@ -376,9 +376,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		} catch (NullPointerException exc) {
 			if (components != null) {
 				throw exc;
-			}		
+			}
+			executor.accept(checkAndInitComponentMapAndAfterInitTask());
 		}
-		executor.accept(checkAndInitComponentMapAndAfterInitTask());
 	}
 	
 	private <T> T executeOnComponentMap(Function<Map<Class<?>, Component>, T> executor) {
