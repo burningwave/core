@@ -84,22 +84,9 @@ public abstract class Thread extends java.lang.Thread {
 	}
 	
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
-		this.originalExecutable = checkExecutable(executable);
+		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
-	}
-	
-	private ThrowingConsumer<Thread, ? extends Throwable> checkExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable) {
-		if (executable == null) {
-			executable = thread -> {
-				ManagedLoggerRepository.logError(getClass()::getName, "Executable of {} was set to null", this);
-			};
-			this.originalExecutable = executable;
-			this.looper = false;
-			start();
-			throw new NullExecutableException(Strings.compile("Executable of {} was set to null", this));
-		}
-		return executable;
 	}
 	
 	public boolean isDetached() {
@@ -112,6 +99,18 @@ public abstract class Thread extends java.lang.Thread {
 
 	@Override
 	public void start() {
+		if (this.originalExecutable == null) {
+			this.originalExecutable = thread -> {
+				ManagedLoggerRepository.logError(getClass()::getName, "Executable of {} is null", this);
+			};
+			this.looper = false;
+			startExecution();		
+			throw new NullExecutableException(Strings.compile("Executable of {} is null", this));
+		}
+		startExecution();	
+	}
+
+	private void startExecution() {
 		if (!looper) {
 			executableWrapper.set(originalExecutable);
 		} else {
