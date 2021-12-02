@@ -798,11 +798,7 @@ public class QueuedTasksExecutor implements Closeable {
 				return true;
 			}
 			if (waitingTime > 0) {
-				try {
-					Thread.sleep(waitingTime);
-				} catch (InterruptedException exc) {
-					ManagedLoggerRepository.logError(getClass()::getName, exc);
-				}
+				Thread.waitFor(waitingTime);
 			}
 			return isExecutorTerminated();
 		}
@@ -1864,7 +1860,7 @@ public class QueuedTasksExecutor implements Closeable {
 					"Starting {}", getName()
 				);
 				ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
-					thread.waitFor(config.getInterval());
+					Thread.waitFor(config.getInterval());
 					if (thread.isLooping()) {
 						if (config.isAllTasksLoggerEnabled()) {
 							queuedTasksExecutorGroup.logInfo();

@@ -241,7 +241,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		if (!waitForAfterInitTaskIfNotNull()) {
 			//Ensure that component map was initialized and that the after init task was launched
 			executeOnComponentMap(components -> {
-				components.toString();
+				//Testing that component map is not null
+				components.getClass();
 			});
 			waitForAfterInitTaskIfNotNull();
 		}
@@ -376,9 +377,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		} catch (NullPointerException exc) {
 			if (components != null) {
 				throw exc;
-			}		
+			}
+			executor.accept(checkAndInitComponentMapAndAfterInitTask());
 		}
-		executor.accept(checkAndInitComponentMapAndAfterInitTask());
 	}
 	
 	private <T> T executeOnComponentMap(Function<Map<Class<?>, Component>, T> executor) {
@@ -388,9 +389,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		} catch (NullPointerException exc) {
 			if (components != null) {
 				throw exc;
-			}		
+			}
+			return executor.apply(checkAndInitComponentMapAndAfterInitTask());
 		}
-		return executor.apply(checkAndInitComponentMapAndAfterInitTask());
 	}
 
 	@Override

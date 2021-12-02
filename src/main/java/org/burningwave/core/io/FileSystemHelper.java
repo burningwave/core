@@ -320,7 +320,7 @@ public class FileSystemHelper implements Component {
 			lastDeletionStartTime = -1;
 			ThreadHolder.startLooping(name, true, Thread.MIN_PRIORITY, thread -> {
 				pingAndDelete();
-				thread.waitFor(waitInterval);
+				org.burningwave.core.concurrent.Thread.waitFor(waitInterval);
 			});
 		}
 
