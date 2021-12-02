@@ -261,10 +261,8 @@ public abstract class Thread extends java.lang.Thread {
 					ManagedLoggerRepository.logError(getClass()::getName, "The thread runned a null executable");
 					if (this.executableWrapper.get() == null) {
 						int waitTime = 10;
-						try {
-							ManagedLoggerRepository.logWarn(getClass()::getName, "Executable is still null: thread will wait {} milliseconds until next retry", waitTime);
-							Thread.sleep(waitTime);
-						} catch (InterruptedException e) {}
+						ManagedLoggerRepository.logWarn(getClass()::getName, "Executable is still null: thread will wait {} milliseconds until next retry", waitTime);
+						waitFor(waitTime);
 					}
 					runExecutable();
 				}
