@@ -798,11 +798,7 @@ public class QueuedTasksExecutor implements Closeable {
 				return true;
 			}
 			if (waitingTime > 0) {
-				try {
-					Thread.sleep(waitingTime);
-				} catch (InterruptedException exc) {
-					ManagedLoggerRepository.logError(getClass()::getName, exc);
-				}
+				Thread.waitFor(waitingTime);
 			}
 			return isExecutorTerminated();
 		}
