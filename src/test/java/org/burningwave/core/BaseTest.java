@@ -191,6 +191,20 @@ public class BaseTest implements Component {
 		}
 		assertNull(throwable);
 	}
+	
+	public void testThrow(Executable executable) {
+		Throwable throwable = null;
+		long initialTime = System.currentTimeMillis();
+		try {
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logDebug(getClass()::getName, getCallerMethod() + " - Initializing logger");
+			executable.execute();
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, getCallerMethod() + " - Elapsed time: " + getFormattedDifferenceOfMillis(System.currentTimeMillis(), initialTime));
+		} catch (Throwable exc) {
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logError(getClass()::getName, getCallerMethod() + " - Exception occurred", exc);
+			throwable = exc;
+		}
+		assertNotNull(throwable);
+	}
 
 
 	String getFormattedDifferenceOfMillis(long value1, long value2) {
