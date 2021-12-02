@@ -37,16 +37,16 @@ public class BackgroundExecutorTest extends BaseTest {
 	//@Test
 	public void stressTestOne() {
 		testDoesNotThrow(() -> {
+			AtomicInteger remainedRequestCountWrapper = new AtomicInteger(100_000_000);
 			Random random = new Random();
 			Collection<QueuedTasksExecutor.Task> tasks = new LinkedHashSet<>();
 			for (int i = 0; i < 10; i++) {
 				tasks.add(
 					BackgroundExecutor.createTask(tsk -> {
-						AtomicInteger remainedRequestCountWrapper = new AtomicInteger(10_000_000);
-						while (remainedRequestCountWrapper.getAndDecrement() > 0) {
+						while (remainedRequestCountWrapper.get() > 0) {
 							BackgroundExecutor.createTask(task -> {
-								int remainedRequestCount = remainedRequestCountWrapper.get();
-								if (remainedRequestCount % 10_000 == 0) {
+								int remainedRequestCount = remainedRequestCountWrapper.getAndDecrement();
+								if (remainedRequestCount % 100_000 == 0) {
 									ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCount);
 								}
 							}, random.ints(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY + 1).findFirst().getAsInt()).submit();
@@ -63,14 +63,13 @@ public class BackgroundExecutorTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			int remainedRequestCount = 100_000_000;
 			Random random = new Random();
-			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
-			while (remainedRequestCount-- > 0 && exceptionWrapper.get() == null) {
+			while (remainedRequestCount-- > 0) {
 				final int remainedRequestCountTemp = remainedRequestCount;
 				BackgroundExecutor.createTask(task -> {
-					//if (remainedRequestCountTemp % 100_000 == 0) {
+					if (remainedRequestCountTemp % 100_000 == 0) {
 						ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCountTemp);
-					//}
-				}, random.nextInt(Thread.MAX_PRIORITY) + 1).submit();
+					}
+				}, random.ints(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY + 1).findFirst().getAsInt()).submit();
 			}			
 		});
 	}
