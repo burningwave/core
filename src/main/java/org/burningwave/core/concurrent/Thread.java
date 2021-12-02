@@ -58,7 +58,7 @@ public abstract class Thread extends java.lang.Thread {
 	boolean looper;
 	boolean looping;
 	private long number;
-	Boolean alive;
+	Boolean running;
 	Supplier supplier;
 	
 	private Thread(Supplier threadSupplier, long number) {
@@ -82,9 +82,23 @@ public abstract class Thread extends java.lang.Thread {
 	}
 	
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
+		checkExecutable(executable);
 		this.originalExecutable = executable;
 		this.looper = isLooper;
 		return this;
+	}
+
+	private ThrowingConsumer<Thread, ? extends Throwable> checkExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable) {
+		if (executable == null) {
+			executable = thread -> {
+				ManagedLoggerRepository.logError(getClass()::getName, "Executable of {} was set to null", this);
+			};
+			this.originalExecutable = executable;
+			this.looper = false;
+			start();
+			throw new NullExecutableException(Strings.compile("Executable of {} was set to null", this));
+		}
+		return executable;
 	}
 	
 	public boolean isDetached() {
@@ -107,12 +121,12 @@ public abstract class Thread extends java.lang.Thread {
 				}
 			};
 		}
-		if (alive != null) {
+		if (running != null) {
 			synchronized (this) {
 				notifyAll();
 			}
 		} else {
-			this.alive = true;
+			this.running = true;
 			super.start();
 		}
 	}
@@ -123,7 +137,11 @@ public abstract class Thread extends java.lang.Thread {
 			notifyAll();
 		}
 	}
-
+	
+	public boolean isRunning() {
+		return running;
+	}
+	
 	public boolean isLooping() {
 		return looping;
 	}
@@ -141,7 +159,7 @@ public abstract class Thread extends java.lang.Thread {
 	}
 
 	void shutDown(boolean waitForFinish) {
-		alive = false;
+		running = false;
 		stopLooping();
 		if (waitForFinish && Thread.currentThread() != this) {
 			try {
@@ -181,26 +199,27 @@ public abstract class Thread extends java.lang.Thread {
 		
 		@Override
 		public void run() {
-			IllegalStateException nullExecutableException = null;
-			while (alive) {
+			NullExecutableException nullExecutableException = null;
+			while (running) {
 				supplier.runningThreads.add(this);
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
 					if (executable == null || originalExecutable == null) {
-						nullExecutableException = new IllegalStateException(Strings.compile("Executable of thread {} is null"));
+						nullExecutableException = new NullExecutableException(Strings.compile("Executable of thread {} is null", this));
 						ManagedLoggerRepository.logError(getClass()::getName, "{}, {}, {}", exc, this, executable, originalExecutable);
-						ManagedLoggerRepository.logInfo(getClass()::getName, "The thread {} will be shutted down", exc, this);
+						ManagedLoggerRepository.logWarn(getClass()::getName, "The thread {} will be shutted down", this);
 						shutDown();
+					} else {
+						ManagedLoggerRepository.logError(getClass()::getName, "{}, {}, {}", exc);
 					}
-					ManagedLoggerRepository.logError(getClass()::getName, "{}, {}, {}", exc, this, executable, originalExecutable);
 				}
 				try {
 					supplier.runningThreads.remove(this);
 					executable = null;
 					originalExecutable = null;
 					setIndexedName();
-					if (!alive) {
+					if (!running) {
 						continue;
 					}
 					synchronized(this) {
@@ -877,7 +896,7 @@ public abstract class Thread extends java.lang.Thread {
 		public boolean isAlive(String threadName) {
 			Thread thr = threads.get(threadName);
 			if (thr != null) {
-				return thr.alive;
+				return thr.running;
 			}
 			return false;
 		}
@@ -892,4 +911,5 @@ public abstract class Thread extends java.lang.Thread {
 			threadSupplier = null;
 		}
 	}
+	
 }
