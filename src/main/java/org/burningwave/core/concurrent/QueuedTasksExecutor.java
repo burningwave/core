@@ -697,7 +697,7 @@ public class QueuedTasksExecutor implements Closeable {
 		volatile boolean finished;
 		volatile boolean executed;
 		boolean exceptionHandled;
-		E executable;
+		volatile E executable;
 		java.lang.Thread creator;
 		Thread executor;
 		Object executorOrTerminatedExecutorFlag;
@@ -706,6 +706,9 @@ public class QueuedTasksExecutor implements Closeable {
 		QueuedTasksExecutor queuedTasksExecutor;
 
 		public TaskAbst(E executable, boolean creationTracking) {
+			if (executable == null) {
+				throw new NullExecutableException("executable could not be null");
+			}
 			this.executable = executable;
 			if (creationTracking) {
 				stackTraceOnCreation = java.lang.Thread.currentThread().getStackTrace();
