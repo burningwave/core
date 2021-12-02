@@ -41,13 +41,11 @@ import org.burningwave.core.function.Executor;
 
 public class FileInputStream extends java.io.FileInputStream implements Component {
 
-	private File file;
 	private String absolutePath;
 
 
 	private FileInputStream(File file) throws FileNotFoundException {
 		super(file);
-		this.file = file;
 		this.absolutePath = Paths.clean(file.getAbsolutePath());
 	}
 
@@ -70,15 +68,10 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 			throw new FileSystemItemNotFoundException(exc);
 		}
 	}
-
-	public File getFile() {
-		return this.file;
-	}
-
+	
 	@Override
 	public void close() {
 		Executor.run(() -> super.close());
-		file = null;
 		absolutePath = null;
 	}
 
@@ -92,7 +85,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 
 	public ByteBuffer toByteBuffer() {
 		return Cache.pathForContents.getOrUploadIfAbsent(
-			file.getAbsolutePath(), () ->
+			absolutePath, () ->
 			Streams.toByteBuffer(this)
 		);
 	}
