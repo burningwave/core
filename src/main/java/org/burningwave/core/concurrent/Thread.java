@@ -174,7 +174,41 @@ public abstract class Thread extends java.lang.Thread {
 		terminate(thread -> super.interrupt(), "interrupt");
 	}
 	
-	abstract void terminate(Consumer<Thread> operation, String operationName);
+	void terminate(Consumer<Thread> operation, String operationName) {
+		ManagedLoggerRepository.logWarn(
+			getClass()::getName,
+			"Called {} by {}{}\n\ton {} (executable: {}):{}",
+			operationName,
+			Thread.currentThread(),
+			Strings.from(Methods.retrieveExternalCallersInfo(), 2),
+			this,
+			executableWrapper.get(),
+			Strings.from(getStackTrace(), 2)
+		);
+		shutDown();
+		removePermanently();
+		java.lang.Thread currentThread = Thread.currentThread();
+		if (this != currentThread) {	
+			try {
+				operation.accept(this);
+			} catch (Throwable exc) {
+				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred", exc);						
+			}
+		}
+		synchronized(supplier.poolableSleepingThreads) {
+			supplier.poolableSleepingThreads.notifyAll();
+		}
+		synchronized(mutex) {
+			mutex.notifyAll();
+		}
+		if (this == currentThread) {	
+			Thread killer = supplier.getOrCreate().setExecutable(thread -> {
+				operation.accept(this);
+			});
+			killer.setPriority(currentThread.getPriority());
+			killer.start();
+		}
+	}
 	
 	@Override
 	public String toString() {
@@ -202,6 +236,8 @@ public abstract class Thread extends java.lang.Thread {
 		}
 		return System.currentTimeMillis() - initialTime;
 	}
+	
+	abstract void removePermanently();
 	
 	private static class Poolable extends Thread {
 		
@@ -269,45 +305,9 @@ public abstract class Thread extends java.lang.Thread {
 				}
 			}
 		}
-		
-		@Override
-		void terminate(Consumer<Thread> operation, String operationName) {
-			ManagedLoggerRepository.logWarn(
-				getClass()::getName,
-				"Called {} by {}{}\n\ton {} (executable: {}):{}",
-				operationName,
-				Thread.currentThread(),
-				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
-				this,
-				executableWrapper.get(),
-				Strings.from(getStackTrace(), 2)
-			);
-			shutDown();
-			removePermanently();
-			java.lang.Thread currentThread = Thread.currentThread();
-			if (this != currentThread) {	
-				try {
-					operation.accept(this);
-				} catch (Throwable exc) {
-					ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred", exc);						
-				}
-			}
-			synchronized(supplier.poolableSleepingThreads) {
-				supplier.poolableSleepingThreads.notifyAll();
-			}
-			synchronized(mutex) {
-				mutex.notifyAll();
-			}
-			if (this == currentThread) {	
-				Thread killer = supplier.getOrCreate().setExecutable(thread -> {
-					operation.accept(this);
-				});
-				killer.setPriority(currentThread.getPriority());
-				killer.start();
-			}
-		}
 
-		private void removePermanently () {
+		@Override
+		void removePermanently () {
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadCount;
 				--supplier.poolableThreadCount;
@@ -343,33 +343,11 @@ public abstract class Thread extends java.lang.Thread {
 				mutex.notifyAll();
 			}
 		}
-
+		
 		@Override
-		void terminate(Consumer<Thread> operation, String operationName) {
-			ManagedLoggerRepository.logWarn(
-				getClass()::getName,
-				"Called {} by {}{}\n\ton {} (executable: {}):{}",
-				operationName,
-				Thread.currentThread(),
-				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
-				this,
-				executableWrapper.get(),
-				Strings.from(getStackTrace(), 2)
-			);
-			shutDown();
+		void removePermanently () {
 			if (supplier.runningThreads.remove(this)) {
 				--supplier.threadCount;
-			}
-			try {
-				operation.accept(this);
-			} catch (Throwable exc) {
-				ManagedLoggerRepository.logError(getClass()::getName, "Exception occurred", exc);
-			}
-			synchronized(supplier.poolableSleepingThreads) {
-				supplier.poolableSleepingThreads.notifyAll();
-			}
-			synchronized(mutex) {
-				mutex.notifyAll();
 			}
 		}
 	}
