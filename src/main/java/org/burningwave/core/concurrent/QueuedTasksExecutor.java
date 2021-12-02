@@ -119,9 +119,9 @@ public class QueuedTasksExecutor implements Closeable {
 				
 				@Override
 				public boolean remove(Object task) {
-					boolean removed = super.remove(task);
-					int size = size();
-					if (size > min && size < max) {
+					boolean removed;
+					int size;
+					if ((removed = super.remove(task)) && (size = size()) > min && size < max) {
 						//ManagedLoggerRepository.logInfo(getClass()::getName, "Collection size: {}", size);
 						synchronized(this) {
 							this.notifyAll();
