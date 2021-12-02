@@ -82,8 +82,7 @@ public abstract class Thread extends java.lang.Thread {
 	}
 	
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable, boolean isLooper) {
-		checkExecutable(executable);
-		this.originalExecutable = executable;
+		this.originalExecutable = checkExecutable(executable);
 		this.looper = isLooper;
 		return this;
 	}
