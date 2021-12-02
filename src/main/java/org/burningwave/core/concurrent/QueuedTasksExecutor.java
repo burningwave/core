@@ -98,7 +98,40 @@ public class QueuedTasksExecutor implements Closeable {
 	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
-			tasksQueue = new CopyOnWriteArrayList<>();
+			tasksQueue = new CopyOnWriteArrayList<>() {
+				private static final long serialVersionUID = -176528742161426076L;
+				int min = 1500;
+				int max = 2000;
+				
+				@Override
+				public boolean add(TaskAbst<?, ?> e) {
+					while (tasksQueue.size() > max) {
+						synchronized(this) {
+							try {
+								wait();
+							} catch (Throwable exc) {
+								Driver.throwException(exc);
+							}
+						}
+					}
+					return super.add(e);
+				}
+				
+				@Override
+				public boolean remove(Object task) {
+					boolean removed = super.remove(task);
+					int size = size();
+					if (size > min && size < max) {
+						//ManagedLoggerRepository.logInfo(getClass()::getName, "Collection size: {}", size);
+						synchronized(this) {
+							this.notifyAll();
+						}
+					}
+					return removed;
+				}
+				
+			};
+			
 			tasksInExecution = new ConcurrentHashMap<TaskAbst<?, ?>, TaskAbst<?, ?>>() {
 
 				private static final long serialVersionUID = 4138691488536653865L;
@@ -131,7 +164,7 @@ public class QueuedTasksExecutor implements Closeable {
 	void init() {
 		initializer.run();
 	}
-
+	
 	void init0() {
 		supended = Boolean.FALSE;
 		terminated = Boolean.FALSE;
