@@ -179,9 +179,14 @@ public abstract class Thread extends java.lang.Thread {
 	
 	@Override
 	public String toString() {
-		return super.toString() + Optional.ofNullable(getState()).map(threadState ->
-			" (" + Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")) + ")"
-		).orElseGet(() -> "");
+		return Strings.compile(
+			"{} ({})", 
+			super.toString(),
+			getClass().getSimpleName(),
+			Optional.ofNullable(getState()).map(threadState ->
+				": " + Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " "))
+			).orElseGet(() -> "")
+		);
 	}
 	
 	public static void waitFor(long millis) {
