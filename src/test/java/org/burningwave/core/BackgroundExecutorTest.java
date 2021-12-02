@@ -2,8 +2,10 @@ package org.burningwave.core;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +28,23 @@ public class BackgroundExecutorTest extends BaseTest {
 				.waitForTerminatedThreadNotAlive(100)
 				.isTerminatedThreadNotAlive()
 			);
+		});
+	}
+	
+	//@Test
+	public void stressTest() {
+		testDoesNotThrow(() -> {
+			int remainedRequestCount = 100_000_000;
+			Random random = new Random();
+			AtomicReference<Throwable> exceptionWrapper = new AtomicReference<>();
+			while (remainedRequestCount-- > 0 && exceptionWrapper.get() == null) {
+				final int remainedRequestCountTemp = remainedRequestCount;
+				BackgroundExecutor.createTask(task -> {
+					//if (remainedRequestCountTemp % 100_000 == 0) {
+						ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCountTemp);
+					//}
+				}, random.nextInt(Thread.MAX_PRIORITY) + 1).submit();
+			}			
 		});
 	}
 	
