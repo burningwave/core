@@ -52,7 +52,6 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public abstract class Thread extends java.lang.Thread {
-	Object mutex;
 	ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
 	AtomicReference<ThrowingConsumer<Thread, ? extends Throwable>> executableWrapper;
 	boolean looper;
@@ -64,7 +63,6 @@ public abstract class Thread extends java.lang.Thread {
 	private Thread(Supplier threadSupplier, long number) {
 		super(threadSupplier.name + " - Executor " + number);
 		executableWrapper = new AtomicReference<>();
-		mutex = new Object();
 		this.supplier = threadSupplier;
 		this.number = number;
 		setIndexedName();
@@ -122,8 +120,8 @@ public abstract class Thread extends java.lang.Thread {
 			});
 		}
 		if (running != null) {
-			synchronized (mutex) {
-				mutex.notifyAll();
+			synchronized (executableWrapper) {
+				executableWrapper.notifyAll();
 			}
 		} else {
 			this.running = true;
@@ -133,8 +131,8 @@ public abstract class Thread extends java.lang.Thread {
 
 	public void stopLooping() {
 		looping = false;
-		synchronized(mutex) {
-			mutex.notifyAll();
+		synchronized(executableWrapper) {
+			executableWrapper.notifyAll();
 		}
 	}
 	
@@ -198,8 +196,8 @@ public abstract class Thread extends java.lang.Thread {
 		synchronized(supplier.poolableSleepingThreads) {
 			supplier.poolableSleepingThreads.notifyAll();
 		}
-		synchronized(mutex) {
-			mutex.notifyAll();
+		synchronized(executableWrapper) {
+			executableWrapper.notifyAll();
 		}
 		if (this == currentThread) {	
 			Thread killer = supplier.getOrCreate().setExecutable(thread -> {
@@ -258,7 +256,7 @@ public abstract class Thread extends java.lang.Thread {
 					if (!running) {
 						continue;
 					}
-					synchronized(mutex) {
+					synchronized(executableWrapper) {
 						if (supplier.addPoolableSleepingThreadFunction.apply(this) == null) {
 							ManagedLoggerRepository.logWarn(
 								getClass()::getName,
@@ -271,7 +269,7 @@ public abstract class Thread extends java.lang.Thread {
 						synchronized(supplier.poolableSleepingThreads) {
 							supplier.poolableSleepingThreads.notifyAll();
 						}					
-						mutex.wait();
+						executableWrapper.wait();
 					}
 				} catch (InterruptedException exc) {
 					ManagedLoggerRepository.logError(getClass()::getName, exc);
@@ -282,8 +280,8 @@ public abstract class Thread extends java.lang.Thread {
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
 			}
-			synchronized(mutex) {
-				mutex.notifyAll();
+			synchronized(executableWrapper) {
+				executableWrapper.notifyAll();
 			}
 		}
 
@@ -337,8 +335,8 @@ public abstract class Thread extends java.lang.Thread {
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
 			}
-			synchronized(mutex) {
-				mutex.notifyAll();
+			synchronized(executableWrapper) {
+				executableWrapper.notifyAll();
 			}
 		}
 		
