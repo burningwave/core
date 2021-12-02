@@ -1864,7 +1864,7 @@ public class QueuedTasksExecutor implements Closeable {
 					"Starting {}", getName()
 				);
 				ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
-					thread.waitFor(config.getInterval());
+					Thread.waitFor(config.getInterval());
 					if (thread.isLooping()) {
 						if (config.isAllTasksLoggerEnabled()) {
 							queuedTasksExecutorGroup.logInfo();

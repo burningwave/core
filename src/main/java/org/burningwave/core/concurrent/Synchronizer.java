@@ -249,7 +249,7 @@ public class Synchronizer implements Closeable {
 
 		public ThreadsMonitorer start(Long interval) {
 			ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
-				thread.waitFor(interval);
+				Thread.waitFor(interval);
 				if (thread.isLooping()) {
 					synchronizer.logAllThreadsState(false);
 				}
