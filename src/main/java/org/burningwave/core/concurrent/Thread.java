@@ -181,12 +181,19 @@ public abstract class Thread extends java.lang.Thread {
 		
 		@Override
 		public void run() {
+			IllegalStateException nullExecutableException = null;
 			while (alive) {
 				supplier.runningThreads.add(this);
 				try {
 					executable.accept(this);
 				} catch (Throwable exc) {
-					ManagedLoggerRepository.logError(getClass()::getName, this.toString(), exc);
+					if (executable == null || originalExecutable == null) {
+						nullExecutableException = new IllegalStateException(Strings.compile("Executable of thread {} is null"));
+						ManagedLoggerRepository.logError(getClass()::getName, "{}, {}, {}", exc, this, executable, originalExecutable);
+						ManagedLoggerRepository.logInfo(getClass()::getName, "The thread {} will be shutted down", exc, this);
+						shutDown();
+					}
+					ManagedLoggerRepository.logError(getClass()::getName, "{}, {}, {}", exc, this, executable, originalExecutable);
 				}
 				try {
 					supplier.runningThreads.remove(this);
@@ -222,6 +229,9 @@ public abstract class Thread extends java.lang.Thread {
 			}
 			synchronized(this) {
 				notifyAll();
+			}
+			if (nullExecutableException != null) {
+				throw nullExecutableException;
 			}
 		}
 		
