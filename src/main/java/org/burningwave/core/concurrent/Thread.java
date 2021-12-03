@@ -52,21 +52,42 @@ import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public abstract class Thread extends java.lang.Thread {
+	private final static ThrowingConsumer<Thread, ? extends Throwable> nullExecutableNotifier;
+	
+	static {
+		nullExecutableNotifier = thread -> {
+			ManagedLoggerRepository.logError(thread.getClass()::getName, "Executable is null");
+		};
+	}
+	
 	ThrowingConsumer<Thread, ? extends Throwable> originalExecutable;
 	AtomicReference<ThrowingConsumer<Thread, ? extends Throwable>> executableWrapper;
 	boolean looper;
 	boolean looping;
-	private long number;
 	Boolean running;
 	Supplier supplier;
+	String defaultName;
 	
 	private Thread(Supplier threadSupplier, long number) {
 		super(threadSupplier.name + " - Executor " + number);
 		executableWrapper = new AtomicReference<>();
 		this.supplier = threadSupplier;
-		this.number = number;
+		defaultName = Strings.compile(
+			"{} - {} executor {}",
+			supplier.name,
+			getClass().getSimpleName(),
+			number
+		);
 		setIndexedName();
 		setDaemon(threadSupplier.daemon);
+	}
+	
+	abstract void removePermanently();
+	
+	abstract void startRunning();
+	
+	void callStart() {
+		super.start();
 	}
 	
 	public void setIndexedName() {
@@ -74,7 +95,7 @@ public abstract class Thread extends java.lang.Thread {
 	}
 
 	public void setIndexedName(String prefix) {
-		setName(Optional.ofNullable(prefix).orElseGet(() -> supplier.name + " - Executor") + " " + number);
+		setName(Optional.ofNullable(prefix).orElse(defaultName));
 	}
 	
 	public Thread setExecutable(ThrowingConsumer<Thread, ? extends Throwable> executable) {
@@ -98,17 +119,15 @@ public abstract class Thread extends java.lang.Thread {
 	@Override
 	public void start() {
 		if (this.originalExecutable == null) {
-			this.originalExecutable = thread -> {
-				ManagedLoggerRepository.logError(getClass()::getName, "Executable is null");
-			};
+			this.originalExecutable = nullExecutableNotifier;
 			this.looper = false;
 			startExecution();		
 			throw new NullExecutableException(Strings.compile("Executable of {} is null", this));
 		}
-		startExecution();	
+		startExecution();
 	}
 
-	private void startExecution() {
+	void startExecution() {
 		if (!looper) {
 			executableWrapper.set(originalExecutable);
 		} else {
@@ -119,15 +138,10 @@ public abstract class Thread extends java.lang.Thread {
 				}
 			});
 		}
-		if (running != null) {
-			synchronized (executableWrapper) {
-				executableWrapper.notifyAll();
-			}
-		} else {
-			this.running = true;
-			super.start();
-		}
+		startRunning();
 	}
+	
+	
 
 	public void stopLooping() {
 		looping = false;
@@ -137,7 +151,7 @@ public abstract class Thread extends java.lang.Thread {
 	}
 	
 	public boolean isRunning() {
-		return running;
+		return isAlive() && running;
 	}
 	
 	public boolean isLooping() {
@@ -200,7 +214,7 @@ public abstract class Thread extends java.lang.Thread {
 			executableWrapper.notifyAll();
 		}
 		if (this == currentThread) {	
-			Thread killer = supplier.getOrCreate().setExecutable(thread -> {
+			Thread killer = supplier.getOrCreateThread().setExecutable(thread -> {
 				operation.accept(this);
 			});
 			killer.setPriority(currentThread.getPriority());
@@ -235,8 +249,6 @@ public abstract class Thread extends java.lang.Thread {
 		return System.currentTimeMillis() - initialTime;
 	}
 	
-	abstract void removePermanently();
-	
 	private static class Poolable extends Thread {
 		
 		private Poolable(Thread.Supplier supplier, long number) {
@@ -244,13 +256,32 @@ public abstract class Thread extends java.lang.Thread {
 		}
 		
 		@Override
+		void startRunning() {
+			if (running != null) {
+				synchronized (executableWrapper) {
+					executableWrapper.notifyAll();
+				}
+			} else {
+				callStart();
+			}
+		}
+		
+		@Override
 		public void run() {
+			if (this.running != null) {
+				throw new IllegalStateException(Strings.compile("{} could not be restarted", this));
+			}
+			this.running = true;
 			while (running) {
 				supplier.runningThreads.add(this);
 				try {
 					runExecutable();
 					supplier.runningThreads.remove(this);
-					executableWrapper.set(null);
+					//Synchronization needed by the method joinAllRunningThreads
+					synchronized(this) {
+						executableWrapper.set(null);
+						notifyAll();
+					}
 					originalExecutable = null;
 					setIndexedName();
 					if (!running) {
@@ -315,6 +346,7 @@ public abstract class Thread extends java.lang.Thread {
 				--supplier.poolableThreadCount;
 			}
 		}
+		
 	}
 	
 	private static class Detached extends Thread {
@@ -322,15 +354,23 @@ public abstract class Thread extends java.lang.Thread {
 		private Detached(Thread.Supplier supplier, long number) {
 			super(supplier, number);
 		}
-
+		
+		@Override
+		void startRunning() {
+			callStart();
+		}
+		
 		@Override
 		public void run() {
+			this.running = true;
 			try {
 				supplier.runningThreads.add(this);
 				executableWrapper.get().accept(this);
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(getClass()::getName, exc);
 			}
+			executableWrapper.set(null);
+			originalExecutable = null;
 			removePermanently();
 			synchronized(supplier.poolableSleepingThreads) {
 				supplier.poolableSleepingThreads.notifyAll();
@@ -338,6 +378,7 @@ public abstract class Thread extends java.lang.Thread {
 			synchronized(executableWrapper) {
 				executableWrapper.notifyAll();
 			}
+			running = false;
 		}
 		
 		@Override
@@ -519,37 +560,59 @@ public abstract class Thread extends java.lang.Thread {
 				return new Supplier(name, config) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					@Override
-					public void shutDownAll() {
-						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
-							super.shutDownAll();
+					public Supplier shutDownAllThreads(boolean joinThreads) {
+						String shutDownRequestorClass = Methods.retrieveExternalCallerInfo().getClassName();
+						if (shutDownRequestorClass.equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+							super.shutDownAllThreads(joinThreads);
+						} else {
+							ManagedLoggerRepository.logWarn(getClass()::getName, "{} is not authorized to shutdown {}", shutDownRequestorClass, this);
 						}
+						return this;
 					}
 				};
 			} else {
 				return new Supplier(name, config);
 			}
 		}
-
-		public Thread getOrCreate(String name) {
-			Thread thread = getOrCreate();
+		
+		public Thread getOrCreatePoolableThread() {
+			Thread thread;
+			while ((thread = getPoolableThreadFunction.get()) == null) {
+				synchronized(poolableSleepingThreads) {
+					if (poolableThreadCount >= maxPoolableThreadCount) {
+						try {
+							poolableSleepingThreads.wait();
+						} catch (InterruptedException exc) {
+							ManagedLoggerRepository.logError(Thread.class::getName, exc);
+						}
+						continue;
+					}
+					return createPoolableThread();
+				}
+			}
+			return thread;
+		}
+		
+		public Thread getOrCreateThread(String name) {
+			Thread thread = getOrCreateThread();
 			thread.setName(name);
 			return thread;
 		}
 
-		public final Thread getOrCreate() {
-			return getOrCreate(1);
+		public final Thread getOrCreateThread() {
+			return getOrCreateThread(1);
 		}
 
-		public final Thread getOrCreate(int requestCount) {
-			return getOrCreate(requestCount, requestCount);
+		public final Thread getOrCreateThread(int tentativeCount) {
+			return getOrCreateThread(tentativeCount, tentativeCount);
 		}
 
-		final Thread getOrCreate(int initialValue, int requestCount) {
+		final Thread getOrCreateThread(int initialValue, int tentativeCount) {
 			Thread thread = getPoolableThreadFunction.get();
 			if (thread != null) {
 				return thread;
 			}
-			if (requestCount > 0 && poolableThreadCount >= maxPoolableThreadCount && threadCount >= maxThreadCount) {
+			if (tentativeCount > 0 && poolableThreadCount >= maxPoolableThreadCount && threadCount >= maxThreadCount) {
 				synchronized(poolableSleepingThreads) {
 					try {
 						if ((thread = getPoolableThreadFunction.get()) != null) {
@@ -560,7 +623,7 @@ public abstract class Thread extends java.lang.Thread {
 							long startWaitTime = System.currentTimeMillis();
 							poolableSleepingThreads.wait(poolableThreadRequestTimeout);
 							if (maxDetachedThreadCountIncreasingStep < 1) {
-								return getOrCreate(initialValue, requestCount);
+								return getOrCreateThread(initialValue, tentativeCount);
 							}
 							long endWaitTime = System.currentTimeMillis();
 							long waitElapsedTime = endWaitTime - startWaitTime;
@@ -577,7 +640,7 @@ public abstract class Thread extends java.lang.Thread {
 									);
 									timeOfLastIncreaseOfMaxDetachedThreadCount = Long.MAX_VALUE;
 								}
-								return getOrCreate(initialValue, requestCount);
+								return getOrCreateThread(initialValue, tentativeCount);
 							} else {
 								timeOfLastIncreaseOfMaxDetachedThreadCount = System.currentTimeMillis();
 								maxThreadCount += maxDetachedThreadCountIncreasingStep;
@@ -586,23 +649,23 @@ public abstract class Thread extends java.lang.Thread {
 									"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
 									java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
 								);
-								return getOrCreate(initialValue, --requestCount);
+								return getOrCreateThread(initialValue, --tentativeCount);
 							}
 						}
 					} catch (InterruptedException exc) {
-						ManagedLoggerRepository.logError(Thread.class::getName, exc);
+						ManagedLoggerRepository.logError(getClass()::getName, exc);
 					}
 				}
 			} else if (poolableThreadCount >= maxPoolableThreadCount) {
 				if (threadCount < maxThreadCount) {
 					return createDetachedThread();
 				} else {
-					return getOrCreate(initialValue, initialValue);
+					return getOrCreateThread(initialValue, initialValue);
 				}
 			}
 			synchronized(poolableSleepingThreads) {
 				if (poolableThreadCount >= maxPoolableThreadCount) {
-					return getOrCreate(initialValue, requestCount);
+					return getOrCreateThread(initialValue, tentativeCount);
 				}
 				return createPoolableThread();
 			}
@@ -614,7 +677,7 @@ public abstract class Thread extends java.lang.Thread {
 			return new Poolable(this, ++threadNumberSupplier);
 		}
 
-		Thread createDetachedThread() {
+		public Thread createDetachedThread() {
 			++threadCount;
 			return new Detached(this, ++threadNumberSupplier);
 		}
@@ -695,20 +758,54 @@ public abstract class Thread extends java.lang.Thread {
 			return false;
 		}
 		
-		public void shutDownAllPoolableSleeping() {
+		public Supplier shutDownAllPoolableSleepingThreads() {
+			return shutDownAllPoolableSleepingThreads(false);
+		}
+		
+		public Supplier shutDownAllPoolableSleepingThreads(boolean joinThreads) {
+			boolean areThereRunningThreads = false;
 			for (Thread thread : poolableSleepingThreads) {
-				if (thread != null) {
+				if (thread != null && thread.isRunning()) {
+					areThereRunningThreads = true;
 					thread.shutDown();
 				}
 			}
+			if (areThereRunningThreads) {
+				shutDownAllPoolableSleepingThreads(joinThreads);
+			}
+			return this;
 		}
-
-		public void shutDownAll() {
+		
+		public Supplier shutDownAllThreads() {
+			return shutDownAllThreads(false);
+		}
+		
+		public Supplier shutDownAllThreads(boolean joinThreads) {
 			Iterator<Thread> itr = runningThreads.iterator();
 			while (itr.hasNext()) {
-				itr.next().shutDown();
+				itr.next().shutDown(joinThreads);
 			}
-			shutDownAllPoolableSleeping();
+			shutDownAllPoolableSleepingThreads(joinThreads);
+			return this;
+		}
+		
+		public Supplier joinAllRunningThreads() {
+			Iterator<Thread> itr = runningThreads.iterator();
+			while (itr.hasNext()) {
+				Thread thread = itr.next();
+				while (thread.executableWrapper.get() != null) {
+					synchronized(thread) {
+						if (thread.executableWrapper.get() != null) {
+							try {
+								thread.wait();
+							} catch (InterruptedException exc) {
+								ManagedLoggerRepository.logError(getClass()::getName, exc);
+							}
+						}
+					}
+				}
+			}
+			return this;
 		}
 		
 		public int getPoolableThreadCount() {
@@ -800,8 +897,11 @@ public abstract class Thread extends java.lang.Thread {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 					@Override
 					public void close() {
-						if (Methods.retrieveExternalCallerInfo().getClassName().equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
+						String shutDownRequestorClass = Methods.retrieveExternalCallerInfo().getClassName();
+						if (shutDownRequestorClass.equals(Methods.retrieveExternalCallerInfo(stackTraceOnCreation).getClassName())) {
 							super.close();
+						} else {
+							ManagedLoggerRepository.logWarn(getClass()::getName, "{} is not authorized to shutdown {}", shutDownRequestorClass, this);
 						}
 					}
 				};
