@@ -811,7 +811,8 @@ public abstract class Thread extends java.lang.Thread {
 		}
 		
 		public Thread joinThread(Thread thread) {
-			if (Thread.currentThread() != thread) {
+			if (Thread.currentThread() == thread) {
+				ManagedLoggerRepository.logWarn(getClass()::getName, "Join ignored: the current thread could not wait itself");
 				return thread;
 			}
 			while (thread.executableWrapper.get() != null) {
