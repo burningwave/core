@@ -592,17 +592,18 @@ public abstract class Thread extends java.lang.Thread {
 			Thread thread;
 			while ((thread = getPoolableThreadFunction.get()) == null) {
 				synchronized(poolableSleepingThreads) {
-					if ((thread = getPoolableThreadFunction.get()) == null) {
-						if (poolableThreadCount >= maxPoolableThreadCount) {
-							try {
-								poolableSleepingThreads.wait();
-							} catch (InterruptedException exc) {
-								ManagedLoggerRepository.logError(Thread.class::getName, exc);
-							}
-							continue;
-						}
-						return createPoolableThread();
+					if ((thread = getPoolableThreadFunction.get()) != null) {
+						return thread;
 					}
+					if (poolableThreadCount >= maxPoolableThreadCount) {
+						try {
+							poolableSleepingThreads.wait();
+						} catch (InterruptedException exc) {
+							ManagedLoggerRepository.logError(Thread.class::getName, exc);
+						}
+						continue;
+					}
+					return createPoolableThread();
 				}
 			}
 			return thread;
