@@ -368,8 +368,8 @@ public abstract class Thread extends java.lang.Thread {
 		@Override
 		public void run() {
 			this.running = true;
+			supplier.runningThreads.put(this, this);
 			try {
-				supplier.runningThreads.put(this, this);
 				executableWrapper.get().accept(this);
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(getClass()::getName, exc);
@@ -809,15 +809,19 @@ public abstract class Thread extends java.lang.Thread {
 		public Supplier joinAllRunningThreads() {
 			Iterator<Thread> itr = runningAndWaitingForRunThreads.keySet().iterator();
 			while (itr.hasNext()) {
-				Thread thread = itr.next();
-				while (thread.executableWrapper.get() != null) {
-					synchronized(thread.executableWrapper) {
-						if (thread.executableWrapper.get() != null) {
-							try {
-								thread.executableWrapper.wait();
-							} catch (InterruptedException exc) {
-								ManagedLoggerRepository.logError(getClass()::getName, exc);
-							}
+				joinThread(itr.next());
+			}
+			return this;
+		}
+		
+		public Supplier joinThread(Thread thread) {
+			while (thread.executableWrapper.get() != null) {
+				synchronized(thread.executableWrapper) {
+					if (thread.executableWrapper.get() != null) {
+						try {
+							thread.executableWrapper.wait();
+						} catch (InterruptedException exc) {
+							ManagedLoggerRepository.logError(getClass()::getName, exc);
 						}
 					}
 				}
