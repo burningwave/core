@@ -186,7 +186,7 @@ public class QueuedTasksExecutor implements Closeable {
 								continue;
 							}
 						}
-						task.setExecutor(threadSupplier.getOrCreate()).start();
+						task.setExecutor(threadSupplier.getOrCreateThread()).start();
 					}
 				} else {
 					synchronized(executableCollectionFillerMutex) {
