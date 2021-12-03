@@ -170,12 +170,8 @@ public abstract class Thread extends java.lang.Thread {
 	void shutDown(boolean waitForFinish) {
 		running = false;
 		stopLooping();
-		if (waitForFinish && Thread.currentThread() != this) {
-			try {
-				join();
-			} catch (InterruptedException exc) {
-				ManagedLoggerRepository.logError(getClass()::getName, exc);
-			}
+		if (waitForFinish) {
+			supplier.joinThread(this);
 		}
 	}
 	
@@ -784,7 +780,7 @@ public abstract class Thread extends java.lang.Thread {
 			for (Thread thread : poolableSleepingThreads) {
 				if (thread != null && thread.isRunning()) {
 					areThereRunningThreads = true;
-					thread.shutDown();
+					thread.shutDown(joinThreads);
 				}
 			}
 			if (areThereRunningThreads) {
@@ -814,7 +810,10 @@ public abstract class Thread extends java.lang.Thread {
 			return this;
 		}
 		
-		public Supplier joinThread(Thread thread) {
+		public Thread joinThread(Thread thread) {
+			if (Thread.currentThread() != thread) {
+				return thread;
+			}
 			while (thread.executableWrapper.get() != null) {
 				synchronized(thread.executableWrapper) {
 					if (thread.executableWrapper.get() != null) {
@@ -826,7 +825,7 @@ public abstract class Thread extends java.lang.Thread {
 					}
 				}
 			}
-			return this;
+			return thread;
 		}
 		
 		public int getPoolableThreadCount() {
