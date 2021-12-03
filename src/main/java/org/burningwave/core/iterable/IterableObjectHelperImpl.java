@@ -715,7 +715,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						: null;
 				// Used for break the iteration
 				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
-				Collection<Thread> threads = ConcurrentHashMap.newKeySet();
+				Map<Thread, Thread> threads = new ConcurrentHashMap<>();
 				/* Iterate List */
 				if (items instanceof List) { 
 					List<I> itemList = (List<I>)items;
@@ -748,7 +748,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							}
 						};
 						if (currentIndex < (taskCountThatCanBeCreated - 1)) {
-							threads.add(createAndStartThread(iterator, priority));
+							createAndStartThread(threads, iterator, priority);
 						} else {
 							consume(iterator);
 						}
@@ -781,7 +781,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					};
 					for (int taskIndex = 0; taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null; taskIndex++) {
 						if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-							threads.add(createAndStartThread(iterator, priority));
+							createAndStartThread(threads, iterator, priority);
 						} else {
 							consume(iterator);
 						}
@@ -822,7 +822,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								}
 							};
 							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								threads.add(createAndStartThread(iterator, priority));
+								createAndStartThread(threads, iterator, priority);
 							} else {
 								consume(iterator);
 							}						
@@ -859,15 +859,23 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								}
 							}; 
 							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								threads.add(createAndStartThread(iterator, priority));
+								createAndStartThread(threads, iterator, priority);
 							} else {
 								consume(iterator);
 							}
 						}
 					}
 				}
-				for (Thread thread : threads) {
-					ThreadSupplier.joinThread(thread);
+				if (!threads.isEmpty()) {
+					synchronized(threads) {
+						if (!threads.isEmpty()) {
+							try {
+								threads.wait();
+							} catch (InterruptedException exc) {
+								Driver.throwException(exc);
+							}
+						}
+					}
 				}
 				return output;
 			} 
@@ -905,11 +913,23 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return output;
 	}
 
-	private Thread createAndStartThread(ThrowingConsumer<Thread, ? extends Throwable> iterator, int priority) {
+	private Thread createAndStartThread(Map<Thread, Thread> threads, ThrowingConsumer<Thread, ? extends Throwable> iterator, int priority) {
 		Thread thread = ThreadSupplier.getOrCreateThread().setExecutable(iterator);
 		thread.setPriority(priority);
+		threads.put(thread, thread);
 		thread.start();
 		return thread;
+	}
+	
+	private void removeThread(Map<Thread, Thread> threads, Thread thread) {
+		if (thread != null) {
+			threads.remove(thread);
+			if (threads.isEmpty()) {
+				synchronized(threads) {
+					threads.notify();
+				}
+			}
+		}
 	}
 
 	private void checkAndNotifyTerminationOfIteration(
@@ -926,12 +946,6 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			iterator.accept(null);
 		} catch (Throwable exc) {
 			ManagedLoggerRepository.logError(getClass()::getName, exc);
-		}
-	}
-
-	private void removeThread(Collection<Thread> tasks, Thread thread) {
-		if (thread != null) {
-			tasks.remove(thread);
 		}
 	}
 	
