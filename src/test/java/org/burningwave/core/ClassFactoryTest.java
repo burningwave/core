@@ -4,6 +4,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.JVMInfo;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
+import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -150,7 +151,9 @@ public class ClassFactoryTest extends BaseTest {
 			int threadCount = 6;
 			Collection<Thread> threads = new ArrayList<>();
 			for (int i = 0; i < threadCount; i++) {
-				threads.add(new Thread( () -> getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", null)));
+				threads.add(ThreadSupplier.createDetachedThread().setExecutable(thread ->
+					getOrBuildClassWithExternalClassTestOne(true, "ComplexExample", "ComplexExampleTwo", null))
+				);
 			}
 			for (Thread thread : threads) {
 				thread.start();
