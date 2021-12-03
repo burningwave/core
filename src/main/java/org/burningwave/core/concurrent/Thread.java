@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -138,7 +137,13 @@ public abstract class Thread extends java.lang.Thread {
 				}
 			});
 		}
-		startRunning();
+		try {
+			supplier.runningAndWaitingForRunThreads.put(this, this);
+			startRunning();
+		} catch (Throwable exc) {
+			supplier.runningAndWaitingForRunThreads.remove(this);
+			throw exc;
+		}
 	}
 	
 	
@@ -273,14 +278,14 @@ public abstract class Thread extends java.lang.Thread {
 			}
 			this.running = true;
 			while (running) {
-				supplier.runningThreads.add(this);
+				supplier.runningThreads.put(this, this);
 				try {
 					runExecutable();
 					supplier.runningThreads.remove(this);
 					//Synchronization needed by the method joinAllRunningThreads
-					synchronized(this) {
+					synchronized(executableWrapper) {
 						executableWrapper.set(null);
-						notifyAll();
+						executableWrapper.notifyAll();
 					}
 					originalExecutable = null;
 					setIndexedName();
@@ -337,7 +342,7 @@ public abstract class Thread extends java.lang.Thread {
 
 		@Override
 		void removePermanently () {
-			if (supplier.runningThreads.remove(this)) {
+			if (supplier.runningThreads.remove(this, this)) {
 				--supplier.threadCount;
 				--supplier.poolableThreadCount;
 			}
@@ -364,7 +369,7 @@ public abstract class Thread extends java.lang.Thread {
 		public void run() {
 			this.running = true;
 			try {
-				supplier.runningThreads.add(this);
+				supplier.runningThreads.put(this, this);
 				executableWrapper.get().accept(this);
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(getClass()::getName, exc);
@@ -383,7 +388,7 @@ public abstract class Thread extends java.lang.Thread {
 		
 		@Override
 		void removePermanently () {
-			if (supplier.runningThreads.remove(this)) {
+			if (supplier.runningThreads.remove(this) != null) {
 				--supplier.threadCount;
 			}
 		}
@@ -451,7 +456,8 @@ public abstract class Thread extends java.lang.Thread {
 		private int maxDetachedThreadCountIncreasingStep;
 		private long poolableThreadRequestTimeout;
 		private long elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount;
-		private Collection<Thread> runningThreads;
+		private Map<Thread, Thread> runningThreads;
+		private Map<Thread, Thread> runningAndWaitingForRunThreads;
 		//Changed poolable thread container to array (since 12.15.2, the previous version is 12.15.1)
 		private Thread.Poolable[] poolableSleepingThreads;
 		private Object[] poolableSleepingThreadMutexes;
@@ -511,8 +517,19 @@ public abstract class Thread extends java.lang.Thread {
 			if (maxDetachedThreadCount < 0) {
 				maxDetachedThreadCount = Integer.MAX_VALUE - maxPoolableThreadCount;
 			}
-			
-			this.runningThreads = ConcurrentHashMap.newKeySet();
+			this.runningAndWaitingForRunThreads = new ConcurrentHashMap<Thread, Thread>();
+			this.runningThreads = new ConcurrentHashMap<Thread, Thread>() {
+
+				private static final long serialVersionUID = 3434004576787151770L;
+				
+				@Override
+				public Thread remove(Object key) {
+					runningAndWaitingForRunThreads.remove(key);
+					return super.remove(key);
+				}
+				
+			};
+						
 			this.poolableSleepingThreads = new Thread.Poolable[maxPoolableThreadCount];
 			this.poolableSleepingThreadMutexes = new Object[poolableSleepingThreads.length];
 			for (int i = 0; i < poolableSleepingThreadMutexes.length; i++) {
@@ -781,7 +798,7 @@ public abstract class Thread extends java.lang.Thread {
 		}
 		
 		public Supplier shutDownAllThreads(boolean joinThreads) {
-			Iterator<Thread> itr = runningThreads.iterator();
+			Iterator<Thread> itr = runningAndWaitingForRunThreads.keySet().iterator();
 			while (itr.hasNext()) {
 				itr.next().shutDown(joinThreads);
 			}
@@ -790,14 +807,14 @@ public abstract class Thread extends java.lang.Thread {
 		}
 		
 		public Supplier joinAllRunningThreads() {
-			Iterator<Thread> itr = runningThreads.iterator();
+			Iterator<Thread> itr = runningAndWaitingForRunThreads.keySet().iterator();
 			while (itr.hasNext()) {
 				Thread thread = itr.next();
 				while (thread.executableWrapper.get() != null) {
-					synchronized(thread) {
+					synchronized(thread.executableWrapper) {
 						if (thread.executableWrapper.get() != null) {
 							try {
-								thread.wait();
+								thread.executableWrapper.wait();
 							} catch (InterruptedException exc) {
 								ManagedLoggerRepository.logError(getClass()::getName, exc);
 							}
