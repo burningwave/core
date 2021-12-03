@@ -62,9 +62,9 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
 import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.Thread;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig.WithOutputOfCollection;
@@ -643,7 +643,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> configuration
 	) {
 		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return (OM)iterate(
+		return iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OM)config.output,
@@ -657,7 +657,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> configuration
 	) {
 		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return (OC)iterate(
+		return iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OC)config.output,
@@ -688,7 +688,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (items == IterationConfigImpl.NO_ITEMS) {
 			return output;
 		}
-		Thread currentThread = Thread.currentThread();
+		java.lang.Thread currentThread = Thread.currentThread();
 		int initialThreadPriority = currentThread.getPriority();
 		if (priority == null) {
 			priority = initialThreadPriority;
@@ -715,7 +715,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						: null;
 				// Used for break the iteration
 				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
-				Collection<QueuedTasksExecutor.Task> tasks = ConcurrentHashMap.newKeySet();
+				Collection<Thread> threads = ConcurrentHashMap.newKeySet();
 				/* Iterate List */
 				if (items instanceof List) { 
 					List<I> itemList = (List<I>)items;
@@ -729,7 +729,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
 							splittedIteratorSize :
 							(itemList.size() - (splittedIteratorSize * currentIndex));
-						ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+						ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
 							try {
 								for (
 									int remainedItems = itemsCount;
@@ -744,16 +744,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 								throw exc;
 							} finally {
-								removeTask(tasks, task);
+								removeThread(threads, thread);
 							}
 						};
 						if (currentIndex < (taskCountThatCanBeCreated - 1)) {
-							tasks.add(
-								BackgroundExecutor.createTask(
-									iterator,
-									priority
-								).submit()
-							);
+							threads.add(createAndStartThread(iterator, priority));
 						} else {
 							consume(iterator);
 						}
@@ -761,7 +756,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				/* Iterate any Collection except List */
 				} else if (items instanceof Collection) { 
 					Iterator<I> itemIterator = ((Collection<I>)items).iterator();
-					ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {
+					ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
 						I item = null;
 						try {
 							while (terminateIterationNotification.get() == null) {
@@ -781,14 +776,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 							throw exc;
 						} finally {
-							removeTask(tasks, task);
+							removeThread(threads, thread);
 						}
 					};
 					for (int taskIndex = 0; taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null; taskIndex++) {
 						if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-							tasks.add(
-								BackgroundExecutor.createTask(iterator, priority).submit()
-							);
+							threads.add(createAndStartThread(iterator, priority));
 						} else {
 							consume(iterator);
 						}
@@ -809,7 +802,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								splittedIteratorSize :
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
-							ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
 								try {
 									int remainedItems = itemsCount;									
 									for (
@@ -825,16 +818,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 									throw exc;
 								} finally {
-									removeTask(tasks, task);
+									removeThread(threads, thread);
 								}
 							};
 							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								tasks.add(
-									BackgroundExecutor.createTask(
-										iterator,
-										priority
-									).submit()
-								);
+								threads.add(createAndStartThread(iterator, priority));
 							} else {
 								consume(iterator);
 							}						
@@ -851,7 +839,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
 							I[] itemArray = (I[])items;
-							ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
 								try {
 									int remainedItems = itemsCount;
 									for (
@@ -867,24 +855,19 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
 									throw exc;
 								} finally {
-									removeTask(tasks, task);
+									removeThread(threads, thread);
 								}
 							}; 
 							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								tasks.add(
-									BackgroundExecutor.createTask(
-										iterator,
-										priority
-									).submit()
-								);
+								threads.add(createAndStartThread(iterator, priority));
 							} else {
 								consume(iterator);
 							}
 						}
 					}
 				}
-				for (QueuedTasksExecutor.Task task : tasks) {
-					task.join();
+				for (Thread thread : threads) {
+					ThreadSupplier.joinThread(thread);
 				}
 				return output;
 			} 
@@ -922,6 +905,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return output;
 	}
 
+	private Thread createAndStartThread(ThrowingConsumer<Thread, ? extends Throwable> iterator, int priority) {
+		Thread thread = ThreadSupplier.getOrCreateThread().setExecutable(iterator);
+		thread.setPriority(priority);
+		thread.start();
+		return thread;
+	}
+
 	private void checkAndNotifyTerminationOfIteration(
 		AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification,
 		IterableObjectHelper.TerminateIteration exc
@@ -931,7 +921,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private void consume(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator) {
+	private void consume(ThrowingConsumer<Thread, ? extends Throwable> iterator) {
 		try {
 			iterator.accept(null);
 		} catch (Throwable exc) {
@@ -939,9 +929,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private void removeTask(Collection<QueuedTasksExecutor.Task> tasks, Task task) {
-		if (task != null) {
-			tasks.remove(task);
+	private void removeThread(Collection<Thread> tasks, Thread thread) {
+		if (thread != null) {
+			tasks.remove(thread);
 		}
 	}
 	
