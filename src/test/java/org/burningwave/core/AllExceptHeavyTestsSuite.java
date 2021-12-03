@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
     PropertiesTest.class,
     SourceCodeHandlerTest.class,
     StringsTest.class,
+    ThreadSupplierTest.class,
     UnitSourceGeneratorTest.class,
 //    RepeatedClassFactoryTest.class,
 //    RepeatedComponentContainerTest.class
