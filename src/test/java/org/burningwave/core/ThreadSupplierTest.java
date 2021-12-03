@@ -32,18 +32,21 @@ public class ThreadSupplierTest extends BaseTest {
 			for (int i = 0; i < iterationsCount; i++) {
 				Thread thread = threadSupplier.getOrCreatePoolableThread().setExecutable(thr -> {
 					int currentOperationCount = operationCount.incrementAndGet();
-					ManagedLoggerRepository.logInfo(getClass()::getName, "Operation count: {}", currentOperationCount);
-					if (currentOperationCount % (iterationsCount /2) == 0) {
+					if (currentOperationCount % (iterationsCount / 5) == 0 && currentOperationCount != iterationsCount) {
 						synchronized(thr) {
-							thr.wait(2500);
+							long waitTime = 7500;
+							ManagedLoggerRepository.logInfo(getClass()::getName, "Operation count: {} - Waiting for {}", currentOperationCount, waitTime);
+							thr.wait(waitTime);
 						}
+					} else if (currentOperationCount % 10000 == 0) {
+						ManagedLoggerRepository.logInfo(getClass()::getName, "Operation count: {}", currentOperationCount);
 					}
 				});
 				thread.start();
 			}
 			threadSupplier.joinAllRunningThreads()
 			.shutDownAllThreads(true);
-			assertEquals(operationCount.get(), 100000);			
+			assertEquals(100000, operationCount.get());			
 		});
 	}
 	
