@@ -400,7 +400,7 @@ public class TaskLauncher implements ManagedLogger {
 <br/>
 
 # <a name="Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority"></a>Iterating collections and arrays in parallel by setting thread priority
-Through the underlying configurable [**ThreadSupplier**](#Performing-tasks-in-parallel-with-different-priorities) the **IterableObjectHelper** component is able to iterate a collection or an array in parallel and execute an action on each iterated item giving also the ability to set the threads priority:
+Through the underlying configurable [**ThreadSupplier**](#ThreadSupplier) the **IterableObjectHelper** component is able to iterate a collection or an array in parallel and execute an action on each iterated item giving also the ability to set the threads priority:
 ```java
 package org.burningwave.core.examples.iterableobjecthelper;
 
