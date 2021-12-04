@@ -1158,17 +1158,17 @@ background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task
 #	mark as probable dead locked, kill
 background-executor.all-tasks-monitoring.probable-dead-locked-tasks-handling.policy=\
 	log only
-background-executor.queue-task-executor[0].name=\
+background-executor.queued-task-executor[0].name=\
 	Low priority tasks
-background-executor.queue-task-executor[0].priority=\
+background-executor.queued-task-executor[0].priority=\
 	1
-background-executor.queue-task-executor[1].name=\
+background-executor.queued-task-executor[1].name=\
 	Normal priority tasks
-background-executor.queue-task-executor[1].priority=\
+background-executor.queued-task-executor[1].priority=\
 	5
-background-executor.queue-task-executor[2].name=\
+background-executor.queued-task-executor[2].name=\
 	High priority tasks
-background-executor.queue-task-executor[2].priority=\
+background-executor.queued-task-executor[2].priority=\
 	10
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.enabled}

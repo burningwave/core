@@ -68,8 +68,8 @@ import org.burningwave.core.classes.FunctionalInterfaceFactory;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchResult;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -120,7 +120,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private Properties config;
 	private boolean isUndestroyable;
 	private Consumer<ComponentContainer> preAfterInitCall;
-	private QueuedTasksExecutor.Task afterInitTask;
+	private QueuedTaskExecutor.Task afterInitTask;
 	private String instanceId;
 
 	static {
@@ -212,9 +212,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					if (preAfterInitCall != null) {
 						preAfterInitCall.accept(this);
 					}
-					Collection<QueuedTasksExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
+					Collection<QueuedTaskExecutor.TaskAbst<?, ?>> tasks = resolveProperty(this.config, Configuration.Key.AFTER_INIT, null);
 					if (tasks != null) {
-						for (QueuedTasksExecutor.TaskAbst<?, ?> iteratedTask : tasks) {
+						for (QueuedTaskExecutor.TaskAbst<?, ?> iteratedTask : tasks) {
 							iteratedTask.waitForFinish();
 						}
 					}
@@ -250,7 +250,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 	
 	private boolean waitForAfterInitTaskIfNotNull() {
-		QueuedTasksExecutor.Task afterInitTask = this.afterInitTask;
+		QueuedTaskExecutor.Task afterInitTask = this.afterInitTask;
 		if (afterInitTask != null) {
 			return afterInitTask.waitForFinish() != null;
 		}

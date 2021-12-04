@@ -39,7 +39,7 @@ import java.util.Optional;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Criteria;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 
 
 public class SearchResult<E> implements Closeable {
@@ -116,7 +116,7 @@ public class SearchResult<E> implements Closeable {
 		return context.getSkippedClassNames();
 	}
 
-	public QueuedTasksExecutor.Task getSearchTask() {
+	public QueuedTaskExecutor.Task getSearchTask() {
 		return context.getSearchTask();
 	}
 

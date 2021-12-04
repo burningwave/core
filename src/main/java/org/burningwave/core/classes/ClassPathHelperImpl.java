@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.ClassPathHunter.SearchResult;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.FileSystemItem.CheckingOption;
@@ -401,7 +401,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Map<String, String> classPaths = new HashMap<>();
 		Collection<FileSystemItem> effectiveClassPaths = callRepositoriesSupplier.apply(classRepositories);
 
-		Collection<QueuedTasksExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>();
+		Collection<QueuedTaskExecutor.ProducerTask<String>> pathsCreationTasks = new HashSet<>();
 
 		if (pathsToBeRefreshedPredicate == null) {
 			pathsToBeRefreshedPredicate = fileSystemItem -> false;
@@ -419,7 +419,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 								classPathsBasePath.getAbsolutePath() + "/" + Paths.toSquaredPath(fsObject.getAbsolutePath(), fsObject.isFolder())
 							);
 							if (!classPath.refresh().exists()) {
-								QueuedTasksExecutor.ProducerTask<String> tsk = BackgroundExecutor.createProducerTask(task -> {
+								QueuedTaskExecutor.ProducerTask<String> tsk = BackgroundExecutor.createProducerTask(task -> {
 									FileSystemItem copy = fsObject.copyTo(classPathsBasePath.getAbsolutePath());
 									File target = new File(classPath.getAbsolutePath());
 									new File(copy.getAbsolutePath()).renameTo(target);

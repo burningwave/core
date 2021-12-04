@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Executable;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 
@@ -77,8 +77,8 @@ public interface CodeExecutor {
 				Function.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
 				FileSystemItem.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
 				PathHelper.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				QueuedTasksExecutor.ProducerTask.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				QueuedTasksExecutor.Task.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				QueuedTaskExecutor.ProducerTask.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+				QueuedTaskExecutor.Task.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
 				Supplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 

@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Context;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
 
@@ -52,7 +52,7 @@ class SearchContext<T> implements Closeable {
 	PathScannerClassLoader sharedPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Collection<String> skippedClassNames;
-	QueuedTasksExecutor.Task searchTask;
+	QueuedTaskExecutor.Task searchTask;
 	Collection<T> itemsFound;
 	boolean requestToClosePathScannderClassLoaderOnClose;
 
@@ -109,13 +109,13 @@ class SearchContext<T> implements Closeable {
 	}
 
 	void waitForSearchEnding() {
-		QueuedTasksExecutor.Task searchTask = this.searchTask;
+		QueuedTaskExecutor.Task searchTask = this.searchTask;
 		if (searchTask != null) {
 			searchTask.join();
 		}
 	}
 
-	QueuedTasksExecutor.Task getSearchTask() {
+	QueuedTaskExecutor.Task getSearchTask() {
 		return this.searchTask;
 	}
 

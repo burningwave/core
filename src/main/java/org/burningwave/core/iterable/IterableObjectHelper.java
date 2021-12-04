@@ -47,7 +47,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.Properties.Event;
@@ -164,15 +164,15 @@ public interface IterableObjectHelper {
 	
 	public <I, IC> void iterate(IterationConfig<I, IC, ?> config);
 	
-	public <I, IC, O, OC> QueuedTasksExecutor.ProducerTask<OC> createIterateAndGetTask(
+	public <I, IC, O, OC> QueuedTaskExecutor.ProducerTask<OC> createIterateAndGetTask(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
 	);
 	
-	public <I, IC, K, O, OM> QueuedTasksExecutor.ProducerTask<OM> createIterateAndGetTask(
+	public <I, IC, K, O, OM> QueuedTaskExecutor.ProducerTask<OM> createIterateAndGetTask(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
 	);
 	
-	public <I, IC> QueuedTasksExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config);
+	public <I, IC> QueuedTaskExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
 

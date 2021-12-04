@@ -51,7 +51,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 

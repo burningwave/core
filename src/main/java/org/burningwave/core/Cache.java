@@ -52,7 +52,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.burningwave.core.classes.Members;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.TriConsumer;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.IterableZipContainer;
@@ -170,7 +170,7 @@ public class Cache {
 			return null;
 		}
 
-		QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
+		QueuedTaskExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<T, PathForResources<R>> resources;
 			synchronized (this.resources) {
 				resources = this.resources;
@@ -371,7 +371,7 @@ public class Cache {
 			return count;
 		}
 
-		private QueuedTasksExecutor.Task clearInBackground(boolean destroyItems) {
+		private QueuedTaskExecutor.Task clearInBackground(boolean destroyItems) {
 			Map<Long, Map<String, Map<String, R>>> partitions;
 			synchronized (this.resources) {
 				partitions = this.resources;
@@ -435,7 +435,7 @@ public class Cache {
 									}
 								}).parallelIf(coll -> parallel)
 							);
-						}).parallelIf(coll -> parallel)
+						}).parallelIf(coll -> false)
 					);
 				}).parallelIf(coll -> parallel)
 			);
@@ -455,7 +455,7 @@ public class Cache {
 		Set<Object> toBeExcluded = excluded != null && excluded.length > 0 ?
 			new HashSet<>(Arrays.asList(excluded)) :
 			null;
-		Set<QueuedTasksExecutor.Task> tasks = new HashSet<>();
+		Set<QueuedTaskExecutor.Task> tasks = new HashSet<>();
 		addCleaningTask(tasks, clear(pathForContents, toBeExcluded, destroyItems));
 		addCleaningTask(tasks, clear(pathForFileSystemItems, toBeExcluded, destroyItems));
 		addCleaningTask(tasks, clear(pathForIterableZipContainers, toBeExcluded, destroyItems));
@@ -467,19 +467,19 @@ public class Cache {
 		addCleaningTask(tasks, clear(uniqueKeyForConstructors, toBeExcluded, destroyItems));
 		addCleaningTask(tasks, clear(uniqueKeyForMethods, toBeExcluded, destroyItems));
 		addCleaningTask(tasks, clear(uniqueKeyForExecutableAndMethodHandle, toBeExcluded, destroyItems));
-		for (QueuedTasksExecutor.Task task : tasks) {
+		for (QueuedTaskExecutor.Task task : tasks) {
 			task.join();
 		}
 	}
 	
-	private boolean addCleaningTask(Set<QueuedTasksExecutor.Task> tasks, QueuedTasksExecutor.Task task) {
+	private boolean addCleaningTask(Set<QueuedTaskExecutor.Task> tasks, QueuedTaskExecutor.Task task) {
 		if (task != null) {
 			return tasks.add(task);
 		}
 		return false;
 	}
 
-	private QueuedTasksExecutor.Task clear(Object cache, Set<Object> excluded, boolean destroyItems) {
+	private QueuedTaskExecutor.Task clear(Object cache, Set<Object> excluded, boolean destroyItems) {
 		if (excluded == null || !excluded.contains(cache)) {
 			if (cache instanceof ObjectAndPathForResources) {
 				return ((ObjectAndPathForResources<?,?>)cache).clearInBackground(destroyItems);

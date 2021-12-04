@@ -62,9 +62,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig.WithOutputOfCollection;
@@ -624,17 +622,17 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	@Override
-	public <I, IC, O, OC> ProducerTask<OC> createIterateAndGetTask(WithOutputOfCollection<I, IC, O, OC> config) {
+	public <I, IC, O, OC> QueuedTaskExecutor.ProducerTask<OC> createIterateAndGetTask(WithOutputOfCollection<I, IC, O, OC> config) {
 		return BackgroundExecutor.createProducerTask(() -> iterateAndGet(config));
 	}
 
 	@Override
-	public <I, IC, K, O, OM> ProducerTask<OM> createIterateAndGetTask(WithOutputOfMap<I, IC, K, O, OM> config) {
+	public <I, IC, K, O, OM> QueuedTaskExecutor.ProducerTask<OM> createIterateAndGetTask(WithOutputOfMap<I, IC, K, O, OM> config) {
 		return BackgroundExecutor.createProducerTask(() -> iterateAndGet(config));
 	}
 
 	@Override
-	public <I, IC> Task createIterateTask(IterationConfig<I, IC, ?> config) {
+	public <I, IC> QueuedTaskExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config) {
 		return BackgroundExecutor.createTask(() -> iterate(config));
 	}
 	
@@ -643,7 +641,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> configuration
 	) {
 		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return (OM)iterate(
+		return iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OM)config.output,
@@ -657,7 +655,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> configuration
 	) {
 		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return (OC)iterate(
+		return iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OC)config.output,
@@ -715,7 +713,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						: null;
 				// Used for break the iteration
 				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
-				Collection<QueuedTasksExecutor.Task> tasks = ConcurrentHashMap.newKeySet();
+				Collection<QueuedTaskExecutor.Task> tasks = ConcurrentHashMap.newKeySet();
 				/* Iterate List */
 				if (items instanceof List) { 
 					List<I> itemList = (List<I>)items;
@@ -729,7 +727,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
 							splittedIteratorSize :
 							(itemList.size() - (splittedIteratorSize * currentIndex));
-						ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+						ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> iterator = task -> {					
 							try {
 								for (
 									int remainedItems = itemsCount;
@@ -761,7 +759,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				/* Iterate any Collection except List */
 				} else if (items instanceof Collection) { 
 					Iterator<I> itemIterator = ((Collection<I>)items).iterator();
-					ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {
+					ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> iterator = task -> {
 						I item = null;
 						try {
 							while (terminateIterationNotification.get() == null) {
@@ -809,7 +807,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								splittedIteratorSize :
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
-							ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+							ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> iterator = task -> {					
 								try {
 									int remainedItems = itemsCount;									
 									for (
@@ -851,7 +849,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
 							I[] itemArray = (I[])items;
-							ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator = task -> {					
+							ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> iterator = task -> {					
 								try {
 									int remainedItems = itemsCount;
 									for (
@@ -883,7 +881,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					}
 				}
-				for (QueuedTasksExecutor.Task task : tasks) {
+				for (QueuedTaskExecutor.Task task : tasks) {
 					task.join();
 				}
 				return output;
@@ -931,7 +929,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private void consume(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> iterator) {
+	private void consume(ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> iterator) {
 		try {
 			iterator.accept(null);
 		} catch (Throwable exc) {
@@ -939,7 +937,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 	}
 
-	private void removeTask(Collection<QueuedTasksExecutor.Task> tasks, Task task) {
+	private void removeTask(Collection<QueuedTaskExecutor.Task> tasks, QueuedTaskExecutor.Task task) {
 		if (task != null) {
 			tasks.remove(task);
 		}

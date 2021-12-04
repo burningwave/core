@@ -71,7 +71,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.burningwave.core.classes.JavaClass;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.concurrent.TaskStateException;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.PentaFunction;
@@ -250,7 +250,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 	
 	private <T> T timedExecute(ThrowingSupplier<T, Throwable> executable, long timeout) {
-		QueuedTasksExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
+		QueuedTaskExecutor.ProducerTask<T> task = BackgroundExecutor.createProducerTask(() -> {
 			return executable.get();
 		}).submit();
 		try {
@@ -723,7 +723,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				if (file.exists()) {
 					return IterableObjectHelper.iterateAndGet(
 						IterationConfig.ofNullable(file.listFiles())
-						.withOutput((Collection<FileSystemItem>)newCollectionSupplier.get())
+						.withOutput(newCollectionSupplier.get())
 						.withAction((fl, outputCollectionHandler) -> {
 							outputCollectionHandler.accept(
 								(outputCollection) -> {

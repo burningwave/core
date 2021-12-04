@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 

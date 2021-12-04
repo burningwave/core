@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.junit.jupiter.api.Test;
 
 public class BackgroundExecutorTest extends BaseTest {
@@ -39,7 +39,7 @@ public class BackgroundExecutorTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			AtomicInteger remainedRequestCountWrapper = new AtomicInteger(100_000_000);
 			Random random = new Random();
-			Collection<QueuedTasksExecutor.Task> tasks = new LinkedHashSet<>();
+			Collection<QueuedTaskExecutor.Task> tasks = new LinkedHashSet<>();
 			for (int i = 0; i < 10; i++) {
 				tasks.add(
 					BackgroundExecutor.createTask(tsk -> {
@@ -54,7 +54,7 @@ public class BackgroundExecutorTest extends BaseTest {
 					}).submit()
 				);
 			}
-			tasks.forEach(QueuedTasksExecutor.Task::waitForFinish);
+			tasks.forEach(QueuedTaskExecutor.Task::waitForFinish);
 		});
 	}
 	
@@ -78,8 +78,8 @@ public class BackgroundExecutorTest extends BaseTest {
 	public void killTestTwo() {
 		testDoesNotThrow(() -> {
 			AtomicBoolean executed = new AtomicBoolean(false);
-			AtomicReference<QueuedTasksExecutor.Task> mainTaskWrapper = new AtomicReference<>();
-			QueuedTasksExecutor.Task childTask = BackgroundExecutor.createTask(task -> {
+			AtomicReference<QueuedTaskExecutor.Task> mainTaskWrapper = new AtomicReference<>();
+			QueuedTaskExecutor.Task childTask = BackgroundExecutor.createTask(task -> {
 				Thread.sleep(2500);
 				mainTaskWrapper.get().kill();
 				while(true){}

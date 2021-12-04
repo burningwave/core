@@ -3,8 +3,8 @@ package org.burningwave.core.examples.backgroundexecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
 
 
 public class TaskLauncher implements ManagedLogger {
