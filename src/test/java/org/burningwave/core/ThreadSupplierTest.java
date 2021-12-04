@@ -57,9 +57,9 @@ public class ThreadSupplierTest extends BaseTest {
 			while (remainedRequestCount-- > 0) {
 				final int remainedRequestCountTemp = remainedRequestCount;
 				ThreadSupplier.getOrCreateThread().setExecutable(thread -> {
-					//if (remainedRequestCountTemp % 100_000 == 0) {
+					if (remainedRequestCountTemp % 100_000 == 0) {
 						ManagedLoggerRepository.logInfo(getClass()::getName, "{} thread - Remained iterations: {}", thread.getClass().getSimpleName(), remainedRequestCountTemp);
-					//}
+					}
 				}).start();
 			}			
 		});
