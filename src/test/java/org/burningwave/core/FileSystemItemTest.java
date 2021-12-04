@@ -289,7 +289,7 @@ public class FileSystemItemTest extends BaseTest {
 		).findInAllChildren(
 			FileSystemItem.Criteria.forAllFileThat(
 				fileSystemItem -> "class".equals(fileSystemItem.getExtension())
-			).enableTimedFind(60000).enableDefaultExceptionHandler()
+			)
 		),
 		false);
 	}

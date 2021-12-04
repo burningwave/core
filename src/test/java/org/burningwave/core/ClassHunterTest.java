@@ -131,7 +131,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/spring-core-4.3.4.RELEASE.jar")
-				).checkForAddedClasses().enableTimedSearchForEveryScannedPath(60000)
+				).checkForAddedClasses()
 			),
 			(result) ->
 				result.getClasses()
@@ -140,7 +140,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources")
-				).enableTimedSearchForEveryScannedPath(60000)
+				)
 			),
 			(result) ->
 				result.getClasses()
@@ -835,7 +835,7 @@ public class ClassHunterTest extends BaseTest {
 			() -> componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					componentSupplier.getPathHelper().getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip")
-				).enableTimedSearchForEveryScannedPath(60000)
+				)
 			),
 			(result) ->
 				result.getClasses()
@@ -1249,7 +1249,6 @@ public class ClassHunterTest extends BaseTest {
 				).waitForSearchEnding(
 					false
 				).useNewIsolatedClassLoader()
-				.enableTimedSearchForEveryScannedPath(60000)
 			),
 			(result) -> {
 				result.waitForSearchEnding();

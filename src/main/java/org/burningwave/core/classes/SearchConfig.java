@@ -78,7 +78,6 @@ public class SearchConfig implements Closeable {
 	PathScannerClassLoader pathScannerClassLoader;
 	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
 	
-	Long defaultTimedFindTime;
 	BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler;
 	
 	boolean waitForSearchEnding;
@@ -375,11 +374,6 @@ public class SearchConfig implements Closeable {
 		return this;
 	}
 	
-	public SearchConfig enableTimedSearchForEveryScannedPath(long timeout) {
-		this.defaultTimedFindTime = timeout;
-		return this;
-	}
-	
 	public SearchConfig withExceptionHandlerForFileFilter(BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler) {
 		if (fileFilterExceptionHandler != null) {
 			this.fileFilterExceptionHandler = fileFilterExceptionHandler;
@@ -471,9 +465,6 @@ public class SearchConfig implements Closeable {
 		if (fileFilter.getPriority() == null) {
 			fileFilter.withPriority(this.priority);
 		}
-		if (this.defaultTimedFindTime != null && !fileFilter.hasFindFunctionBeenSetFromExternal()) {
-			fileFilter.enableTimedFind(this.defaultTimedFindTime);
-		}
 		if (fileFilter.getExceptionHandler() == null) {
 			if (this.fileFilterExceptionHandler != null) {
 				fileFilter.setExceptionHandler(this.fileFilterExceptionHandler);
@@ -517,7 +508,6 @@ public class SearchConfig implements Closeable {
 		destConfig.waitForSearchEnding = this.waitForSearchEnding;
 		destConfig.priority = this.priority;
 		destConfig.minimumCollectionSizeForParallelIterationPredicate = this.minimumCollectionSizeForParallelIterationPredicate;
-		destConfig.defaultTimedFindTime = this.defaultTimedFindTime;
 		destConfig.fileFilterExceptionHandler = this.fileFilterExceptionHandler;
 		return destConfig;
 	}
@@ -539,7 +529,6 @@ public class SearchConfig implements Closeable {
 		pathScannerClassLoader = null;
 		priority = null;
 		minimumCollectionSizeForParallelIterationPredicate = null;
-		defaultTimedFindTime = null;
 		fileFilterExceptionHandler = null;
 	}
 }
