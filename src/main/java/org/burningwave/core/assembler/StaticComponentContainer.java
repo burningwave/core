@@ -47,7 +47,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.TasksMonitorer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
@@ -513,11 +513,11 @@ public class StaticComponentContainer {
 		).map(nm -> nm + " - ").orElseGet(() -> "") + simpleName;
 	}
 
-	private static final QueuedTasksExecutor.Group.TasksMonitorer.Config retrieveAllTasksMonitoringConfig() {
+	private static final TasksMonitorer.Config retrieveAllTasksMonitoringConfig() {
 		String probablyDeadLockedThreadsHandlingPolicy = IterableObjectHelper.resolveStringValue(
 			onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY)
 		);
-		return new QueuedTasksExecutor.Group.TasksMonitorer.Config().setAllTasksLoggerEnabled(
+		return new TasksMonitorer.Config().setAllTasksLoggerEnabled(
 			Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED)))
 		).setInterval(
 			Objects.toLong(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL)))
