@@ -62,8 +62,8 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
 import org.burningwave.core.concurrent.Thread;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;

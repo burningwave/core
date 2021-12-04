@@ -48,7 +48,7 @@ import java.util.function.Supplier;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;

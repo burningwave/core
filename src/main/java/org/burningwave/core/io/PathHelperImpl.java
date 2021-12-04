@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.concurrent.QueuedTasksExecutor;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -72,7 +72,7 @@ class PathHelperImpl implements Component, PathHelper {
 	private Map<String, Collection<String>> pathGroups;
 	private Collection<String> allPaths;
 	private Map<?, ?> config;
-	private QueuedTasksExecutor.Task initializerTask;
+	private QueuedTaskExecutor.Task initializerTask;
 
 	PathHelperImpl(Map<?, ?> config) {
 		this.config = config;
@@ -145,7 +145,7 @@ class PathHelperImpl implements Component, PathHelper {
 	}
 
 	private void waitForInitialization() {
-		QueuedTasksExecutor.Task initializerTask = this.initializerTask;
+		QueuedTaskExecutor.Task initializerTask = this.initializerTask;
 		if (initializerTask != null) {
 			initializerTask.waitForFinish();
 		}
@@ -521,7 +521,7 @@ class PathHelperImpl implements Component, PathHelper {
 	@Override
 	public void close() {
 		closeResources(() -> pathGroups == null, task -> {
-			QueuedTasksExecutor.Task initializerTask = this.initializerTask;
+			QueuedTaskExecutor.Task initializerTask = this.initializerTask;
 			if (initializerTask != null) {
 				initializerTask.abortOrWaitForFinish();
 			}

@@ -72,7 +72,7 @@ import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.io.ByteBufferOutputStream;
 import org.burningwave.core.io.FileSystemItem;

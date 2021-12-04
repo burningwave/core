@@ -65,7 +65,7 @@ import org.burningwave.core.function.ThrowingSupplier;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"unchecked", "resource"})
-public class QueuedTasksExecutor implements Closeable {
+public class QueuedTaskExecutor implements Closeable {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
 	private final static Map<TaskAbst<?, ?>, TaskAbst<?, ?>> allTasksInExecution;
@@ -94,7 +94,7 @@ public class QueuedTasksExecutor implements Closeable {
 		allTasksInExecution = new ConcurrentHashMap<>();
 	}
 
-	QueuedTasksExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
+	QueuedTaskExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
 		initializer = () -> {
 			this.threadSupplier = threadSupplier;
 			tasksQueue = new CopyOnWriteArrayList<TaskAbst<?, ?>>() {
@@ -232,13 +232,13 @@ public class QueuedTasksExecutor implements Closeable {
 		return false;
 	}
 
-	public static QueuedTasksExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority) {
+	public static QueuedTaskExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority) {
 		return create(executorName, threadSupplier, initialPriority, false, false);
 	}
 
-	public static QueuedTasksExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority, boolean daemon, boolean undestroyable) {
+	public static QueuedTaskExecutor create(String executorName, Thread.Supplier threadSupplier, int initialPriority, boolean daemon, boolean undestroyable) {
 		if (undestroyable) {
-			return new QueuedTasksExecutor(executorName, threadSupplier, initialPriority, daemon) {
+			return new QueuedTaskExecutor(executorName, threadSupplier, initialPriority, daemon) {
 				StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
 				@Override
 				public boolean shutDown(boolean waitForTasksTermination) {
@@ -250,11 +250,11 @@ public class QueuedTasksExecutor implements Closeable {
 
 			};
 		} else {
-			return new QueuedTasksExecutor(executorName, threadSupplier, initialPriority, daemon);
+			return new QueuedTaskExecutor(executorName, threadSupplier, initialPriority, daemon);
 		}
 	}
 
-	public QueuedTasksExecutor setTasksCreationTrackingFlag(boolean flag) {
+	public QueuedTaskExecutor setTasksCreationTrackingFlag(boolean flag) {
 		this.taskCreationTrackingEnabled = flag;
 		return this;
 	}
@@ -274,13 +274,13 @@ public class QueuedTasksExecutor implements Closeable {
 		return executable -> new ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 
 			@Override
-			QueuedTasksExecutor getQueuedTasksExecutor() {
-				return QueuedTasksExecutor.this;
+			QueuedTaskExecutor getQueuedTasksExecutor() {
+				return QueuedTaskExecutor.this;
 			}
 
 			@Override
-			QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
-				return QueuedTasksExecutor.this;
+			QueuedTaskExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+				return QueuedTaskExecutor.this;
 			}
 
 		};
@@ -290,23 +290,23 @@ public class QueuedTasksExecutor implements Closeable {
 		return createTask(task -> executable.run());
 	}
 	
-	public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable) {
+	public Task createTask(ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> executable) {
 		Task task = getTaskSupplier().apply(executable);
 		task.priority = this.defaultPriority;
 		return task;
 	}
 	
-	<T> Function<ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>, Task> getTaskSupplier() {
+	<T> Function<ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable>, Task> getTaskSupplier() {
 		return executable -> new Task(executable, taskCreationTrackingEnabled) {
 
 			@Override
-			QueuedTasksExecutor getQueuedTasksExecutor() {
-				return QueuedTasksExecutor.this;
+			QueuedTaskExecutor getQueuedTasksExecutor() {
+				return QueuedTaskExecutor.this;
 			}
 
 			@Override
-			QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
-				return QueuedTasksExecutor.this;
+			QueuedTaskExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+				return QueuedTaskExecutor.this;
 			}
 
 		};
@@ -347,21 +347,21 @@ public class QueuedTasksExecutor implements Closeable {
 		return bag;
 	}
 
-	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task) {
+	public <E, T extends TaskAbst<E, T>> QueuedTaskExecutor waitFor(T task) {
 		return waitFor(task, java.lang.Thread.currentThread().getPriority(), false);
 	}
 
-	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, boolean ignoreDeadLocked) {
+	public <E, T extends TaskAbst<E, T>> QueuedTaskExecutor waitFor(T task, boolean ignoreDeadLocked) {
 		return waitFor(task, java.lang.Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 
-	public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
+	public <E, T extends TaskAbst<E, T>> QueuedTaskExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
 		changePriorityToAllTaskBeforeAndWaitThem(task, priority, ignoreDeadLocked);
 		task.waitForFinish(ignoreDeadLocked, false);
 		return this;
 	}
 
-	public QueuedTasksExecutor waitForTasksEnding() {
+	public QueuedTaskExecutor waitForTasksEnding() {
 		return waitForTasksEnding(java.lang.Thread.currentThread().getPriority(), false);
 	}
 
@@ -489,7 +489,7 @@ public class QueuedTasksExecutor implements Closeable {
 		}
 	}
 
-	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
+	public QueuedTaskExecutor waitForTasksEnding(int priority, boolean waitForNewAddedTasks, boolean ignoreDeadLocked) {
 		waitForTasksEnding(priority, ignoreDeadLocked);
 		if (waitForNewAddedTasks) {
 			while (!tasksInExecution.isEmpty() || !tasksQueue.isEmpty()) {
@@ -499,7 +499,7 @@ public class QueuedTasksExecutor implements Closeable {
 		return this;
 	}
 
-	public QueuedTasksExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
+	public QueuedTaskExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
 		tasksLauncher.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
 		if (!tasksQueue.isEmpty()) {
@@ -518,22 +518,22 @@ public class QueuedTasksExecutor implements Closeable {
 		return this;
 	}
 
-	public QueuedTasksExecutor changePriority(int priority) {
+	public QueuedTaskExecutor changePriority(int priority) {
 		this.defaultPriority = priority;
 		tasksLauncher.setPriority(priority);
 		tasksQueue.stream().forEach(executable -> executable.changePriority(priority));
 		return this;
 	}
 
-	public QueuedTasksExecutor suspend(boolean immediately, boolean ignoreDeadLocked) {
+	public QueuedTaskExecutor suspend(boolean immediately, boolean ignoreDeadLocked) {
 		return suspend0(immediately, java.lang.Thread.currentThread().getPriority(), ignoreDeadLocked);
 	}
 
-	public QueuedTasksExecutor suspend(boolean immediately, int priority, boolean ignoreDeadLocked) {
+	public QueuedTaskExecutor suspend(boolean immediately, int priority, boolean ignoreDeadLocked) {
 		return suspend0(immediately, priority, ignoreDeadLocked);
 	}
 
-	QueuedTasksExecutor suspend0(boolean immediately, int priority, boolean ignoreDeadLocked) {
+	QueuedTaskExecutor suspend0(boolean immediately, int priority, boolean ignoreDeadLocked) {
 		tasksLauncher.setPriority(priority);
 		if (immediately) {
 			synchronized (suspensionCallerMutex) {
@@ -561,7 +561,7 @@ public class QueuedTasksExecutor implements Closeable {
 	}
 
 	Task createSuspendingTask(int priority) {
-		Task tsk = createTask((ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>)task ->
+		Task tsk = createTask((ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable>)task ->
 			supended = Boolean.TRUE
 		).runOnlyOnce(getOperationId("suspend"), () -> 
 			supended
@@ -600,7 +600,7 @@ public class QueuedTasksExecutor implements Closeable {
 		waitForTasksInExecutionEnding(priority, ignoreDeadLocked);
 	}
 
-	public QueuedTasksExecutor resumeFromSuspension() {
+	public QueuedTaskExecutor resumeFromSuspension() {
 		synchronized(resumeCallerMutex) {
 			try {
 				supended = Boolean.FALSE;
@@ -735,7 +735,7 @@ public class QueuedTasksExecutor implements Closeable {
 		Object executorOrTerminatedExecutorFlag;
 		Throwable exc;
 		ThrowingBiPredicate<T, Throwable, Throwable> exceptionHandler;
-		QueuedTasksExecutor queuedTasksExecutor;
+		QueuedTaskExecutor queuedTasksExecutor;
 
 		public TaskAbst(E executable, boolean creationTracking) {
 			if (executable == null) {
@@ -758,7 +758,7 @@ public class QueuedTasksExecutor implements Closeable {
 					this.creatorInfos = Collections.unmodifiableList(
 						Methods.retrieveExternalCallersInfo(
 							this.stackTraceOnCreation,
-							(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTasksExecutor.class.getName()),
+							(clientMethodSTE, currentIteratedSTE) -> !currentIteratedSTE.getClassName().startsWith(QueuedTaskExecutor.class.getName()),
 							-1
 						)
 					);
@@ -1144,7 +1144,7 @@ public class QueuedTasksExecutor implements Closeable {
 		T setExecutor(Thread thread) {
 			executor = thread.setExecutable(thr -> this.execute());
 			executor.setPriority(this.priority);
-			QueuedTasksExecutor queuedTasksExecutor = getQueuedTasksExecutor();
+			QueuedTaskExecutor queuedTasksExecutor = getQueuedTasksExecutor();
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
@@ -1230,12 +1230,12 @@ public class QueuedTasksExecutor implements Closeable {
 			return (T)this;
 		}
 
-		abstract QueuedTasksExecutor getQueuedTasksExecutor();
+		abstract QueuedTaskExecutor getQueuedTasksExecutor();
 
-		abstract QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread);
+		abstract QueuedTaskExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread);
 	}
 
-	public static abstract class Task extends TaskAbst<ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>, Task> {
+	public static abstract class Task extends TaskAbst<ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable>, Task> {
 
 		Task(ThrowingConsumer<Task, ? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
@@ -1267,10 +1267,10 @@ public class QueuedTasksExecutor implements Closeable {
 
 	}
 
-	public static abstract class ProducerTask<T> extends TaskAbst<ThrowingFunction<QueuedTasksExecutor.ProducerTask<T>, T, ? extends Throwable>, ProducerTask<T>> {
+	public static abstract class ProducerTask<T> extends TaskAbst<ThrowingFunction<QueuedTaskExecutor.ProducerTask<T>, T, ? extends Throwable>, ProducerTask<T>> {
 		private T result;
 
-		ProducerTask(ThrowingFunction<QueuedTasksExecutor.ProducerTask<T>, T, ? extends Throwable> executable, boolean creationTracking) {
+		ProducerTask(ThrowingFunction<QueuedTaskExecutor.ProducerTask<T>, T, ? extends Throwable> executable, boolean creationTracking) {
 			super(executable, creationTracking);
 		}
 
@@ -1307,7 +1307,7 @@ public class QueuedTasksExecutor implements Closeable {
 
 	public static class Group implements Identifiable {
 		String name;
-		Map<Integer, QueuedTasksExecutor> queuedTasksExecutors;
+		Map<Integer, QueuedTaskExecutor> queuedTasksExecutors;
 		TasksMonitorer allTasksMonitorer;
 		Consumer<Group> initializator;
 		Integer[] definedPriorites;
@@ -1327,10 +1327,10 @@ public class QueuedTasksExecutor implements Closeable {
 					)
 				);
 				queuedTasksExecutorGroup.name = name;
-				Map<Integer, QueuedTasksExecutor> queuedTasksExecutors = new HashMap<>();
+				Map<Integer, QueuedTaskExecutor> queuedTasksExecutors = new HashMap<>();
 				for (int i = 0;  i < java.lang.Thread.MAX_PRIORITY; i++) {
 					Object priorityAsObject = IterableObjectHelper.resolveValue(
-						ResolveConfig.forNamedKey("queue-task-executor[" + i + "].priority")
+						ResolveConfig.forNamedKey("queued-task-executor[" + i + "].priority")
 						.on(configuration)
 					);
 					if (priorityAsObject != null) {
@@ -1339,19 +1339,19 @@ public class QueuedTasksExecutor implements Closeable {
 							throw new IllegalArgumentException(
 								Strings.compile(
 									"Value of '{}' is not correct: it must be between {} and {}",
-									"queue-task-executor[" + i + "].priority",
+									"queued-task-executor[" + i + "].priority",
 									java.lang.Thread.MIN_PRIORITY, java.lang.Thread.MAX_PRIORITY
 								)
 							);
 						}
 						String queuedTasksExecutorName =
 							IterableObjectHelper.resolveStringValue(
-								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].name")
+								ResolveConfig.forNamedKey("queued-task-executor[" + i + "].name")
 								.on(configuration)
 							);
 						Thread.Supplier queuedTasksExecutorThreadSupplier =
 							IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].thread-supplier")
+								ResolveConfig.forNamedKey("queued-task-executor[" + i + "].thread-supplier")
 								.on(configuration)
 						);
 						if (queuedTasksExecutorThreadSupplier == null) {
@@ -1359,7 +1359,7 @@ public class QueuedTasksExecutor implements Closeable {
 						}
 						Object isQueuedTasksExecutorDaemonAsObject =
 							IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey("queue-task-executor[" + i + "].daemon")
+								ResolveConfig.forNamedKey("queued-task-executor[" + i + "].daemon")
 								.on(configuration)
 							);
 						Boolean isQueuedTasksExecutorDaemon = isDaemon;
@@ -1398,7 +1398,7 @@ public class QueuedTasksExecutor implements Closeable {
 		}
 
 		private void setTasksCreationTrackingFlag(Group queuedTasksExecutorGroup, boolean flag) {
-			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutorGroup.queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutorGroup.queuedTasksExecutors.entrySet()) {
 				queuedTasksExecutorBox.getValue().setTasksCreationTrackingFlag(flag);
 			}
 		}
@@ -1488,8 +1488,8 @@ public class QueuedTasksExecutor implements Closeable {
 			return getByPriority(priority).createProducerTask(executable);
 		}
 
-		QueuedTasksExecutor getByPriority(int priority) {
-			QueuedTasksExecutor queuedTasksExecutor = null;
+		QueuedTaskExecutor getByPriority(int priority) {
+			QueuedTaskExecutor queuedTasksExecutor = null;
 			//Implemented deferred initialization (since 10.0.0, the previous version is 9.5.2)
 			try {
 				queuedTasksExecutor = queuedTasksExecutors.get(priority);
@@ -1536,11 +1536,11 @@ public class QueuedTasksExecutor implements Closeable {
 			return definedPriorites[definedPriorites.length -1];
 		}
 
-		public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable) {
+		public Task createTask(ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> executable) {
 			return createTask(executable, java.lang.Thread.currentThread().getPriority());
 		}
 		
-		public Task createTask(ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> executable, int priority) {
+		public Task createTask(ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> executable, int priority) {
 			return getByPriority(priority).createTask(executable);
 		}
 		
@@ -1552,15 +1552,15 @@ public class QueuedTasksExecutor implements Closeable {
 			return getByPriority(priority).createTask(executable);
 		}
 
-		QueuedTasksExecutor createQueuedTasksExecutor(String executorName, Thread.Supplier threadSupplier, int priority, boolean isDaemon) {
-			return new QueuedTasksExecutor(executorName, threadSupplier, priority, isDaemon) {
+		QueuedTaskExecutor createQueuedTasksExecutor(String executorName, Thread.Supplier threadSupplier, int priority, boolean isDaemon) {
+			return new QueuedTaskExecutor(executorName, threadSupplier, priority, isDaemon) {
 
 				@Override
-				<T> Function<ThrowingFunction<QueuedTasksExecutor.ProducerTask<T>, T, ? extends Throwable>, QueuedTasksExecutor.ProducerTask<T>> getProducerTaskSupplier() {
-					return executable -> new QueuedTasksExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
+				<T> Function<ThrowingFunction<QueuedTaskExecutor.ProducerTask<T>, T, ? extends Throwable>, QueuedTaskExecutor.ProducerTask<T>> getProducerTaskSupplier() {
+					return executable -> new QueuedTaskExecutor.ProducerTask<T>(executable, taskCreationTrackingEnabled) {
 
 						@Override
-						QueuedTasksExecutor getQueuedTasksExecutor() {
+						QueuedTaskExecutor getQueuedTasksExecutor() {
 							return this.queuedTasksExecutor != null?
 								this.queuedTasksExecutor : Group.this.getByPriority(this.priority);
 						}
@@ -1571,7 +1571,7 @@ public class QueuedTasksExecutor implements Closeable {
 						}
 
 						@Override
-						QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+						QueuedTaskExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
 							return Group.this.getByPriority(thread.getPriority());
 						}
 
@@ -1579,11 +1579,11 @@ public class QueuedTasksExecutor implements Closeable {
 				}
 
 				@Override
-				<T> Function<ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable> , QueuedTasksExecutor.Task> getTaskSupplier() {
-					return executable -> new QueuedTasksExecutor.Task(executable, taskCreationTrackingEnabled) {
+				<T> Function<ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable> , QueuedTaskExecutor.Task> getTaskSupplier() {
+					return executable -> new QueuedTaskExecutor.Task(executable, taskCreationTrackingEnabled) {
 
 						@Override
-						QueuedTasksExecutor getQueuedTasksExecutor() {
+						QueuedTaskExecutor getQueuedTasksExecutor() {
 							return this.queuedTasksExecutor != null?
 								this.queuedTasksExecutor : Group.this.getByPriority(this.priority);
 						}
@@ -1594,14 +1594,14 @@ public class QueuedTasksExecutor implements Closeable {
 						}
 
 						@Override
-						QueuedTasksExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
+						QueuedTaskExecutor retrieveQueuedTasksExecutorOf(java.lang.Thread thread) {
 							return Group.this.getByPriority(thread.getPriority());
 						}
 					};
 				}
 
 				@Override
-				public QueuedTasksExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
+				public QueuedTaskExecutor waitForTasksEnding(int priority, boolean ignoreDeadLocked) {
 					if (priority == defaultPriority) {
 						if (!tasksQueue.isEmpty()) {
 							synchronized(executingFinishedWaiterMutex) {
@@ -1629,14 +1629,14 @@ public class QueuedTasksExecutor implements Closeable {
 				}
 
 				@Override
-				public <E, T extends TaskAbst<E, T>> QueuedTasksExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
+				public <E, T extends TaskAbst<E, T>> QueuedTaskExecutor waitFor(T task, int priority, boolean ignoreDeadLocked) {
 					task.waitForFinish(ignoreDeadLocked, false);
 					return this;
 				}
 
 				@Override
 				Task createSuspendingTask(int priority) {
-					return createTask((ThrowingConsumer<QueuedTasksExecutor.Task, ? extends Throwable>)task ->
+					return createTask((ThrowingConsumer<QueuedTaskExecutor.Task, ? extends Throwable>)task ->
 						supended = Boolean.TRUE
 					);
 				}
@@ -1651,7 +1651,7 @@ public class QueuedTasksExecutor implements Closeable {
 				synchronized (task) {
 					if (getByPriority(oldPriority).tasksQueue.remove(task)) {
 						task.priority = newPriority;
-						QueuedTasksExecutor queuedTasksExecutor = getByPriority(newPriority);
+						QueuedTaskExecutor queuedTasksExecutor = getByPriority(newPriority);
 						task.queuedTasksExecutor = null;
 						task.executor = null;
 						queuedTasksExecutor.addToQueue(task, true);
@@ -1684,16 +1684,16 @@ public class QueuedTasksExecutor implements Closeable {
 				if (initializator != null) {
 					return;
 				}
-				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(priority);
-				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				QueuedTaskExecutor lastToBeWaitedFor = getByPriority(priority);
+				for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTaskExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (queuedTasksExecutor != lastToBeWaitedFor) {
 						queuedTasksExecutor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 					}
 				}
 				lastToBeWaitedFor.waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
-				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTaskExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (waitForNewAddedTasks && (!queuedTasksExecutor.tasksQueue.isEmpty() || !queuedTasksExecutor.tasksInExecution.isEmpty())) {
 						waitForTasksEnding(priority, waitForNewAddedTasks, ignoreDeadLocked);
 						break;
@@ -1726,14 +1726,14 @@ public class QueuedTasksExecutor implements Closeable {
 
 		public String getInfoAsString() {
 			StringBuffer loggableMessage = new StringBuffer("");
-			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				loggableMessage.append(queuedTasksExecutorBox.getValue().getInfoAsString());
 			}
 			return loggableMessage.toString();
 		}
 
 		public <E, T extends TaskAbst<E, T>> boolean abort(T task) {
-			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				if (queuedTasksExecutorBox.getValue().abort(task)) {
 					return true;
 				}
@@ -1742,7 +1742,7 @@ public class QueuedTasksExecutor implements Closeable {
 		}
 		
 		public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
-			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				if (queuedTasksExecutorBox.getValue().kill(task)) {
 					return true;
 				}
@@ -1752,7 +1752,7 @@ public class QueuedTasksExecutor implements Closeable {
 
 		public Collection<TaskAbst<?, ?>> getAllTasksInExecution() {
 			Collection<TaskAbst<?, ?>> tasksInExecution = new HashSet<>();
-			for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				tasksInExecution.addAll(
 					queuedTasksExecutorBox.getValue().tasksInExecution.keySet()
 				);
@@ -1784,9 +1784,9 @@ public class QueuedTasksExecutor implements Closeable {
 					initializator = null;
 					return;
 				}
-				QueuedTasksExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
-				for (Entry<Integer, QueuedTasksExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
-					QueuedTasksExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
+				QueuedTaskExecutor lastToBeWaitedFor = getByPriority(java.lang.Thread.currentThread().getPriority());
+				for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
+					QueuedTaskExecutor queuedTasksExecutor = queuedTasksExecutorBox.getValue();
 					if (queuedTasksExecutor != lastToBeWaitedFor) {
 						queuedTasksExecutor.shutDown(waitForTasksTermination);
 					}

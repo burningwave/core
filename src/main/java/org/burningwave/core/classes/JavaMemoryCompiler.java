@@ -42,7 +42,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.ProducerTask;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 

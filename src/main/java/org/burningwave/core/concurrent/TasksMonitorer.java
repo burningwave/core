@@ -40,14 +40,14 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.burningwave.core.Closeable;
-import org.burningwave.core.concurrent.QueuedTasksExecutor.TaskAbst;
+import org.burningwave.core.concurrent.QueuedTaskExecutor.TaskAbst;
 
 public class TasksMonitorer implements Closeable {
-	Map<QueuedTasksExecutor.TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
-	QueuedTasksExecutor.Group queuedTasksExecutorGroup;
+	Map<QueuedTaskExecutor.TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
+	QueuedTaskExecutor.Group queuedTasksExecutorGroup;
 	TasksMonitorer.Config config;
 
-	TasksMonitorer(QueuedTasksExecutor.Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
+	TasksMonitorer(QueuedTaskExecutor.Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
 		waitingTasksAndLastStackTrace = new HashMap<>();
 		this.queuedTasksExecutorGroup = queuedTasksExecutorGroup;
 		this.config = config;
@@ -56,17 +56,17 @@ public class TasksMonitorer implements Closeable {
 	void checkAndHandleProbableDeadLockedTasks(
 		long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked,
 		boolean markAsProbableDeadLocked,
-		Consumer<QueuedTasksExecutor.TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction
+		Consumer<QueuedTaskExecutor.TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction
 	) {
-		Iterator<Entry<QueuedTasksExecutor.TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
+		Iterator<Entry<QueuedTaskExecutor.TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
 		while (tasksAndStackTracesIterator.hasNext()) {
-			QueuedTasksExecutor.TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
+			QueuedTaskExecutor.TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
 			if(task.hasFinished()) {
 				tasksAndStackTracesIterator.remove();
 			}
 		}
 		long currentTime = System.currentTimeMillis();
-		for (QueuedTasksExecutor.TaskAbst<?, ?> task : queuedTasksExecutorGroup.getAllTasksInExecution()) {
+		for (QueuedTaskExecutor.TaskAbst<?, ?> task : queuedTasksExecutorGroup.getAllTasksInExecution()) {
 			if (currentTime - task.startTime > minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
 				java.lang.Thread taskThread = task.executor;
 				Thread.State threadState = Optional.ofNullable(taskThread).map(java.lang.Thread::getState).orElseGet(() -> null);
@@ -190,7 +190,7 @@ public class TasksMonitorer implements Closeable {
 		private long interval;
 		private long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
 		private boolean markAsProbableDeadLocked;
-		private Consumer<QueuedTasksExecutor.TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction;
+		private Consumer<QueuedTaskExecutor.TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction;
 		private boolean allTasksLoggerEnabled;
 
 		public long getInterval() {
@@ -225,7 +225,7 @@ public class TasksMonitorer implements Closeable {
 			return terminateProbableDeadLockedTasksFunction != null;
 		}
 		
-		public Consumer<QueuedTasksExecutor.TaskAbst<?, ?>> getTerminateProablyDeadLockedTasksFunction() {
+		public Consumer<QueuedTaskExecutor.TaskAbst<?, ?>> getTerminateProablyDeadLockedTasksFunction() {
 			return terminateProbableDeadLockedTasksFunction;
 		}
 		

@@ -154,7 +154,7 @@ public class StaticComponentContainer {
 	@SuppressWarnings("unused")
 	private static final org.burningwave.core.iterable.Properties.Listener GlobalPropertiesListener;
 
-	public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
+	public static final org.burningwave.core.concurrent.QueuedTaskExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
 	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
 	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
@@ -299,7 +299,7 @@ public class StaticComponentContainer {
 				true
 			);
 			ThreadHolder = org.burningwave.core.concurrent.Thread.Holder.create(ThreadSupplier, true);
-			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTasksExecutor.Group.create(
+			BackgroundExecutor = org.burningwave.core.concurrent.QueuedTaskExecutor.Group.create(
 				"background-executor",
 				getAndAdjustConfigurationForBackgroundExecutor()
 			);
@@ -453,21 +453,21 @@ public class StaticComponentContainer {
 	private static Map<String, Object> getAndAdjustConfigurationForBackgroundExecutor() {
 		if (IterableObjectHelper.resolveStringValues(
 				ResolveConfig.forAllKeysThat((Predicate<String>)key ->
-					key.matches("background-executor.queue-task-executor\\[\\d\\]\\.priority")
+					key.matches("background-executor.queued-task-executor\\[\\d\\]\\.priority")
 				).on(GlobalProperties)
 			).isEmpty()
 		) {
-			GlobalProperties.put("background-executor.queue-task-executor[0].priority", Thread.MIN_PRIORITY);
-			if (GlobalProperties.get("background-executor.queue-task-executor[0].name") == null) {
-				GlobalProperties.put("background-executor.queue-task-executor[0].name", "Low priority tasks");
+			GlobalProperties.put("background-executor.queued-task-executor[0].priority", Thread.MIN_PRIORITY);
+			if (GlobalProperties.get("background-executor.queued-task-executor[0].name") == null) {
+				GlobalProperties.put("background-executor.queued-task-executor[0].name", "Low priority tasks");
 			}
-			GlobalProperties.put("background-executor.queue-task-executor[1].priority", Thread.NORM_PRIORITY);
-			if (GlobalProperties.get("background-executor.queue-task-executor[1].name") == null) {
-				GlobalProperties.put("background-executor.queue-task-executor[1].name", "Normal priority tasks");
+			GlobalProperties.put("background-executor.queued-task-executor[1].priority", Thread.NORM_PRIORITY);
+			if (GlobalProperties.get("background-executor.queued-task-executor[1].name") == null) {
+				GlobalProperties.put("background-executor.queued-task-executor[1].name", "Normal priority tasks");
 			}
-			GlobalProperties.put("background-executor.queue-task-executor[2].priority", Thread.MAX_PRIORITY);
-			if (GlobalProperties.get("background-executor.queue-task-executor[2].name") == null) {
-				GlobalProperties.put("background-executor.queue-task-executor[2].name", "High priority tasks");
+			GlobalProperties.put("background-executor.queued-task-executor[2].priority", Thread.MAX_PRIORITY);
+			if (GlobalProperties.get("background-executor.queued-task-executor[2].name") == null) {
+				GlobalProperties.put("background-executor.queued-task-executor[2].name", "High priority tasks");
 			}
 		}
 		Map<String, Object> configuration = IterableObjectHelper.resolveValues(
