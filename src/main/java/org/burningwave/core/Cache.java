@@ -435,7 +435,7 @@ public class Cache {
 									}
 								}).parallelIf(coll -> parallel)
 							);
-						}).parallelIf(coll -> parallel)
+						}).parallelIf(coll -> false)
 					);
 				}).parallelIf(coll -> parallel)
 			);
