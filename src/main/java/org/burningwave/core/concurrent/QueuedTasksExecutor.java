@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
-import static org.burningwave.core.assembler.StaticComponentContainer.ThreadHolder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1408,14 +1407,20 @@ public class QueuedTasksExecutor implements Closeable {
 			if (initializator == null) {
 				startAllTasksMonitoring(this, config);
 			} else {
-				initializator = initializator.andThen(queuedTasksExecutorGroup -> {
-					startAllTasksMonitoring(this, config);
+				Synchronizer.execute(getOperationId("initialization"), () -> {
+					if (initializator != null) {
+						initializator = initializator.andThen(queuedTasksExecutorGroup -> {
+							startAllTasksMonitoring(this, config);
+						});
+					} else {
+						startAllTasksMonitoring(this, config);
+					}
 				});
 			}
 			return this;
 		}
 
-		void startAllTasksMonitoring(Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
+		synchronized void startAllTasksMonitoring(Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
 			TasksMonitorer allTasksMonitorer = queuedTasksExecutorGroup.allTasksMonitorer;
 			if (allTasksMonitorer != null) {
 				allTasksMonitorer.close();
@@ -1793,213 +1798,6 @@ public class QueuedTasksExecutor implements Closeable {
 				queuedTasksExecutors = null;
 			});
 			return true;
-		}
-
-		public static class TasksMonitorer implements Closeable {
-			Map<TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
-			QueuedTasksExecutor.Group queuedTasksExecutorGroup;
-			TasksMonitorer.Config config;
-
-			TasksMonitorer(QueuedTasksExecutor.Group queuedTasksExecutorGroup, TasksMonitorer.Config config) {
-				waitingTasksAndLastStackTrace = new HashMap<>();
-				this.queuedTasksExecutorGroup = queuedTasksExecutorGroup;
-				this.config = config;
-			}
-
-			void checkAndHandleProbableDeadLockedTasks(
-				long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked,
-				boolean markAsProbableDeadLocked,
-				Consumer<TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction
-			) {
-				Iterator<Entry<TaskAbst<?, ?>, StackTraceElement[]>> tasksAndStackTracesIterator = waitingTasksAndLastStackTrace.entrySet().iterator();
-				while (tasksAndStackTracesIterator.hasNext()) {
-					TaskAbst<?, ?> task = tasksAndStackTracesIterator.next().getKey();
-					if(task.hasFinished()) {
-						tasksAndStackTracesIterator.remove();
-					}
-				}
-				long currentTime = System.currentTimeMillis();
-				for (TaskAbst<?, ?> task : queuedTasksExecutorGroup.getAllTasksInExecution()) {
-					if (currentTime - task.startTime > minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
-						java.lang.Thread taskThread = task.executor;
-						Thread.State threadState = Optional.ofNullable(taskThread).map(java.lang.Thread::getState).orElseGet(() -> null);
-						if (taskThread != null &&
-						(Thread.State.BLOCKED.equals(threadState) ||
-						Thread.State.WAITING.equals(threadState) ||
-						Thread.State.TIMED_WAITING.equals(threadState))) {
-							StackTraceElement[] previousRegisteredStackTrace = waitingTasksAndLastStackTrace.get(task);
-							StackTraceElement[] currentStackTrace = taskThread.getStackTrace();
-							if (previousRegisteredStackTrace != null) {
-								if (areStrackTracesEquals(previousRegisteredStackTrace, currentStackTrace)) {
-									if (!task.hasFinished()) {
-										ManagedLoggerRepository.logWarn(
-											getClass()::getName,
-											"Possible deadlock detected for task:{}",
-											task.getInfoAsString()
-										);
-										if (markAsProbableDeadLocked) {
-											task.markAsProbablyDeadLocked();
-										}
-										if (terminateProbableDeadLockedTasksFunction != null && !task.hasFinished()) {
-											ManagedLoggerRepository.logWarn(
-												getClass()::getName,
-												"Trying to terminate task {}",
-												task.hashCode()
-											);
-											terminateProbableDeadLockedTasksFunction.accept(task);
-										}
-										if (markAsProbableDeadLocked) {
-											task.clear();
-											synchronized(task) {
-												task.notifyAll();
-											}
-										}
-										ManagedLoggerRepository.logWarn(
-											getClass()::getName,
-											Synchronizer.getAllThreadsInfoAsString(true)											
-										);
-										Synchronizer.logAllThreadsState(true);
-									}
-								} else {
-									waitingTasksAndLastStackTrace.put(task, currentStackTrace);
-								}
-							} else {
-								waitingTasksAndLastStackTrace.put(task, currentStackTrace);
-							}
-						}
-					}
-				}
-			}
-
-			private boolean areStrackTracesEquals(StackTraceElement[] stackTraceOne, StackTraceElement[] stackTraceTwo) {
-				if (stackTraceOne.length == stackTraceTwo.length) {
-					for (int i = 0; i < stackTraceOne.length; i++) {
-						if (!stackTraceOne[i].toString().equals(stackTraceTwo[i].toString()) ) {
-							return false;
-						}
-					}
-					return true;
-				}
-				return false;
-			}
-
-			private String getName() {
-				return Optional.ofNullable(queuedTasksExecutorGroup.name).map(nm -> nm + " - ").orElseGet(() -> "") + "All tasks monitorer";
-			}
-
-			public TasksMonitorer start() {
-				ManagedLoggerRepository.logInfo(
-					() -> this.getClass().getName(),
-					"Starting {}", getName()
-				);
-				ThreadHolder.startLooping(getName(), true, java.lang.Thread.MIN_PRIORITY, thread -> {
-					Thread.waitFor(config.getInterval());
-					if (thread.isLooping()) {
-						if (config.isAllTasksLoggerEnabled()) {
-							queuedTasksExecutorGroup.logInfo();
-						}
-						try {
-							checkAndHandleProbableDeadLockedTasks(
-								config.getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(),
-								config.isMarkAsProablyDeadLockedEnabled(),
-								config.getTerminateProablyDeadLockedTasksFunction()
-							);
-						} catch (Throwable exc) {
-							ManagedLoggerRepository.logError(
-								() -> this.getClass().getName(),
-								"Exception occurred while checking dead locked tasks", exc
-							);
-						}
-					}
-				});
-				return this;
-			}
-
-			public void stop() {
-				stop(false);
-			}
-
-			public void stop(boolean waitThreadToFinish) {
-				ManagedLoggerRepository.logInfo(
-					() -> this.getClass().getName(),
-					"Starting {}", getName()
-				);
-				ThreadHolder.stop(getName());
-			}
-
-			@Override
-			public void close() {
-				close(false);
-			}
-
-			public void close(boolean waitForTasksTermination) {
-				stop(waitForTasksTermination);
-				this.queuedTasksExecutorGroup = null;
-				this.waitingTasksAndLastStackTrace.clear();
-				this.waitingTasksAndLastStackTrace = null;
-			}
-
-			public static class Config {
-				private long interval;
-				private long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
-				private boolean markAsProbableDeadLocked;
-				private Consumer<TaskAbst<?, ?>> terminateProbableDeadLockedTasksFunction;
-				private boolean allTasksLoggerEnabled;
-
-				public long getInterval() {
-					return interval;
-				}
-
-				public TasksMonitorer.Config setInterval(long interval) {
-					this.interval = interval;
-					return this;
-				}
-
-				public long getMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked() {
-					return minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
-				}
-
-				public TasksMonitorer.Config setMinimumElapsedTimeToConsiderATaskAsProbablyDeadLocked(
-						long minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked) {
-					this.minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked = minimumElapsedTimeToConsiderATaskAsProbablyDeadLocked;
-					return this;
-				}
-
-				public boolean isMarkAsProablyDeadLockedEnabled() {
-					return markAsProbableDeadLocked;
-				}
-
-				public TasksMonitorer.Config setMarkAsProbableDeadLocked(String policy) {
-					this.markAsProbableDeadLocked = policy.toLowerCase().contains("mark as probable dead locked");
-					return this;
-				}
-
-				public boolean isTerminateProablyDeadLockedTasksEnabled() {
-					return terminateProbableDeadLockedTasksFunction != null;
-				}
-				
-				public Consumer<TaskAbst<?, ?>> getTerminateProablyDeadLockedTasksFunction() {
-					return terminateProbableDeadLockedTasksFunction;
-				}
-				
-				public TasksMonitorer.Config setTerminateProbableDeadLockedTasksOperation(String policy) {
-					this.terminateProbableDeadLockedTasksFunction = policy.toLowerCase().contains("interrupt") ?
-						TaskAbst::interrupt :
-							policy.toLowerCase().contains("kill") ?
-								TaskAbst::kill : 
-								null;
-					return this;
-				}
-
-				public boolean isAllTasksLoggerEnabled() {
-					return allTasksLoggerEnabled;
-				}
-
-				public TasksMonitorer.Config setAllTasksLoggerEnabled(boolean allTasksLoggerEnabled) {
-					this.allTasksLoggerEnabled = allTasksLoggerEnabled;
-					return this;
-				}
-			}
 		}
 	}
 
