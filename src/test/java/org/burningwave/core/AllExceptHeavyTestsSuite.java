@@ -10,14 +10,14 @@ import org.junit.runner.RunWith;
 //@SelectPackages("org.burningwave.core")
 @SelectClasses({
 	ModulesTest.class,
-	BackgroundExecutorTest.class,
+//	BackgroundExecutorTest.class,
 	ByteBufferHandlerTest.class,
 	ByteCodeHunterTest.class,
     ClassesTest.class,
     ClassFactoryTest.class,
-    ComponentContainerTest.class,
+//    ComponentContainerTest.class,
     ClassHunterTest.class,
-    ClassLoadersTest.class,
+//    ClassLoadersTest.class,
     ClassPathHunterTest.class,
     CodeExecutorTest.class,
     ConstructorsTest.class,
@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
     ThreadSupplierTest.class,
     UnitSourceGeneratorTest.class,
     RepeatedClassFactoryTest.class,
-    RepeatedComponentContainerTest.class
+//    RepeatedComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
 public class AllExceptHeavyTestsSuite {
