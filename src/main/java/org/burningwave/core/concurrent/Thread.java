@@ -79,6 +79,7 @@ public abstract class Thread extends java.lang.Thread {
 		);
 		setIndexedName();
 		setDaemon(threadSupplier.daemon);
+		setPriority(supplier.defaultThreadPriority);
 	}
 	
 	abstract void removePermanently();
@@ -300,7 +301,8 @@ public abstract class Thread extends java.lang.Thread {
 						}
 						synchronized(supplier.poolableSleepingThreads) {
 							supplier.poolableSleepingThreads.notifyAll();
-						}					
+						}
+						setPriority(supplier.defaultThreadPriority);
 						executableWrapper.wait();
 					}
 				} catch (InterruptedException exc) {
@@ -399,6 +401,7 @@ public abstract class Thread extends java.lang.Thread {
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
 				public static final String MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
+				public static final String DEFAULT_THREAD_PRIORITY = "thread-supplier.default-thread-priority";
 				public static final String MAX_DETACHED_THREAD_COUNT_INCREASING_STEP = "thread-supplier.max-detached-thread-count.increasing-step";
 			}
 
@@ -465,6 +468,7 @@ public abstract class Thread extends java.lang.Thread {
 		private java.util.function.Supplier<Thread.Poolable> getForwardPoolableThreadFunction;
 		private java.util.function.Supplier<Thread.Poolable> getReversePoolableThreadFunction;
 		private java.util.function.Supplier<Thread.Poolable> getPoolableThreadFunction;
+		private int defaultThreadPriority;
 		
 		Supplier (
 			String name,
@@ -562,6 +566,18 @@ public abstract class Thread extends java.lang.Thread {
 				config.put(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT, poolableThreadRequestTimeout);
 			}
 			this.timeOfLastIncreaseOfMaxDetachedThreadCount = Long.MAX_VALUE;
+			try {
+				this.defaultThreadPriority = Objects.toInt(
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(
+							Configuration.Key.DEFAULT_THREAD_PRIORITY
+						)
+						.on(config)
+					)
+				);
+			} catch (Throwable exc) {
+				this.defaultThreadPriority = Thread.currentThread().getPriority();
+			}
 		}
 		
 		public static Supplier create(
