@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 public interface Executor {

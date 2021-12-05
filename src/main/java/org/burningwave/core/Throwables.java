@@ -37,9 +37,9 @@ public class Throwables {
 	public static <T> T throwException(String message, Object... placeHolderReplacements) {
 		Throwable exception = null;
 		if (placeHolderReplacements == null || placeHolderReplacements.length == 0) {
-			exception = new RuntimeException(message);
+			exception = new Exception(message);
 		} else {
-			exception = new RuntimeException(Strings.compile(message, placeHolderReplacements));
+			exception = new Exception(Strings.compile(message, placeHolderReplacements));
 		}
 		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 		StackTraceElement[] stackTraceOfException = new StackTraceElement[stackTrace.length - 2];

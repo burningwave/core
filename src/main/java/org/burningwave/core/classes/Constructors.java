@@ -30,7 +30,6 @@ package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

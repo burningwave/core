@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.iterable;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

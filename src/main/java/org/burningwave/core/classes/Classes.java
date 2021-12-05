@@ -207,7 +207,7 @@ public class Classes implements MembersRetriever {
 						);
 					}
 				}
-				return org.burningwave.core.Throwables.throwException(exc);
+				throw exc;
 			}
 		} catch (IOException exc) {
 			return org.burningwave.core.Throwables.throwException(exc);

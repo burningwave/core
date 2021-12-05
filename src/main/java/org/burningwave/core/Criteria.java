@@ -29,7 +29,6 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.util.Optional;
 import java.util.function.BiFunction;

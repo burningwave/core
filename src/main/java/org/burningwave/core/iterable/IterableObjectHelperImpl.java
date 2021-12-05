@@ -951,6 +951,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 	
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
+		Integer maxThreadCountsForParallelIteration = this.maxThreadCountsForParallelIteration;
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
 				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
@@ -963,8 +964,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				Synchronizer.execute(
 					getOperationId("initMaxThreadCountsForParallelIteration"), 
 					() -> {
-						if (maxThreadCountsForParallelIteration == null) {
-							maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+						if (this.maxThreadCountsForParallelIteration == null) {
+							this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
 						}
 					}
 				);				
@@ -975,6 +976,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 
 	private boolean isConcurrentEnabled(Object coll) {
+		Class<?>[] parallelCollectionClasses = this.parallelCollectionClasses;
 		try {
 			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
 				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
@@ -983,7 +985,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return false;
 		} catch (NullPointerException exc) {
-			if (this.parallelCollectionClasses == null) {
+			if (parallelCollectionClasses == null) {
 				Synchronizer.execute(
 					getOperationId("initParallelCollectionClassesCollection"),
 					() -> {
