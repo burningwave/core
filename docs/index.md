@@ -1231,6 +1231,8 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
+thread-supplier.default-thread-priority=\
+	5
 thread-supplier.max-detached-thread-count=\
 	${thread-supplier.max-poolable-thread-count}
 thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
