@@ -39,8 +39,8 @@ import org.junit.runner.RunWith;
     StringsTest.class,
     ThreadSupplierTest.class,
     UnitSourceGeneratorTest.class,
-//    RepeatedClassFactoryTest.class,
-//    RepeatedComponentContainerTest.class
+    RepeatedClassFactoryTest.class,
+    RepeatedComponentContainerTest.class
 })
 @ExcludeTags("Heavy")
 public class AllExceptHeavyTestsSuite {
