@@ -490,7 +490,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			clearInBackground();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			Driver.getLoadedClassesRetriever(this).clear();
+			//Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
 			this.clients.clear();
 			this.clients = null;
