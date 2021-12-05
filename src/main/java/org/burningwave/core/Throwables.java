@@ -34,32 +34,31 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 @SuppressWarnings("unchecked")
 public class Throwables {
 	
-	public static <T> T throwException(Object obj, Object... arguments) {
+	public static <T> T throwException(String message, Object... placeHolderReplacements) {
 		Throwable exception = null;
-		StackTraceElement[] stackTraceOfException = null;
-		if (obj instanceof String) {
-			if (arguments == null || arguments.length == 0) {
-				exception = new RuntimeException((String)obj);
-			} else {
-				exception = new RuntimeException(Strings.compile((String)obj, arguments));
-			}
-			StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-			stackTraceOfException = new StackTraceElement[stackTrace.length - 2];
-			System.arraycopy(stackTrace, 2, stackTraceOfException, 0, stackTraceOfException.length);	
+		if (placeHolderReplacements == null || placeHolderReplacements.length == 0) {
+			exception = new RuntimeException(message);
 		} else {
-			exception = (Throwable)obj;
-			StackTraceElement[] stackTrace = exception.getStackTrace();
-			stackTraceOfException = new StackTraceElement[stackTrace.length + 1];
-			stackTraceOfException[0] = Thread.currentThread().getStackTrace()[2];
-			System.arraycopy(stackTrace, 0, stackTraceOfException, 1, stackTrace.length);			
+			exception = new RuntimeException(Strings.compile(message, placeHolderReplacements));
 		}
-		exception.setStackTrace(stackTraceOfException);				
-		throwException(exception);
+		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+		StackTraceElement[] stackTraceOfException = new StackTraceElement[stackTrace.length - 2];
+		System.arraycopy(stackTrace, 2, stackTraceOfException, 0, stackTraceOfException.length);
+		throwException0(exception);
 		return null;
 	}
 	
+	public static <T> T throwException(Throwable exception) {
+		StackTraceElement[] stackTrace = exception.getStackTrace();
+		StackTraceElement[] stackTraceOfException = new StackTraceElement[stackTrace.length + 1];
+		stackTraceOfException[0] = Thread.currentThread().getStackTrace()[2];
+		System.arraycopy(stackTrace, 0, stackTraceOfException, 1, stackTrace.length);
+		exception.setStackTrace(stackTraceOfException);				
+		throwException0(exception);
+		return null;
+	}	
 	
-	private static <E extends Throwable> void throwException(Throwable exc) throws E {
+	private static <E extends Throwable> void throwException0(Throwable exc) throws E {
 		throw (E)exc;
 	}
 	
