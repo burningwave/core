@@ -1,20 +1,10 @@
 name: Build and test
 
-#on:
-#  schedule:
-#    - cron: "0 3-23/6 * * *"
+on:
+  schedule:
+    - cron: "0 3-23/6 * * *"
 #    - cron: "0 15 * * 5"
 #    - cron: "0 10,22 30 9 *"
-on:
-  push:
-    branches:
-      - master
-    paths: 
-      - "src/main/**.java"
-      - "src/test/**.java"
-      - ".github/workflows/**"
-      - "**.properties"
-      - "**.xml"
 
 jobs:
     
