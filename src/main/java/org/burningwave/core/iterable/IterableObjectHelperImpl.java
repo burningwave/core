@@ -678,7 +678,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		);
 	}
 	
-	// Using ThreadSupplier since 12.37.0 (previuos version is 12.36.0)
+	// Using ThreadSupplier since 12.38.0 (previous version is 12.37.0)
 	private <I, IC, OC> OC iterate(
 		IC items,
 		Predicate<IC> predicateForParallelIteration,

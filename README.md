@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1535328454)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1541245021)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1535328454)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1541245021)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -48,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.35.0</version>
+    <version>12.38.3</version>
 </dependency>
 ```
 
@@ -63,7 +63,7 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.35.0</version>
+    <version>12.38.3</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
@@ -341,9 +341,9 @@ public class Finder {
 <br/>
 
 # <a name="Performing-tasks-in-parallel-with-different-priorities"></a>Performing tasks in parallel with different priorities
-The **BackgroundExecutor** component is able to run different functional interfaces in parallel **by setting the priority of the thread they will be assigned to**. There is also the option to wait for them start or finish.
+The **BackgroundExecutor** component you is able to run different functional interfaces in parallel **by setting the priority of the thread they will be assigned to**. There is also the option to wait for them start or finish.
 
-For obtaining threads the BackgroundExecutor uses the <a name="ThreadSupplier">**ThreadSupplier**</a> component which can be customized in the [burningwave.static.properties](#configuration) file. The ThreadSupplier provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-thread-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-thread-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-thread-count' property for the quantity indicated by the **`thread-supplier.max-detached-thread-count.increasing-step`** property. Resetting the 'thread-supplier.max-detached-thread-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
+For obtaining threads this component uses the <a name="ThreadSupplier">**ThreadSupplier**</a> that is also used by the **IterableObjectHelper** to [iterate collections or arrays in parallel](#Iterating-collections-and-arrays-in-parallel-by-setting-thread-priority). The ThreadSupplier can be customized in the [burningwave.static.properties](#configuration) file and it provides a fixed number of reusable threads indicated by the **`thread-supplier.max-poolable-thread-count`** property and, if these threads have already been assigned, new non-reusable threads will be created whose quantity maximum is indicated by the **`thread-supplier.max-detached-thread-count`** property. Once this limit is reached if the request for a new thread exceeds the waiting time indicated by the **`thread-supplier.poolable-thread-request-timeout`** property, the ThreadSupplier will proceed to increase the limit indicated by the 'thread-supplier.max-detached-thread-count' property for the quantity indicated by the **`thread-supplier.max-detached-thread-count.increasing-step`** property. Resetting the 'thread-supplier.max-detached-thread-count' property to its initial value, will occur gradually only when there have been no more waits on thread requests for an amount of time indicated by the **`thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value`** property.
 ```java
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 
@@ -1231,6 +1231,8 @@ synchronizer.all-threads-monitoring.interval=\
 	90000
 thread-supplier.default-daemon-flag-value=\
 	true
+thread-supplier.default-thread-priority=\
+	5
 thread-supplier.max-detached-thread-count=\
 	${thread-supplier.max-poolable-thread-count}
 thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value=\
