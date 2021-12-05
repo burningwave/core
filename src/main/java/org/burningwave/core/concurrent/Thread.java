@@ -400,9 +400,10 @@ public abstract class Thread extends java.lang.Thread {
 				public static final String MAX_DETACHED_THREAD_COUNT = "thread-supplier.max-detached-thread-count";
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
-				public static final String MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE = "thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
-				public static final String DEFAULT_THREAD_PRIORITY = "thread-supplier.default-thread-priority";
+				public static final String MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE =
+					"thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
 				public static final String MAX_DETACHED_THREAD_COUNT_INCREASING_STEP = "thread-supplier.max-detached-thread-count.increasing-step";
+				public static final String DEFAULT_THREAD_PRIORITY = "thread-supplier.default-thread-priority";
 			}
 
 			public final static Map<String, Object> DEFAULT_VALUES;
@@ -438,6 +439,11 @@ public abstract class Thread extends java.lang.Thread {
 				defaultValues.put(
 					Key.MAX_DETACHED_THREAD_COUNT_INCREASING_STEP,
 					"autodetect"
+				);
+				
+				defaultValues.put(
+					Key.DEFAULT_THREAD_PRIORITY,
+					Thread.NORM_PRIORITY
 				);
 
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
