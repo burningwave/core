@@ -390,7 +390,7 @@ public class SearchConfig implements Closeable {
 
 	public SearchConfig useClassLoader(PathScannerClassLoader classLoader) {
 		if (classLoader == null)  {
-			Driver.throwException("Class loader could not be null");
+			org.burningwave.core.Throwables.throwException("Class loader could not be null");
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;
@@ -409,7 +409,7 @@ public class SearchConfig implements Closeable {
 
 	public SearchConfig useAsParentClassLoader(ClassLoader classLoader) {
 		if (classLoader == null)  {
-			Driver.throwException("Parent class loader could not be null");
+			org.burningwave.core.Throwables.throwException("Parent class loader could not be null");
 		}
 		useDefaultPathScannerClassLoader = false;
 		useDefaultPathScannerClassLoaderAsParent = false;

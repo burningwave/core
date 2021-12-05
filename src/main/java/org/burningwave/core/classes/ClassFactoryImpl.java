@@ -165,7 +165,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 				classNames
 			);
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 

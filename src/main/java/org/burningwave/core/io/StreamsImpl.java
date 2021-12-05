@@ -118,7 +118,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			copy(inputStream, outputStream);
 			return outputStream.toByteArray();
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -137,7 +137,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			}
 			return BufferHandler.shareContent(byteBuffer);
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -205,7 +205,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 		try (InputStream inputStream = inputStreamSupplier.get()) {
 			feelPropertiesMap(inputStream, map);
 		} catch (IOException exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}		
 	}
 
@@ -219,7 +219,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 				castedMap.put(entry.getKey(), entry.getValue());
 			}
 		} catch (IOException exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 		
 	}

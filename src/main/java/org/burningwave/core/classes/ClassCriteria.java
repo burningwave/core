@@ -65,7 +65,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			try {
 				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;

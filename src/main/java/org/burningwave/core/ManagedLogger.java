@@ -173,7 +173,7 @@ public interface ManagedLogger {
 
 			} catch (Throwable exc) {
 				exc.printStackTrace();
-				return Driver.throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
 

@@ -246,7 +246,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 					this.getClass()
 				);
 			} else {
-				Driver.throwException(exc);
+				org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
     	removeNotLoadedBytecode(className);

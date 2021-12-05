@@ -131,7 +131,7 @@ public class Resources {
 						FileSystemItem.of(resourceURL).toInputStream()
 					);
 				} catch (Throwable exc2) {
-					return Driver.throwException(exc);
+					return org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 		}
@@ -171,7 +171,7 @@ public class Resources {
 						FileSystemItem.of(resourceURL).toInputStream()
 					);
 				} catch (Throwable exc2) {
-					return Driver.throwException(exc);
+					return org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 		}

@@ -47,7 +47,7 @@ public class FunctionalInterfaceSourceGenerator {
 
 	public ClassSourceGenerator generateExecutor(String className, BodySourceGenerator body) {
 		if (className.contains("$")) {
-			Driver.throwException("{} code executor could not be a inner class", className);
+			org.burningwave.core.Throwables.throwException("{} code executor could not be a inner class", className);
 		}
 		String classSimpleName = Classes.retrieveSimpleName(className);
 
@@ -75,7 +75,7 @@ public class FunctionalInterfaceSourceGenerator {
 	public ClassSourceGenerator generateConsumer(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			Driver.throwException("{} consumer could not be a inner class", className);
+			org.burningwave.core.Throwables.throwException("{} consumer could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		FunctionSourceGenerator acceptMethod = FunctionSourceGenerator.create("accept").setReturnType(
@@ -112,7 +112,7 @@ public class FunctionalInterfaceSourceGenerator {
 	public ClassSourceGenerator generatePredicate(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			Driver.throwException("{} Predicate could not be a inner class", className);
+			org.burningwave.core.Throwables.throwException("{} Predicate could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		FunctionSourceGenerator testMethod = FunctionSourceGenerator.create("test").setReturnType(
@@ -149,7 +149,7 @@ public class FunctionalInterfaceSourceGenerator {
 	public ClassSourceGenerator generateFunction(String className, int parametersLength) {
 		String classSimpleName = Classes.retrieveSimpleName(className);
 		if (className.contains("$")) {
-			Driver.throwException("{} function could not be a inner class", className);
+			org.burningwave.core.Throwables.throwException("{} function could not be a inner class", className);
 		}
 		TypeDeclarationSourceGenerator typeDeclaration = TypeDeclarationSourceGenerator.create(classSimpleName);
 		GenericSourceGenerator returnType = GenericSourceGenerator.create("R");

@@ -71,7 +71,7 @@ public class Members {
 	public <M extends Member> M findOne(MemberCriteria<M, ?, ?> criteria, Class<?> classFrom) {
 		Collection<M> members = findAll(criteria, classFrom);
 		if (members.size() > 1) {
-			Driver.throwException("More than one member found for class {}", classFrom.getName());
+			org.burningwave.core.Throwables.throwException("More than one member found for class {}", classFrom.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -543,7 +543,7 @@ public class Members {
 							retrieveMethodHandle(consulter, executable)
 						);
 					} catch (NoSuchMethodException | IllegalAccessException exc) {
-						return Driver.throwException(exc);
+						return org.burningwave.core.Throwables.throwException(exc);
 					}
 				});
 			}

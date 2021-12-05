@@ -185,11 +185,11 @@ public interface IterableObjectHelper {
 	public <K, V> String toString(Map<K, V> map, int marginTabCount);
 	
 	public default <T> T terminateIteration() {
-		return Driver.throwException(TerminateIteration.NOTIFICATION);
+		return org.burningwave.core.Throwables.throwException(TerminateIteration.NOTIFICATION);
 	}
 	
 	public default <T> T terminateCurrentThreadIteration() {
-		return Driver.throwException(TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION);
+		return org.burningwave.core.Throwables.throwException(TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION);
 	}
 	
 	public default boolean isIterationTerminatedNotification(Throwable exc) {

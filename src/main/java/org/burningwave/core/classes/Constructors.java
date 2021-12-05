@@ -57,7 +57,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 	) {
 		Constructor<?> ctor = findFirstAndMakeItAccessible(targetClass, Classes.retrieveFrom(arguments));
 		if (ctor == null) {
-			Driver.throwException("Constructor not found in {}", targetClass.getName());
+			org.burningwave.core.Throwables.throwException("Constructor not found in {}", targetClass.getName());
 		}
 		return Executor.get(() -> {
 			return (T)Classes.newInstance(
@@ -96,7 +96,7 @@ public class Constructors extends Members.Handler.OfExecutable<Constructor<?>, C
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
-			Driver.throwException(
+			org.burningwave.core.Throwables.throwException(
 				"Found more than one of constructor with argument types {} in {} class",
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()

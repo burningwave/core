@@ -209,7 +209,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
@@ -232,7 +232,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);

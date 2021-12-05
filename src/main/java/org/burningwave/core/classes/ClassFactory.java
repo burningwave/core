@@ -292,7 +292,7 @@ public interface ClassFactory {
 		private Compilation.Result getCompilationResult() {
 			Compilation.Result compilationResult = getCompilationTask().join();
 			if (getCompilationTask().getException() != null) {
-				Driver.throwException(getCompilationTask().getException());
+				org.burningwave.core.Throwables.throwException(getCompilationTask().getException());
 			}
 			return compilationResult;
 		}

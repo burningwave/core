@@ -371,7 +371,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				Driver.throwException("Found more than one item under key/predicate {}", key);
+				org.burningwave.core.Throwables.throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
@@ -873,7 +873,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							try {
 								threads.wait();
 							} catch (InterruptedException exc) {
-								Driver.throwException(exc);
+								org.burningwave.core.Throwables.throwException(exc);
 							}
 						}
 					}

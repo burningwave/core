@@ -72,7 +72,7 @@ public class Modules {
 			allUnnamedSet = new HashSet<>();
 			allUnnamedSet.add(Fields.getStaticDirect(moduleClass, "ALL_UNNAMED_MODULE"));
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -89,7 +89,7 @@ public class Modules {
 				});
 			});
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -132,7 +132,7 @@ public class Modules {
 				export("openPackages", moduleFrom, pkgName, moduleTo);
 			});
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -167,7 +167,7 @@ public class Modules {
 				exporter.accept("openPackages", module, pkgName);
 			});
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 

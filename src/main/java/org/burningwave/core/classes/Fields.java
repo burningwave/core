@@ -179,7 +179,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findOneAndMakeItAccessible(Class<?> targetClass, String memberName) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, memberName, null);
 		if (members.size() != 1) {
-			Driver.throwException(
+			org.burningwave.core.Throwables.throwException(
 				new NoSuchFieldException(
 					Strings.compile("Field {} not found or found more than one field in {} hierarchy", memberName, targetClass.getName())
 				)
@@ -191,7 +191,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
-			Driver.throwException(
+			org.burningwave.core.Throwables.throwException(
 				new NoSuchFieldException(
 					Strings.compile("Field {} not found in {} hierarchy", fieldName, targetClass.getName())
 				)

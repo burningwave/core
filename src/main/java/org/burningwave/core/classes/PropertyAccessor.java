@@ -103,7 +103,7 @@ public abstract class PropertyAccessor implements Component {
 			}
 			message = message.substring(0, message.length() - 1);
 			if (exceptions.size() == propertyRetrievers.size()) {
-				Driver.throwException(message.toString());
+				org.burningwave.core.Throwables.throwException(message.toString());
 			} else {
 				//logDebug("Warning: " + message);
 			}
@@ -149,7 +149,7 @@ public abstract class PropertyAccessor implements Component {
 			} else if (Map.class.isAssignableFrom(property.getClass())) {
 				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
 			} else {
-				return Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+				return org.burningwave.core.Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedProperty(
 					propertyRetriever.get(),
@@ -189,7 +189,7 @@ public abstract class PropertyAccessor implements Component {
 		} else if (Map.class.isAssignableFrom(property.getClass())) {
 			((Map<String, T>)property).put(index, (T)value);
 		} else {
-			Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+			org.burningwave.core.Throwables.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 		}
 	}
 

@@ -55,7 +55,7 @@ public interface Executor {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
     
@@ -63,7 +63,7 @@ public interface Executor {
 		try {
 			consumer.accept(input);
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -73,7 +73,7 @@ public interface Executor {
 				runnable.run();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Driver.throwException(exc);
+					org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 			--attemptsNumber;
@@ -84,7 +84,7 @@ public interface Executor {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -94,7 +94,7 @@ public interface Executor {
 				return supplier.get();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Driver.throwException(exc);
+					org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 			--attemptsNumber;

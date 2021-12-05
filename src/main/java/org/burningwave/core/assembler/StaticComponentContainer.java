@@ -229,7 +229,7 @@ public class StaticComponentContainer {
 									}
 								}
 								if (mustThrowException) {
-									Driver.throwException("The reconfiguration of property '{}' is not allowed", key);
+									org.burningwave.core.Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
 								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggerRepository;

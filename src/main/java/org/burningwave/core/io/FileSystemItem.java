@@ -491,7 +491,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -871,7 +871,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
 				if (zIS == null) {
-					return Driver.throwException(
+					return org.burningwave.core.Throwables.throwException(
 						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 					);
 				}
@@ -911,7 +911,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							// in case of JMod files folder
 							return retrieveConventionedRelativePath(this, zIS2, null, relativePath);
 						}
-						return Driver.throwException(
+						return org.burningwave.core.Throwables.throwException(
 							new FileSystemItemNotFoundException(
 								Strings.compile("Absolute path \"{}\" not exists", absolutePath.getKey())
 							)
@@ -923,7 +923,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		} catch (NullPointerException exc) {
 			if (initialException != null) {
-				return Driver.throwException(initialException);
+				return org.burningwave.core.Throwables.throwException(initialException);
 			} else {
 				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
@@ -1105,7 +1105,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try (InputStream inputStream = toInputStream()) {
 			return Objects.deserialize(inputStream);
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
