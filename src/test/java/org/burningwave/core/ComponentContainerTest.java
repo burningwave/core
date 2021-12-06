@@ -58,8 +58,8 @@ public class ComponentContainerTest extends BaseTest {
 
 
 
-//	@Test
-//	@Order(4)
+	@Test
+	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
