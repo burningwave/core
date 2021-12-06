@@ -554,10 +554,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					if (!(component instanceof ClassLoader)) {
 						component.close();
 					} else {
-						((ClassLoader)component).unregister(this, true, false);
+						((ClassLoader)component).unregister(this, true, true);
 					}
 				});
 			}
+			System.gc();
 			return this;
 		});
 
@@ -634,6 +635,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				fileSystemItem.reset();
 			});
 		}
+		System.gc();
 	}
 
 	public static void clearAll() {
