@@ -902,26 +902,31 @@ public class Classes implements MembersRetriever {
 			if (Driver.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"), checkForAddedClasses, classPathCollections);
 			}
+			
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
-				paths.addAll(classPaths);
-			}
-			if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {
-				paths.removeAll(getAllLoadedPaths(classLoader));
-				if (!paths.isEmpty()) {
-					Object target = classLoader instanceof URLClassLoader ?
-						classLoader :
-						Fields.getDirect(classLoader, "ucp");
-					if (target != null) {
-						Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
-						paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-							classPathAdder.accept(url);
-						});
-						return paths;
-					}
+				for (String path : classPaths) {
+					paths.add(Paths.normalizeAndClean(path));
 				}
-			} else if (classLoader instanceof PathScannerClassLoader) {
-				return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
+			}
+			synchronized (classLoader) {
+				if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {
+					paths.removeAll(getAllLoadedPaths(classLoader));
+					if (!paths.isEmpty()) {
+						Object target = classLoader instanceof URLClassLoader ?
+							classLoader :
+							Fields.getDirect(classLoader, "ucp");
+						if (target != null) {
+							Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
+							paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+								classPathAdder.accept(url);
+							});
+							return paths;
+						}
+					}
+				} else if (classLoader instanceof PathScannerClassLoader) {
+					return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
+				}
 			}
 			return new HashSet<>();
 		}
