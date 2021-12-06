@@ -450,11 +450,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			Strings.compile("Could not register client {} to {}: it is closed", client, this)
 		);
 	}
-	
+
 	public boolean unregister(Object client, boolean close) {
 		return unregister(client, close, false);
 	}
-	
+
 	public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
 		if (markAsCloseable) {
 			markedAsCloseable = markAsCloseable;

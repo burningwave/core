@@ -109,8 +109,8 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		if (this.parameters == null) {
 			setAsParameterizable(true);
 		}
-		for (int i = 0; i < parameters.length; i++) {
-			this.parameters.addElement(parameters[i]);
+		for (SourceGenerator parameter : parameters) {
+			this.parameters.addElement(parameter);
 		}
 		return this;
 	}

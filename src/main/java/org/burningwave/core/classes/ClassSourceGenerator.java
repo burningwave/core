@@ -159,7 +159,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		this.staticInitializer = initializer.setDelimiters("static {\n", "\n}").setElementPrefix("\t");
 		return this;
 	}
-	
+
 	public ClassSourceGenerator setInitializer(BodySourceGenerator initializer) {
 		this.initializer = initializer.setDelimiters("{\n", "\n}").setElementPrefix("\t");
 		return this;
@@ -249,7 +249,7 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 	private String getStaticInitializer() {
 		return Optional.ofNullable(staticInitializer).map(stIn ->  "\t" + getOrEmpty(stIn).replace("\n", "\n\t")).orElseGet(() -> null);
 	}
-	
+
 	private String getInitializer() {
 		return Optional.ofNullable(initializer).map(in ->  "\t" + getOrEmpty(in).replace("\n", "\n\t")).orElseGet(() -> null);
 	}

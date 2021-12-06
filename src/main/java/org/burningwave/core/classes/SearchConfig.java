@@ -55,10 +55,10 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 @SuppressWarnings({"resource", "unchecked"})
 public class SearchConfig implements Closeable {
-	
+
 	private final static BiFunction<Throwable, FileSystemItem[], Boolean> exceptionThrowerForFileFilter;
-	
-	
+
+
 	Function<ClassLoader, Map.Entry<ClassLoader, Collection<FileSystemItem>>> pathsSupplier;
 	Function<FileSystemItem, FileSystemItem.Find> findFunctionSupplier;
 	Predicate<FileSystemItem> refreshPathIf;
@@ -76,20 +76,20 @@ public class SearchConfig implements Closeable {
 	ClassLoader parentClassLoaderForPathScannerClassLoader;
 	PathScannerClassLoader pathScannerClassLoader;
 	Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
-	
+
 	BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler;
-	
+
 	boolean waitForSearchEnding;
 	Integer priority;
 	boolean optimizePaths;
-	
+
 	static {
 		exceptionThrowerForFileFilter = (exception, childAndParent) -> {
 			ManagedLoggerRepository.logError(SearchConfig.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 			return IterableObjectHelper.terminateIteration();
 		};
 	}
-	
+
 	SearchConfig() {
 		pathsSupplier = classLoader -> {
 			return new AbstractMap.SimpleEntry<>(classLoader, ConcurrentHashMap.newKeySet());
@@ -372,7 +372,7 @@ public class SearchConfig implements Closeable {
 		additionalFileFilterSupplier = fileSystemItem -> previousAdditionalFileFilterSupplier.apply(fileSystemItem).and(filter);
 		return this;
 	}
-	
+
 	public SearchConfig withExceptionHandlerForFileFilter(BiFunction<Throwable, FileSystemItem[], Boolean> fileFilterExceptionHandler) {
 		if (fileFilterExceptionHandler != null) {
 			this.fileFilterExceptionHandler = fileFilterExceptionHandler;
@@ -380,7 +380,7 @@ public class SearchConfig implements Closeable {
 			this.fileFilterExceptionHandler = exceptionThrowerForFileFilter;
 		}
 		return this;
-	}	
+	}
 
 	public SearchConfig setMinimumCollectionSizeForParallelIteration(int value) {
 		this.minimumCollectionSizeForParallelIterationPredicate = collection -> collection.size() >= value;

@@ -202,7 +202,7 @@ public class Classes implements MembersRetriever {
 						cls.getName().replace(".", "/") + ".class",
 						clsLoader,
 						false
-					).getValue()) {;
+					).getValue()) {
 						return Streams.toByteBuffer(
 							java.util.Objects.requireNonNull(inputStreamTwo, "Could not acquire bytecode for class " + cls.getName())
 						);
@@ -293,7 +293,7 @@ public class Classes implements MembersRetriever {
 	public Class<?> getClassOrWrapper(Class<?> cls) {
 		return io.github.toolfactory.jvm.util.Classes.getClassOrWrapper(cls);
 	}
-	
+
 	public <I> Function<Integer, ?> buildArrayValueRetriever(I items) {
 		Class<?> componentType = items.getClass().getComponentType();
 		if (componentType.isPrimitive()) {

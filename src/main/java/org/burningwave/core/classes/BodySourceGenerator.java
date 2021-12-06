@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
-@SuppressWarnings("unchecked") 
+@SuppressWarnings("unchecked")
 public class BodySourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = 5923611245424078711L;
@@ -158,7 +158,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		});
 		return types;
 	}
-	
+
 	public BodySourceGenerator useType(java.lang.Class<?>... classes) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (java.lang.Class<?> cls : classes) {
@@ -193,7 +193,7 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		}
 		return this;
 	}
-	
+
 	public BodySourceGenerator useTypes(Collection<String>... classCollections) {
 		Optional.ofNullable(this.usedTypes).orElseGet(() -> this.usedTypes = new ArrayList<>());
 		for (Collection<String> classes : classCollections) {

@@ -160,7 +160,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			(E)config
 		);
 	}
-	
+
 	private <R> R retrieveValue(
 		Function<ResolveConfig.ForNamedKey, R> valueResolver,
 		ExecuteConfig.ForProperties config, Map<?, ?> properties,
@@ -180,7 +180,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		return null;
 	}
 
-	
+
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {
 		return execute((E)ExecuteConfig.forBodySourceGenerator(body));
