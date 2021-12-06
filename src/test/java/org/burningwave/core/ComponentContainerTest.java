@@ -48,8 +48,8 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 
-//	@Test
-//	@Order(3)
+	@Test
+	@Order(3)
 	public void reInit() {
 		testDoesNotThrow(() -> {
 			getComponentSupplier().reInit();
