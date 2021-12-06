@@ -87,11 +87,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			public static final String AFTER_INIT = "component-container.after-init.operations";
 
 		}
-		
+
 		public static class Value {
-			
+
 			public static String FILE_NAME = "burningwave.properties";
-			
+
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -224,7 +224,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return this;
 	}
-	
+
 	private Map<Class<?>, Component> checkAndInitComponentMapAndAfterInitTask() {
 		if (this.components == null) {
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
@@ -236,7 +236,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return this.components;
 	}
-	
+
 	public ComponentContainer waitForAfterInitTask() {
 		if (!waitForAfterInitTaskIfNotNull()) {
 			//Ensure that component map was initialized and that the after init task was launched
@@ -248,7 +248,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		}
 		return this;
 	}
-	
+
 	private boolean waitForAfterInitTaskIfNotNull() {
 		QueuedTaskExecutor.Task afterInitTask = this.afterInitTask;
 		if (afterInitTask != null) {
@@ -358,7 +358,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		return executeOnComponentMap(components -> {
 			T component = (T)components.get(cls);
 			if (component != null) {
-				return component;				
+				return component;
 			}
 			return Synchronizer.execute(getMutexForComponentsId() + "_" + cls.getName(), () -> {
 				T componentTemp;
@@ -369,7 +369,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			});
 		});
 	}
-	
+
 	private void executeOnComponentMap(Consumer<Map<Class<?>, Component>> executor) {
 		Map<Class<?>, Component> components = this.components;
 		try {
@@ -381,7 +381,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			executor.accept(checkAndInitComponentMapAndAfterInitTask());
 		}
 	}
-	
+
 	private <T> T executeOnComponentMap(Function<Map<Class<?>, Component>, T> executor) {
 		Map<Class<?>, Component> components = this.components;
 		try {
@@ -397,7 +397,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	@Override
 	public org.burningwave.core.classes.PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(
-			ClassLoader.class, 
+			ClassLoader.class,
 			() -> {
 				return new ComponentContainer.ClassLoader(this);
 			}
@@ -568,7 +568,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ManagedLoggerRepository.logError(
 					ComponentContainer.class::getName,
 					"Exception occurred while executing reset on {}",
-					exc, 
+					exc,
 					componentContainer.toString()
 				);
 			}
@@ -610,12 +610,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			Cache.clear(false);
 		}
 	}
-	
+
 	@Override
 	public void clear() {
 		clear(true, true, true);
 	}
-	
+
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		waitForAfterInitTaskIfNotNull();
@@ -631,7 +631,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			});
 		}
 	}
-	
+
 	public static void clearAll() {
 		clearAll(true, true, true);
 	}
@@ -703,13 +703,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	private static class ClassLoader extends org.burningwave.core.classes.PathScannerClassLoader {
 		private ComponentContainer componentContainer;
 		private Map<Class<?>, Component> components;
-		
-		
+
+
 		static {
-	        ClassLoader.registerAsParallelCapable();
+	        java.lang.ClassLoader.registerAsParallelCapable();
 	    }
 
-		
+
 		ClassLoader(
 			ComponentContainer componentContainer
 		) {
@@ -745,7 +745,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					return isClosed;
 				}
 				closeCalled = Synchronizer.execute(
-					componentContainer.getMutexForComponentsId(), 
+					componentContainer.getMutexForComponentsId(),
 					() -> {
 						ClassLoader cL = (ClassLoader)components.remove(ClassLoader.class);
 						if (cL != null) {
@@ -760,12 +760,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			}
 			return isClosed || closeCalled;
 		}
-		
+
 		@Override
 		protected Task closeResources() {
 			return closeResources(
 				ComponentContainer.ClassLoader.class.getName() + "@" + System.identityHashCode(this),
-				() -> 
+				() ->
 					this.componentContainer == null,
 				task -> {
 					super.closeResources().waitForFinish();

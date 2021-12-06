@@ -98,7 +98,7 @@ public class Synchronizer implements Closeable {
 			}
 		}
 	}
-	
+
 	public <E extends Throwable> void execute(String id, Consumer<Mutex> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
@@ -114,7 +114,7 @@ public class Synchronizer implements Closeable {
 			}
 		}
 	}
-	
+
 	public <E extends Throwable> void executeThrower(String id, ThrowingConsumer<Mutex, E> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {
@@ -138,7 +138,7 @@ public class Synchronizer implements Closeable {
 			}
 		}
 	}
-	
+
 	public <T, E extends Throwable> T executeThrower(String id, ThrowingFunction<Mutex, T, E> executable) throws E {
 		try (Mutex mutex = getMutex(id);) {
 			synchronized (mutex) {

@@ -199,14 +199,14 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 		});
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
-	
+
 	@Override
 	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map) {
 		try (InputStream inputStream = inputStreamSupplier.get()) {
 			feelPropertiesMap(inputStream, map);
 		} catch (IOException exc) {
 			org.burningwave.core.Throwables.throwException(exc);
-		}		
+		}
 	}
 
 	@Override
@@ -221,7 +221,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 		} catch (IOException exc) {
 			org.burningwave.core.Throwables.throwException(exc);
 		}
-		
+
 	}
 
 }

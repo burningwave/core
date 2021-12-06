@@ -43,7 +43,7 @@ import org.burningwave.core.ManagedLogger.Repository;
 public class SimpleManagedLoggerRepository extends Repository.Abst {
 	private Map<String, LoggingLevel.Mutable> loggers;
 	private SimpleDateFormat dateFormat;
-	
+
 	public SimpleManagedLoggerRepository(Map<?, ?> properties) {
 		super(properties);
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");

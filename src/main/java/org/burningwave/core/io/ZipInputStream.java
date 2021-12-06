@@ -56,8 +56,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
-	
-	
+
+
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
@@ -81,7 +81,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		}
 		return parent;
 	}
-	
+
 
 	@Override
 	public String getAbsolutePath() {
@@ -180,7 +180,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			currentZipEntry = null;
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		closeEntry();
@@ -343,7 +343,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
-		
+
 			@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {

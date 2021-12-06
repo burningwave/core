@@ -33,7 +33,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 @SuppressWarnings("unchecked")
 public class Throwables {
-	
+
 	public static <T> T throwException(String message, Object... placeHolderReplacements) {
 		Throwable exception = null;
 		if (placeHolderReplacements == null || placeHolderReplacements.length == 0) {
@@ -47,19 +47,19 @@ public class Throwables {
 		org.burningwave.core.Throwables.throwException0(exception);
 		return null;
 	}
-	
+
 	public static <T> T throwException(Throwable exception) {
 		StackTraceElement[] stackTrace = exception.getStackTrace();
 		StackTraceElement[] stackTraceOfException = new StackTraceElement[stackTrace.length + 1];
 		stackTraceOfException[0] = Thread.currentThread().getStackTrace()[2];
 		System.arraycopy(stackTrace, 0, stackTraceOfException, 1, stackTrace.length);
-		exception.setStackTrace(stackTraceOfException);				
+		exception.setStackTrace(stackTraceOfException);
 		org.burningwave.core.Throwables.throwException0(exception);
 		return null;
-	}	
-	
+	}
+
 	private static <E extends Throwable> E throwException0(Throwable exc) throws E {
 		throw (E)exc;
 	}
-	
+
 }

@@ -51,7 +51,7 @@ import org.burningwave.core.Component;
 public interface IterableZipContainer extends Closeable {
 	public final static String classId = Objects.getClassId(IterableZipContainer.class);
 	public final static String PATH_SUFFIX = "///";
-	
+
 	public static IterableZipContainer create(FileInputStream file) {
 		return create(file.getAbsolutePath(), file);
 	}
@@ -125,7 +125,7 @@ public interface IterableZipContainer extends Closeable {
 		}
 		return null;
 	}
-	
+
 
 	public String getConventionedAbsolutePath();
 
@@ -148,7 +148,7 @@ public interface IterableZipContainer extends Closeable {
 	public Function<Entry, Entry> getEntrySupplier();
 
 	public void closeEntry();
-	
+
 	public default <T> Collection<T> findAllAndConvert(
 		Predicate<IterableZipContainer.Entry> zipEntryPredicate,
 		Function<IterableZipContainer.Entry, T> tSupplier,

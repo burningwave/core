@@ -70,7 +70,7 @@ public interface PathHelper {
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
-		
+
 	}
 
 	public static PathHelper create(Map<?, ?> config) {

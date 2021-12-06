@@ -51,14 +51,14 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 	public static enum Event {
 		PUT, REMOVE
 	}
-	
+
 	private Set<Listener> listeners;
 	private String defaultValuesSeparator;
-	
+
 	public Properties() {
 		super();
 	}
-	
+
 	public Properties(Map<?, ?> defaults, String defaultValuesSeparator) {
 		super(defaults);
 		this.defaultValuesSeparator = defaultValuesSeparator;
@@ -74,25 +74,25 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 		}
 		return listeners;
 	}
-	
+
 	public Properties load(Supplier<InputStream> inputStreamSupplier) {
 		Streams.feelPropertiesMap(inputStreamSupplier, this);
 		return this;
 	}
-	
+
 	public Properties load(InputStream inputStream) {
 		Streams.feelPropertiesMap(inputStream, this);
 		return this;
 	}
-	
+
 	public String getDefaultValuesSeparator() {
 		return this.defaultValuesSeparator != null ? this.defaultValuesSeparator : IterableObjectHelper.getDefaultValuesSeparator();
 	}
-	
+
     public Object setProperty(String key, String value) {
         return put(key, value);
     }
-    
+
     public String getProperty(String key) {
         return (String)get(key);
     }
@@ -319,7 +319,7 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 			properties.getListeners().remove(this);
 			return (L)this;
 		}
-		
+
 		public default <L extends Listener> L checkAndListenTo(Map<?, ?> map) {
 			if (map instanceof Properties) {
 				this.listenTo((Properties)map);
@@ -327,7 +327,7 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 			}
 			return null;
 		}
-		
+
 		public default <L extends Listener> L checkAndUnregister(Map<?, ?> map) {
 			if (map instanceof Properties) {
 				this.unregister((Properties)map);
@@ -335,7 +335,7 @@ public class Properties extends ConcurrentHashMap<Object, Object> {
 			}
 			return null;
 		}
-		
+
 		public default <K, V>void processChangeNotification(Properties properties, Event event, K key, V newValue, V previousValue) {
 
 		}

@@ -75,13 +75,13 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-		
+
 		}
-		
+
 		public static class Value {
-			
+
 			public static String FILE_NAME = "burningwave.static.properties";
-			
+
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -432,14 +432,14 @@ public class StaticComponentContainer {
 		}
 
 	}
-	
+
 	private static org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey onGlobalPropertiesforNamedKey(String key) {
 		return org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(key).on(GlobalProperties);
 	}
 
 	private static void adjustConfigurationValues(Properties properties) {
 		String defaultValuesSeparator = (String)org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES.get(
-			org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR		
+			org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR
 		);
 		org.burningwave.core.iterable.IterableObjectHelper temporaryPropertyResolver = org.burningwave.core.iterable.IterableObjectHelper.create(properties);
 		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).checkAndUnregister(properties);

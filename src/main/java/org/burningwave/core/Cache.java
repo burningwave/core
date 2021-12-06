@@ -183,21 +183,21 @@ public class Cache {
 				resources.clear();
 			}).submit();
 		}
-		
+
 		public void iterate(TriConsumer<T, String, R> itemConsumer) {
 			iterate(false, itemConsumer, new AtomicReference<>());
 		}
-		
+
 		public void iterateParallel(TriConsumer<T, String, R> itemConsumer) {
 			iterate(true, itemConsumer, new AtomicReference<>());
 		}
-		
+
 		void iterate(
 			boolean parallel,
 			TriConsumer<T, String, R> itemConsumer,
 			AtomicReference<org.burningwave.core.iterable.IterableObjectHelper.TerminateIteration> terminateExceptionWrapper
 		) {
-			
+
 			IterableObjectHelper.iterate(
 				IterationConfig.of(
 					this.resources.entrySet()
@@ -397,15 +397,15 @@ public class Cache {
 			}
 			partitions.clear();
 		}
-		
+
 		public void iterate(BiConsumer<String, R> itemConsumer) {
 			iterate(false, itemConsumer, new AtomicReference<>());
 		}
-		
+
 		public void iterateParallel(BiConsumer<String, R> itemConsumer) {
 			iterate(true, itemConsumer, new AtomicReference<>());
 		}
-		
+
 		void iterate(
 			boolean parallel,
 			BiConsumer<String, R> itemConsumer,
@@ -471,7 +471,7 @@ public class Cache {
 			task.join();
 		}
 	}
-	
+
 	private boolean addCleaningTask(Set<QueuedTaskExecutor.Task> tasks, QueuedTaskExecutor.Task task) {
 		if (task != null) {
 			return tasks.add(task);

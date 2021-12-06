@@ -58,7 +58,7 @@ public interface Executor {
 			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
-    
+
     static <I, E extends Throwable> void accept(ThrowingConsumer<I, E> consumer, I input) {
 		try {
 			consumer.accept(input);

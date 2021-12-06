@@ -103,7 +103,7 @@ public class TasksMonitorer implements Closeable {
 								}
 								ManagedLoggerRepository.logWarn(
 									getClass()::getName,
-									Synchronizer.getAllThreadsInfoAsString(true)											
+									Synchronizer.getAllThreadsInfoAsString(true)
 								);
 								Synchronizer.logAllThreadsState(true);
 							}
@@ -224,16 +224,16 @@ public class TasksMonitorer implements Closeable {
 		public boolean isTerminateProablyDeadLockedTasksEnabled() {
 			return terminateProbableDeadLockedTasksFunction != null;
 		}
-		
+
 		public Consumer<QueuedTaskExecutor.TaskAbst<?, ?>> getTerminateProablyDeadLockedTasksFunction() {
 			return terminateProbableDeadLockedTasksFunction;
 		}
-		
+
 		public TasksMonitorer.Config setTerminateProbableDeadLockedTasksOperation(String policy) {
 			this.terminateProbableDeadLockedTasksFunction = policy.toLowerCase().contains("interrupt") ?
 				TaskAbst::interrupt :
 					policy.toLowerCase().contains("kill") ?
-						TaskAbst::kill : 
+						TaskAbst::kill :
 						null;
 			return this;
 		}
