@@ -18,7 +18,7 @@ import org.junit.jupiter.api.condition.OS;
 public class ComponentContainerTest extends BaseTest {
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@DisabledOnOs(OS.LINUX)
 	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
