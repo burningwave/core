@@ -10,15 +10,15 @@ import org.burningwave.core.classes.ClassHunter;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
-@TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
-	
+
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
@@ -36,6 +36,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
@@ -46,9 +47,10 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
-	
+
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(3)
 	public void reInit() {
 		testDoesNotThrow(() -> {
@@ -59,6 +61,7 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
@@ -77,9 +80,10 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
-	
+
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
@@ -99,8 +103,9 @@ public class ComponentContainerTest extends BaseTest {
 			componentSupplier.close();
 		});
 	}
-	
+
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
@@ -124,8 +129,9 @@ public class ComponentContainerTest extends BaseTest {
 			);
 		});
 	}
-	
+
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	@Order(7)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
