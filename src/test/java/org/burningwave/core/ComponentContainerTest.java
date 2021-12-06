@@ -36,7 +36,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@DisabledOnOs(OS.LINUX)
 	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
