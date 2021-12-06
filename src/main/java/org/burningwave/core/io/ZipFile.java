@@ -89,7 +89,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			}
 			originalZipFile = null;
 		} catch (IOException exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 		entriesIterator = entries.iterator();
 	}
@@ -138,7 +138,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 					try {
 						originalZipFile = this.originalZipFile = new java.util.zip.ZipFile(file);
 					} catch (IOException exc) {
-						org.burningwave.core.Throwables.throwException(exc);
+						org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 					}
 				}
 			}

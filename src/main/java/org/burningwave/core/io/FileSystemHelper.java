@@ -235,7 +235,7 @@ public class FileSystemHelper implements Component {
 				}
 			}
 		} else {
-			org.burningwave.core.Throwables.throwException("Could not close singleton instance {}", this);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", this);
 		}
 	}
 

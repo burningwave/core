@@ -109,7 +109,7 @@ public class QueuedTaskExecutor implements Closeable {
 							try {
 								wait();
 							} catch (Throwable exc) {
-								org.burningwave.core.Throwables.throwException(exc);
+								org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 							}
 						}
 					}
@@ -1258,7 +1258,7 @@ public class QueuedTaskExecutor implements Closeable {
 			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
-				org.burningwave.core.Throwables.throwException(exception);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
 			}
 			if (!wasExecuted()) {
 				throw new TaskStateException(this, "is not completed");
@@ -1291,7 +1291,7 @@ public class QueuedTaskExecutor implements Closeable {
 			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
 			if (exception != null && !exceptionHandled) {
-				return org.burningwave.core.Throwables.throwException(exception);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
 			}
 			if (!wasExecuted()) {
 				throw new TaskStateException(this, "is not completed");
@@ -1766,7 +1766,7 @@ public class QueuedTaskExecutor implements Closeable {
 				allTasksMonitorer.start();
 				return this;
 			}
-			return org.burningwave.core.Throwables.throwException("All tasks monitorer has not been configured");
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("All tasks monitorer has not been configured");
 		}
 
 		public Group stopAllTasksMonitoring() {

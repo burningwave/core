@@ -277,7 +277,7 @@ public class BufferHandler implements Component {
 					try {
 						this.wait();
 					} catch (InterruptedException exc) {
-						org.burningwave.core.Throwables.throwException(exc);
+						org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 					}
 				}
 			}

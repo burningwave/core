@@ -217,7 +217,7 @@ public interface IterableZipContainer extends Closeable {
 			loadZipEntryData
 		);
 		if (entriesFound.size() > 1) {
-			org.burningwave.core.Throwables.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
 		}
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}

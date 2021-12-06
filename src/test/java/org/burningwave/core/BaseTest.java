@@ -215,7 +215,7 @@ public class BaseTest implements Component {
 		try {
 			Thread.sleep(seconds * 1000);
 		} catch (InterruptedException exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 

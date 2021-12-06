@@ -153,12 +153,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					}
 					return config;
 				} catch (Throwable exc) {
-					return org.burningwave.core.Throwables.throwException(exc);
+					return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return org.burningwave.core.Throwables.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -167,7 +167,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return org.burningwave.core.Throwables.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -588,7 +588,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			org.burningwave.core.Throwables.throwException("Could not close singleton instance {}", Holder.INSTANCE);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
 

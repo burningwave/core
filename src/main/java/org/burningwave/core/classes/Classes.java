@@ -211,7 +211,7 @@ public class Classes implements MembersRetriever {
 				throw exc;
 			}
 		} catch (IOException exc) {
-			return org.burningwave.core.Throwables.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -509,7 +509,7 @@ public class Classes implements MembersRetriever {
 					)
 				);
 			} catch (Throwable exc) {
-				return org.burningwave.core.Throwables.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -562,7 +562,7 @@ public class Classes implements MembersRetriever {
 			try {
 				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
 			} catch (Throwable exc) {
-				return org.burningwave.core.Throwables.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -624,7 +624,7 @@ public class Classes implements MembersRetriever {
 
 			}
 			if (packages == null) {
-				org.burningwave.core.Throwables.throwException("Could not find packages Map on {}", classLoader);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 
@@ -791,7 +791,7 @@ public class Classes implements MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				return org.burningwave.core.Throwables.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -993,7 +993,7 @@ public class Classes implements MembersRetriever {
 
 							}
 						} catch (MalformedURLException exc) {
-							org.burningwave.core.Throwables.throwException(exc);
+							org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 						}
 					}
 				}
@@ -1018,7 +1018,7 @@ public class Classes implements MembersRetriever {
 				this.classLoadersPackages = null;
 				this.builtinClassLoaderClassParentField = null;
 			} else {
-				org.burningwave.core.Throwables.throwException("Could not close singleton instance {}", this);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", this);
 			}
 		}
 

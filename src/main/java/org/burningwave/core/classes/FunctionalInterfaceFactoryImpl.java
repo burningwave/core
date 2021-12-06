@@ -75,7 +75,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
 		Constructor<?> ctor = Constructors.findFirstAndMakeItAccessible(targetClass, argumentTypes);
 		if (ctor == null) {
-			org.burningwave.core.Throwables.throwException(
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 				"Constructor with argument types {} not found in {} class",
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
@@ -112,7 +112,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	private Method retrieveMethod(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
-			org.burningwave.core.Throwables.throwException(
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 				"Method named {} with argument types {} not found in {} hierarchy",
 				methodName,
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),

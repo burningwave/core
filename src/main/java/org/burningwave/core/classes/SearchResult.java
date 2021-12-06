@@ -102,7 +102,7 @@ public class SearchResult<E> implements Closeable {
 	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
 		Map<String, E> itemsFound = getClasses(criteria);
 		if (itemsFound.size() > 1) {
-			org.burningwave.core.Throwables.throwException("Found more than one element");
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one element");
 		}
 		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}

@@ -261,7 +261,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							org.burningwave.core.Throwables.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+							org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
 						try {
 						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());

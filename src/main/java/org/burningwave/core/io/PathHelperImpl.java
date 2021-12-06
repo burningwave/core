@@ -312,7 +312,7 @@ class PathHelperImpl implements Component, PathHelper {
 			}
 			return pathGroup;
 		} else {
-			return org.burningwave.core.Throwables.throwException("classPaths parameter is null");
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("classPaths parameter is null");
 		}
 	}
 
@@ -393,11 +393,11 @@ class PathHelperImpl implements Component, PathHelper {
 					filesFound.put(fileSystemItem.getAbsolutePath(), fileSystemItem);
 					filesInfo.append("\t" + System.identityHashCode(file) + ": " + fileSystemItem.getAbsolutePath() + "\n");
 				} else {
-					org.burningwave.core.Throwables.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
+					org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one resource under relative path {}",  resourceRelativePath);
 				}
 			}
 			if (filesFound.size() > 1) {
-				org.burningwave.core.Throwables.throwException("Found more than one resource under relative path {}:\n{}",  resourceRelativePath, filesInfo.toString());
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one resource under relative path {}:\n{}",  resourceRelativePath, filesInfo.toString());
 			} else {
 				FileSystemItem fileSystemItem = FileSystemItem.ofPath(filesFound.keySet().stream().findFirst().get());
 				ManagedLoggerRepository.logWarn(getClass()::getName, "Found more than one resource under relative path {}:\n{}\t{}: {}\twill be assumed\n",
@@ -513,7 +513,7 @@ class PathHelperImpl implements Component, PathHelper {
 	public String getPath(Predicate<String> pathPredicate) {
 		Collection<String> classPathsFound = getPaths(pathPredicate);
 		if (classPathsFound.size() > 1) {
-			org.burningwave.core.Throwables.throwException("Found more than one class path for predicate {}", pathPredicate);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one class path for predicate {}", pathPredicate);
 		}
 		return classPathsFound.stream().findFirst().orElseGet(() -> null);
 	}
