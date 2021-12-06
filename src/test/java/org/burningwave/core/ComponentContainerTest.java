@@ -18,8 +18,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
 	
-//	@Test
-//	@Order(1)
+	@Test
+	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
