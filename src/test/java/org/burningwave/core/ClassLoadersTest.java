@@ -62,7 +62,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -74,7 +74,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -86,7 +86,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
