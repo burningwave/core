@@ -5,7 +5,7 @@ on:
     - cron: "0 0-23/6 * * *"
 #    - cron: "0 17 * * 5"
 #    - cron: "0 4,16 30 9 *"
-  
+   
 jobs:
     
   build-and-test-with-Java-8-and-later:
@@ -14,10 +14,8 @@ jobs:
       fail-fast: true
       max-parallel: 15
       matrix:
-#        architecture: [x64, x64, x64, x64, x64, x64, x64]
-#        os: [ubuntu-latest, macOS-latest, windows-latest]
-        architecture: [x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64, x64]
-        os: [ubuntu-latest]
+        architecture: [x64, x64, x64, x64, x64, x64, x64]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18-ea]
     runs-on: ${{ matrix.os }}
     steps:
