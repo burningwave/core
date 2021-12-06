@@ -545,15 +545,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				this.components = new ConcurrentHashMap<>();
 			});
 			if (!components.isEmpty()) {
-				BackgroundExecutor.createTask(task ->
-					IterableObjectHelper.deepClear(components, (type, component) -> {
-						if (!(component instanceof ClassLoader)) {
-							component.close();
-						} else {
-							((ClassLoader)component).unregister(this, true, false);
-						}
-					}),Thread.MIN_PRIORITY
-				).submit();
+				IterableObjectHelper.deepClear(components, (type, component) -> {
+					if (!(component instanceof ClassLoader)) {
+						component.close();
+					} else {
+						((ClassLoader)component).unregister(this, true, false);
+					}
+				});
 			}
 			return this;
 		});
