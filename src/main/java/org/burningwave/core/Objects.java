@@ -28,13 +28,14 @@
  */
 package org.burningwave.core;
 
-
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.UUID;
 
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
@@ -47,19 +48,48 @@ public class Objects {
 	}
 
 	public String getId(Object target) {
-		return target.getClass().getName() + "@" +  System.identityHashCode(target);
+		try {
+			return target.getClass().getName() + "@" +  System.identityHashCode(target);
+		} catch (NullPointerException exc) {
+			if (target != null) {
+				throw exc;
+			}
+			return UUID.randomUUID().toString();
+		}
+
 	}
 
 	public String getStandardId(Object target) {
-		return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
+		try {
+			return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
+		} catch (NullPointerException exc) {
+			if (target != null) {
+				throw exc;
+			}
+			return UUID.randomUUID().toString();
+		}
 	}
 
 	public String getCurrentId(Object target) {
-		return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
+		try {
+			return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
+		} catch (NullPointerException exc) {
+			if (target != null) {
+				throw exc;
+			}
+			return UUID.randomUUID().toString();
+		}
 	}
 
 	public String getClassId(Class<?> targetClass) {
-		return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
+		try {
+			return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
+		} catch (NullPointerException exc) {
+			if (targetClass != null) {
+				throw exc;
+			}
+			return UUID.randomUUID().toString();
+		}
 	}
 
 	public int toInt(Object object) {
@@ -90,7 +120,7 @@ public class Objects {
 		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
 	        out.writeObject(object);
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			Driver.throwException(exc);
 		}
 	}
 
@@ -98,7 +128,7 @@ public class Objects {
 		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
             return (S) in.readObject();
 		} catch (Throwable exc) {
-			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 
@@ -106,7 +136,7 @@ public class Objects {
 		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
 			serialize(object, outputStream);
 		} catch (Throwable exc) {
-			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			Driver.throwException(exc);
 		}
 		return FileSystemItem.ofPath(absolutePath);
 	}

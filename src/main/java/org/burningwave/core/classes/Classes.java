@@ -28,7 +28,6 @@
  */
 package org.burningwave.core.classes;
 
-
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
@@ -202,13 +201,13 @@ public class Classes implements MembersRetriever {
 						cls.getName().replace(".", "/") + ".class",
 						clsLoader,
 						false
-					).getValue()) {
+					).getValue()) {;
 						return Streams.toByteBuffer(
 							java.util.Objects.requireNonNull(inputStreamTwo, "Could not acquire bytecode for class " + cls.getName())
 						);
 					}
 				}
-				throw exc;
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		} catch (IOException exc) {
 			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
@@ -338,11 +337,6 @@ public class Classes implements MembersRetriever {
 				this.builtinClassLoaderClassParentField = Fields.findFirstAndMakeItAccessible(builtinClassLoaderClass, "parent", builtinClassLoaderClass);
 			}
 			registeredNotificationListenerOfParentsChange = ConcurrentHashMap.newKeySet();
-
-			//Preload required for the setAsMaster method
-			@SuppressWarnings("unused")
-			Class<?> cls = ChangeParentsContext.class;
-			cls = ChangeParentsContext.Elements.class;
 		}
 
 		public static Loaders create() {
@@ -410,26 +404,35 @@ public class Classes implements MembersRetriever {
 			if (oldParent == newParent) {
 				throw new IllegalArgumentException("The new parent cannot be the same of the old parent");
 			}
-			if (mantainHierarchy) {
-				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
-				if (oldParent != null && newParent != null) {
-					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
-					if (masterClassLoaderOfOriginalFutureParent != newParent) {
-						resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
-					} else {
-						resetterOne.set(setAsParent0(newParent, oldParent));
-					}
+			return Synchronizer.execute(Objects.getId(target), () -> {
+				return Synchronizer.execute(Objects.getId(newParent), () -> {
+					if (mantainHierarchy) {
+						AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
+						if (oldParent != null && newParent != null) {
+							ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
+							if (masterClassLoaderOfOriginalFutureParent != newParent) {
+								resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
+							} else {
+								resetterOne.set(setAsParent0(newParent, oldParent));
+							}
 
-				}
-				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
-				return resetterOne.get() != null ? (reset) -> {
-					ClassLoader targetExParent = resetterTwo.apply(reset);
-					resetterOne.get().apply(reset);
-					return targetExParent;
-				} : resetterTwo;
-			} else {
-				return setAsParent0(target, newParent);
-			}
+						}
+						Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
+						return resetterOne.get() != null ? (Function<Boolean, ClassLoader>)(reset) -> {
+							return Synchronizer.execute(Objects.getId(target), () -> {
+								return Synchronizer.execute(Objects.getId(newParent), () -> {
+									ClassLoader targetExParent = resetterTwo.apply(reset);
+									resetterOne.get().apply(reset);
+									return targetExParent;
+								});
+							});
+						} : resetterTwo;
+
+					} else {
+						return setAsParent0(target, newParent);
+					}
+				});
+			});
 		}
 
 		private Function<Boolean, ClassLoader> setAsParent0(ClassLoader target, ClassLoader originalFutureParent) {
@@ -451,13 +454,17 @@ public class Classes implements MembersRetriever {
 			);
 			return (reset) -> {
 				if (reset) {
-					checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
-					Fields.setDirect(target, "parent", targetExParent);
-					notifyParentsChange(
-						new ChangeParentsContext(
-							target, targetExParent, futureParent
-						)
-					);
+					Synchronizer.execute(Objects.getId(target), () -> {
+						Synchronizer.execute(Objects.getId(originalFutureParent), () -> {
+							checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
+							Fields.setDirect(target, "parent", targetExParent);
+							notifyParentsChange(
+								new ChangeParentsContext(
+									target, targetExParent, futureParent
+								)
+							);
+						});
+					});
 				}
 				return targetExParent;
 			};
@@ -902,14 +909,11 @@ public class Classes implements MembersRetriever {
 			if (Driver.isClassLoaderDelegate(classLoader)) {
 				return addClassPaths(Fields.getDirect(classLoader, "classLoader"), checkForAddedClasses, classPathCollections);
 			}
-			
 			Collection<String> paths = new HashSet<>();
 			for (Collection<String> classPaths : classPathCollections) {
-				for (String path : classPaths) {
-					paths.add(Paths.normalizeAndClean(path));
-				}
+				paths.addAll(classPaths);
 			}
-			synchronized (classLoader) {
+			return Synchronizer.execute(Objects.getId(classLoader), () -> {
 				if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {
 					paths.removeAll(getAllLoadedPaths(classLoader));
 					if (!paths.isEmpty()) {
@@ -927,8 +931,8 @@ public class Classes implements MembersRetriever {
 				} else if (classLoader instanceof PathScannerClassLoader) {
 					return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
 				}
-			}
-			return new HashSet<>();
+				return new HashSet<>();
+			});
 		}
 
 		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
