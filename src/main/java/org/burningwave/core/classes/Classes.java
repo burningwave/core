@@ -481,7 +481,7 @@ public class Classes implements MembersRetriever {
 					futureParentMC.register(targetMemoryClassLoader);
 				}
 				if (exParentMC != null) {
-					exParentMC.unregister(targetMemoryClassLoader, false);
+					exParentMC.unregister(targetMemoryClassLoader);
 				}
 			}
 		}
