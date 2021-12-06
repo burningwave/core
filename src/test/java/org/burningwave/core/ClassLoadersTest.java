@@ -29,7 +29,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
+	@DisabledOnOs(OS.LINUX)
 	public void setAsParentClassLoaderTest() {
 		if (System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).indexOf("nux") >= 0) {
 			testNotNull(() -> {
@@ -72,7 +72,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
+	@DisabledOnOs(OS.LINUX)
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -85,7 +85,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
+	@DisabledOnOs(OS.LINUX)
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
