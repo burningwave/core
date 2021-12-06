@@ -103,7 +103,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -125,7 +125,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void createAndClose() {
 		testDoesNotThrow(() -> {
 			Classes.Loaders.create().close();
