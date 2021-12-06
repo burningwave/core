@@ -960,18 +960,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return 0;
 		} catch (NullPointerException exc) {
-			if (maxThreadCountsForParallelIteration == null) {
-				Synchronizer.execute(
-					getOperationId("initMaxThreadCountsForParallelIteration"), 
-					() -> {
-						if (this.maxThreadCountsForParallelIteration == null) {
-							this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
-						}
-					}
-				);				
-				return getCountOfTasksThatCanBeCreated(items, predicate);
+			if (maxThreadCountsForParallelIteration != null) {
+				throw exc;
 			}
-			throw exc;
+			Synchronizer.execute(
+				getOperationId("initMaxThreadCountsForParallelIteration"), 
+				() -> {
+					if (this.maxThreadCountsForParallelIteration == null) {
+						this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+					}
+				}
+			);				
+			return getCountOfTasksThatCanBeCreated(items, predicate);
 		}
 	}
 
@@ -985,18 +985,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return false;
 		} catch (NullPointerException exc) {
-			if (parallelCollectionClasses == null) {
-				Synchronizer.execute(
-					getOperationId("initParallelCollectionClassesCollection"),
-					() -> {
-						if (this.parallelCollectionClasses == null) {
-							this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
-						}
-					}
-				);				
-				return isConcurrentEnabled(coll);
+			if (parallelCollectionClasses != null) {
+				throw exc;
 			}
-			throw exc;
+			Synchronizer.execute(
+				getOperationId("initParallelCollectionClassesCollection"),
+				() -> {
+					if (this.parallelCollectionClasses == null) {
+						this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+					}
+				}
+			);				
+			return isConcurrentEnabled(coll);			
 		}
 	}
 
