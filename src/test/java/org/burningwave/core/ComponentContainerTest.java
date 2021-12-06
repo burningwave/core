@@ -11,8 +11,6 @@ import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
 public class ComponentContainerTest extends BaseTest {
 
@@ -78,7 +76,6 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
 	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
