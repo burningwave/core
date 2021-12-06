@@ -229,7 +229,7 @@ public abstract class Thread extends java.lang.Thread {
 		return Strings.compile(
 			"{} ({})",
 			super.toString(),
-			getClass().getSimpleName(),
+			getClass().getSimpleName() + 
 			Optional.ofNullable(getState()).map(threadState ->
 				": " + Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " "))
 			).orElseGet(() -> "")
