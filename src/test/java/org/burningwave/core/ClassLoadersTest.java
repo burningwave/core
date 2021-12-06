@@ -34,7 +34,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void setAsMasterTest() {
 		testNotNull(() -> {
 			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
