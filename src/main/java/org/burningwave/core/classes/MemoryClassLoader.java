@@ -479,10 +479,6 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	public void close() {
 		closeResources();
 	}
-	
-	public void launchCloseAndWait() {
-		closeResources().waitForFinish();
-	}
 
 	protected QueuedTaskExecutor.Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
@@ -495,7 +491,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)parentClassLoader).unregister(this);
+				((MemoryClassLoader)parentClassLoader).unregister(this, true);
 			}
 			clearInBackground();
 			notLoadedByteCodes = null;
