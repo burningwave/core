@@ -444,10 +444,8 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	public void register(Object client) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
-			synchronized(clients) {
-				clients.add(client);
-				return;
-			}
+			clients.add(client);
+			return;
 		}
 		throw new IllegalStateException(
 			Strings.compile("Could not register client {} to {}: it is closed", client, this)
