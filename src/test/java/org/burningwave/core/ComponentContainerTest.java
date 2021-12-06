@@ -79,8 +79,8 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 
-//	@Test
-//	@Order(5)
+	@Test
+	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
