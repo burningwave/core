@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.assembler;
 
+import static org.burningwave.core.Throwables.throwException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -229,7 +230,7 @@ public class StaticComponentContainer {
 									}
 								}
 								if (mustThrowException) {
-									org.burningwave.core.Throwables.throwException("The reconfiguration of property '{}' is not allowed", key);
+									throwException("The reconfiguration of property '{}' is not allowed", key);
 								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggerRepository;

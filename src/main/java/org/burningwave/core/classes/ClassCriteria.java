@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
@@ -64,7 +65,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			try {
 				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
-				return org.burningwave.core.Throwables.throwException(exc);
+				return throwException(exc);
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;

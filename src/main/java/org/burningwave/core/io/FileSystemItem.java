@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-//import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -490,7 +490,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			return org.burningwave.core.Throwables.throwException(exc);
+			return throwException(exc);
 		}
 	}
 
@@ -870,7 +870,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
 				if (zIS == null) {
-					return org.burningwave.core.Throwables.throwException(
+					return throwException(
 						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 					);
 				}
@@ -910,7 +910,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							// in case of JMod files folder
 							return retrieveConventionedRelativePath(this, zIS2, null, relativePath);
 						}
-						return org.burningwave.core.Throwables.throwException(
+						return throwException(
 							new FileSystemItemNotFoundException(
 								Strings.compile("Absolute path \"{}\" not exists", absolutePath.getKey())
 							)
@@ -922,7 +922,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		} catch (NullPointerException exc) {
 			if (initialException != null) {
-				return org.burningwave.core.Throwables.throwException(initialException);
+				return throwException(initialException);
 			} else {
 				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
@@ -1104,7 +1104,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try (InputStream inputStream = toInputStream()) {
 			return Objects.deserialize(inputStream);
 		} catch (Throwable exc) {
-			return org.burningwave.core.Throwables.throwException(exc);
+			return throwException(exc);
 		}
 	}
 

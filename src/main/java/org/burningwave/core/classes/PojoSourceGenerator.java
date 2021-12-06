@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
@@ -115,7 +116,7 @@ public class PojoSourceGenerator {
 
 	public ClassSourceGenerator generate(String className, int options, Class<?>... superClasses) {
 		if (className.contains("$")) {
-			org.burningwave.core.Throwables.throwException("{} Pojo could not be a inner class", className);
+			throwException("{} Pojo could not be a inner class", className);
 		}
 		String packageName = Classes.retrievePackageName(className);
 		String classSimpleName = Classes.retrieveSimpleName(className);
@@ -134,7 +135,7 @@ public class PojoSourceGenerator {
 				cls.expands(createTypeDeclaration(isUseFullyQualifiedClassNamesEnabled(options), iteratedSuperClass));
 				superClass = iteratedSuperClass;
 			} else {
-				org.burningwave.core.Throwables.throwException("{} Pojo could not extends more than one class", className);
+				throwException("{} Pojo could not extends more than one class", className);
 			}
 		}
 		if (superClass != null) {

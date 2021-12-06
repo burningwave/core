@@ -28,6 +28,8 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.Throwables.throwException;
+
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -88,7 +90,7 @@ public class Objects {
 		try (ObjectOutputStream out = new ObjectOutputStream(outputStream)) {
 	        out.writeObject(object);
 		} catch (Throwable exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			throwException(exc);
 		}
 	}
 
@@ -96,7 +98,7 @@ public class Objects {
 		try (ObjectInputStream in = new ObjectInputStream(inputStream)) {
             return (S) in.readObject();
 		} catch (Throwable exc) {
-			return org.burningwave.core.Throwables.throwException(exc);
+			return throwException(exc);
 		}
 	}
 
@@ -104,7 +106,7 @@ public class Objects {
 		try (FileOutputStream outputStream = FileOutputStream.create(absolutePath)) {
 			serialize(object, outputStream);
 		} catch (Throwable exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			throwException(exc);
 		}
 		return FileSystemItem.ofPath(absolutePath);
 	}

@@ -29,6 +29,8 @@
 package org.burningwave.core.classes;
 
 
+import static org.burningwave.core.Throwables.throwException;
+
 import java.lang.reflect.Member;
 import java.util.Collection;
 import java.util.HashMap;
@@ -100,7 +102,7 @@ public class SearchResult<E> implements Closeable {
 	public <C extends CriteriaWithClassElementsSupplyingSupport<E, C, T>, T extends Criteria.TestContext<E, C>> Map.Entry<String, E> getUnique(C criteria) {
 		Map<String, E> itemsFound = getClasses(criteria);
 		if (itemsFound.size() > 1) {
-			org.burningwave.core.Throwables.throwException("Found more than one element");
+			throwException("Found more than one element");
 		}
 		return itemsFound.entrySet().stream().findFirst().orElseGet(() -> null);
 	}

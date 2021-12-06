@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.Throwables.throwException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -40,7 +42,7 @@ public interface MembersRetriever {
 	public default Field getDeclaredField(Class<?> cls, Predicate<Field> predicate) {
 		Collection<Field> members = getDeclaredFields(cls, predicate);
 		if (members.size() > 1) {
-			org.burningwave.core.Throwables.throwException("More than one member found for class {}", cls.getName());
+			throwException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -48,7 +50,7 @@ public interface MembersRetriever {
 	public default Method getDeclaredMethod(Class<?> cls, Predicate<Method> predicate) {
 		Collection<Method> members = getDeclaredMethods(cls, predicate);
 		if (members.size() > 1) {
-			org.burningwave.core.Throwables.throwException("More than one member found for class {}", cls.getName());
+			throwException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}
@@ -56,7 +58,7 @@ public interface MembersRetriever {
 	public default <T> Constructor<T> getDeclaredConstructor(Class<T> cls, Predicate<Constructor<T>> predicate) {
 		Collection<Constructor<T>> members = getDeclaredConstructors(cls, predicate);
 		if (members.size() > 1) {
-			org.burningwave.core.Throwables.throwException("More than one member found for class {}", cls.getName());
+			throwException("More than one member found for class {}", cls.getName());
 		}
 		return members.stream().findFirst().orElse(null);
 	}

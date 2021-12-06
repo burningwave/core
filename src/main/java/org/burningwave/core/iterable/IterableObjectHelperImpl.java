@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -371,7 +372,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				org.burningwave.core.Throwables.throwException("Found more than one item under key/predicate {}", key);
+				throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
@@ -873,7 +874,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							try {
 								threads.wait();
 							} catch (InterruptedException exc) {
-								org.burningwave.core.Throwables.throwException(exc);
+								throwException(exc);
 							}
 						}
 					}

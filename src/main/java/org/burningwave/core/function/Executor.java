@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.function;
 
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 public interface Executor {
@@ -54,7 +55,7 @@ public interface Executor {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			throwException(exc);
 		}
 	}
     
@@ -62,7 +63,7 @@ public interface Executor {
 		try {
 			consumer.accept(input);
 		} catch (Throwable exc) {
-			org.burningwave.core.Throwables.throwException(exc);
+			throwException(exc);
 		}
 	}
 
@@ -72,7 +73,7 @@ public interface Executor {
 				runnable.run();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					org.burningwave.core.Throwables.throwException(exc);
+					throwException(exc);
 				}
 			}
 			--attemptsNumber;
@@ -83,7 +84,7 @@ public interface Executor {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
-			return org.burningwave.core.Throwables.throwException(exc);
+			return throwException(exc);
 		}
 	}
 
@@ -93,7 +94,7 @@ public interface Executor {
 				return supplier.get();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					org.burningwave.core.Throwables.throwException(exc);
+					throwException(exc);
 				}
 			}
 			--attemptsNumber;

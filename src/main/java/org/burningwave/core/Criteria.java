@@ -28,6 +28,7 @@
  */
 package org.burningwave.core;
 
+import static org.burningwave.core.Throwables.throwException;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 
 import java.util.Optional;
@@ -162,7 +163,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return Optional.ofNullable(logicalOperator).map(logOp -> {
 			return logicalOperator.apply(input);
 		}).orElseGet(() ->
-			org.burningwave.core.Throwables.throwException(
+			throwException(
 				"A call to and/or method is necessary before calling {} at {}",
 				Thread.currentThread().getStackTrace()[10].getMethodName(),
 				Thread.currentThread().getStackTrace()[11]
@@ -429,7 +430,7 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			return Optional.ofNullable(logicalOperator).map(logOp -> {
 				return logicalOperator.apply(input);
 			}).orElseGet(() ->
-				org.burningwave.core.Throwables.throwException(
+				throwException(
 					"A call to and/or method is necessary before calling {} at {}",
 					Thread.currentThread().getStackTrace()[10].getMethodName(),
 					Thread.currentThread().getStackTrace()[11]
