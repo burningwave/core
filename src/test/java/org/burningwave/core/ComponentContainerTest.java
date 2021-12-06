@@ -18,8 +18,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
 	
-	@Test
-	@Order(1)
+//	@Test
+//	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -35,8 +35,8 @@ public class ComponentContainerTest extends BaseTest {
 		});
 	}
 
-	@Test
-	@Order(2)
+//	@Test
+//	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -58,8 +58,8 @@ public class ComponentContainerTest extends BaseTest {
 
 
 
-	@Test
-	@Order(4)
+//	@Test
+//	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -79,8 +79,8 @@ public class ComponentContainerTest extends BaseTest {
 	}
 	
 
-	@Test
-	@Order(5)
+//	@Test
+//	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
@@ -100,8 +100,8 @@ public class ComponentContainerTest extends BaseTest {
 		});
 	}
 	
-	@Test
-	@Order(6)
+//	@Test
+//	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
