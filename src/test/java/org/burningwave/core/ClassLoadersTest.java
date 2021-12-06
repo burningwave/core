@@ -74,7 +74,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
