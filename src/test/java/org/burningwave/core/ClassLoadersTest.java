@@ -34,7 +34,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void setAsMasterTest() {
 		testNotNull(() -> {
 			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
@@ -52,7 +52,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -62,7 +62,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -74,7 +74,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -86,7 +86,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -103,7 +103,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -125,7 +125,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void createAndClose() {
 		testDoesNotThrow(() -> {
 			Classes.Loaders.create().close();
