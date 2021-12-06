@@ -17,8 +17,6 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
 public class ClassLoadersTest extends BaseTest {
 
@@ -29,7 +27,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void setAsParentClassLoaderTest() {
 		if (System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).indexOf("nux") >= 0) {
 			testNotNull(() -> {
@@ -42,7 +40,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void setAsMasterTest() {
 		testDoesNotThrow(() -> {
 			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
@@ -61,7 +59,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -72,7 +70,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -85,7 +83,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -98,7 +96,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -116,7 +114,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -139,7 +137,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@EnabledOnOs({OS.MAC, OS.WINDOWS})
 	public void createAndClose() {
 		testDoesNotThrow(() -> {
 			Classes.Loaders.create().close();
