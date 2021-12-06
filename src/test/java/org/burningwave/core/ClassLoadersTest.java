@@ -1,6 +1,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -36,19 +37,21 @@ public class ClassLoadersTest extends BaseTest {
 
 	@Test
 	public void setAsMasterTest() {
-		testNotNull(() -> {
+		testDoesNotThrow(() -> {
 			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
 			MemoryClassLoader classLoader_2 = getMemoryClassLoader(classLoader_1);
 			MemoryClassLoader classLoader_3 = getMemoryClassLoader(classLoader_2);
 			MemoryClassLoader classLoader_4 = getMemoryClassLoader(null);
 			Function<Boolean, ClassLoader> resetter = ClassLoaders.setAsMaster(classLoader_3, classLoader_4);
-			ClassLoader parent = ClassLoaders.getParent(classLoader_1);
+			assertEquals(ClassLoaders.getParent(classLoader_1), classLoader_4);
 			resetter.apply(true);
-			classLoader_4.close();
-			classLoader_3.close();
-			classLoader_2.close();
-			classLoader_1.close();
-			return parent;
+			assertEquals(ClassLoaders.getParent(classLoader_1), null);
+			classLoader_4.launchCloseAndWait();
+			classLoader_3.launchCloseAndWait();
+			classLoader_2.launchCloseAndWait();
+			classLoader_1.launchCloseAndWait();
+			
+			Thread.sleep(15000);
 		});
 	}
 
@@ -62,7 +65,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-//	@Test
+	@Test
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -74,7 +77,7 @@ public class ClassLoadersTest extends BaseTest {
 		});
 	}
 
-	//@Test
+	@Test
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
