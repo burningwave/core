@@ -410,7 +410,7 @@ public class Classes implements MembersRetriever {
 				throw new IllegalArgumentException("The new parent cannot be the same of the old parent");
 			}
 			return Synchronizer.execute(Objects.getId(target), () -> {
-				return Synchronizer.execute(Objects.getId(newParent), () -> {
+				return Synchronizer.execute(Objects.getIdOrUUIDIfNull(newParent), () -> {
 					if (mantainHierarchy) {
 						AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
 						if (oldParent != null && newParent != null) {
@@ -425,7 +425,7 @@ public class Classes implements MembersRetriever {
 						Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
 						return resetterOne.get() != null ? (Function<Boolean, ClassLoader>)(reset) -> {
 							return Synchronizer.execute(Objects.getId(target), () -> {
-								return Synchronizer.execute(Objects.getId(newParent), () -> {
+								return Synchronizer.execute(Objects.getIdOrUUIDIfNull(newParent), () -> {
 									ClassLoader targetExParent = resetterTwo.apply(reset);
 									resetterOne.get().apply(reset);
 									return targetExParent;
@@ -460,7 +460,7 @@ public class Classes implements MembersRetriever {
 			return (reset) -> {
 				if (reset) {
 					Synchronizer.execute(Objects.getId(target), () -> {
-						Synchronizer.execute(Objects.getId(originalFutureParent), () -> {
+						Synchronizer.execute(Objects.getIdOrUUIDIfNull(originalFutureParent), () -> {
 							checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
 							Fields.setDirect(target, "parent", targetExParent);
 							notifyParentsChange(

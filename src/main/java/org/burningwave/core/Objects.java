@@ -47,7 +47,7 @@ public class Objects {
 		return new Objects();
 	}
 
-	public String getId(Object target) {
+	public String getIdOrUUIDIfNull(Object target) {
 		try {
 			return target.getClass().getName() + "@" +  System.identityHashCode(target);
 		} catch (NullPointerException exc) {
@@ -56,40 +56,23 @@ public class Objects {
 			}
 			return UUID.randomUUID().toString();
 		}
+	}
+
+	public String getId(Object target) {
+		return target.getClass().getName() + "@" +  System.identityHashCode(target);
 
 	}
 
 	public String getStandardId(Object target) {
-		try {
-			return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
-		} catch (NullPointerException exc) {
-			if (target != null) {
-				throw exc;
-			}
-			return UUID.randomUUID().toString();
-		}
+		return target.getClass().getName() + "@" +  Integer.toHexString(System.identityHashCode(target));
 	}
 
 	public String getCurrentId(Object target) {
-		try {
-			return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
-		} catch (NullPointerException exc) {
-			if (target != null) {
-				throw exc;
-			}
-			return UUID.randomUUID().toString();
-		}
+		return target.getClass().getName() + "@" +  System.identityHashCode(target) + "_" + System.currentTimeMillis();
 	}
 
 	public String getClassId(Class<?> targetClass) {
-		try {
-			return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
-		} catch (NullPointerException exc) {
-			if (targetClass != null) {
-				throw exc;
-			}
-			return UUID.randomUUID().toString();
-		}
+		return targetClass.getName() + "@" + System.identityHashCode(targetClass.getClass());
 	}
 
 	public int toInt(Object object) {
