@@ -152,7 +152,7 @@ public class Cache {
 
 		public PathForResources<R> remove(T object, boolean destroyItems) {
 			PathForResources<R> pathForResources = resources.remove(object);
-			if (pathForResources != null && destroyItems) {
+			if ((pathForResources != null) && destroyItems) {
 				pathForResources.clearInBackground(destroyItems).waitForFinish();
 			}
 			return pathForResources;
@@ -283,7 +283,7 @@ public class Cache {
 			if (resource == null) {
 				resource = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
 					R resourceTemp = loadedResources.get(path);
-					if (resourceTemp == null && resourceSupplier != null) {
+					if ((resourceTemp == null) && (resourceSupplier != null)) {
 						resourceTemp = resourceSupplier.get();
 						if (resourceTemp != null) {
 							loadedResources.put(path, resourceTemp = sharer.apply(resourceTemp));
@@ -350,7 +350,7 @@ public class Cache {
 			R item = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
 				return nestedPartition.remove(path);
 			});
-			if (itemDestroyer != null && destroy && item != null) {
+			if ((itemDestroyer != null) && destroy && (item != null)) {
 				String finalPath = path;
 				itemDestroyer.accept(finalPath, item);
 			}
@@ -385,7 +385,7 @@ public class Cache {
 		void clearResources(Map<Long, Map<String, Map<String, R>>> partitions, boolean destroyItems) {
 			for (Entry<Long, Map<String, Map<String, R>>> partition : partitions.entrySet()) {
 				for (Entry<String, Map<String, R>> nestedPartition : partition.getValue().entrySet()) {
-					if (itemDestroyer != null && destroyItems) {
+					if ((itemDestroyer != null) && destroyItems) {
 						IterableObjectHelper.deepClear(nestedPartition.getValue(), (path, resource) -> {
 							this.itemDestroyer.accept(path, resource);
 						});
@@ -452,7 +452,7 @@ public class Cache {
 
 
 	public void clear(boolean destroyItems, Object... excluded) {
-		Set<Object> toBeExcluded = excluded != null && excluded.length > 0 ?
+		Set<Object> toBeExcluded = (excluded != null) && (excluded.length > 0) ?
 			new HashSet<>(Arrays.asList(excluded)) :
 			null;
 		Set<QueuedTaskExecutor.Task> tasks = new HashSet<>();
@@ -480,7 +480,7 @@ public class Cache {
 	}
 
 	private QueuedTaskExecutor.Task clear(Object cache, Set<Object> excluded, boolean destroyItems) {
-		if (excluded == null || !excluded.contains(cache)) {
+		if ((excluded == null) || !excluded.contains(cache)) {
 			if (cache instanceof ObjectAndPathForResources) {
 				return ((ObjectAndPathForResources<?,?>)cache).clearInBackground(destroyItems);
 			}  else if (cache instanceof PathForResources) {
