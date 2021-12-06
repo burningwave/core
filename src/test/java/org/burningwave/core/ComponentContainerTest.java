@@ -1,6 +1,5 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.condition.OS;
 public class ComponentContainerTest extends BaseTest {
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
 	@Order(1)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
@@ -36,7 +34,6 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
 	@Order(2)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
@@ -50,7 +47,6 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
 	@Order(3)
 	public void reInit() {
 		testDoesNotThrow(() -> {
@@ -61,7 +57,6 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
 	@Order(4)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
@@ -105,7 +100,6 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	//@DisabledOnOs(OS.LINUX)
 	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
@@ -131,7 +125,6 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
 	@Order(7)
 	public void clearAll() {
 		testDoesNotThrow(() -> {
@@ -139,7 +132,6 @@ public class ComponentContainerTest extends BaseTest {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.resetAll();
 			Cache.clear(true);
-			BackgroundExecutor.waitForTasksEnding(true);
 			System.gc();
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
 		});
