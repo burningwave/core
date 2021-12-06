@@ -226,13 +226,18 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	private Map<Class<?>, Component> checkAndInitComponentMapAndAfterInitTask() {
+		boolean setAndlaunchAfterInitTask = false;
 		if (this.components == null) {
-			Synchronizer.execute(getMutexForComponentsId(), () -> {
+			setAndlaunchAfterInitTask = Synchronizer.execute(getMutexForComponentsId(), () -> {
 				if (this.components == null) {
 					this.components = new ConcurrentHashMap<>();
-					setAndlaunchAfterInitTask();
+					return true;
 				}
+				return false;
 			});
+			if (setAndlaunchAfterInitTask) {
+				setAndlaunchAfterInitTask();
+			}
 		}
 		return this.components;
 	}
@@ -616,12 +621,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		waitForAfterInitTaskIfNotNull();
 		if (closeHuntersResults) {
 			closeHuntersSearchResults();
 		}
 		resetClassFactory(closeClassRetrievers);
-		waitForAfterInitTaskIfNotNull();
+		if (!closeHuntersResults && !closeClassRetrievers) {
+			waitForAfterInitTaskIfNotNull();
+		}
 		Cache.clear(true, Cache.pathForFileSystemItems);
 		if (clearFileSystemItemReferences) {
 			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
