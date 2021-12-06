@@ -50,8 +50,6 @@ public class ClassLoadersTest extends BaseTest {
 			classLoader_3.launchCloseAndWait();
 			classLoader_2.launchCloseAndWait();
 			classLoader_1.launchCloseAndWait();
-			
-			Thread.sleep(15000);
 		});
 	}
 
