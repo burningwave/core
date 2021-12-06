@@ -44,7 +44,7 @@ public class Throwables {
 		StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 		StackTraceElement[] stackTraceOfException = new StackTraceElement[stackTrace.length - 2];
 		System.arraycopy(stackTrace, 2, stackTraceOfException, 0, stackTraceOfException.length);
-		org.burningwave.core.Throwables.throwException0(exception);
+		throwException0(exception);
 		return null;
 	}
 
@@ -54,7 +54,7 @@ public class Throwables {
 		stackTraceOfException[0] = Thread.currentThread().getStackTrace()[2];
 		System.arraycopy(stackTrace, 0, stackTraceOfException, 1, stackTrace.length);
 		exception.setStackTrace(stackTraceOfException);
-		org.burningwave.core.Throwables.throwException0(exception);
+		throwException0(exception);
 		return null;
 	}
 
