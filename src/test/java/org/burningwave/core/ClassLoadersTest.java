@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -16,6 +17,8 @@ import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.PathHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 public class ClassLoadersTest extends BaseTest {
 
@@ -26,16 +29,20 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void setAsParentClassLoaderTest() {
-		testNotNull(() -> {
-			try (MemoryClassLoader classLoader = getMemoryClassLoader(null);) {
-				ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader());
-				return ClassLoaders.getParent(classLoader);
-			}
-		});
+		if (System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).indexOf("nux") >= 0) {
+			testNotNull(() -> {
+				try (MemoryClassLoader classLoader = getMemoryClassLoader(null);) {
+					ClassLoaders.setAsParent(classLoader, Thread.currentThread().getContextClassLoader());
+					return ClassLoaders.getParent(classLoader);
+				}
+			});
+		}
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void setAsMasterTest() {
 		testDoesNotThrow(() -> {
 			MemoryClassLoader classLoader_1 = getMemoryClassLoader(null);
@@ -46,14 +53,15 @@ public class ClassLoadersTest extends BaseTest {
 			assertEquals(ClassLoaders.getParent(classLoader_1), classLoader_4);
 			resetter.apply(true);
 			assertEquals(ClassLoaders.getParent(classLoader_1), null);
-			classLoader_4.launchCloseAndWait();
-			classLoader_3.launchCloseAndWait();
-			classLoader_2.launchCloseAndWait();
-			classLoader_1.launchCloseAndWait();
+			classLoader_4.close();
+			classLoader_3.close();
+			classLoader_2.close();
+			classLoader_1.close();
 		});
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void getAsParentClassLoaderTest() {
 		testNotEmpty(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -64,6 +72,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void addClassPathsTestOne() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -76,6 +85,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void addClassPathsTestTwo() {
 		testNotNull(() -> {
 			ComponentSupplier componentSupplier = getComponentSupplier();
@@ -88,6 +98,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void loadOrDefineByByteCodesTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -105,6 +116,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void loadOrDefineByByteCodesTestTwo() {
 		testNotNull(() -> {
 			try(MemoryClassLoader classLoader = getMemoryClassLoader(null)) {
@@ -127,6 +139,7 @@ public class ClassLoadersTest extends BaseTest {
 	}
 
 	@Test
+	@DisabledOnOs(OS.LINUX)
 	public void createAndClose() {
 		testDoesNotThrow(() -> {
 			Classes.Loaders.create().close();
