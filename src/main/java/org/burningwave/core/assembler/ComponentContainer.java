@@ -731,7 +731,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 		@Override
-		public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+		public boolean unregister(Object client, boolean close, boolean markAsCloseable) {
 			boolean closeCalled = super.unregister(client, close, markAsCloseable);
 			if ((!isClosed || !closeCalled) && markAsCloseable) {
 				Map<Class<?>, Component> components = this.components;

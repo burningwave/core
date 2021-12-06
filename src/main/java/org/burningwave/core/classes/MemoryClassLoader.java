@@ -63,13 +63,13 @@ import org.burningwave.core.io.ByteBufferInputStream;
 public class MemoryClassLoader extends ClassLoader implements Component, org.burningwave.core.classes.Classes.Loaders.NotificationListenerOfParentsChange {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
-	Collection<Object> clients;
+	protected Collection<Object> clients;
 	protected boolean isClosed;
 	private boolean markedAsCloseable;
 	String instanceId;
 	ClassLoader[] allParents;
-	
-	
+
+
 	static {
         ClassLoader.registerAsParallelCapable();
     }
@@ -84,7 +84,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 		this.notLoadedByteCodes = new ConcurrentHashMap<>();
 		this.loadedByteCodes = new ConcurrentHashMap<>();
-		this.clients = new HashSet<>();
+		this.clients = ConcurrentHashMap.newKeySet();
 		ClassLoaders.registerNotificationListenerOfParentsChange(this);
 		computeAllParents();
 	}
@@ -441,35 +441,39 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		Cache.uniqueKeyForExecutableAndMethodHandle.remove(this, true);
 	}
 
-	public synchronized void register(Object client) {
+	public void register(Object client) {
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
-			clients.add(client);
-			return;
+			synchronized(clients) {
+				clients.add(client);
+				return;
+			}
 		}
 		throw new IllegalStateException(
 			Strings.compile("Could not register client {} to {}: it is closed", client, this)
 		);
 	}
-	
+
 	public boolean unregister(Object client) {
 		return unregister(client, false, false);
 	}
-	
+
 	public boolean unregister(Object client, boolean close) {
 		return unregister(client, close, false);
 	}
 
-	public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+	public boolean unregister(Object client, boolean close, boolean markAsCloseable) {
 		if (markAsCloseable) {
 			markedAsCloseable = markAsCloseable;
 		}
 		Collection<Object> clients = this.clients;
 		if (!isClosed) {
-			clients.remove(client);
-			if (clients.isEmpty() && (close || markedAsCloseable)) {
-				close();
-				return true;
+			synchronized(clients) {
+				clients.remove(client);
+				if (clients.isEmpty() && (close || markedAsCloseable)) {
+					close();
+					return true;
+				}
 			}
 		}
 		return isClosed;
