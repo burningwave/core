@@ -120,7 +120,7 @@ public class QueuedTaskExecutor implements Closeable {
 				public boolean remove(Object task) {
 					boolean removed;
 					int size;
-					if ((removed = super.remove(task)) && (size = size()) > min && size < max) {
+					if ((removed = super.remove(task)) && ((size = size()) > min) && (size < max)) {
 						//ManagedLoggerRepository.logInfo(getClass()::getName, "Collection size: {}", size);
 						synchronized(this) {
 							this.notifyAll();
@@ -333,7 +333,7 @@ public class QueuedTaskExecutor implements Closeable {
 	}
 
 	<E, T extends TaskAbst<E, T>> Object[] canBeExecuted(T task) {
-		Object[] bag = new Object[]{task, true};
+		Object[] bag = {task, true};
 		if (task.runOnlyOnce) {
 			bag[1] =(!task.hasBeenExecutedChecker.get() &&
 				Optional.ofNullable(runOnlyOnceTasks.putIfAbsent(
@@ -803,7 +803,7 @@ public class QueuedTaskExecutor implements Closeable {
 
 		public boolean isAborted() {
 			Thread executor = this.executor;
-			return aborted && !executed && (executor == null || !executor.isAlive());
+			return aborted && !executed && ((executor == null) || !executor.isAlive());
 		}
 
 		private boolean isExecutorTerminated() {
@@ -841,7 +841,7 @@ public class QueuedTaskExecutor implements Closeable {
 
 		public T waitForTerminatedThreadNotAlive(long pingTime, long tentative) {
 			if (tentative > 0) {
-				while(!isTerminatedThreadNotAlive(pingTime) && tentative-- > 0) {}
+				while(!isTerminatedThreadNotAlive(pingTime) && (tentative-- > 0)) {}
 			} else {
 				while(!isTerminatedThreadNotAlive(pingTime)) {}
 			}
@@ -853,9 +853,9 @@ public class QueuedTaskExecutor implements Closeable {
 		}
 
 		public <EXC extends Throwable> T waitForTerminatedThreadNotAlive(long pingTime, long tentative, ThrowingConsumer<Integer, EXC> consumer) {
-			Integer tentativeCount = 0;
+			int tentativeCount = 0;
 			if (tentative > 0) {
-				while(!isTerminatedThreadNotAlive(pingTime) && tentative-- > 0) {
+				while(!isTerminatedThreadNotAlive(pingTime) && (tentative-- > 0)) {
 					Executor.accept(consumer, ++tentativeCount);
 				}
 			} else {
@@ -871,7 +871,7 @@ public class QueuedTaskExecutor implements Closeable {
 		}
 
 		public boolean wasExecutedWithException() {
-			return isStarted() && exc != null;
+			return isStarted() && (exc != null);
 		}
 
 		public boolean isSubmitted() {
@@ -906,7 +906,7 @@ public class QueuedTaskExecutor implements Closeable {
 			}
 			long timeAtStartWaiting = System.currentTimeMillis();
 			while(waitForStarting0(ignoreDeadLocked, ignoreSubmittedCheck, timeout) &&
-				System.currentTimeMillis() - timeAtStartWaiting < timeout
+				((System.currentTimeMillis() - timeAtStartWaiting) < timeout)
 			) {}
 			return (T)this;
 		}
@@ -968,7 +968,7 @@ public class QueuedTaskExecutor implements Closeable {
 			}
 			long timeAtStartWaiting = System.currentTimeMillis();
 			while(waitForFinish0(ignoreDeadLocked, ignoreSubmittedCheck, timeout) &&
-				System.currentTimeMillis() - timeAtStartWaiting < timeout
+				((System.currentTimeMillis() - timeAtStartWaiting) < timeout)
 			) {}
 			return (T)this;
 		}
@@ -1023,7 +1023,7 @@ public class QueuedTaskExecutor implements Closeable {
 				} catch (Throwable exc) {
 					this.exc = exc;
 					startTime = null;
-					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
+					if ((exceptionHandler == null) || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
 					forceAbort();
@@ -1035,7 +1035,7 @@ public class QueuedTaskExecutor implements Closeable {
 					++getQueuedTasksExecutor().executedTasksCount;
 				} catch (Throwable exc) {
 					this.exc = exc;
-					if (exceptionHandler == null || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
+					if ((exceptionHandler == null) || !(exceptionHandled = exceptionHandler.test((T)this, exc))) {
 						throw exc;
 					}
 				}
@@ -1257,7 +1257,7 @@ public class QueuedTaskExecutor implements Closeable {
 		public void join(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
-			if (exception != null && !exceptionHandled) {
+			if ((exception != null) && !exceptionHandled) {
 				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
 			}
 			if (!wasExecuted()) {
@@ -1290,7 +1290,7 @@ public class QueuedTaskExecutor implements Closeable {
 		public T join(boolean ignoreDeadLocked, boolean ignoreSubmittedCheck, long timeout) {
 			waitForFinish(ignoreDeadLocked, ignoreSubmittedCheck, timeout);
 			Throwable exception = getException();
-			if (exception != null && !exceptionHandled) {
+			if ((exception != null) && !exceptionHandled) {
 				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
 			}
 			if (!wasExecuted()) {
@@ -1335,7 +1335,7 @@ public class QueuedTaskExecutor implements Closeable {
 					);
 					if (priorityAsObject != null) {
 						int priority = Objects.toInt(priorityAsObject);
-						if (priority < java.lang.Thread.MIN_PRIORITY || priority > java.lang.Thread.MAX_PRIORITY) {
+						if ((priority < java.lang.Thread.MIN_PRIORITY) || (priority > java.lang.Thread.MAX_PRIORITY)) {
 							throw new IllegalArgumentException(
 								Strings.compile(
 									"Value of '{}' is not correct: it must be between {} and {}",
@@ -1446,7 +1446,7 @@ public class QueuedTaskExecutor implements Closeable {
 			);
 			for (Entry<String, Object> entry : configuration.entrySet()) {
 				Object value = entry.getValue();
-				if (value instanceof Collection && ((Collection<Object>)value).size() == 1) {
+				if ((value instanceof Collection) && (((Collection<Object>)value).size() == 1)) {
 					value = ((Collection<Object>)value).iterator().next();
 				}
 				finalConfiguration.put(entry.getKey().replace(keyPrefix +".", ""), value);
@@ -1516,7 +1516,7 @@ public class QueuedTaskExecutor implements Closeable {
 			if (queuedTasksExecutors.get(priority) != null) {
 				return priority;
 			}
-			if (priority < java.lang.Thread.MIN_PRIORITY || priority > java.lang.Thread.MAX_PRIORITY) {
+			if ((priority < java.lang.Thread.MIN_PRIORITY) || (priority > java.lang.Thread.MAX_PRIORITY)) {
 				throw new IllegalArgumentException(
 					Strings.compile(
 						"Priority value must be between {} and {}",
