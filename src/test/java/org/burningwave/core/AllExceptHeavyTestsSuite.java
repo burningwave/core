@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
     ClassFactoryTest.class,
     ComponentContainerTest.class,
     ClassHunterTest.class,
-//    ClassLoadersTest.class,
+    ClassLoadersTest.class,
     ClassPathHunterTest.class,
     CodeExecutorTest.class,
     ConstructorsTest.class,
