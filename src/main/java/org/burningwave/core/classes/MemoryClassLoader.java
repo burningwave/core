@@ -496,12 +496,12 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			clearInBackground();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			Driver.getLoadedClassesRetriever(this).clear();
+			//Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
 			this.clients.clear();
 			this.clients = null;
 			if (this.getClass().equals(MemoryClassLoader.class)) {
-				ManagedLoggerRepository.logInfo(getClass()::getName, "{}: ClassLoader {} successfully closed", task, this);
+				ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
 			}
 		});
 	}
