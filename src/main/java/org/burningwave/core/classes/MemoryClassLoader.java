@@ -55,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
-import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.io.ByteBufferInputStream;
 
 
@@ -68,7 +68,8 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	private boolean markedAsCloseable;
 	String instanceId;
 	ClassLoader[] allParents;
-
+	
+	
 	static {
         ClassLoader.registerAsParallelCapable();
     }
@@ -416,7 +417,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 
 	@Override
-	public Task clearInBackground() {
+	public QueuedTaskExecutor.Task clearInBackground() {
 		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;
 		this.notLoadedByteCodes = new HashMap<>();
@@ -450,7 +451,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			Strings.compile("Could not register client {} to {}: it is closed", client, this)
 		);
 	}
-
+	
+	public boolean unregister(Object client) {
+		return unregister(client, false, false);
+	}
+	
 	public boolean unregister(Object client, boolean close) {
 		return unregister(client, close, false);
 	}
@@ -474,8 +479,12 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	public void close() {
 		closeResources();
 	}
+	
+	public void launchCloseAndWait() {
+		closeResources().waitForFinish();
+	}
 
-	protected Task closeResources() {
+	protected QueuedTaskExecutor.Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
 			Collection<Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
@@ -486,17 +495,17 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
-				((MemoryClassLoader)parentClassLoader).unregister(this, true, false);
+				((MemoryClassLoader)parentClassLoader).unregister(this);
 			}
 			clearInBackground();
 			notLoadedByteCodes = null;
 			loadedByteCodes = null;
-			//Driver.getLoadedClassesRetriever(this).clear();
+			Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
 			this.clients.clear();
 			this.clients = null;
 			if (this.getClass().equals(MemoryClassLoader.class)) {
-				ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+				ManagedLoggerRepository.logInfo(getClass()::getName, "{}: ClassLoader {} successfully closed", task, this);
 			}
 		});
 	}
