@@ -83,7 +83,7 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	@DisabledOnOs(OS.LINUX)
+	//@DisabledOnOs(OS.LINUX)
 	@Order(5)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
