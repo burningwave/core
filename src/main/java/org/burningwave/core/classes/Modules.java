@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
@@ -73,7 +73,7 @@ public class Modules {
 			allUnnamedSet = new HashSet<>();
 			allUnnamedSet.add(Fields.getStaticDirect(moduleClass, "ALL_UNNAMED_MODULE"));
 		} catch (Throwable exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -90,7 +90,7 @@ public class Modules {
 				});
 			});
 		} catch (Throwable exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -133,7 +133,7 @@ public class Modules {
 				export("openPackages", moduleFrom, pkgName, moduleTo);
 			});
 		} catch (Throwable exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -168,7 +168,7 @@ public class Modules {
 				exporter.accept("openPackages", module, pkgName);
 			});
 		} catch (Throwable exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 

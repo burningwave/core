@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -131,7 +131,7 @@ public class Resources {
 						FileSystemItem.of(resourceURL).toInputStream()
 					);
 				} catch (Throwable exc2) {
-					return throwException(exc);
+					return org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 		}
@@ -171,7 +171,7 @@ public class Resources {
 						FileSystemItem.of(resourceURL).toInputStream()
 					);
 				} catch (Throwable exc2) {
-					return throwException(exc);
+					return org.burningwave.core.Throwables.throwException(exc);
 				}
 			}
 		}

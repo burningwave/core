@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
@@ -217,7 +217,7 @@ public interface IterableZipContainer extends Closeable {
 			loadZipEntryData
 		);
 		if (entriesFound.size() > 1) {
-			throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
+			org.burningwave.core.Throwables.throwException("Found more than one zip entry for predicate {}", zipEntryPredicate);
 		}
 		return entriesFound.stream().findFirst().orElseGet(() -> null);
 	}

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.assembler;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
@@ -153,12 +153,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					}
 					return config;
 				} catch (Throwable exc) {
-					return throwException(exc);
+					return org.burningwave.core.Throwables.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -167,7 +167,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -588,7 +588,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			throwException("Could not close singleton instance {}", Holder.INSTANCE);
+			org.burningwave.core.Throwables.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
 

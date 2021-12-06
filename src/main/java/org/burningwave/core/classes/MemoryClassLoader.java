@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
@@ -247,7 +247,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 					this.getClass()
 				);
 			} else {
-				throwException(exc);
+				org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
     	removeNotLoadedBytecode(className);

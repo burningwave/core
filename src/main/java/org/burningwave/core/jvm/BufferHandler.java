@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.jvm;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -277,7 +277,7 @@ public class BufferHandler implements Component {
 					try {
 						this.wait();
 					} catch (InterruptedException exc) {
-						throwException(exc);
+						org.burningwave.core.Throwables.throwException(exc);
 					}
 				}
 			}

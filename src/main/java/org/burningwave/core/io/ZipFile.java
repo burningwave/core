@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.FileSystemHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
@@ -89,7 +89,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 			}
 			originalZipFile = null;
 		} catch (IOException exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 		entriesIterator = entries.iterator();
 	}
@@ -138,7 +138,7 @@ class ZipFile implements IterableZipContainer, Memorizer {
 					try {
 						originalZipFile = this.originalZipFile = new java.util.zip.ZipFile(file);
 					} catch (IOException exc) {
-						throwException(exc);
+						org.burningwave.core.Throwables.throwException(exc);
 					}
 				}
 			}

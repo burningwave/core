@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -78,7 +78,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 			if (membersThatMatch.size() == 1) {
 				return membersThatMatch.stream().findFirst().get();
 			}
-			throwException(
+			org.burningwave.core.Throwables.throwException(
 				new IllegalArgumentException(
 					Strings.compile(
 						"Found more than one of method named {} with argument types {} in {} hierarchy",
@@ -210,7 +210,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return Executor.get(() -> {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, Classes.retrieveFrom(arguments));
 			if (method == null) {
-				throwException(
+				org.burningwave.core.Throwables.throwException(
 					new NoSuchMethodException(
 						Strings.compile(
 							"Method {} not found in {} hierarchy", methodName, targetClass.getName()
@@ -261,7 +261,7 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		if (entry == null) {
 			Method method = findFirstAndMakeItAccessible(targetClass, methodName, inputParameterTypesOrSubTypes);
 			if (method == null) {
-				throwException(
+				org.burningwave.core.Throwables.throwException(
 					new NoSuchMethodException(
 						Strings.compile(
 							"Method {} not found in {} hierarchy", methodName, targetClass.getName()

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
@@ -165,7 +165,7 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 				classNames
 			);
 		} catch (Throwable exc) {
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 

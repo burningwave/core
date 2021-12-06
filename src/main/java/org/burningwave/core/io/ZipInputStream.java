@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
@@ -261,7 +261,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+							org.burningwave.core.Throwables.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
 						try {
 						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());

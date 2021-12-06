@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
@@ -118,7 +118,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			copy(inputStream, outputStream);
 			return outputStream.toByteArray();
 		} catch (Throwable exc) {
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -137,7 +137,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			}
 			return BufferHandler.shareContent(byteBuffer);
 		} catch (Throwable exc) {
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -205,7 +205,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 		try (InputStream inputStream = inputStreamSupplier.get()) {
 			feelPropertiesMap(inputStream, map);
 		} catch (IOException exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}		
 	}
 
@@ -219,7 +219,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 				castedMap.put(entry.getKey(), entry.getValue());
 			}
 		} catch (IOException exc) {
-			throwException(exc);
+			org.burningwave.core.Throwables.throwException(exc);
 		}
 		
 	}

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.classes;
 
-import static org.burningwave.core.Throwables.throwException;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
@@ -211,7 +211,7 @@ public class Classes implements MembersRetriever {
 				throw exc;
 			}
 		} catch (IOException exc) {
-			return throwException(exc);
+			return org.burningwave.core.Throwables.throwException(exc);
 		}
 	}
 
@@ -509,7 +509,7 @@ public class Classes implements MembersRetriever {
 					)
 				);
 			} catch (Throwable exc) {
-				return throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
 
@@ -562,7 +562,7 @@ public class Classes implements MembersRetriever {
 			try {
 				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
 			} catch (Throwable exc) {
-				return throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
 
@@ -624,7 +624,7 @@ public class Classes implements MembersRetriever {
 
 			}
 			if (packages == null) {
-				throwException("Could not find packages Map on {}", classLoader);
+				org.burningwave.core.Throwables.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 
@@ -791,7 +791,7 @@ public class Classes implements MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				return throwException(exc);
+				return org.burningwave.core.Throwables.throwException(exc);
 			}
 		}
 
@@ -993,7 +993,7 @@ public class Classes implements MembersRetriever {
 
 							}
 						} catch (MalformedURLException exc) {
-							throwException(exc);
+							org.burningwave.core.Throwables.throwException(exc);
 						}
 					}
 				}
@@ -1018,7 +1018,7 @@ public class Classes implements MembersRetriever {
 				this.classLoadersPackages = null;
 				this.builtinClassLoaderClassParentField = null;
 			} else {
-				throwException("Could not close singleton instance {}", this);
+				org.burningwave.core.Throwables.throwException("Could not close singleton instance {}", this);
 			}
 		}
 
