@@ -100,8 +100,8 @@ public class ComponentContainerTest extends BaseTest {
 		});
 	}
 	
-//	@Test
-//	@Order(6)
+	@Test
+	@Order(6)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
