@@ -97,7 +97,7 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.2</junit-jupiter.version>
 		<junit.version>1.8.2</junit.version>
-		<burningwave-jvm-driver.version>6.6.0</burningwave-jvm-driver.version>
+		<burningwave-jvm-driver.version>6.6.1</burningwave-jvm-driver.version>
 		<jvm-driver.version>8.7.1</jvm-driver.version>
 		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
