@@ -330,7 +330,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public void reInit() {
 		Synchronizer.execute(getMutexForComponentsId(), () -> {
-			clear();
 			reset();
 			init();
 		});
@@ -544,8 +543,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	public ComponentContainer reset() {
+		clear();
 		return executeOnComponentMap(components -> {
-			waitForAfterInitTaskIfNotNull();
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.components = new ConcurrentHashMap<>();
 			});
@@ -585,7 +584,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			closeResources(() -> instanceId == null, task -> {
 				checkAndUnregister(GlobalProperties);
 				checkAndUnregister(config);
-				clear();
+				reset();
 				components = null;
 				propertySupplier = null;
 				config = null;
