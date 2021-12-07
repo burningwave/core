@@ -1,6 +1,5 @@
 package org.burningwave.core;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
@@ -132,7 +131,7 @@ public class ComponentContainerTest extends BaseTest {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.resetAll();
-			BackgroundExecutor.waitForTasksEnding();
+			//BackgroundExecutor.waitForTasksEnding();
 			Cache.clear(true);
 			System.gc();
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
