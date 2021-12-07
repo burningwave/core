@@ -28,9 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
-
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
-import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
@@ -42,15 +40,12 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -63,9 +58,7 @@ import java.util.stream.Stream;
 
 import org.burningwave.core.Identifiable;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
-import org.burningwave.core.concurrent.QueuedTaskExecutor.Task;
-import org.burningwave.core.concurrent.Thread;
+import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig.WithOutputOfCollection;
@@ -74,13 +67,12 @@ import org.burningwave.core.iterable.Properties.Event;
 
 @SuppressWarnings("unchecked")
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener, Identifiable {
-	private Predicate<Object> defaultMinimumCollectionSizeForParallelIterationPredicate;
+	Predicate<Object> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
 	private Integer maxThreadCountsForParallelIteration;
 	//Deferred initialized
 	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
 	private Class<?>[] parallelCollectionClasses;
-
 
 	IterableObjectHelperImpl(Map<?, ?> config) {
 		this.defaultValuesSeparator = resolveStringValue(
@@ -187,7 +179,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	@Override
 	public <K, V> void deepClear(Map<K,V> map) {
-		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		java.util.Iterator<Entry<K, V>> itr = map.entrySet().iterator();
 		while (itr.hasNext()) {
 			itr.next();
 			itr.remove();
@@ -196,7 +188,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	@Override
 	public <K, V, E extends Throwable> void deepClear(Map<K,V> map, ThrowingBiConsumer<K, V, E> itemDestroyer) throws E {
-		Iterator<Entry<K, V>> itr = map.entrySet().iterator();
+		java.util.Iterator<Entry<K, V>> itr = map.entrySet().iterator();
 		while (itr.hasNext()) {
 			Entry<K, V> entry = itr.next();
 			try {
@@ -211,7 +203,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	@Override
 	public <V> void deepClear(Collection<V> map) {
-		Iterator<V> itr = map.iterator();
+		java.util.Iterator<V> itr = map.iterator();
 		while (itr.hasNext()) {
 			itr.next();
 			itr.remove();
@@ -220,7 +212,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	@Override
 	public <V, E extends Throwable > void deepClear(Collection<V> map, ThrowingConsumer<V, E> itemDestroyer) throws E {
-		Iterator<V> itr = map.iterator();
+		java.util.Iterator<V> itr = map.iterator();
 		while (itr.hasNext()) {
 			itr.remove();
 			itemDestroyer.accept(itr.next());
@@ -372,7 +364,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one item under key/predicate {}", key);
+				Driver.throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
@@ -549,7 +541,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	@Override
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName) {
 		Collection<String> placeHolders = getAllPlaceHolders(map);
-		Iterator<String> placeHoldersItr = placeHolders.iterator();
+		java.util.Iterator<String> placeHoldersItr = placeHolders.iterator();
 		while (placeHoldersItr.hasNext()) {
 			if (!containsValue(map, propertyName, placeHoldersItr.next())) {
 				placeHoldersItr.remove();
@@ -625,17 +617,17 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 
 	@Override
-	public <I, IC, O, OC> ProducerTask<OC> createIterateAndGetTask(WithOutputOfCollection<I, IC, O, OC> config) {
+	public <I, IC, O, OC> QueuedTaskExecutor.ProducerTask<OC> createIterateAndGetTask(WithOutputOfCollection<I, IC, O, OC> config) {
 		return BackgroundExecutor.createProducerTask(() -> iterateAndGet(config));
 	}
 
 	@Override
-	public <I, IC, K, O, OM> ProducerTask<OM> createIterateAndGetTask(WithOutputOfMap<I, IC, K, O, OM> config) {
+	public <I, IC, K, O, OM> QueuedTaskExecutor.ProducerTask<OM> createIterateAndGetTask(WithOutputOfMap<I, IC, K, O, OM> config) {
 		return BackgroundExecutor.createProducerTask(() -> iterateAndGet(config));
 	}
 
 	@Override
-	public <I, IC> Task createIterateTask(IterationConfig<I, IC, ?> config) {
+	public <I, IC> QueuedTaskExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config) {
 		return BackgroundExecutor.createTask(() -> iterate(config));
 	}
 
@@ -643,8 +635,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <I, IC, K, O, OM> OM iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> configuration
 	) {
-		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return iterate(
+		Iterator.Config<I, IC> config = configuration.getWrappedConfiguration();
+		return config.iteratorSupplier.apply(this).iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OM)config.output,
@@ -657,8 +649,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <I, IC, O, OC> OC iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> configuration
 	) {
-		IterationConfigImpl<I, IC> config = configuration.getWrappedConfiguration();
-		return iterate(
+		Iterator.Config<I, IC> config = configuration.getWrappedConfiguration();
+		return config.iteratorSupplier.apply(this).iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			(OC)config.output,
@@ -669,8 +661,8 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	@Override
 	public <I, IC> void iterate(IterationConfig<I, IC, ?> configuration) {
-		IterationConfigImpl<I, IC> config = (IterationConfigImpl<I, IC>)configuration;
-		iterate(
+		Iterator.Config<I, IC> config = (Iterator.Config<I, IC>)configuration;
+		config.iteratorSupplier.apply(this).iterate(
 			(IC)config.items,
 			config.predicateForParallelIteration,
 			null,
@@ -679,280 +671,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		);
 	}
 
-	// Using ThreadSupplier since 12.38.0 (previous version is 12.37.0)
-	private <I, IC, OC> OC iterate(
-		IC items,
-		Predicate<IC> predicateForParallelIteration,
-		OC output,
-		BiConsumer<I, Consumer<Consumer<OC>>> action,
-		Integer priority
-	) {
-		if (items == IterationConfigImpl.NO_ITEMS) {
-			return output;
-		}
-		java.lang.Thread currentThread = Thread.currentThread();
-		int initialThreadPriority = currentThread.getPriority();
-		if (priority == null) {
-			priority = initialThreadPriority;
-		} else if (initialThreadPriority != priority) {
-			currentThread.setPriority(priority);
-		}
-		try {
-			if (predicateForParallelIteration == null) {
-				predicateForParallelIteration = collectionOrArray -> this.defaultMinimumCollectionSizeForParallelIterationPredicate.test(collectionOrArray);
-			}
-			int taskCountThatCanBeCreated = getCountOfTasksThatCanBeCreated(items, predicateForParallelIteration);
-			if (taskCountThatCanBeCreated > 1) {
-				Consumer<Consumer<OC>> outputItemsHandler =
-					output != null ?
-						isConcurrentEnabled(output) ?
-							(outputHandler) -> {
-								outputHandler.accept(output);
-							} :
-							(outputHandler) -> {
-								synchronized (output) {
-									outputHandler.accept(output);
-								}
-							}
-						: null;
-				// Used for break the iteration
-				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
-				Map<Thread, Thread> threads = new ConcurrentHashMap<>();
-				/* Iterate List */
-				if (items instanceof List) {
-					List<I> itemList = (List<I>)items;
-					final int splittedIteratorSize = itemList.size() / taskCountThatCanBeCreated;
-					for (
-						int currentIndex = 0, splittedIteratorIndex = 0;
-						currentIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
-						++currentIndex, splittedIteratorIndex+=splittedIteratorSize
-					) {
-						Iterator<I> itemIterator = itemList.listIterator(splittedIteratorIndex);
-						final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
-							splittedIteratorSize :
-							(itemList.size() - (splittedIteratorSize * currentIndex));
-						ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
-							try {
-								for (
-									int remainedItems = itemsCount;
-									terminateIterationNotification.get() == null && remainedItems > 0;
-									--remainedItems
-								) {
-									action.accept(itemIterator.next(), outputItemsHandler);
-								}
-							} catch (IterableObjectHelper.TerminateIteration exc) {
-								checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
-							} catch (Throwable exc) {
-								terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-								throw exc;
-							} finally {
-								removeThread(threads, thread);
-							}
-						};
-						if (currentIndex < (taskCountThatCanBeCreated - 1)) {
-							createAndStartThread(threads, iterator, priority);
-						} else {
-							consume(iterator);
-						}
-					}
-				/* Iterate any Collection except List */
-				} else if (items instanceof Collection) {
-					Iterator<I> itemIterator = ((Collection<I>)items).iterator();
-					ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
-						I item = null;
-						try {
-							while (terminateIterationNotification.get() == null) {
-								try {
-									synchronized (itemIterator) {
-										item = itemIterator.next();
-									}
-								} catch (NoSuchElementException exc) {
-									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-									break;
-								}
-								action.accept(item, outputItemsHandler);
-							}
-						} catch (IterableObjectHelper.TerminateIteration exc) {
-							checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
-						} catch (Throwable exc) {
-							terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-							throw exc;
-						} finally {
-							removeThread(threads, thread);
-						}
-					};
-					for (int taskIndex = 0; taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null; taskIndex++) {
-						if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-							createAndStartThread(threads, iterator, priority);
-						} else {
-							consume(iterator);
-						}
-					}
-				} else {
-					int arrayLength = Array.getLength(items);
-					final int splittedIteratorSize = arrayLength / taskCountThatCanBeCreated;
-					Class<?> componentType = items.getClass().getComponentType();
-					/* Iterate primitive array */
-					if (componentType.isPrimitive()) {
-						final Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);
-						for (
-							int taskIndex = 0, currentSplittedIteratorIndex = 0;
-							taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
-							++taskIndex, currentSplittedIteratorIndex+=splittedIteratorSize
-						) {
-							final int itemsCount = taskIndex != taskCountThatCanBeCreated -1 ?
-								splittedIteratorSize :
-								arrayLength - (splittedIteratorSize * taskIndex);
-							final int splittedIteratorIndex = currentSplittedIteratorIndex;
-							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
-								try {
-									int remainedItems = itemsCount;
-									for (
-										int itemIndex = splittedIteratorIndex;
-										terminateIterationNotification.get() == null && remainedItems > 0;
-										--remainedItems
-									) {
-										action.accept((I)itemRetriever.apply(itemIndex++), outputItemsHandler);
-									}
-								} catch (IterableObjectHelper.TerminateIteration exc) {
-									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
-								} catch (Throwable exc) {
-									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-									throw exc;
-								} finally {
-									removeThread(threads, thread);
-								}
-							};
-							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								createAndStartThread(threads, iterator, priority);
-							} else {
-								consume(iterator);
-							}
-						}
-					/* Iterate array of objects */
-					} else {
-						for (
-							int taskIndex = 0, currentSplittedIteratorIndex = 0;
-							taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
-							++taskIndex, currentSplittedIteratorIndex+=splittedIteratorSize
-						) {
-							final int itemsCount = taskIndex != taskCountThatCanBeCreated -1 ?
-								splittedIteratorSize :
-								arrayLength - (splittedIteratorSize * taskIndex);
-							final int splittedIteratorIndex = currentSplittedIteratorIndex;
-							I[] itemArray = (I[])items;
-							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
-								try {
-									int remainedItems = itemsCount;
-									for (
-										int itemIndex = splittedIteratorIndex;
-										terminateIterationNotification.get() == null && remainedItems > 0;
-										--remainedItems
-									) {
-										action.accept(itemArray[itemIndex++], outputItemsHandler);
-									}
-								} catch (IterableObjectHelper.TerminateIteration exc) {
-									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
-								} catch (Throwable exc) {
-									terminateIterationNotification.set(IterableObjectHelper.TerminateIteration.NOTIFICATION);
-									throw exc;
-								} finally {
-									removeThread(threads, thread);
-								}
-							};
-							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
-								createAndStartThread(threads, iterator, priority);
-							} else {
-								consume(iterator);
-							}
-						}
-					}
-				}
-				if (!threads.isEmpty()) {
-					synchronized(threads) {
-						if (!threads.isEmpty()) {
-							try {
-								threads.wait();
-							} catch (InterruptedException exc) {
-								org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
-							}
-						}
-					}
-				}
-				return output;
-			}
-			Consumer<Consumer<OC>> outputItemsHandler =
-				output != null ?
-					(outputCollectionConsumer) -> {
-						outputCollectionConsumer.accept(output);
-					}
-				: null;
-			try {
-				if (items instanceof Collection) {
-					for (I item : (Collection<I>)items) {
-						action.accept(item, outputItemsHandler);
-					}
-				} else if (!items.getClass().getComponentType().isPrimitive()) {
-					I[] itemArray = (I[])items;
-					for (I item : itemArray) {
-						action.accept(item, outputItemsHandler);
-					}
-				} else {
-					Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);
-					int arrayLength = Array.getLength(items);
-					for (int i = 0; i < arrayLength; i++) {
-						action.accept((I)itemRetriever.apply(i), outputItemsHandler);
-					}
-				}
-			} catch (IterableObjectHelper.TerminateIteration t) {
-
-			}
-		} finally {
-			if (initialThreadPriority != priority) {
-				currentThread.setPriority(initialThreadPriority);
-			}
-		}
-		return output;
-	}
-
-	private Thread createAndStartThread(Map<Thread, Thread> threads, ThrowingConsumer<Thread, ? extends Throwable> iterator, int priority) {
-		Thread thread = ThreadSupplier.getOrCreateThread().setExecutable(iterator);
-		thread.setPriority(priority);
-		threads.put(thread, thread);
-		thread.start();
-		return thread;
-	}
-
-	private void removeThread(Map<Thread, Thread> threads, Thread thread) {
-		if (thread != null) {
-			threads.remove(thread);
-			if (threads.isEmpty()) {
-				synchronized(threads) {
-					threads.notify();
-				}
-			}
-		}
-	}
-
-	private void checkAndNotifyTerminationOfIteration(
-		AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification,
-		IterableObjectHelper.TerminateIteration exc
-	) {
-		if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
-			terminateIterationNotification.set(exc);
-		}
-	}
-
-	private void consume(ThrowingConsumer<Thread, ? extends Throwable> iterator) {
-		try {
-			iterator.accept(null);
-		} catch (Throwable exc) {
-			ManagedLoggerRepository.logError(getClass()::getName, exc);
-		}
-	}
-
-	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
-		Integer maxThreadCountsForParallelIteration = this.maxThreadCountsForParallelIteration;
+	<I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
 				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
@@ -961,23 +680,22 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return 0;
 		} catch (NullPointerException exc) {
-			if (maxThreadCountsForParallelIteration != null) {
-				throw exc;
-			}
-			Synchronizer.execute(
-				getOperationId("initMaxThreadCountsForParallelIteration"),
-				() -> {
-					if (this.maxThreadCountsForParallelIteration == null) {
-						this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+			if (maxThreadCountsForParallelIteration == null) {
+				Synchronizer.execute(
+					getOperationId("initMaxThreadCountsForParallelIteration"),
+					() -> {
+						if (maxThreadCountsForParallelIteration == null) {
+							maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+						}
 					}
-				}
-			);
-			return getCountOfTasksThatCanBeCreated(items, predicate);
+				);
+				return getCountOfTasksThatCanBeCreated(items, predicate);
+			}
+			throw exc;
 		}
 	}
 
-	private boolean isConcurrentEnabled(Object coll) {
-		Class<?>[] parallelCollectionClasses = this.parallelCollectionClasses;
+	boolean isConcurrentEnabled(Object coll) {
 		try {
 			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
 				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
@@ -986,18 +704,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return false;
 		} catch (NullPointerException exc) {
-			if (parallelCollectionClasses != null) {
-				throw exc;
-			}
-			Synchronizer.execute(
-				getOperationId("initParallelCollectionClassesCollection"),
-				() -> {
-					if (this.parallelCollectionClasses == null) {
-						this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+			if (this.parallelCollectionClasses == null) {
+				Synchronizer.execute(
+					getOperationId("initParallelCollectionClassesCollection"),
+					() -> {
+						if (this.parallelCollectionClasses == null) {
+							this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+						}
 					}
-				}
-			);
-			return isConcurrentEnabled(coll);
+				);
+				return isConcurrentEnabled(coll);
+			}
+			throw exc;
 		}
 	}
 
@@ -1034,4 +752,169 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 
 	}
 
+	static abstract class Iterator {
+		static final Object NO_ITEMS;
+
+		final IterableObjectHelperImpl iterableObjectHelper;
+
+		static {
+			NO_ITEMS = new Object();
+		}
+
+		public Iterator(IterableObjectHelperImpl iterableObjectHelper) {
+			this.iterableObjectHelper = iterableObjectHelper;
+		}
+
+		abstract <I, IC, OC> OC iterate(
+			IC items,
+			Predicate<IC> predicateForParallelIteration,
+			OC output,
+			BiConsumer<I, Consumer<Consumer<OC>>> action,
+			Integer priority
+		);
+
+		void checkAndNotifyTerminationOfIteration(
+			AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification,
+			IterableObjectHelper.TerminateIteration exc
+		) {
+			if (exc == IterableObjectHelper.TerminateIteration.NOTIFICATION) {
+				terminateIterationNotification.set(exc);
+			}
+		}
+
+		static class Config<I, IC> implements IterableObjectHelper.IterationConfig<I, IC, Config<I, IC>>{
+			private final static Function<IterableObjectHelperImpl, IterableObjectHelperImpl.Iterator> taskBasedIteratorSupplier;
+			private final static Function<IterableObjectHelperImpl, IterableObjectHelperImpl.Iterator> threadBasedIteratorSupplier;
+
+
+			static {
+				taskBasedIteratorSupplier = TaskBasedIterator::new;
+				threadBasedIteratorSupplier = ThreadBasedIterator::new;
+			}
+
+			Object items;
+			Object action;
+			Object output;
+			Predicate<IC> predicateForParallelIteration;
+			Integer priority;
+			Function<IterableObjectHelperImpl, IterableObjectHelperImpl.Iterator> iteratorSupplier;
+
+			public Config(
+				Object items
+			) {
+				if (items == null) {
+					throw new IllegalArgumentException("Input collection or array could not be null");
+				}
+				this.items = items;
+				iteratorSupplier = taskBasedIteratorSupplier;
+			}
+
+			public <O> Config<I, IC> withAction(BiConsumer<I, Consumer<Consumer<O>>> action) {
+				this.action = action;
+				return this;
+			}
+
+			@Override
+			public Config<I, IC> withAction(Consumer<I> action) {
+				BiConsumer<I, Consumer<Consumer<?>>> newAction = (item, outputItemCollector) -> action.accept(item);
+				this.action = newAction;
+				return this;
+			}
+
+			@Override
+			public Config<I, IC> withPriority(Integer priority) {
+				this.priority = priority;
+				return this;
+			}
+
+			@Override
+			public Config<I, IC> parallelIf(Predicate<IC> predicate) {
+				this.predicateForParallelIteration = predicate;
+				return this;
+			}
+
+			Config<I, IC> setOutput(Object output) {
+				this.output = output;
+				return this;
+			}
+
+			@Override
+			public Config<I, IC> withTaskBasedIteration() {
+				this.iteratorSupplier = taskBasedIteratorSupplier;
+				return this;
+			}
+
+			@Override
+			public Config<I, IC> withThreadBasedIteration() {
+				this.iteratorSupplier = threadBasedIteratorSupplier;
+				return this;
+			}
+
+			@Override
+			public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output) {
+				return new WithOutputOfCollection<>(setOutput(output));
+			}
+
+			@Override
+			public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output) {
+				return new WithOutputOfMap<>(setOutput(output));
+			}
+
+			static abstract class WithOutput<I, IC, CWO extends WithOutput<I, IC, CWO>> implements IterableObjectHelper.IterationConfig<I, IC, CWO> {
+				Config<I, IC> wrappedConfiguration;
+
+				WithOutput(Config<I, IC> configuration) {
+					this.wrappedConfiguration = configuration;
+				}
+
+				@Override
+				public CWO withAction(Consumer<I> action) {
+					wrappedConfiguration.withAction(action);
+					return (CWO)this;
+				}
+
+				@Override
+				public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output) {
+					wrappedConfiguration.setOutput(output);
+					return new WithOutputOfCollection<>(wrappedConfiguration);
+				}
+
+				@Override
+				public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output) {
+					wrappedConfiguration.setOutput(output);
+					return new WithOutputOfMap<>(wrappedConfiguration);
+				}
+
+				@Override
+				public CWO parallelIf(Predicate<IC> predicate) {
+					wrappedConfiguration.parallelIf(predicate);
+					return (CWO)this;
+				}
+
+				@Override
+				public CWO withTaskBasedIteration() {
+					wrappedConfiguration.withTaskBasedIteration();
+					return (CWO)this;
+				}
+
+				@Override
+				public CWO withThreadBasedIteration() {
+					wrappedConfiguration.withThreadBasedIteration();
+					return (CWO)this;
+				}
+
+				@Override
+				public CWO withPriority(Integer priority) {
+					wrappedConfiguration.withPriority(priority);
+					return (CWO)this;
+				}
+
+				Config<I, IC> getWrappedConfiguration() {
+					return wrappedConfiguration;
+				}
+			}
+
+		}
+
+	}
 }
