@@ -518,7 +518,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 
 	public static class DebugSupport implements Closeable, ManagedLogger {
 		private static Map<MemoryClassLoader, DebugSupport> INSTANCES;
-		public static boolean enabled;
+		private static boolean enabled;
 
 		MemoryClassLoader memoryClassLoader;
 		List<StackTraceElement> creationStack;
@@ -550,6 +550,10 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 				return debugSupport != null;
 			}
 			return enabled;
+		}
+
+		public final static void enable() {
+			enabled = true;
 		}
 
 		private DebugSupport(MemoryClassLoader memoryClassLoader) {
