@@ -594,7 +594,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 
 		private String getInfos() {
 			return Strings.compile(
-				"\t{} {} and was created at:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}\n\n",
+				"\t{} {} and was created at:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}",
 				memoryClassLoader,
 				memoryClassLoader.isClosed? "is closed" : "is not closed",
 				String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
@@ -609,9 +609,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		public final static void logAllInstancesInfo() {
 			if (INSTANCES != null) {
 				ManagedLoggerRepository.logInfo(
-					MemoryClassLoader.class::getName, "Memory class loaders: {}\n\n{}",
+					MemoryClassLoader.class::getName, "\n\n\nMemory class loaders: {}\n\n{}\n\n",
 					INSTANCES.size(),
-					String.join("", INSTANCES.values().stream().map(mCL -> mCL.getInfos()).collect(Collectors.toList()))
+					String.join("\n\n", INSTANCES.values().stream().map(mCL -> mCL.getInfos()).collect(Collectors.toList()))
 				);
 			}
 		}
