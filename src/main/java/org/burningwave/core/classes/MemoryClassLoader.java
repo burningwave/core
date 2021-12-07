@@ -569,10 +569,11 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 					creationStack.add(stackTraceElements[i]);
 				}
 			}
-			memoryClassLoader.clients = new ConcurrentHashMap<>() {
+			memoryClassLoader.clients = new ConcurrentHashMap<Object, Object>() {
 
 				private static final long serialVersionUID = -1409968440852414035L;
 
+				@Override
 				public Object put(Object client, Object clientRef) {
 					super.put(client, Methods.retrieveExternalCallersInfo());
 					return client;
