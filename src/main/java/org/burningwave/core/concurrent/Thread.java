@@ -66,15 +66,17 @@ public abstract class Thread extends java.lang.Thread {
 	Boolean running;
 	Supplier supplier;
 	String defaultName;
+	String typeName;
 
 	private Thread(Supplier threadSupplier, long number) {
 		super(threadSupplier.name + " - Executor " + number);
 		executableWrapper = new AtomicReference<>();
 		this.supplier = threadSupplier;
+		typeName = getClass().getSimpleName();
 		defaultName = Strings.compile(
 			"{} - {} executor {}",
 			supplier.name,
-			getClass().getSimpleName(),
+			typeName,
 			number
 		);
 		setIndexedName();
@@ -227,11 +229,10 @@ public abstract class Thread extends java.lang.Thread {
 	@Override
 	public String toString() {
 		return Strings.compile(
-			"{} ({})",
+			"{}{}",
 			super.toString(),
-			getClass().getSimpleName() + 
 			Optional.ofNullable(getState()).map(threadState ->
-				": " + Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " "))
+				Strings.compile("({})", Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")))
 			).orElseGet(() -> "")
 		);
 	}

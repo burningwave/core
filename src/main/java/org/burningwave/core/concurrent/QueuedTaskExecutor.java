@@ -1148,7 +1148,7 @@ public class QueuedTaskExecutor implements Closeable {
 			if (name != null) {
 				executor.setName(queuedTasksExecutor.name + " - " + name);
 			} else {
-				executor.setIndexedName(queuedTasksExecutor.name + " executor");
+				executor.setIndexedName(queuedTasksExecutor.name + " " + executor.typeName.toLowerCase() + " executor");
 			}
 			return (T)this;
 		}
