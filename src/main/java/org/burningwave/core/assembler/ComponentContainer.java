@@ -618,12 +618,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	@Override
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
-		waitForAfterInitTaskIfNotNull();
 		if (closeHuntersResults) {
 			closeHuntersSearchResults();
 		}
 		resetClassFactory(closeClassRetrievers);
-		waitForAfterInitTaskIfNotNull();
+		if (!closeHuntersResults && !closeClassRetrievers) {
+			waitForAfterInitTaskIfNotNull();
+		}
 		Cache.clear(true, Cache.pathForFileSystemItems);
 		if (clearFileSystemItemReferences) {
 			Cache.pathForFileSystemItems.iterateParallel((path, fileSystemItem) -> {
