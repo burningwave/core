@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -545,15 +546,20 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				this.components = new ConcurrentHashMap<>();
 			});
 			if (!components.isEmpty()) {
-				BackgroundExecutor.createTask(task ->
+				BackgroundExecutor.createTask(task -> {
+					AtomicReference<ClassLoader> classLoaderWrapper = new AtomicReference<>();
 					IterableObjectHelper.deepClear(components, (type, component) -> {
 						if (!(component instanceof ClassLoader)) {
 							component.close();
 						} else {
-							((ClassLoader)component).unregister(this, true, false);
+							classLoaderWrapper.set(((ClassLoader)component));
 						}
-					}),Thread.MIN_PRIORITY
-				).submit();
+					});
+					ClassLoader classLoader = classLoaderWrapper.get();
+					if (classLoader != null) {
+						classLoader.unregister(this, true, true);
+					}
+				},Thread.MIN_PRIORITY).submit();
 			}
 			return this;
 		});
