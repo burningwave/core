@@ -203,20 +203,18 @@ public class ClassFactoryImpl implements ClassFactory, Component {
 
 	@Override
 	public void close() {
-		closeResources(() -> this.classRetrievers == null, tsk -> {
-			this.defaultClassLoaderManager.close();
-			checkAndUnregister(config);
-			closeClassRetrievers();
-			BackgroundExecutor.createTask(task -> {
-				this.classRetrievers = null;
-			}).submit();
-			pathHelper = null;
-			javaMemoryCompiler = null;
-			byteCodeHunter = null;
-			classPathHunter = null;
-			classPathHunterSupplier = null;
-			config = null;
-		});
+		this.defaultClassLoaderManager.close();
+		checkAndUnregister(config);
+		closeClassRetrievers();
+		BackgroundExecutor.createTask(task -> {
+			this.classRetrievers = null;
+		}).submit();
+		pathHelper = null;
+		javaMemoryCompiler = null;
+		byteCodeHunter = null;
+		classPathHunter = null;
+		classPathHunterSupplier = null;
+		config = null;
 	}
 
 

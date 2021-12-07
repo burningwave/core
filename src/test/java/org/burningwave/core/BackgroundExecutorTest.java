@@ -24,16 +24,16 @@ public class BackgroundExecutorTest extends BaseTest {
 		testDoesNotThrow(() -> {
 			assertTrue(
 				BackgroundExecutor.createTask(() -> {
-					while(true) {}		
+					while(true) {}
 				}).submit()
 				.waitForStarting()
 				.kill()
-				.waitForTerminatedThreadNotAlive(100)
+				.waitForTerminatedThreadNotAlive(100, 3000)
 				.isTerminatedThreadNotAlive()
 			);
 		});
 	}
-	
+
 	//@Test
 	public void stressTestOne() {
 		testDoesNotThrow(() -> {
@@ -57,7 +57,7 @@ public class BackgroundExecutorTest extends BaseTest {
 			tasks.forEach(QueuedTaskExecutor.Task::waitForFinish);
 		});
 	}
-	
+
 	//@Test
 	public void stressTestTwo() {
 		testDoesNotThrow(() -> {
@@ -70,10 +70,10 @@ public class BackgroundExecutorTest extends BaseTest {
 						ManagedLoggerRepository.logInfo(getClass()::getName, "Remained iteration: {}", remainedRequestCountTemp);
 					}
 				}, random.ints(Thread.NORM_PRIORITY, Thread.MAX_PRIORITY + 1).findFirst().getAsInt()).submit();
-			}			
+			}
 		});
 	}
-	
+
 	@Test
 	public void killTestTwo() {
 		testDoesNotThrow(() -> {
@@ -95,22 +95,22 @@ public class BackgroundExecutorTest extends BaseTest {
 			).submit().waitForStarting());
 			assertTrue(
 				mainTaskWrapper.get().getInfoAsString(),
-				mainTaskWrapper.get().waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive() && !executed.get()
+				mainTaskWrapper.get().waitForTerminatedThreadNotAlive(100, 3000).isTerminatedThreadNotAlive() && !executed.get()
 			);
 			assertTrue(
 				childTask.getInfoAsString(),
-				childTask.waitForTerminatedThreadNotAlive(100).isTerminatedThreadNotAlive()
+				childTask.waitForTerminatedThreadNotAlive(100, 3000).isTerminatedThreadNotAlive()
 			);
 		});
 	}
-	
+
 	@Test
 	public void interruptTestOne() {
 		testDoesNotThrow(() -> {
 			AtomicBoolean executed = new AtomicBoolean();
-			assertTrue(			
+			assertTrue(
 				!BackgroundExecutor.createTask(() -> {
-					Thread.sleep(10000);		
+					Thread.sleep(10000);
 					executed.set(true);
 				}).runOnlyOnce(
 					UUID.randomUUID().toString(), executed::get
@@ -122,5 +122,5 @@ public class BackgroundExecutorTest extends BaseTest {
 			);
 		});
 	}
-	
+
 }

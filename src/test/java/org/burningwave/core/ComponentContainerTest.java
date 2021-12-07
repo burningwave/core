@@ -1,18 +1,21 @@
 package org.burningwave.core;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@TestMethodOrder(OrderAnnotation.class)
 public class ComponentContainerTest extends BaseTest {
 
 	@Test
@@ -129,10 +132,11 @@ public class ComponentContainerTest extends BaseTest {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
 			ComponentContainer.resetAll();
+			BackgroundExecutor.waitForTasksEnding();
 			Cache.clear(true);
 			System.gc();
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
-			MemoryClassLoader.DebugSupport.logAllInstancesInfo();
+			//MemoryClassLoader.DebugSupport.logAllInstancesInfo();
 		});
 	}
 

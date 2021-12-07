@@ -28,11 +28,11 @@
  */
 package org.burningwave.core.assembler;
 
-
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
 import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProperties;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -153,12 +154,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					}
 					return config;
 				} catch (Throwable exc) {
-					return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+					return Driver.throwException(exc);
 				}
 			}).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 
@@ -167,7 +168,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			return new ComponentContainer(() -> properties).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
-			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			return Driver.throwException(exc);
 		}
 	}
 
@@ -226,18 +227,13 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	}
 
 	private Map<Class<?>, Component> checkAndInitComponentMapAndAfterInitTask() {
-		boolean setAndlaunchAfterInitTask = false;
 		if (this.components == null) {
-			setAndlaunchAfterInitTask = Synchronizer.execute(getMutexForComponentsId(), () -> {
+			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				if (this.components == null) {
 					this.components = new ConcurrentHashMap<>();
-					return true;
+					setAndlaunchAfterInitTask();
 				}
-				return false;
 			});
-			if (setAndlaunchAfterInitTask) {
-				setAndlaunchAfterInitTask();
-			}
 		}
 		return this.components;
 	}
@@ -545,19 +541,26 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	public ComponentContainer reset() {
 		clear();
 		return executeOnComponentMap(components -> {
+			waitForAfterInitTaskIfNotNull();
 			Synchronizer.execute(getMutexForComponentsId(), () -> {
 				this.components = new ConcurrentHashMap<>();
 			});
 			if (!components.isEmpty()) {
-				IterableObjectHelper.deepClear(components, (type, component) -> {
-					if (!(component instanceof ClassLoader)) {
-						component.close();
-					} else {
-						((ClassLoader)component).unregister(this, true, true);
+				BackgroundExecutor.createTask(task -> {
+					AtomicReference<ClassLoader> classLoaderWrapper = new AtomicReference<>();
+					IterableObjectHelper.deepClear(components, (type, component) -> {
+						if (!(component instanceof ClassLoader)) {
+							component.close();
+						} else {
+							classLoaderWrapper.set(((ClassLoader)component));
+						}
+					});
+					ClassLoader classLoader = classLoaderWrapper.get();
+					if (classLoader != null) {
+						classLoader.unregister(this, true, true);
 					}
-				});
+				},Thread.MIN_PRIORITY).submit();
 			}
-			System.gc();
 			return this;
 		});
 
@@ -591,7 +594,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				instanceId = null;
 			});
 		} else {
-			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
+			Driver.throwException("Could not close singleton instance {}", Holder.INSTANCE);
 		}
 	}
 
@@ -634,7 +637,6 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				fileSystemItem.reset();
 			});
 		}
-		System.gc();
 	}
 
 	public static void clearAll() {
@@ -711,7 +713,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 		static {
-	        java.lang.ClassLoader.registerAsParallelCapable();
+	        ClassLoader.registerAsParallelCapable();
 	    }
 
 
@@ -738,7 +740,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 		@Override
-		public boolean unregister(Object client, boolean close, boolean markAsCloseable) {
+		public synchronized boolean unregister(Object client, boolean close, boolean markAsCloseable) {
 			boolean closeCalled = super.unregister(client, close, markAsCloseable);
 			if ((!isClosed || !closeCalled) && markAsCloseable) {
 				Map<Class<?>, Component> components = this.components;

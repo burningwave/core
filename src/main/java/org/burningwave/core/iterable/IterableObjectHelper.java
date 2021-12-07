@@ -28,8 +28,6 @@
  */
 package org.burningwave.core.iterable;
 
-
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -226,83 +224,83 @@ public interface IterableObjectHelper {
 
 
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
-			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : null);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : null);
 		}
 
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C of(Collection<I> input) {
-			return (C)new IterationConfigImpl<I, Collection<I>>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<I, Collection<I>>(input);
 		}
 
 		public static <I, C extends IterationConfig<I, I[], C>> C of(I[] input) {
-			return (C)new IterationConfigImpl<I, I[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<I, I[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Integer, int[], C>> C ofInts(int[] input) {
-			return (C)new IterationConfigImpl<Integer, int[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Integer, int[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Long, long[], C>> C ofLongs(long[] input) {
-			return (C)new IterationConfigImpl<Long, long[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Long, long[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Float, float[], C>> C ofFloats(float[] input) {
-			return (C)new IterationConfigImpl<Float, float[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Float, float[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Double, double[], C>> C ofDoubles(double[] input) {
-			return (C)new IterationConfigImpl<Double, double[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Double, double[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofBooleans(boolean[] input) {
-			return (C)new IterationConfigImpl<Boolean, boolean[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Boolean, boolean[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofBytes(byte[] input) {
-			return (C)new IterationConfigImpl<Byte, byte[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Byte, byte[]>(input);
 		}
 
 		public static <I, C extends IterationConfig<Character, char[], C>> C ofChars(char[] input) {
-			return (C)new IterationConfigImpl<Character, char[]>(input);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Character, char[]>(input);
 		}
 
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
-			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C ofNullable(Collection<I> input) {
-			return (C)new IterationConfigImpl<I, Collection<I>>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<I, Collection<I>>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<I, I[], C>> C ofNullable(I[] input) {
-			return (C)new IterationConfigImpl<I, I[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<I, I[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Integer, int[], C>> C ofNullableInts(int[] input) {
-			return (C)new IterationConfigImpl<Integer, int[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Integer, int[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Long, long[], C>> C ofNullableLongs(long[] input) {
-			return (C)new IterationConfigImpl<Long, long[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Long, long[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Float, float[], C>> C ofNullableFloats(float[] input) {
-			return (C)new IterationConfigImpl<Float, float[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Float, float[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Double, double[], C>> C ofNullableDoubles(double[] input) {
-			return (C)new IterationConfigImpl<Double, double[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Double, double[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofNullableBooleans(boolean[] input) {
-			return (C)new IterationConfigImpl<Boolean, boolean[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Boolean, boolean[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofNullableBytes(byte[] input) {
-			return (C)new IterationConfigImpl<Byte, byte[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Byte, byte[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public static <I, C extends IterationConfig<Character, char[], C>> C ofNullableChars(char[] input) {
-			return (C)new IterationConfigImpl<Character, char[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
+			return (C)new IterableObjectHelperImpl.Iterator.Config<Character, char[]>(input != null ? input : IterableObjectHelperImpl.Iterator.NO_ITEMS);
 		}
 
 		public C withAction(Consumer<I> action);
@@ -315,9 +313,13 @@ public interface IterableObjectHelper {
 
 		public C withPriority(Integer priority);
 
-		public static class WithOutputOfMap<I, IC, K, O, OM> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfMap<I, IC, K, O, OM>> {
+		public C withTaskBasedIteration();
 
-			WithOutputOfMap(IterationConfigImpl<I, IC> configuration) {
+		public C withThreadBasedIteration();
+
+		public static class WithOutputOfMap<I, IC, K, O, OM> extends IterableObjectHelperImpl.Iterator.Config.WithOutput<I, IC, WithOutputOfMap<I, IC, K, O, OM>> {
+
+			WithOutputOfMap(IterableObjectHelperImpl.Iterator.Config<I, IC> configuration) {
 				super(configuration);
 			}
 
@@ -328,9 +330,9 @@ public interface IterableObjectHelper {
 
 		}
 
-		public static class WithOutputOfCollection<I, IC, O, OC> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfCollection<I, IC, O, OC>> {
+		public static class WithOutputOfCollection<I, IC, O, OC> extends IterableObjectHelperImpl.Iterator.Config.WithOutput<I, IC, WithOutputOfCollection<I, IC, O, OC>> {
 
-			WithOutputOfCollection(IterationConfigImpl<I, IC> configuration) {
+			WithOutputOfCollection(IterableObjectHelperImpl.Iterator.Config<I, IC> configuration) {
 				super(configuration);
 			}
 
