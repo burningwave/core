@@ -83,14 +83,6 @@ class ClassHunterImpl extends ClassPathScanner.Abst<Class<?>, ClassHunterImpl.Se
 		);
 	}
 
-
-	@Override
-	public void close() {
-		closeResources(() -> this.pathHelper == null, task -> {
-			super.close();
-		});
-	}
-
 	static class SearchContext extends org.burningwave.core.classes.SearchContext<Class<?>> {
 		Map<Class<?>, Map<MemberCriteria<?, ?, ?>, Collection<Member>>> membersFound;
 		Map<MemberCriteria<?, ?, ?>, Collection<Member>> membersFoundFlatMap;
