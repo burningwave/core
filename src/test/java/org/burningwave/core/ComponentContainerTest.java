@@ -7,7 +7,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.GlobalProp
 import org.burningwave.core.assembler.ComponentContainer;
 import org.burningwave.core.classes.ClassFactory;
 import org.burningwave.core.classes.ClassHunter;
-import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.classes.PathScannerClassLoader;
 import org.burningwave.core.classes.SearchConfig;
 import org.burningwave.core.io.FileSystemItem;
@@ -134,7 +133,7 @@ public class ComponentContainerTest extends BaseTest {
 			Cache.clear(true);
 			System.gc();
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
-			MemoryClassLoader.DebugSupport.logAllInstancesInfo();
+			//MemoryClassLoader.DebugSupport.logAllInstancesInfo();
 		});
 	}
 
