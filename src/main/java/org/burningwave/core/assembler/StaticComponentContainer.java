@@ -48,6 +48,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.concurrent.TasksMonitorer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -381,6 +382,7 @@ public class StaticComponentContainer {
 						});
 					}).andThen(() -> {
 						Executor.runAndIgnoreExceptions(() -> {
+							MemoryClassLoader.DebugSupport.logAllInstancesInfo();
 							ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "Shutting down ThreadSupplier");
 							ThreadSupplier.shutDownAllThreads();
 						});
