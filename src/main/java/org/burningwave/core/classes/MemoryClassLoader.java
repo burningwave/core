@@ -607,7 +607,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 
 		public final static void logAllInstancesInfo() {
-			if (INSTANCES != null) {
+			if (INSTANCES != null && INSTANCES.size() > 0) {
 				ManagedLoggerRepository.logInfo(
 					MemoryClassLoader.class::getName, "\n\n\nMemory class loaders: {}\n\n{}\n\n",
 					INSTANCES.size(),
