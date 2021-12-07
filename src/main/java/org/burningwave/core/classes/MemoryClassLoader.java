@@ -59,7 +59,6 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
-import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.io.ByteBufferInputStream;
@@ -450,13 +449,17 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 
 	public void register(Object client) {
 		Map<Object, Object> clients = this.clients;
-		if (!isClosed) {
-			clients.put(client, client);
-			return;
+		if (!Synchronizer.execute(getOperationId("handleClients"), () -> {
+			if (!isClosed) {
+				clients.put(client, client);
+				return true;
+			}
+			return false;
+		})) {
+			throw new IllegalStateException(
+				Strings.compile("Could not register client {} to {}: it is closed", client, this)
+			);
 		}
-		throw new IllegalStateException(
-			Strings.compile("Could not register client {} to {}: it is closed", client, this)
-		);
 	}
 
 	public boolean unregister(Object client) {
@@ -472,16 +475,16 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			markedAsCloseable = markAsCloseable;
 		}
 		Map<Object, Object> clients = this.clients;
-		if (!isClosed) {
-			synchronized(clients) {
+		return Synchronizer.execute(getOperationId("handleClients"), () -> {
+			if (!isClosed) {
 				clients.remove(client);
 				if (clients.isEmpty() && (close || markedAsCloseable)) {
 					close();
 					return true;
 				}
 			}
-		}
-		return isClosed;
+			return isClosed;
+		});
 	}
 
 	@Override
@@ -491,13 +494,20 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 
 	protected QueuedTaskExecutor.Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
-			Map<Object, Object> clients = this.clients;
-			if (clients != null && !clients.isEmpty()) {
-				throw new IllegalStateException(
-					Strings.compile("Could not close {} because there are {} registered clients", this, clients.size())
-				);
+			if (!Synchronizer.execute(getOperationId("handleClients"), () -> {
+				Map<Object, Object> clients = this.clients;
+				if (clients != null) {
+					int clientSize = clients.size();
+					if (clientSize != 0) {
+						ManagedLoggerRepository.logWarn(getClass()::getName, "Could not close {} because there are {} registered clients", this, clients.size());
+						BackgroundExecutor.createTask(tsk -> close()).submit();
+						return false;
+					}
+				}
+				return isClosed = true;
+			})) {
+				return;
 			}
-			isClosed = true;
 			ClassLoader parentClassLoader = ClassLoaders.getParent(this);
 			if (parentClassLoader != null && parentClassLoader instanceof MemoryClassLoader) {
 				((MemoryClassLoader)parentClassLoader).unregister(this, true);
@@ -516,7 +526,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		});
 	}
 
-	public static class DebugSupport implements Closeable, ManagedLogger {
+	public static class DebugSupport implements Closeable {
 		private static Map<MemoryClassLoader, DebugSupport> INSTANCES;
 		private static boolean enabled;
 
@@ -582,9 +592,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			};
 		}
 
-		public void logInfos() {
-			logInfo(
-				"\n\n\t{} {} and was created at:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}",
+		private String getInfos() {
+			return Strings.compile(
+				"\t{} {} and was created at:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}\n\n",
 				memoryClassLoader,
 				memoryClassLoader.isClosed? "is closed" : "is not closed",
 				String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
@@ -593,14 +603,16 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 					String.join("\n\n\t\t\t\t", memoryClassLoader.clients.entrySet().stream().map(cSE ->
 						cSE.getKey() + " was registered at:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", ((List<StackTraceElement>)cSE.getValue()).stream().map(sE -> sE.toString()).collect(Collectors.toList()))
 					).collect(Collectors.toList()))
-
 			);
 		}
 
 		public final static void logAllInstancesInfo() {
 			if (INSTANCES != null) {
-				ManagedLoggerRepository.logInfo(MemoryClassLoader.class::getName, "Memory class loaders: {}", INSTANCES.size());
-				INSTANCES.values().forEach(mCL -> mCL.logInfos());
+				ManagedLoggerRepository.logInfo(
+					MemoryClassLoader.class::getName, "Memory class loaders: {}\n\n{}",
+					INSTANCES.size(),
+					String.join("", INSTANCES.values().stream().map(mCL -> mCL.getInfos()).collect(Collectors.toList()))
+				);
 			}
 		}
 
