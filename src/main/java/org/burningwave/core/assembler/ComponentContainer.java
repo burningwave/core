@@ -587,7 +587,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			closeResources(() -> instanceId == null, task -> {
 				checkAndUnregister(GlobalProperties);
 				checkAndUnregister(config);
-				clear();
+				reset();
 				components = null;
 				propertySupplier = null;
 				config = null;
