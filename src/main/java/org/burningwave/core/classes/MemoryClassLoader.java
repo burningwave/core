@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
 import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
@@ -45,15 +46,20 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.ManagedLogger;
 import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.io.ByteBufferInputStream;
@@ -63,7 +69,7 @@ import org.burningwave.core.io.ByteBufferInputStream;
 public class MemoryClassLoader extends ClassLoader implements Component, org.burningwave.core.classes.Classes.Loaders.NotificationListenerOfParentsChange {
 	Map<String, ByteBuffer> notLoadedByteCodes;
 	Map<String, ByteBuffer> loadedByteCodes;
-	protected Collection<Object> clients;
+	Map<Object, Object> clients;
 	protected boolean isClosed;
 	private boolean markedAsCloseable;
 	String instanceId;
@@ -84,9 +90,10 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		}
 		this.notLoadedByteCodes = new ConcurrentHashMap<>();
 		this.loadedByteCodes = new ConcurrentHashMap<>();
-		this.clients = ConcurrentHashMap.newKeySet();
+		this.clients = new ConcurrentHashMap<>();
 		ClassLoaders.registerNotificationListenerOfParentsChange(this);
 		computeAllParents();
+		DebugSupport.register(this);
 	}
 
 	private void computeAllParents() {
@@ -442,9 +449,9 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 
 	public void register(Object client) {
-		Collection<Object> clients = this.clients;
+		Map<Object, Object> clients = this.clients;
 		if (!isClosed) {
-			clients.add(client);
+			clients.put(client, client);
 			return;
 		}
 		throw new IllegalStateException(
@@ -464,7 +471,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		if (markAsCloseable) {
 			markedAsCloseable = markAsCloseable;
 		}
-		Collection<Object> clients = this.clients;
+		Map<Object, Object> clients = this.clients;
 		if (!isClosed) {
 			synchronized(clients) {
 				clients.remove(client);
@@ -484,7 +491,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 
 	protected QueuedTaskExecutor.Task closeResources() {
 		return closeResources(MemoryClassLoader.class.getName() + "@" + System.identityHashCode(this), () -> isClosed, task -> {
-			Collection<Object> clients = this.clients;
+			Map<Object, Object> clients = this.clients;
 			if (clients != null && !clients.isEmpty()) {
 				throw new IllegalStateException(
 					Strings.compile("Could not close {} because there are {} registered clients", this, clients.size())
@@ -500,11 +507,107 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			loadedByteCodes = null;
 			Driver.getLoadedClassesRetriever(this).clear();
 			unregister();
+			DebugSupport.unregister(this);
 			this.clients.clear();
 			this.clients = null;
 			if (this.getClass().equals(MemoryClassLoader.class)) {
 				ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
 			}
 		});
+	}
+
+	public static class DebugSupport implements Closeable, ManagedLogger {
+		private static Map<MemoryClassLoader, DebugSupport> INSTANCES;
+		public static boolean enabled;
+
+		MemoryClassLoader memoryClassLoader;
+		List<StackTraceElement> creationStack;
+
+		private static Map<MemoryClassLoader, DebugSupport> getInstances() {
+			if (INSTANCES == null) {
+				synchronized(DebugSupport.class) {
+					if (INSTANCES == null) {
+						INSTANCES = new ConcurrentHashMap<>();
+					}
+				}
+			}
+			return INSTANCES;
+		}
+
+		static boolean register(MemoryClassLoader classLoader) {
+			if (enabled) {
+				return getInstances().computeIfAbsent(classLoader, DebugSupport::new) == null;
+			}
+			return enabled;
+		}
+
+		static boolean unregister(MemoryClassLoader classLoader) {
+			if (enabled) {
+				DebugSupport debugSupport = getInstances().remove(classLoader);
+				if (debugSupport != null) {
+					debugSupport.close();
+				}
+				return debugSupport != null;
+			}
+			return enabled;
+		}
+
+		private DebugSupport(MemoryClassLoader memoryClassLoader) {
+			this.memoryClassLoader = memoryClassLoader;
+			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+			creationStack = new ArrayList<>();
+			boolean exitedFromCostructors = false;
+			for (int i = 4; i < stackTraceElements.length; i++) {
+				if (exitedFromCostructors) {
+					creationStack.add(stackTraceElements[i]);
+				} else if (!MemoryClassLoader.class.isAssignableFrom(
+					Driver.getClassByName(
+						stackTraceElements[i].getClassName(), false, MemoryClassLoader.class.getClassLoader(),  MemoryClassLoader.class
+					)
+				) && !stackTraceElements[i].getMethodName().equals("<init>")) {
+					exitedFromCostructors = true;
+					creationStack.add(stackTraceElements[i]);
+				}
+			}
+			memoryClassLoader.clients = new ConcurrentHashMap<>() {
+
+				private static final long serialVersionUID = -1409968440852414035L;
+
+				public Object put(Object client, Object clientRef) {
+					super.put(client, Methods.retrieveExternalCallersInfo());
+					return client;
+				};
+
+			};
+		}
+
+		public void logInfos() {
+			logInfo(
+				"\n\n\t{} {} and was created at:\n\n\t\t{}\n\n\t\t\tclients:\n\n\t\t\t\t{}",
+				memoryClassLoader,
+				memoryClassLoader.isClosed? "is closed" : "is not closed",
+				String.join("\n\t\t", creationStack.stream().map(sE -> sE.toString()).collect(Collectors.toList())),
+				memoryClassLoader.clients.isEmpty() ?
+					"none" :
+					String.join("\n\n\t\t\t\t", memoryClassLoader.clients.entrySet().stream().map(cSE ->
+						cSE.getKey() + " was registered at:\n\n\t\t\t\t\t" + String.join("\n\t\t\t\t\t", ((List<StackTraceElement>)cSE.getValue()).stream().map(sE -> sE.toString()).collect(Collectors.toList()))
+					).collect(Collectors.toList()))
+
+			);
+		}
+
+		public final static void logAllInstancesInfo() {
+			if (INSTANCES != null) {
+				ManagedLoggerRepository.logInfo(MemoryClassLoader.class::getName, "Memory class loaders: {}", INSTANCES.size());
+				INSTANCES.values().forEach(mCL -> mCL.logInfos());
+			}
+		}
+
+		@Override
+		public void close() {
+			creationStack.clear();
+			creationStack = null;
+			memoryClassLoader = null;
+		}
 	}
 }
