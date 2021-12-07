@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.function;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
 public interface Executor {
@@ -55,15 +55,15 @@ public interface Executor {
 		try {
 			runnable.run();
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
-    
+
     static <I, E extends Throwable> void accept(ThrowingConsumer<I, E> consumer, I input) {
 		try {
 			consumer.accept(input);
 		} catch (Throwable exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -73,7 +73,7 @@ public interface Executor {
 				runnable.run();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Driver.throwException(exc);
+					org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 				}
 			}
 			--attemptsNumber;
@@ -84,7 +84,7 @@ public interface Executor {
 		try {
 			return supplier.get();
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -94,7 +94,7 @@ public interface Executor {
 				return supplier.get();
 			} catch (Throwable exc) {
 				if (attemptsNumber > 1) {
-					Driver.throwException(exc);
+					org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 				}
 			}
 			--attemptsNumber;

@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.io;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
@@ -235,7 +235,7 @@ public class FileSystemHelper implements Component {
 				}
 			}
 		} else {
-			Driver.throwException("Could not close singleton instance {}", this);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", this);
 		}
 	}
 

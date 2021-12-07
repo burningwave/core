@@ -59,7 +59,7 @@ public class Strings {
 	}
 
 	public String capitalizeFirstCharacter(String value) {
-		return Character.valueOf(value.charAt(0)).toString().toUpperCase()
+		return Character.toString(value.charAt(0)).toUpperCase()
 		+ value.substring(1, value.length());
 	}
 
@@ -109,19 +109,19 @@ public class Strings {
 
 	public String stripStart(String str, String stripChars) {
 		int strLen;
-		if (str == null || (strLen = str.length()) == 0) {
+		if ((str == null) || ((strLen = str.length()) == 0)) {
 			return str;
 		}
 		int start = 0;
 		if (stripChars == null) {
-			while (start != strLen && Character.isWhitespace(str.charAt(start))) {
+			while ((start != strLen) && Character.isWhitespace(str.charAt(start))) {
 				start++;
 			}
 		} else if (stripChars.length() == 0) {
 			return str;
 		} else {
-			while (start != strLen
-					&& stripChars.indexOf(str.charAt(start)) != -1) {
+			while ((start != strLen)
+					&& (stripChars.indexOf(str.charAt(start)) != -1)) {
 				start++;
 			}
 		}
@@ -130,18 +130,18 @@ public class Strings {
 
 	public String stripEnd(String str, String stripChars) {
 		int end;
-		if (str == null || (end = str.length()) == 0) {
+		if ((str == null) || ((end = str.length()) == 0)) {
 			return str;
 		}
 
 		if (stripChars == null) {
-			while (end != 0 && Character.isWhitespace(str.charAt(end - 1))) {
+			while ((end != 0) && Character.isWhitespace(str.charAt(end - 1))) {
 				end--;
 			}
 		} else if (stripChars.length() == 0) {
 			return str;
 		} else {
-			while (end != 0 && stripChars.indexOf(str.charAt(end - 1)) != -1) {
+			while ((end != 0) && (stripChars.indexOf(str.charAt(end - 1)) != -1)) {
 				end--;
 			}
 		}
@@ -257,7 +257,7 @@ public class Strings {
 			} else {
 				pathCleaner = (path) -> {
 					path = path.replace("\\", "/").replaceAll("\\/{2,}", "/");
-					if (path.endsWith("/") && path.length() > 1) {
+					if (path.endsWith("/") && (path.length() > 1)) {
 						path = path.substring(0, path.length() - 1);
 					}
 					return path;
@@ -369,7 +369,7 @@ public class Strings {
 		}
 
 		public String removeInitialPathElements(String path, String... toRemove) {
-			if (toRemove != null && toRemove.length > 0) {
+			if ((toRemove != null) && (toRemove.length > 0)) {
 				for (String element : toRemove) {
 					if (path.startsWith(element)) {
 						path = path.substring(

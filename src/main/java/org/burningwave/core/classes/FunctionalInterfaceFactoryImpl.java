@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
@@ -74,7 +75,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	public <T> T getOrCreate(Class<?> targetClass, Class<?>... argumentTypes) {
 		Constructor<?> ctor = Constructors.findFirstAndMakeItAccessible(targetClass, argumentTypes);
 		if (ctor == null) {
-			Driver.throwException(
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 				"Constructor with argument types {} not found in {} class",
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),
 				targetClass.getName()
@@ -111,7 +112,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	private Method retrieveMethod(Class<?> targetClass, String methodName, Class<?>... argumentTypes) {
 		Method method = Methods.findFirstAndMakeItAccessible(targetClass, methodName, argumentTypes);
 		if (method == null) {
-			Driver.throwException(
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 				"Method named {} with argument types {} not found in {} hierarchy",
 				methodName,
 				String.join(", ", Arrays.asList(argumentTypes).stream().map(cls -> cls.getName()).collect(Collectors.toList())),

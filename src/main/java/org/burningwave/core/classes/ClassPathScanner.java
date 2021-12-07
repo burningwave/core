@@ -163,7 +163,7 @@ public interface ClassPathScanner<I, R extends SearchResult<I>> {
 											currentScannedPath,
 											scanAndAddToPathScannerClassLoader(context, currentScannedPath)
 										);
-									});									
+									});
 								}
 							).parallelIf(
 								searchConfig.getMinimumCollectionSizeForParallelIterationPredicate() != null ?

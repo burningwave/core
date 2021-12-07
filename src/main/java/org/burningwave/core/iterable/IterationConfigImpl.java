@@ -42,11 +42,11 @@ class IterationConfigImpl<I, IC> implements IterableObjectHelper.IterationConfig
 	Object output;
 	Predicate<IC> predicateForParallelIteration;
 	Integer priority;
-	
+
 	static {
 		NO_ITEMS = new Object();
 	}
-	
+
 	public IterationConfigImpl(
 		Object items
 	) {
@@ -84,7 +84,7 @@ class IterationConfigImpl<I, IC> implements IterableObjectHelper.IterationConfig
 		this.output = output;
 		return this;
 	}
-	
+
 	@Override
 	public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output) {
 		return new WithOutputOfCollection<>(setOutput(output));

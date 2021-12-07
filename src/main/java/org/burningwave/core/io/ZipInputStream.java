@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.io;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
@@ -56,8 +56,8 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 	IterableZipContainer parent;
 	IterableZipContainer.Entry currentZipEntry;
 	ByteBufferInputStream byteBufferInputStream;
-	
-	
+
+
 	ZipInputStream(String absolutePath, InputStream inputStream) {
 		super(inputStream);
 		this.absolutePath = absolutePath;
@@ -81,7 +81,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 		}
 		return parent;
 	}
-	
+
 
 	@Override
 	public String getAbsolutePath() {
@@ -180,7 +180,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			currentZipEntry = null;
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		closeEntry();
@@ -261,7 +261,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 				return Cache.pathForContents.getOrUploadIfAbsent(
 					getAbsolutePath(), () -> {
 						if (zipInputStream.getCurrentZipEntry() != this) {
-							Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
+							org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("{} and his ZipInputStream are not aligned", Attached.class.getSimpleName());
 						}
 						try {
 						    return Streams.toByteBuffer(zipInputStream, (int)super.getSize());
@@ -343,7 +343,7 @@ public class ZipInputStream extends java.util.zip.ZipInputStream implements Iter
 			public IterableZipContainer getParentContainer() {
 				return zipInputStream.duplicate();
 			}
-		
+
 			@Override
 			public ByteBuffer toByteBuffer() {
 				return Cache.pathForContents.getOrUploadIfAbsent(absolutePath, () -> {

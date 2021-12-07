@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
@@ -292,7 +292,7 @@ public interface ClassFactory {
 		private Compilation.Result getCompilationResult() {
 			Compilation.Result compilationResult = getCompilationTask().join();
 			if (getCompilationTask().getException() != null) {
-				Driver.throwException(getCompilationTask().getException());
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(getCompilationTask().getException());
 			}
 			return compilationResult;
 		}

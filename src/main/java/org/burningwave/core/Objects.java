@@ -35,6 +35,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.UUID;
 
 import org.burningwave.core.io.FileOutputStream;
 import org.burningwave.core.io.FileSystemItem;
@@ -46,8 +47,20 @@ public class Objects {
 		return new Objects();
 	}
 
+	public String getIdOrUUIDIfNull(Object target) {
+		try {
+			return target.getClass().getName() + "@" +  System.identityHashCode(target);
+		} catch (NullPointerException exc) {
+			if (target != null) {
+				throw exc;
+			}
+			return UUID.randomUUID().toString();
+		}
+	}
+
 	public String getId(Object target) {
 		return target.getClass().getName() + "@" +  System.identityHashCode(target);
+
 	}
 
 	public String getStandardId(Object target) {

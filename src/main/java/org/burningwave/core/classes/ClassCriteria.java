@@ -28,10 +28,10 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Members;
 
 import java.lang.reflect.Member;
@@ -65,7 +65,7 @@ public class ClassCriteria extends CriteriaWithClassElementsSupplyingSupport<Cla
 			try {
 				return ClassLoaders.loadOrDefine(cls, classSupplier);
 			} catch (ClassNotFoundException exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		};
 		this.byteCodeSupplier = Classes::getByteCode;

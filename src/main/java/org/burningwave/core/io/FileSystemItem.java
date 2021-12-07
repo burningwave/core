@@ -28,10 +28,9 @@
  */
 package org.burningwave.core.io;
 
-//import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 import static org.burningwave.core.assembler.StaticComponentContainer.Cache;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Objects;
@@ -76,14 +75,14 @@ import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
 
 @SuppressWarnings("resource")
 public class FileSystemItem implements Comparable<FileSystemItem> {
-	
-	private final static Function<String, Boolean> isContainer = conventionedAbsolutePath -> 
+
+	private final static Function<String, Boolean> isContainer = conventionedAbsolutePath ->
 		conventionedAbsolutePath.endsWith("/");
-	
-	private final static Function<String, Boolean> isFolder = conventionedAbsolutePath -> 
-		conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX); 
-	
-	private final static Function<String, Boolean> isCompressed = conventionedAbsolutePath -> 
+
+	private final static Function<String, Boolean> isFolder = conventionedAbsolutePath ->
+		conventionedAbsolutePath.endsWith("/") && !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
+
+	private final static Function<String, Boolean> isCompressed = conventionedAbsolutePath ->
 		(conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
 			&& !conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX))
 			|| (conventionedAbsolutePath.contains(IterableZipContainer.PATH_SUFFIX)
@@ -91,13 +90,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					&& conventionedAbsolutePath
 							.indexOf(IterableZipContainer.PATH_SUFFIX) != conventionedAbsolutePath
 									.lastIndexOf(IterableZipContainer.PATH_SUFFIX));
-	
+
 	private final static Function<String, Boolean> isArchive = conventionedAbsolutePath ->
 		conventionedAbsolutePath.endsWith(IterableZipContainer.PATH_SUFFIX);
-	
+
 	private final static String instanceIdPrefix;
 	private final static Supplier<Collection<FileSystemItem>> newCollectionSupplier;
-	
+
 	private Map.Entry<String, String> absolutePath;
 	private FileSystemItem parent;
 	private FileSystemItem parentContainer;
@@ -244,9 +243,9 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		}
 	}
-	
+
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter) {
-		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);		
+		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 
 	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
@@ -285,7 +284,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		return outputCollection;
 	}
-	
+
 	private Collection<FileSystemItem> findIn(
 		Supplier<Collection<FileSystemItem>> childrenSupplier,
 		FileSystemItem.Criteria filter,
@@ -392,7 +391,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public Collection<FileSystemItem> getAllChildren() {
 		return Optional.ofNullable(getAllChildren0()).map(children ->  Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
-	
+
 	private Collection<FileSystemItem> getAllChildren0() {
 		Collection<FileSystemItem> allChildren = this.allChildren;
 		if (allChildren == null) {
@@ -410,7 +409,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public Collection<FileSystemItem> getChildren() {
 		return Optional.ofNullable(getChildren0()).map(children -> Collections.unmodifiableCollection(children)).orElseGet(() -> null);
 	}
-	
+
 	private Collection<FileSystemItem> getChildren0() {
 		Collection<FileSystemItem> children = this.children;
 		if (children == null) {
@@ -491,7 +490,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			return new URL(toURL());
 		} catch (MalformedURLException exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -500,12 +499,12 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isChildOf(FileSystemItem fileSystemItem) {
-		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath ->
 			conventionedAbsolutePath.toString()
 		);
-		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath ->
 			conventionedAbsolutePath.toString()
-		);	
+		);
 		if (isContainer.apply(otherConventionedAbsolutePath)) {
 			if (isContainer.apply(thisConventionedAbsolutePath)) {
 				return thisConventionedAbsolutePath.startsWith(otherConventionedAbsolutePath)
@@ -519,7 +518,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	public boolean isCompressed() {
 		return computeConventionedAbsolutePathAndExecute(isCompressed);
 	}
-	
+
 	public boolean isContainer() {
 		return computeConventionedAbsolutePathAndExecute(isContainer);
 	}
@@ -533,10 +532,10 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public boolean isParentOf(FileSystemItem fileSystemItem) {
-		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+		String otherConventionedAbsolutePath = fileSystemItem.computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath ->
 			conventionedAbsolutePath.toString()
 		);
-		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath -> 
+		String thisConventionedAbsolutePath = computeConventionedAbsolutePathAndExecute(conventionedAbsolutePath ->
 			conventionedAbsolutePath.toString()
 		);
 		if (isContainer.apply(thisConventionedAbsolutePath)) {
@@ -556,11 +555,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	private boolean isRoot(String absolutePathStr) {
 		return absolutePathStr.chars().filter(ch -> ch == '/').count() == 0 || absolutePathStr.equals("/");
 	}
-	
+
 	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function) {
 		return computeConventionedAbsolutePathAndExecute(function, null);
 	}
-	
+
 	private <T> T computeConventionedAbsolutePathAndExecute(Function<String, T> function, NullPointerException exception){
 		try {
 			String conventionedAbsolutePath = computeConventionedAbsolutePath();
@@ -570,7 +569,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
 					"Exception occurred while trying to compute conventioned absolute path of {}. Trying to repeat the operation.",
-					absolutePath.getKey() 
+					absolutePath.getKey()
 				);
 				return computeConventionedAbsolutePathAndExecute(function, exc);
 			} else {
@@ -688,7 +687,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		}
 		return null;
 	}
-	
+
 	public FileSystemItem refresh() {
 		return refresh(true);
 	}
@@ -852,7 +851,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			return null;
 		}
 	}
-	
+
 	private String retrieveConventionedRelativePath(
 			ByteBuffer zipInputStreamAsBytes,
 			String zipInputStreamName,
@@ -860,7 +859,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
     ) {
 		return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, null);
 	}
-	
+
 	private synchronized String retrieveConventionedRelativePath(
 		ByteBuffer zipInputStreamAsBytes,
 		String zipInputStreamName,
@@ -871,7 +870,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			try (IterableZipContainer zIS = IterableZipContainer.create(zipInputStreamName, zipInputStreamAsBytes);) {
 				if (zIS == null) {
-					return Driver.throwException(
+					return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 						new FileSystemItemNotFoundException("Absolute path \"" + absolutePath.getKey() + "\" not exists")
 					);
 				}
@@ -911,7 +910,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 							// in case of JMod files folder
 							return retrieveConventionedRelativePath(this, zIS2, null, relativePath);
 						}
-						return Driver.throwException(
+						return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 							new FileSystemItemNotFoundException(
 								Strings.compile("Absolute path \"{}\" not exists", absolutePath.getKey())
 							)
@@ -923,13 +922,13 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			}
 		} catch (NullPointerException exc) {
 			if (initialException != null) {
-				return Driver.throwException(initialException);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(initialException);
 			} else {
 				ManagedLoggerRepository.logWarn(
 					getClass()::getName,
 					"Exception occurred while trying to compute conventioned relative path on {} (IterableZipContainer path: {})(relative path: {})(IterableZipContainer type: {}). Trying to repeat the operation.",
 					absolutePath.getKey(), zipInputStreamName, relativePath,
-					Optional.ofNullable(iterableZipContainerType).map(Class::getName).orElseGet(() -> "null") 
+					Optional.ofNullable(iterableZipContainerType).map(Class::getName).orElseGet(() -> "null")
 				);
 				return retrieveConventionedRelativePath(zipInputStreamAsBytes, zipInputStreamName, relativePath, exc);
 			}
@@ -1105,7 +1104,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try (InputStream inputStream = toInputStream()) {
 			return Objects.deserialize(inputStream);
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -1232,24 +1231,24 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public static class Criteria extends org.burningwave.core.Criteria.Simple<FileSystemItem[], Criteria> {
-		
+
 		private final static BiFunction<Throwable, FileSystemItem[], Boolean> defaultExceptionHandler;
-		
+
 		private BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 		private Predicate<Collection<?>> minimumCollectionSizeForParallelIterationPredicate;
-		
+
 		private Long timeoutForTimedFindIn;
 		private Integer priority;
-		
+
 		static {
 			defaultExceptionHandler = (exception, childAndParent) -> {
 				ManagedLoggerRepository.logError(FileSystemItem.Criteria.class::getName, "Could not scan " + childAndParent[0].getAbsolutePath(), exception);
 				return false;
 			};
 		}
-		
+
 		private Criteria() {}
-		
+
 		public static Criteria create() {
 			return new Criteria();
 		}

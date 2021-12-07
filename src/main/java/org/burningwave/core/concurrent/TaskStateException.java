@@ -45,7 +45,7 @@ public class TaskStateException extends IllegalStateException {
 			exception
 		);
 	}
-	
+
 	public TaskStateException(QueuedTaskExecutor.TaskAbst<?, ?> task, String message) {
 		super(
 			Strings.compile(

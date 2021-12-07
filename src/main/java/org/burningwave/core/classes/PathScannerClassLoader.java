@@ -61,7 +61,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	PathHelper pathHelper;
 	FileSystemItem.Criteria fileFilterAndProcessor;
 	BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
-	
+
 	public static class Configuration {
 		public static class Key {
 
@@ -121,11 +121,11 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 			return true;
 		}).setExceptionHandler(scanFileCriteria.getExceptionHandler() != null ? scanFileCriteria.getExceptionHandler() : exceptionHandler);
 	}
-	
+
 	public static PathScannerClassLoader create(ClassLoader parentClassLoader, PathHelper pathHelper, FileSystemItem.Criteria scanFileCriteria) {
 		return new PathScannerClassLoader(parentClassLoader, pathHelper, scanFileCriteria);
 	}
-	
+
 	public PathScannerClassLoader refresh() {
 		Collection<String> loadedPaths = this.loadedPaths.keySet();
 		for (String loadedPath : loadedPaths) {
@@ -134,15 +134,15 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		scanPathsAndAddAllByteCodesFound(loadedPaths);
 		return this;
 	}
-	
+
 	public Collection<String> scanPathsWithoutRefreshingAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> false);
 	}
-	
+
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths) {
 		return scanPathsAndAddAllByteCodesFound(paths, (path) -> true);
 	}
-	
+
 	public Collection<String> scanPathsAndAddAllByteCodesFound(Collection<String> paths, Predicate<String> checkForAddedClasses) {
 		Collection<String> scannedPaths = new HashSet<>();
 		try {
@@ -204,7 +204,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
 		Collection<URL> resourcesFound = Resources.getAll(name, this.allParents);
@@ -260,12 +260,12 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		}
 		return false;
 	}
-	
+
 	@Override
 	protected Task closeResources() {
 		return closeResources(
 			PathScannerClassLoader.class.getName() + "@" + System.identityHashCode(this),
-			() -> 
+			() ->
 				this.loadedPaths == null,
 			task -> {
 				super.closeResources().waitForFinish();

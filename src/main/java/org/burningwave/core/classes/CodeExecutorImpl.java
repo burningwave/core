@@ -28,9 +28,9 @@
  */
 package org.burningwave.core.classes;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
@@ -160,7 +160,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			(E)config
 		);
 	}
-	
+
 	private <R> R retrieveValue(
 		Function<ResolveConfig.ForNamedKey, R> valueResolver,
 		ExecuteConfig.ForProperties config, Map<?, ?> properties,
@@ -180,7 +180,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 		return null;
 	}
 
-	
+
 	@Override
 	public <E extends ExecuteConfig<E>, T> T execute(BodySourceGenerator body) {
 		return execute((E)ExecuteConfig.forBodySourceGenerator(body));
@@ -209,7 +209,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				T retrievedElement = executor.executeAndCast(config.getParams());
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);
@@ -232,7 +232,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 				}
 				return retrievedElement;
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			} finally {
 				if (defaultClassLoader instanceof MemoryClassLoader) {
 					((MemoryClassLoader)defaultClassLoader).unregister(executeClient, true);

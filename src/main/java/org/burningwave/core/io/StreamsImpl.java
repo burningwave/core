@@ -28,8 +28,8 @@
  */
 package org.burningwave.core.io;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
 import java.io.BufferedReader;
@@ -118,7 +118,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			copy(inputStream, outputStream);
 			return outputStream.toByteArray();
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -137,7 +137,7 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 			}
 			return BufferHandler.shareContent(byteBuffer);
 		} catch (Throwable exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -199,14 +199,14 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 		});
 		return FileSystemItem.ofPath(file.getAbsolutePath());
 	}
-	
+
 	@Override
 	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map) {
 		try (InputStream inputStream = inputStreamSupplier.get()) {
 			feelPropertiesMap(inputStream, map);
 		} catch (IOException exc) {
-			Driver.throwException(exc);
-		}		
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+		}
 	}
 
 	@Override
@@ -219,9 +219,9 @@ class StreamsImpl implements Streams, Identifiable, Properties.Listener {
 				castedMap.put(entry.getKey(), entry.getValue());
 			}
 		} catch (IOException exc) {
-			Driver.throwException(exc);
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
-		
+
 	}
 
 }

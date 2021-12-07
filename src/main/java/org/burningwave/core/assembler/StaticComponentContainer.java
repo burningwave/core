@@ -29,6 +29,7 @@
 package org.burningwave.core.assembler;
 
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -47,6 +48,7 @@ import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.burningwave.core.concurrent.TasksMonitorer;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -74,13 +76,13 @@ public class StaticComponentContainer {
 			private static final String MODULES_EXPORT_ALL_TO_ALL = "modules.export-all-to-all";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED = "synchronizer.all-threads-monitoring.enabled";
 			private static final String SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL = "synchronizer.all-threads-monitoring.interval";
-		
+
 		}
-		
+
 		public static class Value {
-			
+
 			public static String FILE_NAME = "burningwave.static.properties";
-			
+
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -229,7 +231,7 @@ public class StaticComponentContainer {
 									}
 								}
 								if (mustThrowException) {
-									Driver.throwException("The reconfiguration of property '{}' is not allowed", key);
+									org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("The reconfiguration of property '{}' is not allowed", key);
 								}
 							} else if (keyAsString.equals(ManagedLogger.Repository.Configuration.Key.TYPE)) {
 								ManagedLogger.Repository toBeReplaced = ManagedLoggerRepository;
@@ -338,7 +340,7 @@ public class StaticComponentContainer {
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			Runtime.getRuntime().addShutdownHook(
-				ThreadSupplier.getOrCreateThread(getName("Resource releaser")).setExecutable(thread -> {
+				new Thread(() -> {
 					org.burningwave.core.function.ThrowingRunnable<Throwable> closingOperations = () -> {
 						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending");
@@ -383,11 +385,14 @@ public class StaticComponentContainer {
 							ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "Shutting down ThreadSupplier");
 							ThreadSupplier.shutDownAllThreads();
 						});
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							MemoryClassLoader.DebugSupport.logAllInstancesInfo();
+						});
 					});
 
 					Executor.runAndIgnoreExceptions(closingOperations);
-
-				})
+				}, getName("Resource releaser"))
 			);
 			ManagedLoggerRepository.logInfo(
 				StaticComponentContainer.class::getName,
@@ -431,14 +436,14 @@ public class StaticComponentContainer {
 		}
 
 	}
-	
+
 	private static org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.ForNamedKey onGlobalPropertiesforNamedKey(String key) {
 		return org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(key).on(GlobalProperties);
 	}
 
 	private static void adjustConfigurationValues(Properties properties) {
 		String defaultValuesSeparator = (String)org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES.get(
-			org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR		
+			org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR
 		);
 		org.burningwave.core.iterable.IterableObjectHelper temporaryPropertyResolver = org.burningwave.core.iterable.IterableObjectHelper.create(properties);
 		((org.burningwave.core.iterable.IterableObjectHelperImpl)temporaryPropertyResolver).checkAndUnregister(properties);

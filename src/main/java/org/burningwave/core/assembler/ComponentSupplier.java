@@ -49,21 +49,21 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 	public static ComponentSupplier getInstance() {
 		return ComponentContainer.getInstance();
 	}
-	
+
 	public static void resetAll() {
 		ComponentContainer.resetAll();
 	}
-	
+
 	public static void clearAll() {
 		ComponentContainer.clearAll();
 	}
-	
+
 	public static void clearAll(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences) {
 		ComponentContainer.clearAll(closeHuntersResults, closeClassRetrievers, clearFileSystemItemReferences);
 	}
-	
+
 	public void clear(boolean closeHuntersResults, boolean closeClassRetrievers, boolean clearFileSystemItemReferences);
-	
+
 	public<I, T extends Component> T getOrCreate(Class<I> cls, Supplier<I> componentSupplier);
 
 	public ByteCodeHunter getByteCodeHunter();
@@ -87,7 +87,7 @@ public interface ComponentSupplier extends Cleanable, Closeable {
 	public PathScannerClassLoader getPathScannerClassLoader();
 
 	public void closeHuntersSearchResults();
-	
+
 	public void resetClassFactory(boolean closeClassRetrievers);
-	
+
 }

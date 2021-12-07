@@ -207,10 +207,10 @@ public class Classes implements MembersRetriever {
 						);
 					}
 				}
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		} catch (IOException exc) {
-			return Driver.throwException(exc);
+			return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 		}
 	}
 
@@ -292,7 +292,7 @@ public class Classes implements MembersRetriever {
 	public Class<?> getClassOrWrapper(Class<?> cls) {
 		return io.github.toolfactory.jvm.util.Classes.getClassOrWrapper(cls);
 	}
-	
+
 	public <I> Function<Integer, ?> buildArrayValueRetriever(I items) {
 		Class<?> componentType = items.getClass().getComponentType();
 		if (componentType.isPrimitive()) {
@@ -409,26 +409,35 @@ public class Classes implements MembersRetriever {
 			if (oldParent == newParent) {
 				throw new IllegalArgumentException("The new parent cannot be the same of the old parent");
 			}
-			if (mantainHierarchy) {
-				AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
-				if (oldParent != null && newParent != null) {
-					ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
-					if (masterClassLoaderOfOriginalFutureParent != newParent) {
-						resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
-					} else {
-						resetterOne.set(setAsParent0(newParent, oldParent));
-					}
+			return Synchronizer.execute(Objects.getId(target), () -> {
+				return Synchronizer.execute(Objects.getIdOrUUIDIfNull(newParent), () -> {
+					if (mantainHierarchy) {
+						AtomicReference<Function<Boolean, ClassLoader>> resetterOne = new AtomicReference<>();
+						if (oldParent != null && newParent != null) {
+							ClassLoader masterClassLoaderOfOriginalFutureParent = getMaster(newParent);
+							if (masterClassLoaderOfOriginalFutureParent != newParent) {
+								resetterOne.set(setAsParent0(masterClassLoaderOfOriginalFutureParent, oldParent));
+							} else {
+								resetterOne.set(setAsParent0(newParent, oldParent));
+							}
 
-				}
-				Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
-				return resetterOne.get() != null ? (reset) -> {
-					ClassLoader targetExParent = resetterTwo.apply(reset);
-					resetterOne.get().apply(reset);
-					return targetExParent;
-				} : resetterTwo;
-			} else {
-				return setAsParent0(target, newParent);
-			}
+						}
+						Function<Boolean, ClassLoader> resetterTwo = setAsParent0(target, newParent);
+						return resetterOne.get() != null ? (Function<Boolean, ClassLoader>)(reset) -> {
+							return Synchronizer.execute(Objects.getId(target), () -> {
+								return Synchronizer.execute(Objects.getIdOrUUIDIfNull(newParent), () -> {
+									ClassLoader targetExParent = resetterTwo.apply(reset);
+									resetterOne.get().apply(reset);
+									return targetExParent;
+								});
+							});
+						} : resetterTwo;
+
+					} else {
+						return setAsParent0(target, newParent);
+					}
+				});
+			});
 		}
 
 		private Function<Boolean, ClassLoader> setAsParent0(ClassLoader target, ClassLoader originalFutureParent) {
@@ -450,13 +459,17 @@ public class Classes implements MembersRetriever {
 			);
 			return (reset) -> {
 				if (reset) {
-					checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
-					Fields.setDirect(target, "parent", targetExParent);
-					notifyParentsChange(
-						new ChangeParentsContext(
-							target, targetExParent, futureParent
-						)
-					);
+					Synchronizer.execute(Objects.getId(target), () -> {
+						Synchronizer.execute(Objects.getIdOrUUIDIfNull(originalFutureParent), () -> {
+							checkAndRegisterOrUnregisterMemoryClassLoaders(target, originalFutureParent, targetExParent);
+							Fields.setDirect(target, "parent", targetExParent);
+							notifyParentsChange(
+								new ChangeParentsContext(
+									target, targetExParent, futureParent
+								)
+							);
+						});
+					});
 				}
 				return targetExParent;
 			};
@@ -480,7 +493,7 @@ public class Classes implements MembersRetriever {
 					futureParentMC.register(targetMemoryClassLoader);
 				}
 				if (exParentMC != null) {
-					exParentMC.unregister(targetMemoryClassLoader, false);
+					exParentMC.unregister(targetMemoryClassLoader);
 				}
 			}
 		}
@@ -508,7 +521,7 @@ public class Classes implements MembersRetriever {
 					)
 				);
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -561,7 +574,7 @@ public class Classes implements MembersRetriever {
 			try {
 				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
 			} catch (Throwable exc) {
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -623,7 +636,7 @@ public class Classes implements MembersRetriever {
 
 			}
 			if (packages == null) {
-				Driver.throwException("Could not find packages Map on {}", classLoader);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not find packages Map on {}", classLoader);
 			}
 			return packages;
 
@@ -790,7 +803,7 @@ public class Classes implements MembersRetriever {
 				if (byteCode == null) {
 					throw new ClassNotFoundException(className);
 				}
-				return Driver.throwException(exc);
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
 		}
 
@@ -905,24 +918,26 @@ public class Classes implements MembersRetriever {
 			for (Collection<String> classPaths : classPathCollections) {
 				paths.addAll(classPaths);
 			}
-			if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {
-				paths.removeAll(getAllLoadedPaths(classLoader));
-				if (!paths.isEmpty()) {
-					Object target = classLoader instanceof URLClassLoader ?
-						classLoader :
-						Fields.getDirect(classLoader, "ucp");
-					if (target != null) {
-						Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
-						paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
-							classPathAdder.accept(url);
-						});
-						return paths;
+			return Synchronizer.execute(Objects.getId(classLoader), () -> {
+				if (classLoader instanceof URLClassLoader || Driver.isBuiltinClassLoader(classLoader)) {
+					paths.removeAll(getAllLoadedPaths(classLoader));
+					if (!paths.isEmpty()) {
+						Object target = classLoader instanceof URLClassLoader ?
+							classLoader :
+							Fields.getDirect(classLoader, "ucp");
+						if (target != null) {
+							Consumer<URL> classPathAdder = 	urls -> Methods.invokeDirect(target, "addURL", urls);
+							paths.stream().map(classPath -> FileSystemItem.ofPath(classPath).getURL()).forEach(url -> {
+								classPathAdder.accept(url);
+							});
+							return paths;
+						}
 					}
+				} else if (classLoader instanceof PathScannerClassLoader) {
+					return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
 				}
-			} else if (classLoader instanceof PathScannerClassLoader) {
-				return ((PathScannerClassLoader)classLoader).scanPathsAndAddAllByteCodesFound(paths, checkForAddedClasses);
-			}
-			return new HashSet<>();
+				return new HashSet<>();
+			});
 		}
 
 		public Collection<String> addClassPaths(ClassLoader classLoader, Collection<String>... classPathCollections) {
@@ -992,7 +1007,7 @@ public class Classes implements MembersRetriever {
 
 							}
 						} catch (MalformedURLException exc) {
-							Driver.throwException(exc);
+							org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 						}
 					}
 				}
@@ -1017,7 +1032,7 @@ public class Classes implements MembersRetriever {
 				this.classLoadersPackages = null;
 				this.builtinClassLoaderClassParentField = null;
 			} else {
-				Driver.throwException("Could not close singleton instance {}", this);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Could not close singleton instance {}", this);
 			}
 		}
 

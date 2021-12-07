@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
+
 import static org.burningwave.core.assembler.StaticComponentContainer.BackgroundExecutor;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
@@ -156,7 +157,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			return autodetectMaxRuntimeThreadsCountThreshold();
 		}
 	}
-	
+
 	private Integer autodetectMaxRuntimeThreadsCountThreshold() {
 		if (ThreadSupplier != null) {
 			if (ThreadSupplier.getMaxDetachedThreadCountIncreasingStep() > 0) {
@@ -166,7 +167,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return null;
 	}
-	
+
 	@Override
 	public <K, V> void processChangeNotification(Properties config, Event event, K key, V newValue, V previousValue) {
 		if (event.name().equals(Event.PUT.name()) && key.equals(Configuration.Key.DEFAULT_VALUES_SEPERATOR) && newValue != null) {
@@ -204,7 +205,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(getClass()::getName,"Exception occurred while removing and cleraring " + entry.getValue(), exc);
 			}
-			
+
 		}
 	}
 
@@ -292,7 +293,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		return resolveValue(
 			config.filter, () ->
 			resolve(
-				config.map, config.filter, 
+				config.map, config.filter,
 				config.valuesSeparator, config.defaultValueSeparator,
 				config.deleteUnresolvedPlaceHolder, config.defaultValues
 			)
@@ -314,10 +315,10 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <T> Collection<T> resolveValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
 			config.map, config.filter,
-			config.valuesSeparator != null ? 
-				config.valuesSeparator : 
+			config.valuesSeparator != null ?
+				config.valuesSeparator :
 				config.defaultValueSeparator != null ?
-					config.defaultValueSeparator : 
+					config.defaultValueSeparator :
 					defaultValuesSeparator,
 			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
@@ -328,9 +329,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <K, V> Map<K, V> resolveValues(ResolveConfig.ForAllKeysThat<K> config) {
 		return (Map<K, V>) resolveForKeys(
 			config.map, config.filter,
-			config.valuesSeparator != null ? 
-				config.valuesSeparator : 
-				config.defaultValueSeparator != null ? 
+			config.valuesSeparator != null ?
+				config.valuesSeparator :
+				config.defaultValueSeparator != null ?
 					config.defaultValueSeparator :
 					defaultValuesSeparator,
 			config.defaultValueSeparator,
@@ -342,10 +343,10 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public Collection<String> resolveStringValues(ResolveConfig.ForNamedKey config) {
 		return resolve(
 			config.map, config.filter,
-			config.valuesSeparator != null ? 
+			config.valuesSeparator != null ?
 				config.valuesSeparator :
 				config.defaultValueSeparator != null ?
-					config.defaultValueSeparator : 
+					config.defaultValueSeparator :
 					defaultValuesSeparator,
 			config.defaultValueSeparator,
 			config.deleteUnresolvedPlaceHolder, config.defaultValues
@@ -371,7 +372,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value instanceof Collection) {
 			Collection<T> values = (Collection<T>)value;
 			if (values.size() > 1) {
-				Driver.throwException("Found more than one item under key/predicate {}", key);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("Found more than one item under key/predicate {}", key);
 			}
 			return values.stream().findFirst().orElseGet(() -> null);
 		} else {
@@ -622,7 +623,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		}
 		return object != null && value != null && object.equals(value);
 	}
-	
+
 	@Override
 	public <I, IC, O, OC> ProducerTask<OC> createIterateAndGetTask(WithOutputOfCollection<I, IC, O, OC> config) {
 		return BackgroundExecutor.createProducerTask(() -> iterateAndGet(config));
@@ -637,7 +638,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	public <I, IC> Task createIterateTask(IterationConfig<I, IC, ?> config) {
 		return BackgroundExecutor.createTask(() -> iterate(config));
 	}
-	
+
 	@Override
 	public <I, IC, K, O, OM> OM iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> configuration
@@ -651,7 +652,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			config.priority
 		);
 	}
-	
+
 	@Override
 	public <I, IC, O, OC> OC iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> configuration
@@ -663,9 +664,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			(OC)config.output,
 			(BiConsumer<I, Consumer<Consumer<OC>>>)config.action,
 			config.priority
-		);	
+		);
 	}
-	
+
 	@Override
 	public <I, IC> void iterate(IterationConfig<I, IC, ?> configuration) {
 		IterationConfigImpl<I, IC> config = (IterationConfigImpl<I, IC>)configuration;
@@ -677,7 +678,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			config.priority
 		);
 	}
-	
+
 	// Using ThreadSupplier since 12.38.0 (previous version is 12.37.0)
 	private <I, IC, OC> OC iterate(
 		IC items,
@@ -718,11 +719,11 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
 				Map<Thread, Thread> threads = new ConcurrentHashMap<>();
 				/* Iterate List */
-				if (items instanceof List) { 
+				if (items instanceof List) {
 					List<I> itemList = (List<I>)items;
 					final int splittedIteratorSize = itemList.size() / taskCountThatCanBeCreated;
 					for (
-						int currentIndex = 0, splittedIteratorIndex = 0; 
+						int currentIndex = 0, splittedIteratorIndex = 0;
 						currentIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
 						++currentIndex, splittedIteratorIndex+=splittedIteratorSize
 					) {
@@ -730,7 +731,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						final int itemsCount = currentIndex != taskCountThatCanBeCreated -1 ?
 							splittedIteratorSize :
 							(itemList.size() - (splittedIteratorSize * currentIndex));
-						ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
+						ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
 							try {
 								for (
 									int remainedItems = itemsCount;
@@ -755,7 +756,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					}
 				/* Iterate any Collection except List */
-				} else if (items instanceof Collection) { 
+				} else if (items instanceof Collection) {
 					Iterator<I> itemIterator = ((Collection<I>)items).iterator();
 					ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
 						I item = null;
@@ -795,7 +796,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					if (componentType.isPrimitive()) {
 						final Function<Integer, ?> itemRetriever = Classes.buildArrayValueRetriever(items);
 						for (
-							int taskIndex = 0, currentSplittedIteratorIndex = 0; 
+							int taskIndex = 0, currentSplittedIteratorIndex = 0;
 							taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
 							++taskIndex, currentSplittedIteratorIndex+=splittedIteratorSize
 						) {
@@ -803,16 +804,16 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								splittedIteratorSize :
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
-							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
+							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
 								try {
-									int remainedItems = itemsCount;									
+									int remainedItems = itemsCount;
 									for (
 										int itemIndex = splittedIteratorIndex;
 										terminateIterationNotification.get() == null && remainedItems > 0;
 										--remainedItems
 									) {
-										action.accept((I)itemRetriever.apply(itemIndex++), outputItemsHandler);	
-									}																	
+										action.accept((I)itemRetriever.apply(itemIndex++), outputItemsHandler);
+									}
 								} catch (IterableObjectHelper.TerminateIteration exc) {
 									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
 								} catch (Throwable exc) {
@@ -826,12 +827,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								createAndStartThread(threads, iterator, priority);
 							} else {
 								consume(iterator);
-							}						
+							}
 						}
 					/* Iterate array of objects */
-					} else { 
+					} else {
 						for (
-							int taskIndex = 0, currentSplittedIteratorIndex = 0; 
+							int taskIndex = 0, currentSplittedIteratorIndex = 0;
 							taskIndex < taskCountThatCanBeCreated && terminateIterationNotification.get() == null;
 							++taskIndex, currentSplittedIteratorIndex+=splittedIteratorSize
 						) {
@@ -840,7 +841,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								arrayLength - (splittedIteratorSize * taskIndex);
 							final int splittedIteratorIndex = currentSplittedIteratorIndex;
 							I[] itemArray = (I[])items;
-							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {					
+							ThrowingConsumer<Thread, ? extends Throwable> iterator = thread -> {
 								try {
 									int remainedItems = itemsCount;
 									for (
@@ -849,7 +850,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 										--remainedItems
 									) {
 										action.accept(itemArray[itemIndex++], outputItemsHandler);
-									} 							
+									}
 								} catch (IterableObjectHelper.TerminateIteration exc) {
 									checkAndNotifyTerminationOfIteration(terminateIterationNotification, exc);
 								} catch (Throwable exc) {
@@ -858,7 +859,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								} finally {
 									removeThread(threads, thread);
 								}
-							}; 
+							};
 							if (taskIndex < (taskCountThatCanBeCreated - 1)) {
 								createAndStartThread(threads, iterator, priority);
 							} else {
@@ -873,13 +874,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 							try {
 								threads.wait();
 							} catch (InterruptedException exc) {
-								Driver.throwException(exc);
+								org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 							}
 						}
 					}
 				}
 				return output;
-			} 
+			}
 			Consumer<Consumer<OC>> outputItemsHandler =
 				output != null ?
 					(outputCollectionConsumer) -> {
@@ -904,7 +905,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 					}
 				}
 			} catch (IterableObjectHelper.TerminateIteration t) {
-			
+
 			}
 		} finally {
 			if (initialThreadPriority != priority) {
@@ -921,7 +922,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		thread.start();
 		return thread;
 	}
-	
+
 	private void removeThread(Map<Thread, Thread> threads, Thread thread) {
 		if (thread != null) {
 			threads.remove(thread);
@@ -949,8 +950,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			ManagedLoggerRepository.logError(getClass()::getName, exc);
 		}
 	}
-	
+
 	private <I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
+		Integer maxThreadCountsForParallelIteration = this.maxThreadCountsForParallelIteration;
 		try {
 			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
 				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
@@ -959,22 +961,23 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return 0;
 		} catch (NullPointerException exc) {
-			if (maxThreadCountsForParallelIteration == null) {
-				Synchronizer.execute(
-					getOperationId("initMaxThreadCountsForParallelIteration"), 
-					() -> {
-						if (maxThreadCountsForParallelIteration == null) {
-							maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
-						}
-					}
-				);				
-				return getCountOfTasksThatCanBeCreated(items, predicate);
+			if (maxThreadCountsForParallelIteration != null) {
+				throw exc;
 			}
-			throw exc;
+			Synchronizer.execute(
+				getOperationId("initMaxThreadCountsForParallelIteration"),
+				() -> {
+					if (this.maxThreadCountsForParallelIteration == null) {
+						this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+					}
+				}
+			);
+			return getCountOfTasksThatCanBeCreated(items, predicate);
 		}
 	}
 
 	private boolean isConcurrentEnabled(Object coll) {
+		Class<?>[] parallelCollectionClasses = this.parallelCollectionClasses;
 		try {
 			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
 				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
@@ -983,18 +986,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 			return false;
 		} catch (NullPointerException exc) {
-			if (this.parallelCollectionClasses == null) {
-				Synchronizer.execute(
-					getOperationId("initParallelCollectionClassesCollection"),
-					() -> {
-						if (this.parallelCollectionClasses == null) {
-							this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
-						}
-					}
-				);				
-				return isConcurrentEnabled(coll);
+			if (parallelCollectionClasses != null) {
+				throw exc;
 			}
-			throw exc;
+			Synchronizer.execute(
+				getOperationId("initParallelCollectionClassesCollection"),
+				() -> {
+					if (this.parallelCollectionClasses == null) {
+						this.parallelCollectionClasses = parallelCollectionClassesSupplier.get();
+					}
+				}
+			);
+			return isConcurrentEnabled(coll);
 		}
 	}
 
@@ -1030,5 +1033,5 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		private static final long serialVersionUID = -8096435103182655041L;
 
 	}
-	
+
 }

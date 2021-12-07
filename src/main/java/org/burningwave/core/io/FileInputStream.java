@@ -68,7 +68,7 @@ public class FileInputStream extends java.io.FileInputStream implements Componen
 			throw new FileSystemItemNotFoundException(exc);
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		Executor.run(() -> super.close());

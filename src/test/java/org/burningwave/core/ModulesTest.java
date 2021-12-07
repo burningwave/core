@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import org.burningwave.core.classes.MemoryClassLoader;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ public class ModulesTest extends BaseTest {
 	@Test
 	@Order(1)
 	public void exportPackageToAllUnnamedTest() {
+		MemoryClassLoader.DebugSupport.enable();
 		testDoesNotThrow(() -> {
 			if (JVMInfo.getVersion() > 8) {
 				Modules.exportPackageToAll("java.base", "java.net");

@@ -63,9 +63,9 @@ public interface Streams {
 	public ByteBuffer toByteBuffer(InputStream inputStream, int size);
 
 	public ByteBuffer toByteBuffer(InputStream inputStream);
-	
+
 	public void feelPropertiesMap(Supplier<InputStream> inputStreamSupplier, Map<?, ?> map);
-	
+
 	public void feelPropertiesMap(InputStream inputStream, Map<?, ?> map);
 
 	public StringBuffer getAsStringBuffer(InputStream inputStream);

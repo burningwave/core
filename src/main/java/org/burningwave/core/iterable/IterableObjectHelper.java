@@ -28,7 +28,7 @@
  */
 package org.burningwave.core.iterable;
 
-import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+
 
 import java.util.Collection;
 import java.util.Collections;
@@ -77,7 +77,7 @@ public interface IterableObjectHelper {
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD, "autodetect");
 
 			defaultValues.put(Key.PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE, 2);
-			
+
 			String defaultValuesSeparator = (String)defaultValues.get(Key.DEFAULT_VALUES_SEPERATOR);
 			//The semicolons in this value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 			defaultValues.put(
@@ -153,25 +153,25 @@ public interface IterableObjectHelper {
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, Predicate<String> propertyFilter);
 
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
-	
+
 	public <I, IC, O, OC> OC iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
 	);
-	
+
 	public <I, IC, K, O, OM> OM iterateAndGet(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
 	);
-	
+
 	public <I, IC> void iterate(IterationConfig<I, IC, ?> config);
-	
+
 	public <I, IC, O, OC> QueuedTaskExecutor.ProducerTask<OC> createIterateAndGetTask(
 		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
 	);
-	
+
 	public <I, IC, K, O, OM> QueuedTaskExecutor.ProducerTask<OM> createIterateAndGetTask(
 		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
 	);
-	
+
 	public <I, IC> QueuedTaskExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config);
 
 	public boolean containsValue(Map<?, ?> map, String key, Object object);
@@ -183,19 +183,19 @@ public interface IterableObjectHelper {
 	public String toPrettyString(Map<?, ?> map, String valuesSeparator, int marginTabCount);
 
 	public <K, V> String toString(Map<K, V> map, int marginTabCount);
-	
+
 	public default <T> T terminateIteration() {
-		return Driver.throwException(TerminateIteration.NOTIFICATION);
+		return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(TerminateIteration.NOTIFICATION);
 	}
-	
+
 	public default <T> T terminateCurrentThreadIteration() {
-		return Driver.throwException(TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION);
+		return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(TerminateIteration.ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION);
 	}
-	
+
 	public default boolean isIterationTerminatedNotification(Throwable exc) {
 		return exc instanceof TerminateIteration;
 	}
-	
+
 	public <K, V> String toString(
 		Map<K, V> map,
 		Function<K, String> keyTransformer,
@@ -223,100 +223,100 @@ public interface IterableObjectHelper {
 
 
 	public static interface IterationConfig<I, IC, C extends IterationConfig<I, IC, C>> {
-		
-		
+
+
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C of(Map<J, I> input) {
 			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : null);
 		}
-		
+
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C of(Collection<I> input) {
 			return (C)new IterationConfigImpl<I, Collection<I>>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<I, I[], C>> C of(I[] input) {
 			return (C)new IterationConfigImpl<I, I[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Integer, int[], C>> C ofInts(int[] input) {
 			return (C)new IterationConfigImpl<Integer, int[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Long, long[], C>> C ofLongs(long[] input) {
 			return (C)new IterationConfigImpl<Long, long[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Float, float[], C>> C ofFloats(float[] input) {
 			return (C)new IterationConfigImpl<Float, float[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Double, double[], C>> C ofDoubles(double[] input) {
 			return (C)new IterationConfigImpl<Double, double[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofBooleans(boolean[] input) {
 			return (C)new IterationConfigImpl<Boolean, boolean[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofBytes(byte[] input) {
 			return (C)new IterationConfigImpl<Byte, byte[]>(input);
 		}
-		
+
 		public static <I, C extends IterationConfig<Character, char[], C>> C ofChars(char[] input) {
 			return (C)new IterationConfigImpl<Character, char[]>(input);
 		}
-		
+
 		public static <J, I, C extends IterationConfig<Map.Entry<J, I>, Collection<I>, C>> C ofNullable(Map<J, I> input) {
 			return (C)new IterationConfigImpl<Map.Entry<J, I>, Collection<I>>(input != null ? input.entrySet() : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<I, Collection<I>, C>> C ofNullable(Collection<I> input) {
 			return (C)new IterationConfigImpl<I, Collection<I>>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<I, I[], C>> C ofNullable(I[] input) {
 			return (C)new IterationConfigImpl<I, I[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Integer, int[], C>> C ofNullableInts(int[] input) {
 			return (C)new IterationConfigImpl<Integer, int[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Long, long[], C>> C ofNullableLongs(long[] input) {
 			return (C)new IterationConfigImpl<Long, long[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Float, float[], C>> C ofNullableFloats(float[] input) {
 			return (C)new IterationConfigImpl<Float, float[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Double, double[], C>> C ofNullableDoubles(double[] input) {
 			return (C)new IterationConfigImpl<Double, double[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Boolean, boolean[], C>> C ofNullableBooleans(boolean[] input) {
 			return (C)new IterationConfigImpl<Boolean, boolean[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Byte, byte[], C>> C ofNullableBytes(byte[] input) {
 			return (C)new IterationConfigImpl<Byte, byte[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-		
+
 		public static <I, C extends IterationConfig<Character, char[], C>> C ofNullableChars(char[] input) {
 			return (C)new IterationConfigImpl<Character, char[]>(input != null ? input : IterationConfigImpl.NO_ITEMS);
 		}
-				
+
 		public C withAction(Consumer<I> action);
-		
+
 		public <O, OC extends Collection<O>> WithOutputOfCollection<I, IC, O, OC> withOutput(OC output);
-		
+
 		public <K, O, OM extends Map<K, O>> WithOutputOfMap<I, IC, K, O, OM> withOutput(OM output);
-		
+
 		public C parallelIf(Predicate<IC> predicate);
-		
+
 		public C withPriority(Integer priority);
-		
+
 		public static class WithOutputOfMap<I, IC, K, O, OM> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfMap<I, IC, K, O, OM>> {
-			
+
 			WithOutputOfMap(IterationConfigImpl<I, IC> configuration) {
 				super(configuration);
 			}
@@ -325,11 +325,11 @@ public interface IterableObjectHelper {
 				wrappedConfiguration.withAction(action);
 				return this;
 			}
-			
+
 		}
-		
+
 		public static class WithOutputOfCollection<I, IC, O, OC> extends IterationConfigImpl.WithOutput<I, IC, WithOutputOfCollection<I, IC, O, OC>> {
-			
+
 			WithOutputOfCollection(IterationConfigImpl<I, IC> configuration) {
 				super(configuration);
 			}
@@ -340,7 +340,7 @@ public interface IterableObjectHelper {
 			}
 
 		}
-		
+
 	}
 
 

@@ -29,6 +29,7 @@
 package org.burningwave.core;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 
 public interface Cleanable {
@@ -36,7 +37,7 @@ public interface Cleanable {
 	public default void clear() {
 		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
 	}
-	
+
 	public default QueuedTaskExecutor.Task clearInBackground() {
 		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
 	}
