@@ -561,14 +561,10 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 			StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
 			creationStack = new ArrayList<>();
 			boolean exitedFromCostructors = false;
-			for (int i = 4; i < stackTraceElements.length; i++) {
+			for (int i = 5; i < stackTraceElements.length; i++) {
 				if (exitedFromCostructors) {
 					creationStack.add(stackTraceElements[i]);
-				} else if (!MemoryClassLoader.class.isAssignableFrom(
-					Driver.getClassByName(
-						stackTraceElements[i].getClassName(), false, MemoryClassLoader.class.getClassLoader(),  MemoryClassLoader.class
-					)
-				) && !stackTraceElements[i].getMethodName().equals("<init>")) {
+				} else if (!stackTraceElements[i].getMethodName().equals("<init>")) {
 					exitedFromCostructors = true;
 					creationStack.add(stackTraceElements[i]);
 				}
