@@ -339,8 +339,9 @@ public class StaticComponentContainer {
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
+			new Thread();
 			Runtime.getRuntime().addShutdownHook(
-				ThreadSupplier.getOrCreateThread(getName("Resource releaser")).setExecutable(thread -> {
+				new Thread(() -> {
 					org.burningwave.core.function.ThrowingRunnable<Throwable> closingOperations = () -> {
 						Executor.runAndIgnoreExceptions(() -> {
 							ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "... Waiting for all tasks ending");
@@ -382,15 +383,17 @@ public class StaticComponentContainer {
 						});
 					}).andThen(() -> {
 						Executor.runAndIgnoreExceptions(() -> {
-							MemoryClassLoader.DebugSupport.logAllInstancesInfo();
 							ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "Shutting down ThreadSupplier");
 							ThreadSupplier.shutDownAllThreads();
+						});
+					}).andThen(() -> {
+						Executor.runAndIgnoreExceptions(() -> {
+							MemoryClassLoader.DebugSupport.logAllInstancesInfo();
 						});
 					});
 
 					Executor.runAndIgnoreExceptions(closingOperations);
-
-				})
+				}, getName("Resource releaser"))
 			);
 			ManagedLoggerRepository.logInfo(
 				StaticComponentContainer.class::getName,
