@@ -433,13 +433,13 @@ public class Cache {
 										}
 										throw exception;
 									}
-								}).withThreadBasedIteration()
+								}).threadBased()
 								.parallelIf(coll -> parallel)
 							);
-						}).withThreadBasedIteration()
+						}).threadBased()
 						.parallelIf(coll -> parallel)
 					);
-				}).withThreadBasedIteration()
+				}).threadBased()
 				.parallelIf(coll -> parallel)
 			);
 		}
