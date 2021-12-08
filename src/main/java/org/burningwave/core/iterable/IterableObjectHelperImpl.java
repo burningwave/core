@@ -69,10 +69,10 @@ import org.burningwave.core.iterable.Properties.Event;
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener, Identifiable {
 	Predicate<Object> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
-	private Integer maxThreadCountsForParallelIteration;
+	private volatile Integer maxThreadCountsForParallelIteration;
 	//Deferred initialized
 	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
-	private Class<?>[] parallelCollectionClasses;
+	private volatile Class<?>[] parallelCollectionClasses;
 
 	IterableObjectHelperImpl(Map<?, ?> config) {
 		this.defaultValuesSeparator = resolveStringValue(
@@ -672,38 +672,45 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 	}
 
 	<I, D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate) {
+		Integer maxThreadCountsForParallelIteration = this.maxThreadCountsForParallelIteration;
 		try {
-			if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
-				int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
-				taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
-				return taskCount;
-			}
-			return 0;
+			return getCountOfTasksThatCanBeCreated(items, predicate, maxThreadCountsForParallelIteration);
 		} catch (NullPointerException exc) {
+			if (maxThreadCountsForParallelIteration != null) {
+				throw exc;
+			}
 			if (maxThreadCountsForParallelIteration == null) {
 				Synchronizer.execute(
 					getOperationId("initMaxThreadCountsForParallelIteration"),
 					() -> {
-						if (maxThreadCountsForParallelIteration == null) {
-							maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
+						if (this.maxThreadCountsForParallelIteration == null) {
+							this.maxThreadCountsForParallelIteration = autodetectMaxRuntimeThreadsCountThreshold();
 						}
 					}
 				);
-				return getCountOfTasksThatCanBeCreated(items, predicate);
 			}
-			throw exc;
+			return getCountOfTasksThatCanBeCreated(items, predicate, this.maxThreadCountsForParallelIteration);
 		}
 	}
 
+	private <D> int getCountOfTasksThatCanBeCreated(D items, Predicate<D> predicate,
+			Integer maxThreadCountsForParallelIteration) {
+		if (predicate.test(items) && maxThreadCountsForParallelIteration > ThreadSupplier.getRunningThreadCount()) {
+			int taskCount = Math.min((Runtime.getRuntime().availableProcessors()), items instanceof Collection ? ((Collection<?>)items).size() : Array.getLength(items));
+			taskCount = Math.min(ThreadSupplier.getCountOfThreadsThatCanBeSupplied(), taskCount);
+			return taskCount;
+		}
+		return 0;
+	}
+
 	boolean isConcurrentEnabled(Object coll) {
+		Class<?>[] parallelCollectionClasses = this.parallelCollectionClasses;
 		try {
-			for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
-				if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
-					return true;
-				}
-			}
-			return false;
+			return isConcurrentEnabled(coll, parallelCollectionClasses);
 		} catch (NullPointerException exc) {
+			if (parallelCollectionClasses != null) {
+				throw exc;
+			}
 			if (this.parallelCollectionClasses == null) {
 				Synchronizer.execute(
 					getOperationId("initParallelCollectionClassesCollection"),
@@ -713,10 +720,18 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 						}
 					}
 				);
-				return isConcurrentEnabled(coll);
 			}
-			throw exc;
+			return isConcurrentEnabled(coll, this.parallelCollectionClasses);
 		}
+	}
+
+	private boolean isConcurrentEnabled(Object coll, Class<?>[] parallelCollectionClasses) {
+		for (Class<?> parallelCollectionsClass : parallelCollectionClasses) {
+			if (parallelCollectionsClass.isAssignableFrom(coll.getClass())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private String toPrettyKeyValueLabel(Entry<?, ?> entry, String valuesSeparator, int marginTabCount) {
