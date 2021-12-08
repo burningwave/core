@@ -313,9 +313,9 @@ public interface IterableObjectHelper {
 
 		public C withPriority(Integer priority);
 
-		public C withTaskBasedIteration();
+		public C taskBased();
 
-		public C withThreadBasedIteration();
+		public C threadBased();
 
 		public static class WithOutputOfMap<I, IC, K, O, OM> extends IterableObjectHelperImpl.Iterator.Config.WithOutput<I, IC, WithOutputOfMap<I, IC, K, O, OM>> {
 

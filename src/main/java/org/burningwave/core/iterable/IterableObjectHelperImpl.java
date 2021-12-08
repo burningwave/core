@@ -854,13 +854,13 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			}
 
 			@Override
-			public Config<I, IC> withTaskBasedIteration() {
+			public Config<I, IC> taskBased() {
 				this.iteratorSupplier = taskBasedIteratorSupplier;
 				return this;
 			}
 
 			@Override
-			public Config<I, IC> withThreadBasedIteration() {
+			public Config<I, IC> threadBased() {
 				this.iteratorSupplier = threadBasedIteratorSupplier;
 				return this;
 			}
@@ -907,14 +907,14 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				}
 
 				@Override
-				public CWO withTaskBasedIteration() {
-					wrappedConfiguration.withTaskBasedIteration();
+				public CWO taskBased() {
+					wrappedConfiguration.taskBased();
 					return (CWO)this;
 				}
 
 				@Override
-				public CWO withThreadBasedIteration() {
-					wrappedConfiguration.withThreadBasedIteration();
+				public CWO threadBased() {
+					wrappedConfiguration.threadBased();
 					return (CWO)this;
 				}
 
