@@ -69,10 +69,10 @@ import org.burningwave.core.iterable.Properties.Event;
 public class IterableObjectHelperImpl implements IterableObjectHelper, Properties.Listener, Identifiable {
 	Predicate<Object> defaultMinimumCollectionSizeForParallelIterationPredicate;
 	private String defaultValuesSeparator;
-	private volatile Integer maxThreadCountsForParallelIteration;
+	private Integer maxThreadCountsForParallelIteration;
 	//Deferred initialized
 	private Supplier<Class<?>[]> parallelCollectionClassesSupplier;
-	private volatile Class<?>[] parallelCollectionClasses;
+	private Class<?>[] parallelCollectionClasses;
 
 	IterableObjectHelperImpl(Map<?, ?> config) {
 		this.defaultValuesSeparator = resolveStringValue(
