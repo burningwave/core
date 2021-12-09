@@ -78,18 +78,7 @@ class TaskBasedIterator extends IterableObjectHelperImpl.Iterator {
 			}
 			int taskCountThatCanBeCreated = iterableObjectHelper.getCountOfTasksThatCanBeCreated(items, predicateForParallelIteration);
 			if (taskCountThatCanBeCreated > 1) {
-				Consumer<Consumer<OC>> outputItemsHandler =
-					output != null ?
-							iterableObjectHelper.isConcurrentEnabled(output) ?
-							(outputHandler) -> {
-								outputHandler.accept(output);
-							} :
-							(outputHandler) -> {
-								synchronized (output) {
-									outputHandler.accept(output);
-								}
-							}
-						: null;
+				Consumer<Consumer<OC>> outputItemsHandler = buildOutputCollectionHandler(output);
 				// Used for break the iteration
 				AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification = new AtomicReference<>();
 				Collection<QueuedTaskExecutor.Task> tasks = ConcurrentHashMap.newKeySet();

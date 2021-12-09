@@ -787,7 +787,24 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			BiConsumer<I, Consumer<Consumer<OC>>> action,
 			Integer priority
 		);
+		
 
+		<OC> Consumer<Consumer<OC>> buildOutputCollectionHandler(OC output) {
+			Consumer<Consumer<OC>> outputItemsHandler =
+				output != null ?
+					iterableObjectHelper.isConcurrentEnabled(output) ?
+					(outputHandler) -> {
+						outputHandler.accept(output);
+					} :
+					(outputHandler) -> {
+						synchronized (output) {
+							outputHandler.accept(output);
+						}
+					}
+				: null;
+			return outputItemsHandler;
+		}
+		
 		void checkAndNotifyTerminationOfIteration(
 			AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification,
 			IterableObjectHelper.TerminateIteration exc
