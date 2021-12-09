@@ -68,7 +68,6 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 public class QueuedTaskExecutor implements Closeable {
 	private final static Map<String, TaskAbst<?,?>> runOnlyOnceTasks;
 	private final static Map<java.lang.Thread, Collection<TaskAbst<?,?>>> taskCreatorThreadsForChildTasks;
-	private final static Map<TaskAbst<?, ?>, TaskAbst<?, ?>> allTasksInExecution;
 	Map<TaskAbst<?, ?>, TaskAbst<?, ?>> tasksInExecution;
 	Thread.Supplier threadSupplier;
 	String name;
@@ -91,7 +90,6 @@ public class QueuedTaskExecutor implements Closeable {
 	static {
 		runOnlyOnceTasks = new ConcurrentHashMap<>();
 		taskCreatorThreadsForChildTasks = new ConcurrentHashMap<>();
-		allTasksInExecution = new ConcurrentHashMap<>();
 	}
 
 	QueuedTaskExecutor(String name, Thread.Supplier threadSupplier, int defaultPriority, boolean isDaemon) {
@@ -131,22 +129,7 @@ public class QueuedTaskExecutor implements Closeable {
 
 			};
 
-			tasksInExecution = new ConcurrentHashMap<TaskAbst<?, ?>, TaskAbst<?, ?>>() {
-
-				private static final long serialVersionUID = 4138691488536653865L;
-
-			    @Override
-				public TaskAbst<?, ?> put(TaskAbst<?, ?> key, TaskAbst<?, ?> value) {
-			    	allTasksInExecution.put(key, value);
-			        return super.put(key, value);
-			    }
-
-			    @Override
-				public TaskAbst<?, ?> remove(Object key) {
-			    	allTasksInExecution.remove(key);
-			    	return super.remove(key);
-			    }
-			};
+			tasksInExecution = new ConcurrentHashMap<TaskAbst<?, ?>, TaskAbst<?, ?>>() ;
 			this.resumeCallerMutex = new Object();
 			this.executingFinishedWaiterMutex = new Object();
 			this.suspensionCallerMutex = new Object();
