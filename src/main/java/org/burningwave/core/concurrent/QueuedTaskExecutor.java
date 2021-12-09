@@ -102,7 +102,7 @@ public class QueuedTaskExecutor implements Closeable {
 
 				@Override
 				public boolean add(TaskAbst<?, ?> e) {
-					while (tasksQueue.size() > max) {
+					while (size() > max) {
 						synchronized(this) {
 							try {
 								wait();
