@@ -339,7 +339,6 @@ public class StaticComponentContainer {
 			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
 			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
-			new Thread();
 			Runtime.getRuntime().addShutdownHook(
 				new Thread(() -> {
 					org.burningwave.core.function.ThrowingRunnable<Throwable> closingOperations = () -> {

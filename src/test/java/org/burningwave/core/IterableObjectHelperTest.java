@@ -61,7 +61,7 @@ public class IterableObjectHelperTest extends BaseTest {
 								outputCollection.add(number)
 							);
 						}
-					})
+					}).threadBased()
 					
 				).submit().join();
 			}, false);
