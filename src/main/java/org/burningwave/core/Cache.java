@@ -436,8 +436,7 @@ public class Cache {
 								}).threadBased()
 								.parallelIf(coll -> parallel)
 							);
-						}).threadBased()
-						.parallelIf(coll -> parallel)
+						}).parallelIf(coll -> false)
 					);
 				}).threadBased()
 				.parallelIf(coll -> parallel)
