@@ -92,7 +92,7 @@
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 
 		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
-		<logback.version>1.2.7</logback.version>
+		<logback.version>1.2.8</logback.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.2</junit-jupiter.version>
