@@ -326,7 +326,7 @@
 				<version>${nexus-staging-maven-plugin.version}</version>
 				<extensions>true</extensions>
 				<configuration>
-					<stagingProgressTimeoutMinutes>240</stagingProgressTimeoutMinutes>
+					<stagingProgressTimeoutMinutes>20</stagingProgressTimeoutMinutes>
 					<serverId>ossrh</serverId>
 					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
 					<autoReleaseAfterClose>true</autoReleaseAfterClose>
