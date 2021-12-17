@@ -151,7 +151,7 @@ public class ClassHunterTest extends BaseTest {
 	public void findRecursiveInChildrenExcludingZipAndJar() throws Exception {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		PathHelper pathHelper = componentSupplier.getPathHelper();
-		testNotEmpty(() -> 
+		testNotEmpty(() ->
 			componentSupplier.getClassHunter().findBy(
 				SearchConfig.forPaths(
 					pathHelper.getAbsolutePathOfResource("../../src/test/external-resources")
@@ -159,7 +159,7 @@ public class ClassHunterTest extends BaseTest {
 					pathHelper.getPaths(path -> path.endsWith("jar"))
 				).addFileSystemItems(
 					//folder inside a compressed archive
-					pathHelper.getResource("../logback-core-1.2.7.jar/ch/qos")
+					pathHelper.getResource("../logback-core-1.2.8.jar/ch/qos")
 				).setFindFunction(
 					currentScannedPath -> {
 						// Check if the path is a folder outside of a zip archive
