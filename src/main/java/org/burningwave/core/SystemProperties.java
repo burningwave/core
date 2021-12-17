@@ -64,7 +64,7 @@ public class SystemProperties {
 		return this;
 	}
 
-	public void forEachProperty(BiConsumer<String, String> consumer) {
+	public void forEach(BiConsumer<String, String> consumer) {
 		for (Map.Entry<String, String> entry : systemProperties.entrySet()) {
 			consumer.accept(entry.getKey(), entry.getValue());
 		}
