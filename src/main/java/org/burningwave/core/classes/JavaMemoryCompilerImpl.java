@@ -71,6 +71,7 @@ import javax.tools.ToolProvider;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
+import org.burningwave.core.classes.ClassPathHelper.ComputeConfig;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
@@ -575,23 +576,26 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-						Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()),
-						fileSystemItem ->
+						ComputeConfig.forClassRepositories(
+							Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
+						).refreshAllPathsThat(fileSystemItem ->
 							fileSystemItem.getAbsolutePath().equals(
 								((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()
-							),
-						(classFile) ->
+							)
+						).withFileFilter(classFile ->
 							Objects.equals(classFile.toJavaClass().getPackageName(), packageName)
+						)
 					).get().values()
 				);
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(
-						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.computeFromSources(
-							sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-							classRepositories,
-							null,
-							(classFile) ->
+						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
+							ComputeConfig.fromImportsIntoSources(
+								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
+								classRepositories
+							).withAdditionalFileFilter(classFile ->
 								Objects.equals(classFile.toJavaClass().getPackageName(), packageName)
+							)
 						).get().values()
 					);
 				}
@@ -601,23 +605,26 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-							Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()),
-							fileSystemItem ->
+							ComputeConfig.forClassRepositories(
+								Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
+							).refreshAllPathsThat(fileSystemItem ->
 								fileSystemItem.getAbsolutePath().equals(
 									((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath()
-								),
-							(classFile) ->
+								)
+							).withFileFilter(classFile ->
 								classPredicate.test(classFile.toJavaClass())
+							)
 						).get().values()
 					);
 					if (classPaths.isEmpty()) {
 						classPaths.addAll(
-							((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.computeFromSources(
-								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
-								classRepositories,
-								null,
-								(classFile) ->
+							((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
+								ComputeConfig.fromImportsIntoSources(
+									sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
+									classRepositories
+								).withAdditionalFileFilter(classFile ->
 									classPredicate.test(classFile.toJavaClass())
+								)
 							).get().values()
 						);
 					}
