@@ -65,41 +65,150 @@ public interface ClassPathHelper {
 		return new ClassPathHelperImpl(classPathHunter, config);
 	}
 
-	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories);
+	public Supplier<Map<String, String>> compute(SearchConfig searchConfig);
 
-	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories,
-			ClassCriteria classCriteria);
+	public Supplier<Map<String, String>> compute(ComputeConfig.ByClassesSearching input);
 
-	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig);
+	public Supplier<Map<String, String>> compute(ComputeConfig.ByClassesSearching.FromImportsIntoSources input);
 
-	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories,
-			Collection<String> pathsToBeRefreshed, ClassCriteria classCriteria);
+	public Supplier<Map<String, String>> compute(ComputeConfig input);
 
-	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories);
+	public Supplier<Map<String, String>> compute(ComputeConfig.FromImportsIntoSources input);
 
-	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories,
-			ClassCriteria otherClassCriteria);
+	public Map<String, ClassLoader> compute(ComputeConfig.AddAllToClassLoader input);
 
-	@SuppressWarnings("unchecked")
-	public Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria,  Collection<String>... pathColls);
+	public static class ComputeConfig {
 
-	public Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria, String... path);
+		public Collection<String> classRepositories;
+		public Predicate<FileSystemItem> pathsToBeRefreshedPredicate;
+		public Predicate<FileSystemItem> javaClassFilter;
 
-	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories,
-			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			Predicate<FileSystemItem> javaClassFilterAdditionalFilter);
+		ComputeConfig(Collection<String> classRepositories) {
+			this.classRepositories = classRepositories;
+		}
 
-	public Supplier<Map<String, String>> compute(Collection<String> classRepositories,
-			Predicate<FileSystemItem> javaClassProcessor);
+		public ComputeConfig refreshAllPathsThat(Predicate<FileSystemItem> pathsToBeRefreshedPredicate) {
+			this.pathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate;
+			return this;
+		}
 
-	public Map<String, ClassLoader> computeAndAddAllToClassLoader(ClassLoader classLoader,
-			Collection<String> classRepositories, String className, Collection<String> notFoundClasses);
+		public ComputeConfig withFileFilter(Predicate<FileSystemItem> javaClassFilter) {
+			this.javaClassFilter = javaClassFilter;
+			return this;
+		}
 
-	public Map<String, ClassLoader> computeAndAddAllToClassLoader(ClassLoader classLoader,
-			Collection<String> classRepositories, Collection<String> pathsToBeRefreshed, String className,
-			Collection<String> notFoundClasses);
+		public static ComputeConfig forClassRepositories(Collection<String> classRepositories) {
+			return new ComputeConfig(classRepositories);
+		}
 
-	public Supplier<Map<String, String>> compute(Collection<String> classRepositories,
-			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-			Predicate<FileSystemItem> javaClassFilter);
+		public static ByClassesSearching byClassesSearching(Collection<String> classRepositories) {
+			return new ByClassesSearching(classRepositories);
+		}
+
+		public static ByClassesSearching.FromImportsIntoSources fromImportsIntoSourcesAndByClassesSearching(
+			Collection<String>sources, Collection<String> classRepositories
+		) {
+			return new ByClassesSearching.FromImportsIntoSources(sources, classRepositories);
+		}
+
+		public static FromImportsIntoSources fromImportsIntoSources(
+			Collection<String>sources, Collection<String> classRepositories
+		) {
+			return new FromImportsIntoSources(sources, classRepositories);
+		}
+
+		public static AddAllToClassLoader forAddToClassLoader(
+			ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
+		) {
+			return new AddAllToClassLoader(classLoader, classRepositories, nameOfTheClassToBeLoaded);
+		}
+
+		public static class AddAllToClassLoader {
+			public ClassLoader classLoader;
+			public Collection<String> classRepositories;
+			public Collection<String> pathsToBeRefreshed;
+			public String nameOfTheClassToBeLoaded;
+			public Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded;
+
+			AddAllToClassLoader(ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded) {
+				this.classLoader = classLoader;
+				this.classRepositories = classRepositories;
+				this.nameOfTheClassToBeLoaded = nameOfTheClassToBeLoaded;
+			}
+
+			public AddAllToClassLoader setClassesRequiredByTheClassToBeLoaded(Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded) {
+				this.nameOfTheClassesRequiredByTheClassToBeLoaded = nameOfTheClassesRequiredByTheClassToBeLoaded;
+				return this;
+			}
+
+			public AddAllToClassLoader refreshPaths(Collection<String> pathsToBeRefreshed) {
+				this.pathsToBeRefreshed = pathsToBeRefreshed;
+				return this;
+			}
+
+		}
+
+		public static class FromImportsIntoSources {
+			public Collection<String> sources;
+			public Collection<String> classRepositories;
+			public Predicate<FileSystemItem> pathsToBeRefreshedPredicate;
+			public Predicate<FileSystemItem> additionalFileFilter;
+
+			FromImportsIntoSources(Collection<String> sources, Collection<String> classRepositories) {
+				this.sources = sources;
+				this.classRepositories = classRepositories;
+			}
+
+			public FromImportsIntoSources refreshAllPathsThat(Predicate<FileSystemItem> pathsToBeRefreshedPredicate) {
+				this.pathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate;
+				return this;
+			}
+
+			public FromImportsIntoSources withAdditionalFileFilter(Predicate<FileSystemItem> additionalFileFilter) {
+				this.additionalFileFilter = additionalFileFilter;
+				return this;
+			}
+		}
+
+		public static class ByClassesSearching {
+			Collection<String> classRepositories;
+			Collection<String> pathsToBeRefreshed;
+			ClassCriteria classCriteria;
+
+			ByClassesSearching(Collection<String> classRepositories) {
+				this.classRepositories = classRepositories;
+			}
+
+			public ByClassesSearching refreshPaths(Collection<String> pathsToBeRefreshed) {
+				this.pathsToBeRefreshed = pathsToBeRefreshed;
+				return this;
+			}
+
+			public ByClassesSearching withClassFilter(ClassCriteria classCriteria) {
+				this.classCriteria = classCriteria;
+				return this;
+			}
+
+			public static class FromImportsIntoSources {
+				public Collection<String> sources;
+				public Collection<String> classRepositories;
+				public ClassCriteria additionalClassCriteria;
+
+				FromImportsIntoSources(Collection<String> sources, Collection<String> classRepositories) {
+					this.sources = sources;
+					this.classRepositories = classRepositories;
+				}
+
+				public FromImportsIntoSources setClassRepositories(Collection<String> classRepositories) {
+					this.classRepositories = classRepositories;
+					return this;
+				}
+
+				public FromImportsIntoSources withAdditionalClassFilter(ClassCriteria additionalClassCriteria) {
+					this.additionalClassCriteria = additionalClassCriteria;
+					return this;
+				}
+			}
+		}
+	}
 }
