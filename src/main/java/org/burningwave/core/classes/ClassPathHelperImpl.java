@@ -37,7 +37,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,25 +89,12 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	}
 
 	@Override
-	public Supplier<Map<String, String>> computeByClassesSearching(Collection<String> classRepositories) {
-		return compute(classRepositories, null, (Predicate<FileSystemItem>)null);
-	}
-
-	@Override
-	public Supplier<Map<String, String>> computeByClassesSearching(
-		Collection<String> classRepositories,
-		ClassCriteria classCriteria
-	) {
-		return computeByClassesSearching(classRepositories, null, classCriteria);
-	}
-
-	@Override
-	public Supplier<Map<String, String>> computeByClassesSearching(SearchConfig searchConfig) {
+	public Supplier<Map<String, String>> compute(SearchConfig searchConfig) {
 		SearchConfig searchConfigCopy = searchConfig.createCopy();
 		searchConfigCopy.init((ClassPathHunterImpl)classPathHunter);
 		return compute0(
 			searchConfig.getPathsToBeScanned().stream().map(FileSystemItem::getAbsolutePath).collect(Collectors.toSet()),
-			fileSystemItem -> false,
+			null,
 			(toBeAdjuested) -> {
 				searchConfigCopy.setFileFilter(
 					FileSystemItem.Criteria.forClassTypeFiles(
@@ -116,9 +102,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					)
 				);
 				try(SearchResult result = classPathHunter.findBy(
-						searchConfigCopy
-					)
-				) {
+					searchConfigCopy
+				)) {
 					return result.getClassPaths();
 				}
 			}
@@ -127,173 +112,119 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 
 	@Override
-	public Supplier<Map<String, String>> computeByClassesSearching(
-		Collection<String> classRepositories,
-		Collection<String> pathsToBeRefreshed,
-		ClassCriteria classCriteria
+	public Supplier<Map<String, String>> compute(
+		ComputeConfig.ByClassesSearching input
 	) {
-		SearchConfig searchConfig = SearchConfig.forPaths(classRepositories).by(
-			classCriteria
+		if (input.classRepositories == null) {
+			throw new IllegalArgumentException("No class repository has been provided");
+		}
+		SearchConfig searchConfig = SearchConfig.forPaths(input.classRepositories).by(
+			input.classCriteria
 		).optimizePaths(
 			true
 		);
-		if (pathsToBeRefreshed != null) {
+		if (input.pathsToBeRefreshed != null) {
 			searchConfig.checkForAddedClassesForAllPathThat(fileSystemItem-> {
-				return pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
+				return input.pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
 			});
 		}
-		return computeByClassesSearching(searchConfig);
-	}
-
-
-	@Override
-	public Supplier<Map<String, String>> computeFromSources(
-		Collection<String> sources,
-		Collection<String> classRepositories
-	) {
-		return computeFromSources(sources, classRepositories, null, null);
-	}
-
-	@Override
-	public Supplier<Map<String, String>> computeFromSources(
-		Collection<String> sources,
-		Collection<String> classRepositories,
-		ClassCriteria otherClassCriteria
-	) {
-		Collection<String> imports = new HashSet<>();
-		for (String sourceCode : sources) {
-			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
-		}
-		ClassCriteria classCriteria = ClassCriteria.create().className(
-			className ->
-				imports.contains(className)
-		);
-		if (otherClassCriteria != null) {
-			classCriteria = classCriteria.or(otherClassCriteria);
-		}
-		return computeByClassesSearching(classRepositories, classCriteria);
-	}
-
-	@Override
-	@SafeVarargs
-	public final Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, Collection<String>... pathColls) {
-		FileSystemItem.CheckingOption checkFileOption =
-			getClassFileCheckingOption();
-		Collection<String> classPaths = new HashSet<>();
-		try (SearchResult result = classPathHunter.findBy(
-				SearchConfig.forPaths(pathColls).by(
-					classCriteria
-				).setFileFilter(
-					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
-				).optimizePaths(
-					true
-				)
-			)
-		) {
-			for (FileSystemItem classPath : result.getClassPaths()) {
-				classPaths.add(classPath.getAbsolutePath());
-				classPath.reset();
-			}
-		}
-		return classPaths;
-	}
-
-	@Override
-	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, String... path) {
-		return searchWithoutTheUseOfCache(classCriteria, Arrays.asList(path));
-	}
-
-	@Override
-	public Supplier<Map<String, String>> computeFromSources(
-		Collection<String> sources,
-		Collection<String> classRepositories,
-		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-		Predicate<FileSystemItem> javaClassFilterAdditionalFilter
-	) {
-		Collection<String> imports = new HashSet<>();
-		for (String sourceCode : sources) {
-			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
-		}
-		Predicate<FileSystemItem> javaClassFilter = (classFile) ->
-			imports.contains(classFile.toJavaClass().getName())
-		;
-
-		if (javaClassFilterAdditionalFilter != null) {
-			javaClassFilter = javaClassFilter.or(javaClassFilterAdditionalFilter);
-		}
-		return compute(classRepositories, pathsToBeRefreshedPredicate, javaClassFilter);
+		return compute(searchConfig);
 	}
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		Collection<String> classRepositories,
-		Predicate<FileSystemItem> javaClassProcessor
+		ComputeConfig.ByClassesSearching.FromImportsIntoSources input
 	) {
-		return compute(classRepositories, null, javaClassProcessor);
+		if (input.sources == null) {
+			throw new IllegalArgumentException("No source has been provided");
+		}
+		Collection<String> imports = new HashSet<>();
+		for (String sourceCode : input.sources) {
+			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
+		}
+		ClassCriteria classCriteria = ClassCriteria.create().className(className ->
+			imports.contains(className)
+		);
+		if (input.additionalClassCriteria != null) {
+			classCriteria = classCriteria.or(input.additionalClassCriteria);
+		}
+		return compute(
+			ComputeConfig.byClassesSearching(input.classRepositories).withClassFilter(classCriteria)
+		);
 	}
 
 	@Override
-	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
-		ClassLoader classLoader,
-		Collection<String> classRepositories,
-		String className,
-		Collection<String> notFoundClasses
+	public Supplier<Map<String, String>> compute(
+		ComputeConfig.FromImportsIntoSources input
 	) {
-		return computeAndAddAllToClassLoader(classLoader, classRepositories, null, className, notFoundClasses);
-	}
+		Collection<String> imports = new HashSet<>();
+		for (String sourceCode : input.sources) {
+			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
+		}
+		Predicate<FileSystemItem> javaClassFilter = (classFile) ->
+			imports.contains(classFile.toJavaClass().getName());
 
-	@Override
-	public Map<String, ClassLoader> computeAndAddAllToClassLoader(
-		ClassLoader classLoader,
-		Collection<String> classRepositories,
-		Collection<String> pathsToBeRefreshed,
-		String className,
-		Collection<String> notFoundClasses
-	) {
-		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
-		if (pathsToBeRefreshed != null) {
-			pathsToBeRefreshedPredicate =  fileSystemItem -> pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
+		if (input.additionalFileFilter != null) {
+			javaClassFilter = javaClassFilter.or(input.additionalFileFilter);
 		}
 
-		Collection<String> notFoundClassClassPaths = new HashSet<>();
-		Predicate<FileSystemItem> criteriaOne = (fileSystemItemCls) -> {
+		return compute(
+			ComputeConfig.forClassRepositories(input.classRepositories)
+			.refreshAllPathsThat(input.pathsToBeRefreshedPredicate)
+			.withFileFilter(javaClassFilter)
+		);
+	}
+
+	@Override
+	public Map<String, ClassLoader> compute(
+		ComputeConfig.AddAllToClassLoader input
+	) {
+		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
+		if (input.pathsToBeRefreshed != null) {
+			pathsToBeRefreshedPredicate =  fileSystemItem -> input.pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
+		}
+
+		Collection<String> classPathsOfClassToBeLoaded = new HashSet<>();
+		Predicate<FileSystemItem> criteria = (fileSystemItemCls) -> {
 			JavaClass javaClass = fileSystemItemCls.toJavaClass();
-			if (javaClass.getName().equals(className)) {
+			if (javaClass.getName().equals(input.nameOfTheClassToBeLoaded)) {
 				String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-				notFoundClassClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+				classPathsOfClassToBeLoaded.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
 				return true;
 			}
 			return false;
 		};
 
-		Collection<String> notFoundClassesClassPaths = new HashSet<>();
-		Predicate<FileSystemItem> criteriaTwo = (fileSystemItemCls) -> {
-			JavaClass javaClass = fileSystemItemCls.toJavaClass();
-			for (String notFoundClass : notFoundClasses) {
-				if (javaClass.getName().equals(notFoundClass)) {
-					String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-					notFoundClassesClassPaths.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
-					return true;
+		Collection<String> classPathsOfClassesRequiredByTheClassToBeLoaded = new HashSet<>();
+		if (!(input.nameOfTheClassesRequiredByTheClassToBeLoaded == null || input.nameOfTheClassesRequiredByTheClassToBeLoaded.isEmpty())) {
+			criteria = criteria.or((fileSystemItemCls) -> {
+				JavaClass javaClass = fileSystemItemCls.toJavaClass();
+				for (String className : input.nameOfTheClassesRequiredByTheClassToBeLoaded) {
+					if (javaClass.getName().equals(className)) {
+						String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
+						classPathsOfClassesRequiredByTheClassToBeLoaded.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+						return true;
+					}
 				}
-			}
-			return false;
-		};
+				return false;
+			});
+		}
 
 		Map<String, String> classPaths = compute(
-			classRepositories,
-			pathsToBeRefreshedPredicate,
-			criteriaOne.or(criteriaTwo)
+			ComputeConfig.forClassRepositories(input.classRepositories)
+			.refreshAllPathsThat(pathsToBeRefreshedPredicate)
+			.withFileFilter(criteria)
 		).get();
 
-		ClassLoader targetClassLoader = classLoader;
+		ClassLoader targetClassLoader = input.classLoader;
 		Collection<String> classPathsToLoad = new HashSet<>();
-		if (!notFoundClassClassPaths.isEmpty()) {
-			String notFoundClassClassPath = notFoundClassClassPaths.stream().findFirst().get();
-			targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundClassClassPath);
+		if (!classPathsOfClassToBeLoaded.isEmpty()) {
+			String classToFindClassClassPath = classPathsOfClassToBeLoaded.stream().findFirst().get();
+			targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, classToFindClassClassPath);
 			if (targetClassLoader == null) {
-				String notFoundComputedClassClassPath = classPaths.get(notFoundClassClassPath);
-				if (!notFoundComputedClassClassPath.equals(notFoundClassClassPath)) {
-					targetClassLoader = ClassLoaders.getClassLoaderOfPath(classLoader, notFoundComputedClassClassPath);
+				String notFoundComputedClassClassPath = classPaths.get(classToFindClassClassPath);
+				if (!notFoundComputedClassClassPath.equals(classToFindClassClassPath)) {
+					targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, notFoundComputedClassClassPath);
 					if (targetClassLoader == null) {
 						classPathsToLoad.add(notFoundComputedClassClassPath);
 					}
@@ -303,13 +234,13 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			}
 		}
 		if (targetClassLoader == null) {
-			targetClassLoader = classLoader;
+			targetClassLoader = input.classLoader;
 		}
 
 		Map<String, ClassLoader> addedClassPathsForClassLoader = new HashMap<>();
 
 		if (!(targetClassLoader instanceof PathScannerClassLoader)) {
-			for (String classPath : notFoundClassesClassPaths) {
+			for (String classPath : classPathsOfClassesRequiredByTheClassToBeLoaded) {
 				classPathsToLoad.add(classPaths.get(classPath));
 			}
 
@@ -317,7 +248,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 				if (!ClassLoaders.addClassPath(
 					targetClassLoader,
 					absolutePath ->
-						pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath),
+						input.pathsToBeRefreshed != null && input.pathsToBeRefreshed.contains(absolutePath),
 					classPath
 				).isEmpty()) {
 					ManagedLoggerRepository.logInfo(getClass()::getName, "Added class path {} to {}", classPath, targetClassLoader.toString());
@@ -329,16 +260,16 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		} else {
 			PathScannerClassLoader pathScannerClassLoader = (PathScannerClassLoader)targetClassLoader;
 			classPathsToLoad = new HashSet<>();
-			if (!notFoundClassClassPaths.isEmpty()) {
-				classPathsToLoad.addAll(notFoundClassClassPaths);
+			if (!classPathsOfClassToBeLoaded.isEmpty()) {
+				classPathsToLoad.addAll(classPathsOfClassToBeLoaded);
 			}
-			if (!notFoundClassesClassPaths.isEmpty()) {
-				classPathsToLoad.addAll(notFoundClassesClassPaths);
+			if (!classPathsOfClassesRequiredByTheClassToBeLoaded.isEmpty()) {
+				classPathsToLoad.addAll(classPathsOfClassesRequiredByTheClassToBeLoaded);
 			}
 			for (String addedClassPath : pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 				classPathsToLoad,
 				absolutePath ->
-					pathsToBeRefreshed != null && pathsToBeRefreshed.contains(absolutePath)
+					input.pathsToBeRefreshed != null && input.pathsToBeRefreshed.contains(absolutePath)
 			)) {
 				addedClassPathsForClassLoader.put(addedClassPath, pathScannerClassLoader);
 			}
@@ -348,21 +279,19 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		Collection<String> classRepositories,
-		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
-		Predicate<FileSystemItem> javaClassFilter
+		ComputeConfig input
 	) {
 		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 			getClassFileCheckingOption()
 		);
-		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate != null? pathsToBeRefreshedPredicate :
+		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = input.pathsToBeRefreshedPredicate != null? input.pathsToBeRefreshedPredicate :
 			fileSystemItem -> false;
 
-		Predicate<FileSystemItem> finalJavaClassFilter = javaClassFilter != null? javaClassFilter :
+		Predicate<FileSystemItem> finalJavaClassFilter = input.javaClassFilter != null? input.javaClassFilter :
 			(fileSystemItem) -> true;
 
 		return compute0(
-			classRepositories,
+			input.classRepositories,
 			null,
 			clsRepositories -> {
 				Collection<FileSystemItem> classPaths = ConcurrentHashMap.newKeySet();
@@ -398,6 +327,9 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate,
 		Function<Collection<String>, Collection<FileSystemItem>> callRepositoriesSupplier
 	) {
+		if (classRepositories == null) {
+			throw new IllegalArgumentException("No class repository has been provided");
+		}
 		Map<String, String> classPaths = new HashMap<>();
 		Collection<FileSystemItem> effectiveClassPaths = callRepositoriesSupplier.apply(classRepositories);
 
@@ -458,4 +390,5 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			instanceId = null;
 		});
 	}
+
 }
