@@ -35,7 +35,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.io.File;
 import java.util.Collection;
@@ -116,9 +115,6 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Supplier<Map<String, String>> compute(
 		ComputeConfig.ByClassesSearching input
 	) {
-		if (input.classRepositories == null) {
-			throw new IllegalArgumentException("No class repository has been provided");
-		}
 		SearchConfig searchConfig = SearchConfig.forPaths(input.classRepositories).by(
 			input.classCriteria
 		).optimizePaths(
@@ -136,9 +132,6 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Supplier<Map<String, String>> compute(
 		ComputeConfig.ByClassesSearching.FromImportsIntoSources input
 	) {
-		if (input.sources == null) {
-			throw new IllegalArgumentException("No source has been provided");
-		}
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : input.sources) {
 			imports.addAll(SourceCodeHandler.extractImports(sourceCode));
@@ -150,7 +143,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			classCriteria = classCriteria.or(input.additionalClassCriteria);
 		}
 		return compute(
-			ComputeConfig.byClassesSearching(input.classRepositories).withClassFilter(classCriteria)
+			new ComputeConfig.ByClassesSearching(input.classRepositories).withClassFilter(classCriteria)
 		);
 	}
 
@@ -170,7 +163,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 
 		return compute(
-			ComputeConfig.forClassRepositories(input.classRepositories)
+			new ComputeConfig(input.classRepositories)
 			.refreshAllPathsThat(input.pathsToBeRefreshedPredicate)
 			.withFileFilter(javaClassFilter)
 		);
@@ -180,12 +173,6 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Map<String, ClassLoader> compute(
 		ComputeConfig.AddAllToClassLoader input
 	) {
-		if (Strings.isEmpty(input.nameOfTheClassToBeLoaded)) {
-			throw new IllegalArgumentException("No class name to be found has been provided");
-		}
-		if (input.classLoader == null) {
-			throw new IllegalArgumentException("No class loader has been provided");
-		}
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
 		if (input.pathsToBeRefreshed != null) {
 			pathsToBeRefreshedPredicate =  fileSystemItem -> input.pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
@@ -218,7 +205,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 
 		Map<String, String> classPaths = compute(
-			ComputeConfig.forClassRepositories(input.classRepositories)
+			new ComputeConfig(input.classRepositories)
 			.refreshAllPathsThat(pathsToBeRefreshedPredicate)
 			.withFileFilter(criteria)
 		).get();
@@ -294,7 +281,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = input.pathsToBeRefreshedPredicate != null? input.pathsToBeRefreshedPredicate :
 			fileSystemItem -> false;
 
-		Predicate<FileSystemItem> finalJavaClassFilter = input.javaClassFilter != null? input.javaClassFilter :
+		Predicate<FileSystemItem> finalJavaClassFilter = input.fileFilter != null? input.fileFilter :
 			(fileSystemItem) -> true;
 
 		return compute0(
