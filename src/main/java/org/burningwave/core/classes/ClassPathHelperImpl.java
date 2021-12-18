@@ -35,6 +35,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.IterableOb
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.SourceCodeHandler;
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.io.File;
 import java.util.Collection;
@@ -179,6 +180,12 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	public Map<String, ClassLoader> compute(
 		ComputeConfig.AddAllToClassLoader input
 	) {
+		if (Strings.isEmpty(input.nameOfTheClassToBeLoaded)) {
+			throw new IllegalArgumentException("No class name to be found has been provided");
+		}
+		if (input.classLoader == null) {
+			throw new IllegalArgumentException("No class loader has been provided");
+		}
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
 		if (input.pathsToBeRefreshed != null) {
 			pathsToBeRefreshedPredicate =  fileSystemItem -> input.pathsToBeRefreshed.contains(fileSystemItem.getAbsolutePath());
