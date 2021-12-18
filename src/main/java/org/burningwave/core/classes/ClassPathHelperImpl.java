@@ -187,7 +187,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 					FileSystemItem.Criteria.forClassTypeFiles(checkFileOption)
 				).optimizePaths(
 					true
-				)
+				).checkForAddedClasses()
 			)
 		) {
 			for (FileSystemItem classPath : result.getClassPaths()) {
