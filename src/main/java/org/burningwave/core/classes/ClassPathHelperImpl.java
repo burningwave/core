@@ -281,7 +281,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Predicate<FileSystemItem> finalPathsToBeRefreshedPredicate = input.pathsToBeRefreshedPredicate != null? input.pathsToBeRefreshedPredicate :
 			fileSystemItem -> false;
 
-		Predicate<FileSystemItem> finalJavaClassFilter = input.javaClassFilter != null? input.javaClassFilter :
+		Predicate<FileSystemItem> finalJavaClassFilter = input.fileFilter != null? input.fileFilter :
 			(fileSystemItem) -> true;
 
 		return compute0(

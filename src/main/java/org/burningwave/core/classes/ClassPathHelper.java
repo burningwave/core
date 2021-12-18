@@ -83,7 +83,7 @@ public interface ClassPathHelper {
 
 		public Collection<String> classRepositories;
 		public Predicate<FileSystemItem> pathsToBeRefreshedPredicate;
-		public Predicate<FileSystemItem> javaClassFilter;
+		public Predicate<FileSystemItem> fileFilter;
 
 		ComputeConfig(Collection<String> classRepositories) {
 			if (classRepositories == null) {
@@ -98,7 +98,7 @@ public interface ClassPathHelper {
 		}
 
 		public ComputeConfig withFileFilter(Predicate<FileSystemItem> javaClassFilter) {
-			this.javaClassFilter = javaClassFilter;
+			this.fileFilter = javaClassFilter;
 			return this;
 		}
 
