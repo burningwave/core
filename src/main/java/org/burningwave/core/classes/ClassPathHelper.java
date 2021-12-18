@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,6 +86,9 @@ public interface ClassPathHelper {
 		public Predicate<FileSystemItem> javaClassFilter;
 
 		ComputeConfig(Collection<String> classRepositories) {
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
 			this.classRepositories = classRepositories;
 		}
 
@@ -98,28 +103,55 @@ public interface ClassPathHelper {
 		}
 
 		public static ComputeConfig forClassRepositories(Collection<String> classRepositories) {
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
 			return new ComputeConfig(classRepositories);
 		}
 
 		public static ByClassesSearching byClassesSearching(Collection<String> classRepositories) {
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
 			return new ByClassesSearching(classRepositories);
 		}
 
 		public static ByClassesSearching.FromImportsIntoSources fromImportsIntoSourcesAndByClassesSearching(
 			Collection<String>sources, Collection<String> classRepositories
 		) {
+			if (sources == null) {
+				throw new IllegalArgumentException("No source has been provided");
+			}
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
 			return new ByClassesSearching.FromImportsIntoSources(sources, classRepositories);
 		}
 
 		public static FromImportsIntoSources fromImportsIntoSources(
 			Collection<String>sources, Collection<String> classRepositories
 		) {
+			if (sources == null) {
+				throw new IllegalArgumentException("No source has been provided");
+			}
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
 			return new FromImportsIntoSources(sources, classRepositories);
 		}
 
 		public static AddAllToClassLoader forAddToClassLoader(
 			ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
 		) {
+			if (classLoader == null) {
+				throw new IllegalArgumentException("No class loader has been provided");
+			}
+			if (classRepositories == null) {
+				throw new IllegalArgumentException("No class repository has been provided");
+			}
+			if (Strings.isEmpty(nameOfTheClassToBeLoaded)) {
+				throw new IllegalArgumentException("No class name to be found has been provided");
+			}
 			return new AddAllToClassLoader(classLoader, classRepositories, nameOfTheClassToBeLoaded);
 		}
 
