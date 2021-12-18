@@ -202,14 +202,14 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			return false;
 		};
 
-		Collection<String> classPathsOfClassesRequiredByTheClassToBeLoaded = new HashSet<>();
+		Collection<String> classPathsOfTheClassesRequiredByTheClassToBeLoaded = new HashSet<>();
 		if (!(input.nameOfTheClassesRequiredByTheClassToBeLoaded == null || input.nameOfTheClassesRequiredByTheClassToBeLoaded.isEmpty())) {
 			criteria = criteria.or((fileSystemItemCls) -> {
 				JavaClass javaClass = fileSystemItemCls.toJavaClass();
 				for (String className : input.nameOfTheClassesRequiredByTheClassToBeLoaded) {
 					if (javaClass.getName().equals(className)) {
 						String classAbsolutePath = fileSystemItemCls.getAbsolutePath();
-						classPathsOfClassesRequiredByTheClassToBeLoaded.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
+						classPathsOfTheClassesRequiredByTheClassToBeLoaded.add(classAbsolutePath.substring(0, classAbsolutePath.lastIndexOf("/" + javaClass.getPath())));
 						return true;
 					}
 				}
@@ -226,11 +226,11 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		ClassLoader targetClassLoader = input.classLoader;
 		Collection<String> classPathsToLoad = new HashSet<>();
 		if (!classPathsOfClassToBeLoaded.isEmpty()) {
-			String classToFindClassClassPath = classPathsOfClassToBeLoaded.stream().findFirst().get();
-			targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, classToFindClassClassPath);
+			String classPathOfTheClassToFind = classPathsOfClassToBeLoaded.stream().findFirst().get();
+			targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, classPathOfTheClassToFind);
 			if (targetClassLoader == null) {
-				String notFoundComputedClassClassPath = classPaths.get(classToFindClassClassPath);
-				if (!notFoundComputedClassClassPath.equals(classToFindClassClassPath)) {
+				String notFoundComputedClassClassPath = classPaths.get(classPathOfTheClassToFind);
+				if (!notFoundComputedClassClassPath.equals(classPathOfTheClassToFind)) {
 					targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, notFoundComputedClassClassPath);
 					if (targetClassLoader == null) {
 						classPathsToLoad.add(notFoundComputedClassClassPath);
@@ -247,7 +247,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		Map<String, ClassLoader> addedClassPathsForClassLoader = new HashMap<>();
 
 		if (!(targetClassLoader instanceof PathScannerClassLoader)) {
-			for (String classPath : classPathsOfClassesRequiredByTheClassToBeLoaded) {
+			for (String classPath : classPathsOfTheClassesRequiredByTheClassToBeLoaded) {
 				classPathsToLoad.add(classPaths.get(classPath));
 			}
 
@@ -270,8 +270,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			if (!classPathsOfClassToBeLoaded.isEmpty()) {
 				classPathsToLoad.addAll(classPathsOfClassToBeLoaded);
 			}
-			if (!classPathsOfClassesRequiredByTheClassToBeLoaded.isEmpty()) {
-				classPathsToLoad.addAll(classPathsOfClassesRequiredByTheClassToBeLoaded);
+			if (!classPathsOfTheClassesRequiredByTheClassToBeLoaded.isEmpty()) {
+				classPathsToLoad.addAll(classPathsOfTheClassesRequiredByTheClassToBeLoaded);
 			}
 			for (String addedClassPath : pathScannerClassLoader.scanPathsAndAddAllByteCodesFound(
 				classPathsToLoad,
