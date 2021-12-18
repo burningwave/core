@@ -81,9 +81,9 @@ public interface ClassPathHelper {
 			ClassCriteria otherClassCriteria);
 
 	@SuppressWarnings("unchecked")
-	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria,  Collection<String>... pathColls);
+	public Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria,  Collection<String>... pathColls);
 
-	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, String... path);
+	public Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria, String... path);
 
 	public Supplier<Map<String, String>> computeFromSources(Collection<String> sources, Collection<String> classRepositories,
 			Predicate<FileSystemItem> pathsToBeRefreshedPredicate,

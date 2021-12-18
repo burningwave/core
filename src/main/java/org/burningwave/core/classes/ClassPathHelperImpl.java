@@ -176,7 +176,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	@SafeVarargs
-	public final Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, Collection<String>... pathColls) {
+	public final Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria, Collection<String>... pathColls) {
 		FileSystemItem.CheckingOption checkFileOption =
 			getClassFileCheckingOption();
 		Collection<String> classPaths = new HashSet<>();
@@ -199,8 +199,8 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 	}
 
 	@Override
-	public Collection<String> searchWithoutTheUseOfCache(ClassCriteria classCriteria, String... path) {
-		return searchWithoutTheUseOfCache(classCriteria, Arrays.asList(path));
+	public Collection<String> computeWithoutTheUseOfCache(ClassCriteria classCriteria, String... path) {
+		return computeWithoutTheUseOfCache(classCriteria, Arrays.asList(path));
 	}
 
 	@Override
