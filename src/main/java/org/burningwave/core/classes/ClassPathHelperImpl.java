@@ -229,14 +229,14 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			String classPathOfTheClassToFind = classPathsOfClassToBeLoaded.stream().findFirst().get();
 			targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, classPathOfTheClassToFind);
 			if (targetClassLoader == null) {
-				String notFoundComputedClassClassPath = classPaths.get(classPathOfTheClassToFind);
-				if (!notFoundComputedClassClassPath.equals(classPathOfTheClassToFind)) {
-					targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, notFoundComputedClassClassPath);
+				String computedClassPath = classPaths.get(classPathOfTheClassToFind);
+				if (!computedClassPath.equals(classPathOfTheClassToFind)) {
+					targetClassLoader = ClassLoaders.getClassLoaderOfPath(input.classLoader, computedClassPath);
 					if (targetClassLoader == null) {
-						classPathsToLoad.add(notFoundComputedClassClassPath);
+						classPathsToLoad.add(computedClassPath);
 					}
 				} else {
-					classPathsToLoad.add(notFoundComputedClassClassPath);
+					classPathsToLoad.add(computedClassPath);
 				}
 			}
 		}
