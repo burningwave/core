@@ -171,7 +171,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Map<String, ClassLoader> compute(
-		Compute.AndlLoadConfig input
+		Compute.AndAddToClassLoaderConfig input
 	) {
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
 		if (input.pathsToBeRefreshed != null) {

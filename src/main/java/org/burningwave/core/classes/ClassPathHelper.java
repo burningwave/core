@@ -77,7 +77,7 @@ public interface ClassPathHelper {
 
 	public Supplier<Map<String, String>> compute(Compute.BySourceImportsConfig input);
 
-	public Map<String, ClassLoader> compute(Compute.AndlLoadConfig input);
+	public Map<String, ClassLoader> compute(Compute.AndAddToClassLoaderConfig input);
 
 	public static interface Compute {
 
@@ -110,20 +110,20 @@ public interface ClassPathHelper {
 
 		}
 
-		public static class AndlLoadConfig {
+		public static class AndAddToClassLoaderConfig {
 			public ClassLoader classLoader;
 			public Collection<String> classRepositories;
 			public Collection<String> pathsToBeRefreshed;
 			public String nameOfTheClassToBeLoaded;
 			public Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded;
 
-			AndlLoadConfig(ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded) {
+			AndAddToClassLoaderConfig(ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded) {
 				this.classLoader = classLoader;
 				this.classRepositories = classRepositories;
 				this.nameOfTheClassToBeLoaded = nameOfTheClassToBeLoaded;
 			}
 
-			public static AndlLoadConfig create(
+			public static AndAddToClassLoaderConfig create(
 				ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
 			) {
 				if (classLoader == null) {
@@ -135,15 +135,15 @@ public interface ClassPathHelper {
 				if (Strings.isEmpty(nameOfTheClassToBeLoaded)) {
 					throw new IllegalArgumentException("No class name to be found has been provided");
 				}
-				return new AndlLoadConfig(classLoader, classRepositories, nameOfTheClassToBeLoaded);
+				return new AndAddToClassLoaderConfig(classLoader, classRepositories, nameOfTheClassToBeLoaded);
 			}
 
-			public AndlLoadConfig setClassesRequiredByTheClassToBeLoaded(Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded) {
+			public AndAddToClassLoaderConfig setClassesRequiredByTheClassToBeLoaded(Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded) {
 				this.nameOfTheClassesRequiredByTheClassToBeLoaded = nameOfTheClassesRequiredByTheClassToBeLoaded;
 				return this;
 			}
 
-			public AndlLoadConfig refreshPaths(Collection<String> pathsToBeRefreshed) {
+			public AndAddToClassLoaderConfig refreshPaths(Collection<String> pathsToBeRefreshed) {
 				this.pathsToBeRefreshed = pathsToBeRefreshed;
 				return this;
 			}
