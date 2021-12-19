@@ -576,7 +576,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-						ComputeConfig.forClassRepositories(
+						ComputeConfig.create(
 							Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
 						).refreshAllPathsThat(fileSystemItem ->
 							fileSystemItem.getAbsolutePath().equals(
@@ -590,7 +590,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-							ComputeConfig.fromImportsIntoSources(
+							ComputeConfig.ByImportsIntoSources.create(
 								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 								classRepositories
 							).withAdditionalFileFilter(classFile ->
@@ -605,7 +605,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-							ComputeConfig.forClassRepositories(
+							ComputeConfig.create(
 								Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
 							).refreshAllPathsThat(fileSystemItem ->
 								fileSystemItem.getAbsolutePath().equals(
@@ -619,7 +619,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					if (classPaths.isEmpty()) {
 						classPaths.addAll(
 							((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-								ComputeConfig.fromImportsIntoSources(
+								ComputeConfig.ByImportsIntoSources.create(
 									sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 									classRepositories
 								).withAdditionalFileFilter(classFile ->

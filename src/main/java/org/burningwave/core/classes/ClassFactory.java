@@ -211,7 +211,7 @@ public interface ClassFactory {
 							whereToFind.add(absolutePathOfCompiledFilesClassPath);
 							classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
 							if (!classPathHelper.compute(
-								ComputeConfig.forAddToClassLoader(classLoader, whereToFind, className)
+								ComputeConfig.AddAllToClassLoader.create(classLoader, whereToFind, className)
 								.setClassesRequiredByTheClassToBeLoaded(notFoundClasses)
 								.refreshPaths(Arrays.asList(absolutePathOfCompiledFilesClassPath))
 							).isEmpty()) {
@@ -237,7 +237,7 @@ public interface ClassFactory {
 						}
 						classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
 						if (!classPathHelper.compute(
-								ComputeConfig.forAddToClassLoader(classLoader, classPaths, className)
+								ComputeConfig.AddAllToClassLoader.create(classLoader, classPaths, className)
 								.setClassesRequiredByTheClassToBeLoaded(notFoundClasses)
 								.refreshPaths(classPathsToBeRefreshed)
 						).isEmpty()) {
