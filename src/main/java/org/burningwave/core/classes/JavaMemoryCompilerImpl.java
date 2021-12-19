@@ -71,7 +71,7 @@ import javax.tools.ToolProvider;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
 import org.burningwave.core.assembler.StaticComponentContainer;
-import org.burningwave.core.classes.ClassPathHelper.ComputeConfig;
+import org.burningwave.core.classes.ClassPathHelper.Compute;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
@@ -576,7 +576,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForPackageName(String packageName) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 					((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-						ComputeConfig.forClassRepositories(
+						Compute.Config.create(
 							Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
 						).refreshAllPathsThat(fileSystemItem ->
 							fileSystemItem.getAbsolutePath().equals(
@@ -590,7 +590,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 				if (classPaths.isEmpty()) {
 					classPaths.addAll(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-							ComputeConfig.fromImportsIntoSources(
+							Compute.BySourceImportsConfig.create(
 								sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 								classRepositories
 							).withAdditionalFileFilter(classFile ->
@@ -605,7 +605,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			Collection<String> findForClassName(Predicate<JavaClass> classPredicate) throws Exception {
 				Collection<String> classPaths = new HashSet<>(
 						((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-							ComputeConfig.forClassRepositories(
+							Compute.Config.create(
 								Arrays.asList(((JavaMemoryCompilerImpl)javaMemoryCompiler).compiledClassesRepository.getAbsolutePath())
 							).refreshAllPathsThat(fileSystemItem ->
 								fileSystemItem.getAbsolutePath().equals(
@@ -619,7 +619,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 					if (classPaths.isEmpty()) {
 						classPaths.addAll(
 							((JavaMemoryCompilerImpl)javaMemoryCompiler).classPathHelper.compute(
-								ComputeConfig.fromImportsIntoSources(
+								Compute.BySourceImportsConfig.create(
 									sources.stream().map(ms -> ms.getContent()).collect(Collectors.toCollection(HashSet::new)),
 									classRepositories
 								).withAdditionalFileFilter(classFile ->

@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.assembler.ComponentSupplier;
-import org.burningwave.core.classes.ClassPathHelper.ComputeConfig;
+import org.burningwave.core.classes.ClassPathHelper.Compute;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
 import org.burningwave.core.function.Executor;
@@ -211,7 +211,7 @@ public interface ClassFactory {
 							whereToFind.add(absolutePathOfCompiledFilesClassPath);
 							classesSearchedInAdditionalClassRepositoriesForClassLoader.addAll(notFoundClasses);
 							if (!classPathHelper.compute(
-								ComputeConfig.forAddToClassLoader(classLoader, whereToFind, className)
+								Compute.AndAddToClassLoaderConfig.create(classLoader, whereToFind, className)
 								.setClassesRequiredByTheClassToBeLoaded(notFoundClasses)
 								.refreshPaths(Arrays.asList(absolutePathOfCompiledFilesClassPath))
 							).isEmpty()) {
@@ -237,7 +237,7 @@ public interface ClassFactory {
 						}
 						classesSearchedInCompilationDependenciesPaths.addAll(notFoundClasses);
 						if (!classPathHelper.compute(
-								ComputeConfig.forAddToClassLoader(classLoader, classPaths, className)
+								Compute.AndAddToClassLoaderConfig.create(classLoader, classPaths, className)
 								.setClassesRequiredByTheClassToBeLoaded(notFoundClasses)
 								.refreshPaths(classPathsToBeRefreshed)
 						).isEmpty()) {

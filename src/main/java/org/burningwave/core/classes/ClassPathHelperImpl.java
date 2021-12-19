@@ -113,7 +113,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		ComputeConfig.ByClassesSearching input
+		Compute.ByClasses.Config input
 	) {
 		SearchConfig searchConfig = SearchConfig.forPaths(input.classRepositories).by(
 			input.classCriteria
@@ -130,7 +130,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		ComputeConfig.ByClassesSearching.FromImportsIntoSources input
+		Compute.ByClasses.AndBySourceImportsConfig input
 	) {
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : input.sources) {
@@ -143,13 +143,13 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 			classCriteria = classCriteria.or(input.additionalClassCriteria);
 		}
 		return compute(
-			new ComputeConfig.ByClassesSearching(input.classRepositories).withClassFilter(classCriteria)
+			new Compute.ByClasses.Config(input.classRepositories).withClassFilter(classCriteria)
 		);
 	}
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		ComputeConfig.FromImportsIntoSources input
+		Compute.BySourceImportsConfig input
 	) {
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : input.sources) {
@@ -163,7 +163,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 
 		return compute(
-			new ComputeConfig(input.classRepositories)
+			new Compute.Config(input.classRepositories)
 			.refreshAllPathsThat(input.pathsToBeRefreshedPredicate)
 			.withFileFilter(javaClassFilter)
 		);
@@ -171,7 +171,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Map<String, ClassLoader> compute(
-		ComputeConfig.AddAllToClassLoader input
+		Compute.AndAddToClassLoaderConfig input
 	) {
 		Predicate<FileSystemItem> pathsToBeRefreshedPredicate = null;
 		if (input.pathsToBeRefreshed != null) {
@@ -205,7 +205,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 		}
 
 		Map<String, String> classPaths = compute(
-			new ComputeConfig(input.classRepositories)
+			new Compute.Config(input.classRepositories)
 			.refreshAllPathsThat(pathsToBeRefreshedPredicate)
 			.withFileFilter(criteria)
 		).get();
@@ -273,7 +273,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		ComputeConfig input
+		Compute.Config input
 	) {
 		FileSystemItem.Criteria classFileFilter = FileSystemItem.Criteria.forClassTypeFiles(
 			getClassFileCheckingOption()
