@@ -75,7 +75,7 @@ public interface ClassPathHelper {
 
 	public Supplier<Map<String, String>> compute(ComputeConfig input);
 
-	public Supplier<Map<String, String>> compute(ComputeConfig.FromImportsIntoSources input);
+	public Supplier<Map<String, String>> compute(ComputeConfig.ByImportsIntoSources input);
 
 	public Map<String, ClassLoader> compute(ComputeConfig.AddAllToClassLoader input);
 
@@ -86,10 +86,14 @@ public interface ClassPathHelper {
 		public Predicate<FileSystemItem> fileFilter;
 
 		ComputeConfig(Collection<String> classRepositories) {
+			this.classRepositories = classRepositories;
+		}
+
+		public static ComputeConfig create(Collection<String> classRepositories) {
 			if (classRepositories == null) {
 				throw new IllegalArgumentException("No class repository has been provided");
 			}
-			this.classRepositories = classRepositories;
+			return new ComputeConfig(classRepositories);
 		}
 
 		public ComputeConfig refreshAllPathsThat(Predicate<FileSystemItem> pathsToBeRefreshedPredicate) {
@@ -100,59 +104,6 @@ public interface ClassPathHelper {
 		public ComputeConfig withFileFilter(Predicate<FileSystemItem> javaClassFilter) {
 			this.fileFilter = javaClassFilter;
 			return this;
-		}
-
-		public static ComputeConfig forClassRepositories(Collection<String> classRepositories) {
-			if (classRepositories == null) {
-				throw new IllegalArgumentException("No class repository has been provided");
-			}
-			return new ComputeConfig(classRepositories);
-		}
-
-		public static ByClassesSearching byClassesSearching(Collection<String> classRepositories) {
-			if (classRepositories == null) {
-				throw new IllegalArgumentException("No class repository has been provided");
-			}
-			return new ByClassesSearching(classRepositories);
-		}
-
-		public static ByClassesSearching.FromImportsIntoSources fromImportsIntoSourcesAndByClassesSearching(
-			Collection<String>sources, Collection<String> classRepositories
-		) {
-			if (sources == null) {
-				throw new IllegalArgumentException("No source has been provided");
-			}
-			if (classRepositories == null) {
-				throw new IllegalArgumentException("No class repository has been provided");
-			}
-			return new ByClassesSearching.FromImportsIntoSources(sources, classRepositories);
-		}
-
-		public static FromImportsIntoSources fromImportsIntoSources(
-			Collection<String>sources, Collection<String> classRepositories
-		) {
-			if (sources == null) {
-				throw new IllegalArgumentException("No source has been provided");
-			}
-			if (classRepositories == null) {
-				throw new IllegalArgumentException("No class repository has been provided");
-			}
-			return new FromImportsIntoSources(sources, classRepositories);
-		}
-
-		public static AddAllToClassLoader forAddToClassLoader(
-			ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
-		) {
-			if (classLoader == null) {
-				throw new IllegalArgumentException("No class loader has been provided");
-			}
-			if (classRepositories == null) {
-				throw new IllegalArgumentException("No class repository has been provided");
-			}
-			if (Strings.isEmpty(nameOfTheClassToBeLoaded)) {
-				throw new IllegalArgumentException("No class name to be found has been provided");
-			}
-			return new AddAllToClassLoader(classLoader, classRepositories, nameOfTheClassToBeLoaded);
 		}
 
 		public static class AddAllToClassLoader {
@@ -168,6 +119,21 @@ public interface ClassPathHelper {
 				this.nameOfTheClassToBeLoaded = nameOfTheClassToBeLoaded;
 			}
 
+			public static AddAllToClassLoader create(
+				ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
+			) {
+				if (classLoader == null) {
+					throw new IllegalArgumentException("No class loader has been provided");
+				}
+				if (classRepositories == null) {
+					throw new IllegalArgumentException("No class repository has been provided");
+				}
+				if (Strings.isEmpty(nameOfTheClassToBeLoaded)) {
+					throw new IllegalArgumentException("No class name to be found has been provided");
+				}
+				return new AddAllToClassLoader(classLoader, classRepositories, nameOfTheClassToBeLoaded);
+			}
+
 			public AddAllToClassLoader setClassesRequiredByTheClassToBeLoaded(Collection<String> nameOfTheClassesRequiredByTheClassToBeLoaded) {
 				this.nameOfTheClassesRequiredByTheClassToBeLoaded = nameOfTheClassesRequiredByTheClassToBeLoaded;
 				return this;
@@ -180,23 +146,35 @@ public interface ClassPathHelper {
 
 		}
 
-		public static class FromImportsIntoSources {
+		public static class ByImportsIntoSources {
 			public Collection<String> sources;
 			public Collection<String> classRepositories;
 			public Predicate<FileSystemItem> pathsToBeRefreshedPredicate;
 			public Predicate<FileSystemItem> additionalFileFilter;
 
-			FromImportsIntoSources(Collection<String> sources, Collection<String> classRepositories) {
+			ByImportsIntoSources(Collection<String> sources, Collection<String> classRepositories) {
 				this.sources = sources;
 				this.classRepositories = classRepositories;
 			}
 
-			public FromImportsIntoSources refreshAllPathsThat(Predicate<FileSystemItem> pathsToBeRefreshedPredicate) {
+			public static ByImportsIntoSources create(
+				Collection<String>sources, Collection<String> classRepositories
+			) {
+				if (sources == null) {
+					throw new IllegalArgumentException("No source has been provided");
+				}
+				if (classRepositories == null) {
+					throw new IllegalArgumentException("No class repository has been provided");
+				}
+				return new ByImportsIntoSources(sources, classRepositories);
+			}
+
+			public ByImportsIntoSources refreshAllPathsThat(Predicate<FileSystemItem> pathsToBeRefreshedPredicate) {
 				this.pathsToBeRefreshedPredicate = pathsToBeRefreshedPredicate;
 				return this;
 			}
 
-			public FromImportsIntoSources withAdditionalFileFilter(Predicate<FileSystemItem> additionalFileFilter) {
+			public ByImportsIntoSources withAdditionalFileFilter(Predicate<FileSystemItem> additionalFileFilter) {
 				this.additionalFileFilter = additionalFileFilter;
 				return this;
 			}
@@ -209,6 +187,25 @@ public interface ClassPathHelper {
 
 			ByClassesSearching(Collection<String> classRepositories) {
 				this.classRepositories = classRepositories;
+			}
+
+			public static ByClassesSearching.FromImportsIntoSources create(
+				Collection<String>sources, Collection<String> classRepositories
+			) {
+				if (sources == null) {
+					throw new IllegalArgumentException("No source has been provided");
+				}
+				if (classRepositories == null) {
+					throw new IllegalArgumentException("No class repository has been provided");
+				}
+				return new ByClassesSearching.FromImportsIntoSources(sources, classRepositories);
+			}
+
+			public static ByClassesSearching create(Collection<String> classRepositories) {
+				if (classRepositories == null) {
+					throw new IllegalArgumentException("No class repository has been provided");
+				}
+				return new ByClassesSearching(classRepositories);
 			}
 
 			public ByClassesSearching refreshPaths(Collection<String> pathsToBeRefreshed) {

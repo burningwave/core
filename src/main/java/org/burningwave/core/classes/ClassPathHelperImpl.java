@@ -149,7 +149,7 @@ class ClassPathHelperImpl implements ClassPathHelper, Component {
 
 	@Override
 	public Supplier<Map<String, String>> compute(
-		ComputeConfig.FromImportsIntoSources input
+		ComputeConfig.ByImportsIntoSources input
 	) {
 		Collection<String> imports = new HashSet<>();
 		for (String sourceCode : input.sources) {
