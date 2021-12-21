@@ -36,6 +36,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 import static org.burningwave.core.assembler.StaticComponentContainer.ThreadSupplier;
 
+import java.io.File;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.HashMap;
@@ -445,7 +446,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 								valueObjects = StaticComponentContainer.SystemProperties.get(placeHolder.split(":")[1]);
 								if (valuesSeparatorForSplitting != null) {
 									valueObjects = ((String)valueObjects).replace(
-										StaticComponentContainer.SystemProperties.get("path.separator"), valuesSeparatorForSplitting
+											File.pathSeparator, valuesSeparatorForSplitting
 									);
 								}
 							}
@@ -787,7 +788,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			BiConsumer<I, Consumer<Consumer<OC>>> action,
 			Integer priority
 		);
-		
+
 
 		<OC> Consumer<Consumer<OC>> buildOutputCollectionHandler(OC output) {
 			Consumer<Consumer<OC>> outputItemsHandler =
@@ -804,7 +805,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 				: null;
 			return outputItemsHandler;
 		}
-		
+
 		void checkAndNotifyTerminationOfIteration(
 			AtomicReference<IterableObjectHelper.TerminateIteration> terminateIterationNotification,
 			IterableObjectHelper.TerminateIteration exc
