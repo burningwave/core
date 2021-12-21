@@ -19,6 +19,21 @@ public class ComponentContainerTest extends BaseTest {
 
 	@Test
 	@Order(1)
+	public void deepClearTestOne() {
+		testDoesNotThrow(() -> {
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
+			ComponentContainer.resetAll();
+			//BackgroundExecutor.waitForTasksEnding();
+			Cache.clear(true);
+			System.gc();
+			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at finish {}", Runtime.getRuntime().totalMemory());
+			//MemoryClassLoader.DebugSupport.logAllInstancesInfo();
+		});
+	}
+
+	@Test
+	@Order(2)
 	public void putPropertyOne() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -35,7 +50,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	@Order(2)
+	@Order(3)
 	public void putPropertyTwo() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -48,7 +63,7 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	@Order(3)
+	@Order(4)
 	public void reInit() {
 		testDoesNotThrow(() -> {
 			getComponentSupplier().reInit();
@@ -58,7 +73,7 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	@Order(4)
+	@Order(5)
 	public void putPropertyThree() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -79,7 +94,7 @@ public class ComponentContainerTest extends BaseTest {
 
 
 	@Test
-	@Order(5)
+	@Order(6)
 	public void resetAndCloseTest() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentSupplier = ComponentContainer.create("burningwave.properties");
@@ -100,7 +115,7 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	@Order(6)
+	@Order(7)
 	public void putPropertyFour() {
 		testDoesNotThrow(() -> {
 			ComponentContainer componentContainer = (getComponentSupplier());
@@ -125,8 +140,8 @@ public class ComponentContainerTest extends BaseTest {
 	}
 
 	@Test
-	@Order(7)
-	public void clearAll() {
+	@Order(8)
+	public void deepClearTestTwo() {
 		testDoesNotThrow(() -> {
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Starting clearAll test", Runtime.getRuntime().totalMemory());
 			org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository.logInfo(getClass()::getName, "Total memory at start {}", Runtime.getRuntime().totalMemory());
