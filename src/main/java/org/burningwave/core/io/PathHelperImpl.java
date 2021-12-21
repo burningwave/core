@@ -39,6 +39,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Resources;
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -231,7 +232,7 @@ class PathHelperImpl implements Component, PathHelper {
 								placeHolderName.split(
 									":"
 								)[1]
-							).split(StaticComponentContainer.SystemProperties.get("path.separator"))
+							).split(File.pathSeparator)
 						);
 					} else {
 						placeHolderPaths = getPaths(placeHolderName);

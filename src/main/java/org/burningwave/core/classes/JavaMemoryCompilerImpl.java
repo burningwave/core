@@ -70,7 +70,6 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
-import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.ClassPathHelper.Compute;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
@@ -568,7 +567,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 						return;
 					}
 					String classPath = Paths.clean(path);
-					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + StaticComponentContainer.SystemProperties.get("path.separator"));
+					options.put("-classpath", Optional.ofNullable(options.get("-classpath")).orElse("") + classPath + File.pathSeparator);
 					classPaths.add(classPath);
 				}
 			}
