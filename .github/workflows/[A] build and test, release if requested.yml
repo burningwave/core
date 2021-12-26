@@ -30,7 +30,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-      - name: Build and test with final version JDK
+      - name: Build and test
         run: mvn -B clean test -DskipTests=false --file pom.xml
         
         
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 15
-        uses: actions/setup-java@v2.4.0
+        uses: actions/setup-java@v2.5.0
         with:
           java-version: 15
           distribution: 'zulu'

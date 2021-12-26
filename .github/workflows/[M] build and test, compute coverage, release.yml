@@ -30,12 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v2.4.0
+        uses: actions/setup-java@v2.5.0
         with:
           java-version: ${{ matrix.java }}
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
-      - name: Build and test with final version JDK
+      - name: Build and test with
         run: mvn -B clean test -DskipTests=false --file pom.xml
         
   test-and-compute-coverage:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2.4.0
+      - uses: actions/setup-java@v2.5.0
         with:
           java-version: 8
           distribution: 'zulu'
@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 15
-        uses: actions/setup-java@v2.4.0
+        uses: actions/setup-java@v2.5.0
         with:
           java-version: 15
           distribution: 'zulu'
