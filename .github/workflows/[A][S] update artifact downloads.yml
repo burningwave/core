@@ -1,8 +1,14 @@
 name: Update artifact downloads
 
 on:
-  schedule:
-    - cron: "0 5 31 2 ?"
+  push:
+    branches:
+      - master
+    paths: 
+      - ".github/workflows/update artifact downloads.yml"
+
+#on:
+#  schedule:
 #    - cron: "30 0 21 * *"
 
 jobs:
