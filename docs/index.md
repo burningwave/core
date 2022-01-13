@@ -15,8 +15,6 @@
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/burningwave/core)](https://github.com/burningwave/core/issues?q=is%3Aissue+is%3Aclosed)
 
-[comment]: [![Artifact downloads](https://burningwave.herokuapp.com/miscellaneous-services/stats/total-downloads-badge?artifact-id=core&type=svgg)](https://www.burningwave.org/artifact-downloads/?show-monthly-trend-chart=false)
-
 [![Artifact downloads](https://burningwave.herokuapp.com/miscellaneous-services/stats/total-downloads-badge?artifact-id=core&type=svgg)](https://www.burningwave.org/artifact-downloads/?show-monthly-trend-chart=false)
 [![Repository dependents](https://badgen.net/github/dependents-repo/burningwave/core)](https://github.com/burningwave/core/network/dependents)
 
