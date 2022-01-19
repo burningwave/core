@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Component;
@@ -78,13 +80,28 @@ public class StaticComponentContainer {
 
 		}
 
+		public static void setFileName(String name) {
+			if (name == null || name.isEmpty()) {
+				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
+			}
+			Value.FILE_NAME = name;
+		}
+
+		public static void addValues(Map<?, ?> values) {
+			if (values == null) {
+				throw new IllegalArgumentException("Value map of the configuration cannot be null");
+			}
+			VALUES.add(values);
+		}
+
 		public static class Value {
 
-			public static String FILE_NAME = "burningwave.static.properties";
+			private static String FILE_NAME = "burningwave.static.properties";
 
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
+		private static Collection<Map<?, ?>> VALUES;
 
 		static {
 			Map<String, Object> defaultValues =  new HashMap<>();
@@ -149,6 +166,7 @@ public class StaticComponentContainer {
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+			VALUES = ConcurrentHashMap.newKeySet();
 		}
 	}
 
@@ -201,7 +219,8 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
 			String configFileName = Configuration.Value.FILE_NAME;
-			java.util.Properties propertiesFromConfigurationFile = loadPropertiesFromFile(configFileName);
+			Configuration.VALUES = Collections.unmodifiableCollection(Configuration.VALUES);
+			java.util.Properties propertiesFromConfigurationFile = loadProperties(configFileName, Configuration.VALUES);
 			properties.putAll(propertiesFromConfigurationFile);
 			adjustConfigurationValues(properties);
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {
@@ -494,15 +513,15 @@ public class StaticComponentContainer {
 	}
 
 
-	private static java.util.Properties loadPropertiesFromFile(String fileName) throws IOException, ParseException {
+	private static java.util.Properties loadProperties(String fileName, Collection<Map<?, ?>> otherConfigurationValues) throws IOException, ParseException {
 		Set<ClassLoader> classLoaders = new HashSet<>();
 		classLoaders.add(StaticComponentContainer.class.getClassLoader());
 		classLoaders.add(Thread.currentThread().getContextClassLoader());
-
 		return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
 			fileName,
-			"priority-of-this-configuration-file",
-			classLoaders.toArray(new ClassLoader[classLoaders.size()])
+			"priority-of-this-configuration",
+			classLoaders,
+			!otherConfigurationValues.isEmpty() ? otherConfigurationValues.toArray(new Map[otherConfigurationValues.size()]) : null
 		);
 	}
 
