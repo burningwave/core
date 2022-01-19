@@ -93,7 +93,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			if (name == null || name.isEmpty()) {
 				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
 			}
-			Value.FILE_NAME = name;
+			try {
+				FILE_NAME.put("file-name", name);
+			} catch (UnsupportedOperationException exc) {
+				throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+			}
 		}
 
 		public static void addValues(Map<?, ?> values) {
@@ -103,14 +107,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			VALUES.add(values);
 		}
 
-		public static class Value {
-
-			private static String FILE_NAME = "burningwave.properties";
-
-		}
-
+		private static Map<String, String> FILE_NAME;
 		public final static Map<String, Object> DEFAULT_VALUES;
-
 		private static Collection<Map<?, ?>> VALUES;
 
 		static {
@@ -127,6 +125,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
 			);
 
+			FILE_NAME = new ConcurrentHashMap<>();
+			FILE_NAME.put("file-name", "burningwave.properties");
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			VALUES = ConcurrentHashMap.newKeySet();
 		}
@@ -713,7 +713,12 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 	private static class Holder {
-		private static final ComponentContainer INSTANCE = ComponentContainer.create(Configuration.Value.FILE_NAME).markAsUndestroyable();
+		private static final ComponentContainer INSTANCE;
+
+		static {
+			Configuration.FILE_NAME = Collections.unmodifiableMap(Configuration.FILE_NAME);
+			INSTANCE = ComponentContainer.create(Configuration.FILE_NAME.get("file-name")).markAsUndestroyable();
+		}
 
 		private static ComponentContainer getComponentContainerInstance() {
 			return INSTANCE;
