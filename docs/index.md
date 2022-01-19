@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1612036381)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1718203374)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1612036381)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1718203374)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -1299,7 +1299,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
 If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.ComponentContainer.Configuration.setFileName` before using the component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method `org.burningwave.core.assembler.ComponentContainer.Configuration.setFileName` before using the component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
