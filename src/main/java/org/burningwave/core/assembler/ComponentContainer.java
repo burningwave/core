@@ -89,13 +89,29 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 		}
 
+		public static void setFileName(String name) {
+			if (name == null || name.isEmpty()) {
+				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
+			}
+			Value.FILE_NAME = name;
+		}
+
+		public static void addValues(Map<?, ?> values) {
+			if (values == null) {
+				throw new IllegalArgumentException("Value map of the configuration cannot be null");
+			}
+			VALUES.add(values);
+		}
+
 		public static class Value {
 
-			public static String FILE_NAME = "burningwave.properties";
+			private static String FILE_NAME = "burningwave.properties";
 
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
+
+		private static Collection<Map<?, ?>> VALUES;
 
 		static {
 			Map<String, Object> defaultValues = new HashMap<>();
@@ -112,6 +128,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
+			VALUES = ConcurrentHashMap.newKeySet();
 		}
 	}
 
@@ -146,8 +163,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					classLoaders.add(Thread.currentThread().getContextClassLoader());
 					java.util.Properties config = io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
 						configFileName,
-						"priority-of-this-configuration-file",
-						classLoaders.toArray(new java.lang.ClassLoader[classLoaders.size()])
+						"priority-of-this-configuration",
+						classLoaders,
+						!Configuration.VALUES.isEmpty() ? Configuration.VALUES.toArray(new Map[Configuration.VALUES.size()]) : null
 					);
 					if (config.isEmpty()) {
 						ManagedLoggerRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
