@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,8 +56,6 @@ import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 import org.burningwave.core.iterable.Properties;
 import org.burningwave.core.iterable.Properties.Event;
-
-import io.github.toolfactory.jvm.Driver;
 
 
 public class StaticComponentContainer {
@@ -84,22 +83,25 @@ public class StaticComponentContainer {
 			if (name == null || name.isEmpty()) {
 				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
 			}
-			Value.FILE_NAME = name;
+			try {
+				FILE_NAME.put("file-name", name);
+			} catch (UnsupportedOperationException exc) {
+				throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+			}
 		}
 
 		public static void addValues(Map<?, ?> values) {
 			if (values == null) {
 				throw new IllegalArgumentException("Value map of the configuration cannot be null");
 			}
-			VALUES.add(values);
+			try {
+				VALUES.add(new LinkedHashMap<>(values));
+			} catch (UnsupportedOperationException exc) {
+				throw new UnsupportedOperationException("Cannot add values after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+			}
 		}
 
-		public static class Value {
-
-			private static String FILE_NAME = "burningwave.static.properties";
-
-		}
-
+		private static Map<String, String> FILE_NAME;
 		public final static Map<String, Object> DEFAULT_VALUES;
 		private static Collection<Map<?, ?>> VALUES;
 
@@ -165,6 +167,8 @@ public class StaticComponentContainer {
 				false
 			);
 
+			FILE_NAME = new ConcurrentHashMap<>();
+			FILE_NAME.put("file-name", "burningwave.static.properties");
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			VALUES = ConcurrentHashMap.newKeySet();
 		}
@@ -218,7 +222,8 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
 			properties.putAll(Configuration.DEFAULT_VALUES);
-			String configFileName = Configuration.Value.FILE_NAME;
+			Configuration.FILE_NAME = Collections.unmodifiableMap(Configuration.FILE_NAME);
+			String configFileName = Configuration.FILE_NAME.get("file-name");
 			Configuration.VALUES = Collections.unmodifiableCollection(Configuration.VALUES);
 			java.util.Properties propertiesFromConfigurationFile = loadProperties(configFileName, Configuration.VALUES);
 			properties.putAll(propertiesFromConfigurationFile);
@@ -298,7 +303,7 @@ public class StaticComponentContainer {
 			IterableObjectHelper = org.burningwave.core.iterable.IterableObjectHelper.create(GlobalProperties);
 			String driverClassName = IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.JVM_DRIVER_TYPE));
 			if (driverClassName != null) {
-				Driver = Executor.get(() -> (Driver)StaticComponentContainer.class.getClassLoader().loadClass(
+				Driver = Executor.get(() -> (io.github.toolfactory.jvm.Driver)StaticComponentContainer.class.getClassLoader().loadClass(
 					driverClassName
 				).getDeclaredConstructor().newInstance());
 				if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.JVM_DRIVER_INIT)))) {
