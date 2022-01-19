@@ -48,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.41.2</version>
+    <version>12.42.0</version>
 </dependency>
 ```
 
@@ -57,13 +57,13 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>jvm-driver</artifactId>
-    <version>6.7.1</version>
+    <version>6.7.2</version>
 </dependency>
 
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.41.2</version>
+    <version>12.42.0</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
@@ -1142,7 +1142,7 @@ public class UseOfStaticComponentsExample {
 ```
 ### <a name="static-components-configuration-file"></a>Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Value.FILE_NAME` before using the static component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method  `org.burningwave.core.assembler.StaticComponentContainer.Configuration.setFileName` before using the static component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
 	true
@@ -1224,7 +1224,7 @@ managed-logger.repository.logging.warn.disabled-for=\
 modules.export-all-to-all=\
 	true
 #mandatory if more burningwave.static.properties file are in the class paths
-priority-of-this-configuration-file=0
+priority-of-this-configuration=0
 synchronizer.all-threads-monitoring.enabled=\
 	false
 synchronizer.all-threads-monitoring.interval=\
@@ -1299,7 +1299,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
 If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration-file` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.ComponentContainer.Configuration.Value.FILE_NAME` before using the component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file by setting the field `org.burningwave.core.assembler.ComponentContainer.Configuration.setFileName` before using the component container. **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
@@ -1433,7 +1433,7 @@ paths.main-class-paths.extension=\
 paths.main-class-repositories=\
 	//${system.properties:java.home}/jmods//children:.*?\.jmod;
 #mandatory if more burningwave.properties file are in the class paths
-priority-of-this-configuration-file=0
+priority-of-this-configuration=0
 ```
 **If in your custom burningwave.properties file one of this default properties is not found, the relative default value here in the box above is assumed**.
 
