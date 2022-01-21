@@ -90,14 +90,19 @@ public class StaticComponentContainer {
 			}
 		}
 
-		public static void addValues(Map<?, ?> values) {
-			if (values == null) {
-				throw new IllegalArgumentException("Value map of the configuration cannot be null");
+		public static void add(Map<?, ?>... configurations) {
+			if (configurations == null || configurations.length < 1) {
+				throw new IllegalArgumentException("Configuration map cannot be null");
 			}
 			try {
-				VALUES.add(new LinkedHashMap<>(values));
+				for (Map<?, ?> configuration : configurations) {
+					if (configuration == null) {
+						throw new IllegalArgumentException("Configuration map cannot be null");
+					}
+					VALUES.add(new LinkedHashMap<>(configuration));
+				}
 			} catch (UnsupportedOperationException exc) {
-				throw new UnsupportedOperationException("Cannot add values after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+				throw new UnsupportedOperationException("Cannot add configuration map after that the " + StaticComponentContainer.class.getSimpleName() + " has been initialized");
 			}
 		}
 

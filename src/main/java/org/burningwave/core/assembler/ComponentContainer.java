@@ -40,11 +40,14 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 import static org.burningwave.core.assembler.StaticComponentContainer.Synchronizer;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -100,11 +103,16 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			}
 		}
 
-		public static void addValues(Map<?, ?> values) {
-			if (values == null) {
-				throw new IllegalArgumentException("Value map of the configuration cannot be null");
+		public static void add(Map<?, ?>... configurations) {
+			if (configurations == null || configurations.length < 1) {
+				throw new IllegalArgumentException("Configuration map cannot be null");
 			}
-			VALUES.add(values);
+			for (Map<?, ?> configuration : configurations) {
+				if (configuration == null) {
+					throw new IllegalArgumentException("Configuration map cannot be null");
+				}
+				VALUES.add(new LinkedHashMap<>(configuration));
+			}
 		}
 
 		private static Map<String, String> FILE_NAME;
@@ -183,7 +191,20 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public final static ComponentContainer create(Map<?, ?> properties) {
 		try {
-			return new ComponentContainer(() -> properties).init();
+			return new ComponentContainer(() -> {
+				try {
+					Map<?, ?>[] configurations = !Configuration.VALUES.isEmpty() ? Configuration.VALUES.toArray(new Map[Configuration.VALUES.size() + 1]) : new Map[1];
+					configurations[configurations.length - 1] = properties;
+					return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
+						"///",
+						"priority-of-this-configuration",
+						null,
+						configurations
+					);
+				} catch (IOException | ParseException exc) {
+					return Driver.throwException(exc);
+				}
+			}).init();
 		} catch (Throwable exc){
 			ManagedLoggerRepository.logError(() -> ComponentContainer.class.getName(), "Exception while creating  " + ComponentContainer.class.getSimpleName() , exc);
 			return Driver.throwException(exc);
