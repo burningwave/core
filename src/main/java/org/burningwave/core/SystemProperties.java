@@ -56,10 +56,13 @@ public class SystemProperties {
 		return systemProperties.put(key, value);
 	}
 
-	public synchronized SystemProperties refresh() {
-		systemProperties.clear();
-		for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
-			systemProperties.put((String)entry.getKey(), (String)entry.getValue());
+	public SystemProperties refresh() {
+		java.util.Properties properties;
+		synchronized (properties = System.getProperties()) {
+			systemProperties.clear();
+			for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+				systemProperties.put((String)entry.getKey(), (String)entry.getValue());
+			}
 		}
 		return this;
 	}
