@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths: 
-      - ".github/workflows/[A][S] update artifact downloads.yml"
+      - ".github/workflows/[A][S] update artifact downloads.**"
 
 #on:
 #  schedule:
@@ -28,8 +28,6 @@ jobs:
           if ! [ -s changelog.txt ]; then
              sed -r -i "s%format=svg%format=svgg%" ./README.md;
           fi
-          ls -l
           rm changelog.txt     
-          ls -l
           git commit -am "Artifact downloads automatic update"
           git push
