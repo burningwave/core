@@ -27,6 +27,7 @@ jobs:
           sed -i "s/format=svgggggggggggg/format=svg/w changelog.txt" ./README.md
           if ! [ -s changelog.txt ]; then
              sed -r -i "s%format=svg%format=svgg%" ./README.md;
-          fi          
+          fi
+          rm changelog.txt     
           git commit -am "Artifact downloads automatic update"
           git push
