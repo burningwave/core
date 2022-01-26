@@ -24,9 +24,9 @@ jobs:
           git config user.name "Burningwave"
           git config user.email "info@burningwave.org"
           git pull origin ${{github.ref}}
-          sed -i "s/type=svgggggggggggg/type=svg/w changelog.txt" ./README.md
+          sed -i "s/format=svgggggggggggg/format=svg/w changelog.txt" ./README.md
           if ! [ -s changelog.txt ]; then
-             sed -r -i "s%type=svg%type=svgg%" ./README.md;
+             sed -r -i "s%format=svg%format=svgg%" ./README.md;
           fi          
           git commit -am "Artifact downloads automatic update"
           git push
