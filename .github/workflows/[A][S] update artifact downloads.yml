@@ -5,7 +5,7 @@ on:
     branches:
       - master
     paths: 
-      - ".github/workflows/[A][S] update artifact downloads.yml"
+      - ".github/workflows/**"
 
 #on:
 #  schedule:
