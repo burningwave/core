@@ -79,103 +79,106 @@ public class StaticComponentContainer {
 
 		}
 
-		public static void setFileName(String name) {
-			if (name == null || name.isEmpty()) {
-				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
-			}
-			try {
-				FILE_NAME.put("file-name", name);
-			} catch (UnsupportedOperationException exc) {
-				throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
-			}
-		}
+		public static class Default {
 
-		public static void add(Map<?, ?>... configurations) {
-			if (configurations == null || configurations.length < 1) {
-				throw new IllegalArgumentException("Configuration map cannot be null");
-			}
-			try {
-				for (Map<?, ?> configuration : configurations) {
-					if (configuration == null) {
-						throw new IllegalArgumentException("Configuration map cannot be null");
-					}
-					VALUES.add(new LinkedHashMap<>(configuration));
+			private static Map<String, String> FILE_NAME;
+			private final static Map<String, Object> VALUES;
+			private static Collection<Map<?, ?>> ADDITIONAL_VALUES;
+
+			static {
+				Map<String, Object> defaultValues =  new HashMap<>();
+
+				defaultValues.put(
+					Key.GROUP_NAME_FOR_NAMED_ELEMENTS,
+					"Burningwave"
+				);
+
+				defaultValues.put(Key.BANNER_HIDE, false);
+
+				defaultValues.put(Key.BANNER_FILE, "org/burningwave/banner.bwb");
+
+				defaultValues.put(
+					Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED,
+					false
+				);
+
+				defaultValues.put(
+					Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
+					90000
+				);
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED,
+					true
+				);
+
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED,
+					300000
+				);
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL,
+					30000
+				);
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
+					"log only"
+				);
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
+					"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED +"}"
+				);
+
+				defaultValues.put(
+					Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED,
+					false
+				);
+
+				if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
+					defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
 				}
-			} catch (UnsupportedOperationException exc) {
-				throw new UnsupportedOperationException("Cannot add configuration map after that the " + StaticComponentContainer.class.getSimpleName() + " has been initialized");
-			}
-		}
 
-		private static Map<String, String> FILE_NAME;
-		public final static Map<String, Object> DEFAULT_VALUES;
-		private static Collection<Map<?, ?>> VALUES;
+				defaultValues.put(
+					Key.JVM_DRIVER_INIT,
+					false
+				);
 
-		static {
-			Map<String, Object> defaultValues =  new HashMap<>();
-
-			defaultValues.put(
-				Key.GROUP_NAME_FOR_NAMED_ELEMENTS,
-				"Burningwave"
-			);
-
-			defaultValues.put(Key.BANNER_HIDE, false);
-
-			defaultValues.put(Key.BANNER_FILE, "org/burningwave/banner.bwb");
-
-			defaultValues.put(
-				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_ENABLED,
-				false
-			);
-
-			defaultValues.put(
-				Key.SYNCHRONIZER_ALL_THREADS_MONITORING_INTERVAL,
-				90000
-			);
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED,
-				true
-			);
-
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED,
-				300000
-			);
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_INTERVAL,
-				30000
-			);
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_PROBABLE_DEAD_LOCKED_TASKS_HANDLING_POLICY,
-				"log only"
-			);
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED,
-				"${" + Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED +"}"
-			);
-
-			defaultValues.put(
-				Key.BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_LOGGER_ENABLED,
-				false
-			);
-
-			if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
-				defaultValues.put(Key.MODULES_EXPORT_ALL_TO_ALL, true);
+				FILE_NAME = new ConcurrentHashMap<>();
+				FILE_NAME.put("file-name", "burningwave.static.properties");
+				VALUES = Collections.unmodifiableMap(defaultValues);
+				ADDITIONAL_VALUES = ConcurrentHashMap.newKeySet();
 			}
 
-			defaultValues.put(
-				Key.JVM_DRIVER_INIT,
-				false
-			);
+			public static void setFileName(String name) {
+				if (name == null || name.isEmpty()) {
+					throw new IllegalArgumentException("The name of the configuration file cannot be empty");
+				}
+				try {
+					FILE_NAME.put("file-name", name);
+				} catch (UnsupportedOperationException exc) {
+					throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+				}
+			}
 
-			FILE_NAME = new ConcurrentHashMap<>();
-			FILE_NAME.put("file-name", "burningwave.static.properties");
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-			VALUES = ConcurrentHashMap.newKeySet();
+			public static void add(Map<?, ?>... configurations) {
+				if (configurations == null || configurations.length < 1) {
+					throw new IllegalArgumentException("Configuration map cannot be null");
+				}
+				try {
+					for (Map<?, ?> configuration : configurations) {
+						if (configuration == null) {
+							throw new IllegalArgumentException("Configuration map cannot be null");
+						}
+						ADDITIONAL_VALUES.add(new LinkedHashMap<>(configuration));
+					}
+				} catch (UnsupportedOperationException exc) {
+					throw new UnsupportedOperationException("Cannot add configuration map after that the " + StaticComponentContainer.class.getSimpleName() + " has been initialized");
+				}
+			}
 		}
 	}
 
@@ -226,11 +229,11 @@ public class StaticComponentContainer {
 			properties.putAll(org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.ManagedLogger.Repository.Configuration.DEFAULT_VALUES);
 			properties.putAll(org.burningwave.core.concurrent.Thread.Supplier.Configuration.DEFAULT_VALUES);
-			properties.putAll(Configuration.DEFAULT_VALUES);
-			Configuration.FILE_NAME = Collections.unmodifiableMap(Configuration.FILE_NAME);
-			String configFileName = Configuration.FILE_NAME.get("file-name");
-			Configuration.VALUES = Collections.unmodifiableCollection(Configuration.VALUES);
-			java.util.Properties propertiesFromConfigurationFile = loadProperties(configFileName, Configuration.VALUES);
+			properties.putAll(Configuration.Default.VALUES);
+			Configuration.Default.FILE_NAME = Collections.unmodifiableMap(Configuration.Default.FILE_NAME);
+			String configFileName = Configuration.Default.FILE_NAME.get("file-name");
+			Configuration.Default.ADDITIONAL_VALUES = Collections.unmodifiableCollection(Configuration.Default.ADDITIONAL_VALUES);
+			java.util.Properties propertiesFromConfigurationFile = loadProperties(configFileName, Configuration.Default.ADDITIONAL_VALUES);
 			properties.putAll(propertiesFromConfigurationFile);
 			adjustConfigurationValues(properties);
 			GlobalPropertiesListener = new org.burningwave.core.iterable.Properties.Listener() {

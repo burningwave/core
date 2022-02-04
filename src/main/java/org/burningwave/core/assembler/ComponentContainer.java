@@ -92,51 +92,54 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 		}
 
-		public static void setFileName(String name) {
-			if (name == null || name.isEmpty()) {
-				throw new IllegalArgumentException("The name of the configuration file cannot be empty");
-			}
-			try {
-				FILE_NAME.put("file-name", name);
-			} catch (UnsupportedOperationException exc) {
-				throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
-			}
-		}
+		public static class Default {
 
-		public static void add(Map<?, ?>... configurations) {
-			if (configurations == null || configurations.length < 1) {
-				throw new IllegalArgumentException("Configuration map cannot be null");
+			private static Map<String, String> FILE_NAME;
+			private final static Map<String, Object> VALUES;
+			private static Collection<Map<?, ?>> ADDITIONAL_VALUES;
+
+			static {
+				Map<String, Object> defaultValues = new HashMap<>();
+
+				defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					Arrays.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					SearchResult.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+				);
+				defaultValues.put(
+					Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,
+					ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
+				);
+
+				FILE_NAME = new ConcurrentHashMap<>();
+				FILE_NAME.put("file-name", "burningwave.properties");
+				VALUES = Collections.unmodifiableMap(defaultValues);
+				ADDITIONAL_VALUES = ConcurrentHashMap.newKeySet();
 			}
-			for (Map<?, ?> configuration : configurations) {
-				if (configuration == null) {
+
+			public static void setFileName(String name) {
+				if (name == null || name.isEmpty()) {
+					throw new IllegalArgumentException("The name of the configuration file cannot be empty");
+				}
+				try {
+					FILE_NAME.put("file-name", name);
+				} catch (UnsupportedOperationException exc) {
+					throw new UnsupportedOperationException("Cannot set file name after that the " + StaticComponentContainer.class.getSimpleName() + " class has been initialized");
+				}
+			}
+
+			public static void add(Map<?, ?>... configurations) {
+				if (configurations == null || configurations.length < 1) {
 					throw new IllegalArgumentException("Configuration map cannot be null");
 				}
-				VALUES.add(new LinkedHashMap<>(configuration));
+				for (Map<?, ?> configuration : configurations) {
+					if (configuration == null) {
+						throw new IllegalArgumentException("Configuration map cannot be null");
+					}
+					ADDITIONAL_VALUES.add(new LinkedHashMap<>(configuration));
+				}
 			}
-		}
-
-		private static Map<String, String> FILE_NAME;
-		public final static Map<String, Object> DEFAULT_VALUES;
-		private static Collection<Map<?, ?>> VALUES;
-
-		static {
-			Map<String, Object> defaultValues = new HashMap<>();
-
-			defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				Arrays.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				SearchResult.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-			);
-			defaultValues.put(
-				Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,
-				ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
-			);
-
-			FILE_NAME = new ConcurrentHashMap<>();
-			FILE_NAME.put("file-name", "burningwave.properties");
-			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
-			VALUES = ConcurrentHashMap.newKeySet();
 		}
 	}
 
@@ -173,7 +176,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 						configFileName,
 						"priority-of-this-configuration",
 						classLoaders,
-						!Configuration.VALUES.isEmpty() ? Configuration.VALUES.toArray(new Map[Configuration.VALUES.size()]) : null
+						!Configuration.Default.ADDITIONAL_VALUES.isEmpty() ? Configuration.Default.ADDITIONAL_VALUES.toArray(new Map[Configuration.Default.ADDITIONAL_VALUES.size()]) : null
 					);
 					if (config.isEmpty()) {
 						ManagedLoggerRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
@@ -193,7 +196,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		try {
 			return new ComponentContainer(() -> {
 				try {
-					Map<?, ?>[] configurations = !Configuration.VALUES.isEmpty() ? Configuration.VALUES.toArray(new Map[Configuration.VALUES.size() + 1]) : new Map[1];
+					Map<?, ?>[] configurations = !Configuration.Default.ADDITIONAL_VALUES.isEmpty() ? Configuration.Default.ADDITIONAL_VALUES.toArray(new Map[Configuration.Default.ADDITIONAL_VALUES.size() + 1]) : new Map[1];
 					configurations[configurations.length - 1] = properties;
 					return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
 						"///",
@@ -219,7 +222,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		this.components = null;
 		Properties config = new Properties();
 		TreeMap<Object, Object> defaultProperties = new TreeMap<>();
-		defaultProperties.putAll(Configuration.DEFAULT_VALUES);
+		defaultProperties.putAll(Configuration.Default.VALUES);
 		defaultProperties.putAll(CodeExecutor.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(PathHelper.Configuration.DEFAULT_VALUES);
 		defaultProperties.putAll(JavaMemoryCompiler.Configuration.DEFAULT_VALUES);
@@ -737,8 +740,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		private static final ComponentContainer INSTANCE;
 
 		static {
-			Configuration.FILE_NAME = Collections.unmodifiableMap(Configuration.FILE_NAME);
-			INSTANCE = ComponentContainer.create(Configuration.FILE_NAME.get("file-name")).markAsUndestroyable();
+			Configuration.Default.FILE_NAME = Collections.unmodifiableMap(Configuration.Default.FILE_NAME);
+			INSTANCE = ComponentContainer.create(Configuration.Default.FILE_NAME.get("file-name")).markAsUndestroyable();
 		}
 
 		private static ComponentContainer getComponentContainerInstance() {

@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1751230502)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1796746368)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1751230502)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1796746368)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -48,7 +48,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.43.1</version>
+    <version>12.45.0</version>
 </dependency>
 ```
 
@@ -57,13 +57,13 @@ By default Burningwave Core uses the dynamic driver supplied by the [**ToolFacto
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>jvm-driver</artifactId>
-    <version>6.7.4</version>
+    <version>6.8.2</version>
 </dependency>
 
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.43.1</version>
+    <version>12.45.0</version>
     <exclusions>
         <exclusion>
             <groupId>io.github.toolfactory</groupId>
@@ -1142,7 +1142,7 @@ public class UseOfStaticComponentsExample {
 ```
 ### <a name="static-components-configuration-file"></a>Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method  `org.burningwave.core.assembler.StaticComponentContainer.Configuration.setFileName` before using the static component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method  `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Default.setFileName` before using the static component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
 	true
@@ -1299,7 +1299,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
 If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method `org.burningwave.core.assembler.ComponentContainer.Configuration.setFileName` before using the component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method `org.burningwave.core.assembler.ComponentContainer.Configuration.Default.setFileName` before using the component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
