@@ -36,9 +36,7 @@
 
 	<name>Burningwave Core</name>
 	<description>
-		An advanced and highly optimized Java building frameworks library: it is useful for scanning 
-		class paths, generating classes at runtime, facilitating the use of reflection, scanning 
-		the filesystem, executing stringified code and much more...
+		An advanced and highly optimized Java building frameworks library: it is useful for scanning class paths, generating classes at runtime, facilitating the use of reflection, scanning the filesystem, executing stringified code and much more...
 	</description>
 	<url>https://burningwave.github.io/core/</url>
 
@@ -271,6 +269,7 @@
 					<useModulePath>false</useModulePath>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>${maven-jar-plugin.version}</version>
@@ -281,9 +280,23 @@
 					</excludes>
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
-						<manifestEntries>
+						<manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        	<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+ 						<manifestEntries>
 							<built-by>Burningwave</built-by>
-							<Bundle-Vendor>ToolFactory (Alessio Perrotta, Roberto Gentili)</Bundle-Vendor>
+							<Bundle-Category>Framework</Bundle-Category>
+                            <Bundle-License>https://github.com/burningwave/core/blob/master/LICENSE</Bundle-License>
+                            <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+                            <Bundle-Name>Core</Bundle-Name>
+                            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+							<Bundle-Vendor>Burningwave</Bundle-Vendor>
+                            <Bundle-Description>${project.description}</Bundle-Description>
+                            <Bundle-Version>${project.version}</Bundle-Version>
+                            <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
+                            <Export-Package>org.burningwave.core.assembler;uses:="io.github.toolfactory.jvm,org.burningwave.core,org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.io,org.burningwave.core.iterable,org.burningwave.core.jvm";version="${project.version}",org.burningwave.core.classes;uses:="io.github.toolfactory.jvm.util,org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core.concurrent;uses:="org.burningwave.core,org.burningwave.core.function";version="${project.version}",org.burningwave.core.function;version="${project.version}",org.burningwave.core.io;uses:="org.burningwave.core,org.burningwave.core.classes";version="${project.version}",org.burningwave.core.iterable;uses:="org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function";version="${project.version}",org.burningwave.core.jvm;uses:="org.burningwave.core,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core;uses:="org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}"</Export-Package>							
+							<Import-Package>io.github.toolfactory.jvm,io.github.toolfactory.jvm.util,javax.tools,org.burningwave.core,org.burningwave.core.assembler,org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable,org.burningwave.core.jvm,org.slf4j;version="[1.7,2)";resolution:=optional</Import-Package>
 							<Multi-Release>true</Multi-Release>
 						</manifestEntries>
 					</archive>
