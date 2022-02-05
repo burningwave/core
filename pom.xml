@@ -26,7 +26,9 @@
 	AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 	OR OTHER DEALINGS IN THE SOFTWARE.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.burningwave</groupId>
@@ -136,7 +138,7 @@
 	</scm>
 
 	<dependencies>
-		
+
 		<dependency>
 			<groupId>io.github.toolfactory</groupId>
 			<artifactId>jvm-driver</artifactId>
@@ -269,7 +271,7 @@
 					<useModulePath>false</useModulePath>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>${maven-jar-plugin.version}</version>
@@ -281,22 +283,22 @@
 					<archive>
 						<addMavenDescriptor>false</addMavenDescriptor>
 						<manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        	<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
- 						<manifestEntries>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+						<manifestEntries>
 							<built-by>Burningwave</built-by>
 							<Bundle-Category>Framework</Bundle-Category>
-                            <Bundle-License>https://github.com/burningwave/core/blob/master/LICENSE</Bundle-License>
-                            <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
-                            <Bundle-Name>Core</Bundle-Name>
-                            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+							<Bundle-License>https://github.com/burningwave/core/blob/master/LICENSE</Bundle-License>
+							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+							<Bundle-Name>Core</Bundle-Name>
+							<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
 							<Bundle-Vendor>Burningwave</Bundle-Vendor>
-                            <Bundle-Description>${project.description}</Bundle-Description>
-                            <Bundle-Version>${project.version}</Bundle-Version>
-                            <Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
+							<Bundle-Description>${project.description}</Bundle-Description>
+							<Bundle-Version>${project.version}</Bundle-Version>
+							<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
 							<Import-Package>javax.tools,io.github.toolfactory.jvm;version="${jvm-driver.version}",org.burningwave.jvm;version="${burningwave-jvm-driver.version}";resolution:=optional,io.github.toolfactory.jvm.util,org.slf4j;version="1.7.0";resolution:=optional</Import-Package>
-                            <Export-Package>org.burningwave.core;uses:="org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core.assembler;uses:="io.github.toolfactory.jvm,org.burningwave.core,org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.io,org.burningwave.core.iterable,org.burningwave.core.jvm";version="${project.version}",org.burningwave.core.classes;uses:="io.github.toolfactory.jvm.util,org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core.concurrent;uses:="org.burningwave.core,org.burningwave.core.function";version="${project.version}",org.burningwave.core.function;version="${project.version}",org.burningwave.core.io;uses:="org.burningwave.core,org.burningwave.core.classes";version="${project.version}",org.burningwave.core.iterable;uses:="org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function";version="${project.version}",org.burningwave.core.jvm;uses:="org.burningwave.core,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}"</Export-Package>							
+							<Export-Package>org.burningwave.core;uses:="org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core.assembler;uses:="io.github.toolfactory.jvm,org.burningwave.core,org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.io,org.burningwave.core.iterable,org.burningwave.core.jvm";version="${project.version}",org.burningwave.core.classes;uses:="io.github.toolfactory.jvm.util,org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}",org.burningwave.core.concurrent;uses:="org.burningwave.core,org.burningwave.core.function";version="${project.version}",org.burningwave.core.function;version="${project.version}",org.burningwave.core.io;uses:="org.burningwave.core,org.burningwave.core.classes";version="${project.version}",org.burningwave.core.iterable;uses:="org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function";version="${project.version}",org.burningwave.core.jvm;uses:="org.burningwave.core,org.burningwave.core.io,org.burningwave.core.iterable";version="${project.version}"</Export-Package>
 							<Multi-Release>true</Multi-Release>
 						</manifestEntries>
 					</archive>
@@ -481,8 +483,11 @@
 								</goals>
 								<configuration>
 									<target>
-										<jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
-											<zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
+										<jar update="true"
+											destfile="${project.build.directory}/${project.build.finalName}.jar">
+											<zipfileset prefix="META-INF/versions/9"
+												dir="${project.build.directory}/classes"
+												includes="module-info.class" />
 										</jar>
 									</target>
 								</configuration>
