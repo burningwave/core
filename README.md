@@ -1171,8 +1171,7 @@ iterable-object-helper.parallel-iteration.applicability.output-collection-enable
 	java.util.concurrent.ConcurrentSkipListMap$Values;
 #This property is optional and it is possible to use a custom JVM Driver which implements
 #the io.github.toolfactory.jvm.Driver interface.
-#Other possible values are:
-#io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.DynamicDriver, 
+#Other possible values are: io.github.toolfactory.jvm.DefaultDriver, 
 #org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
 	org.burningwave.jvm.DynamicDriver
