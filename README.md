@@ -7,9 +7,9 @@
 [![Maven Central with version prefix filter](https://img.shields.io/maven-central/v/org.burningwave/core/12)](https://maven-badges.herokuapp.com/maven-central/org.burningwave/core/)
 [![GitHub](https://img.shields.io/github/license/burningwave/core)](https://github.com/burningwave/core/blob/master/LICENSE)
 
-[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1947020891)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/1957354858)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1947020891)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(17)-blueviolet)](https://github.com/burningwave/core/actions/runs/1957354858)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
@@ -48,44 +48,15 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.46.0</version>
-</dependency>
-```
-
-By default Burningwave Core uses the dynamic driver supplied by the [**ToolFactory JVM Driver**](https://toolfactory.github.io/jvm-driver/) library but you can change it through the property **`jvm.driver.type`** in the [burningwave.static.properties](#static-components-configuration-file) file. It is also possible to switch to the drivers supplied by [**Burningwave JVM Driver**](https://burningwave.github.io/jvm-driver/) library by simply adding the following to your dependencies instead the previous one shown above:
-```xml
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>jvm-driver</artifactId>
-    <version>6.8.6</version>
-</dependency>
-
-<dependency>
-    <groupId>org.burningwave</groupId>
-    <artifactId>core</artifactId>
-    <version>12.46.0</version>
-    <exclusions>
-        <exclusion>
-            <groupId>io.github.toolfactory</groupId>
-            <artifactId>narcissus</artifactId>
-        </exclusion>
-    </exclusions>
+    <version>12.47.0</version>
 </dependency>
 ```
 
 ### Requiring the Burningwave Core module
 
-To use Burningwave Core as a Java module with the [default jvm driver](https://toolfactory.github.io/jvm-driver/) library you need to add the following to your `module-info.java`: 
+To use Burningwave Core as a Java module you need to add the following to your `module-info.java`: 
 
 ```java
-requires io.github.toolfactory.narcissus;
-requires org.burningwave.core;
-```
-
-... Instead if you are using the [Burningwave JVM Driver](https://burningwave.github.io/jvm-driver/) library you need add the following:
-
-```java
-requires org.burningwave.jvm;
 requires org.burningwave.core;
 ```
 
@@ -1200,13 +1171,11 @@ iterable-object-helper.parallel-iteration.applicability.output-collection-enable
 	java.util.concurrent.ConcurrentSkipListMap$Values;
 #This property is optional and it is possible to use a custom JVM Driver which implements
 #the io.github.toolfactory.jvm.Driver interface.
-#If you are using the default jvm-driver library other possible values are:
-#io.github.toolfactory.jvm.DefaultDriver, io.github.toolfactory.jvm.HybridDriver, io.github.toolfactory.jvm.NativeDriver
-#If you are using the Burningwave JVM Driver library all the possible values are:
+#Other possible values are:
 #io.github.toolfactory.jvm.DefaultDriver, org.burningwave.jvm.DynamicDriver, 
 #org.burningwave.jvm.HybridDriver, org.burningwave.jvm.NativeDriver
 jvm.driver.type=\
-	io.github.toolfactory.jvm.DynamicDriver
+	org.burningwave.jvm.DynamicDriver
 jvm.driver.init=\
 	false
 #With this value the library will search if org.slf4j.Logger is present and, in this case,
