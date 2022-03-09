@@ -32,8 +32,7 @@ module org.burningwave.core {
     requires java.compiler;
     requires jdk.unsupported;
     requires transitive io.github.toolfactory.jvm;
-    requires static io.github.toolfactory.narcissus;
-    requires static org.burningwave.jvm;
+    requires transitive org.burningwave.jvm;
     requires static org.slf4j;
 
     exports org.burningwave.core;
