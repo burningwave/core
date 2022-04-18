@@ -40,6 +40,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 
 	private boolean isVarArgs;
 	private boolean useFullyQualifiedName;
+	private boolean useClassExtension;
 	private Boolean publicFlag;
 	private String name;
 	private String simpleName;
@@ -124,6 +125,11 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		this.useFullyQualifiedName = flag;
 		return this;
 	}
+	
+	public TypeDeclarationSourceGenerator useClassExtension(boolean flag) {
+		this.useClassExtension = flag;
+		return this;
+	}
 
 	String getName() {
 		return name;
@@ -159,6 +165,10 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 
 	boolean useFullyQualifiedName() {
 		return this.useFullyQualifiedName;
+	}
+	
+	boolean useClassExtension() {
+		return this.useClassExtension;
 	}
 
 	private String getParametersCode() {
@@ -197,6 +207,6 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 			).orElseGet(() -> "") +
 			getParametersCode() +
 			arraysDelimiters +
-			(isVarArgs ? "..." : "");
+			(isVarArgs ? "..." : useClassExtension ? ".class" :  "");
 	}
 }
