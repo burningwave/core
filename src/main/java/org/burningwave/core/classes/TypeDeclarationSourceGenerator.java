@@ -28,6 +28,8 @@
  */
 package org.burningwave.core.classes;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +54,7 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 	}
 
 	private TypeDeclarationSourceGenerator(Class<?> clazz) {
-		if (!clazz.isPrimitive()) {
+		if (!clazz.isPrimitive() && !(clazz.isArray() && Classes.getComponentType(clazz).isPrimitive())) {
 			this.name = clazz.getName();
 		}
 		publicFlag = Modifier.isPublic(clazz.getModifiers());
