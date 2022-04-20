@@ -193,6 +193,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 		)
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][].class).useFullyQualifiedName(true), "multiTimesZero").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(Date[][][].class, "multiTimesOne").addModifier(Modifier.PRIVATE))
+		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(int[][][][].class), "multiInt").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create(Date[][][][].class), "multiTimesTwo").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][]", "Date[][][][][]"), "multiTimesThree").addModifier(Modifier.PRIVATE))
 		.addField(VariableSourceGenerator.create(TypeDeclarationSourceGenerator.create("java.util.Date[][][][][][]", "Date[][][][][][]").useFullyQualifiedName(true), "multiTimesFour").addModifier(Modifier.PRIVATE))

@@ -323,6 +323,14 @@ public class Classes implements MembersRetriever {
 		return index -> itemArray[index];
 	}
 
+	public Class<?> getComponentType(Class<?> cls) {
+		if (!cls.isArray()) {
+			throw new IllegalArgumentException(Strings.compile("{} is not an array type", cls.getName()));
+		}
+		while ((cls = cls.getComponentType()).isArray()) {}
+		return cls;
+	}
+
 	public static class Loaders implements Closeable {
 		protected Map<ClassLoader, Map<String, ?>> classLoadersPackages;
 		protected Map<String, MethodHandle> classLoadersMethods;
