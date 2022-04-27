@@ -217,7 +217,7 @@ public class UnitSourceGeneratorTest extends BaseTest {
 						TypeDeclarationSourceGenerator.create(HashMap.class).addGeneric(
 							GenericSourceGenerator.create(String.class),
 							GenericSourceGenerator.create(String.class)
-					).setAsParameterizable(true)
+						).setAsParameterizable(true)
 					).addMethod(
 						FunctionSourceGenerator.create("get")
 						.setReturnType(TypeDeclarationSourceGenerator.create(String.class))
