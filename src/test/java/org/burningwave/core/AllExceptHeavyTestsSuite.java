@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 	ModulesTest.class,
 	BackgroundExecutorTest.class,
 	ByteBufferHandlerTest.class,
-	ByteCodeHunterTest.class,
+	//ByteCodeHunterTest.class,
     ClassesTest.class,
     ClassFactoryTest.class,
     ComponentContainerTest.class,
