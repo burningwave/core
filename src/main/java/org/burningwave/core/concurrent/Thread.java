@@ -28,6 +28,7 @@
  */
 package org.burningwave.core.concurrent;
 
+import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -180,7 +181,7 @@ public abstract class Thread extends java.lang.Thread {
 
 	public void kill() {
 		terminate(thread ->
-			Methods.invokeDirect(thread, "stop0", new ThreadDeath()),
+			Driver.stop(thread),
 			"stop"
 		);
 	}
