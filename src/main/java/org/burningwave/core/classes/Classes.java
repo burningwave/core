@@ -296,7 +296,10 @@ public class Classes implements MembersRetriever {
 	public <I> Function<Integer, ?> buildArrayValueRetriever(I items) {
 		Class<?> componentType = items.getClass().getComponentType();
 		if (componentType.isPrimitive()) {
-			if (componentType == Integer.TYPE) {
+			if (componentType == Short.TYPE) {
+				short[] itemArray = (short[])items;
+				return index -> itemArray[index];
+			} else if (componentType == Integer.TYPE) {
 				int[] itemArray = (int[])items;
 				return index -> itemArray[index];
 			} else if (componentType == Long.TYPE) {
