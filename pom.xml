@@ -95,7 +95,7 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.8.2</junit-jupiter.version>
 		<junit.version>1.8.2</junit.version>
-		<burningwave-jvm-driver.version>8.3.0</burningwave-jvm-driver.version>
+		<burningwave-jvm-driver.version>8.5.0</burningwave-jvm-driver.version>
 		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
@@ -286,7 +286,7 @@
 							<Bundle-Description>${project.description}</Bundle-Description>
 							<Bundle-Version>${project.version}</Bundle-Version>
 							<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
-							<Import-Package>javax.tools,io.github.toolfactory.jvm;version="9.1.0",org.burningwave.jvm;version="8.3.0";resolution:=optional,io.github.toolfactory.jvm.util,org.slf4j;version="1.7.0";resolution:=optional</Import-Package>
+							<Import-Package>javax.tools,io.github.toolfactory.jvm;version="9.1.0",org.burningwave.jvm;version="8.4.0";resolution:=optional,io.github.toolfactory.jvm.util,org.slf4j;version="1.7.0";resolution:=optional</Import-Package>
 							<Export-Package>org.burningwave.core;uses:="org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="12.45.3",org.burningwave.core.assembler;uses:="io.github.toolfactory.jvm,org.burningwave.core,org.burningwave.core.classes,org.burningwave.core.concurrent,org.burningwave.core.io,org.burningwave.core.iterable,org.burningwave.core.jvm";version="12.45.3",org.burningwave.core.classes;uses:="io.github.toolfactory.jvm.util,org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function,org.burningwave.core.io,org.burningwave.core.iterable";version="12.45.3",org.burningwave.core.concurrent;uses:="org.burningwave.core,org.burningwave.core.function";version="12.45.3",org.burningwave.core.function;version="12.45.3",org.burningwave.core.io;uses:="org.burningwave.core,org.burningwave.core.classes";version="12.45.3",org.burningwave.core.iterable;uses:="org.burningwave.core,org.burningwave.core.concurrent,org.burningwave.core.function";version="12.45.3",org.burningwave.core.jvm;uses:="org.burningwave.core,org.burningwave.core.io,org.burningwave.core.iterable";version="12.45.3"</Export-Package>
 							<Multi-Release>true</Multi-Release>
 						</manifestEntries>
