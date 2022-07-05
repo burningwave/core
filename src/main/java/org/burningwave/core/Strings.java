@@ -300,7 +300,7 @@ public class Strings {
 				path.contains(".\\") ||
 				path.contains(".//")
 			) {
-				path = java.nio.file.Paths.get(path).normalize().toString();
+				path = java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString();
 			}
 			return clean(path);
 		}
