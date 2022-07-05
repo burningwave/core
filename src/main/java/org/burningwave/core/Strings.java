@@ -295,14 +295,8 @@ public class Strings {
 			return "[" + root + "]" + squaredPath;
 		}
 
-		public String normalizeAndClean(String path) {
-			if (path.contains("..") ||
-				path.contains(".\\") ||
-				path.contains(".//")
-			) {
-				path = java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString();
-			}
-			return clean(path);
+		public String toNormalizedCleanedAbsolutePath(String path) {
+			return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
 		}
 
 		public String getExtension(String path) {
