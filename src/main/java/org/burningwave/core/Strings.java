@@ -296,7 +296,13 @@ public class Strings {
 		}
 
 		public String toNormalizedCleanedAbsolutePath(String path) {
-			return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
+			try {
+				return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
 		}
 
 		public String getExtension(String path) {
@@ -331,7 +337,7 @@ public class Strings {
 				"!"
 			);
 
-			if (absolutePath.startsWith("/")) {
+			while (absolutePath.startsWith("/")) {
 				absolutePath = absolutePath.substring(1);
 			}
 
