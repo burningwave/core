@@ -295,7 +295,7 @@ public class Strings {
 			return "[" + root + "]" + squaredPath;
 		}
 
-		public String toCleanedAbsolute(String path) {
+		public String normalizeAndClean(String path) {
 			if (path.contains("..") ||
 				path.contains(".\\") ||
 				path.contains(".//")
