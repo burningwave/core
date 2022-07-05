@@ -449,7 +449,7 @@ class PathHelperImpl implements Component, PathHelper {
 	public Collection<String> optimize(Collection<String> paths) {
 		Collection<String> copyOfPaths = new HashSet<>();
 		for (String path : paths) {
-			copyOfPaths.add(Paths.normalizeAndClean(path));
+			copyOfPaths.add(Paths.toNormalizedCleanedAbsolutePath(path));
 		}
 		paths = new HashSet<>(copyOfPaths);
 		Collection<String> toBeRemoved = new HashSet<>();
