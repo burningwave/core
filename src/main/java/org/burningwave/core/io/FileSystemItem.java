@@ -123,7 +123,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	static FileSystemItem ofPath(String realAbsolutePath, String conventionedAbsolutePath) {
-		final String realAbsolutePathCleaned = Paths.normalizeAndClean(realAbsolutePath);
+		final String realAbsolutePathCleaned = Paths.toCleanedAbsolute(realAbsolutePath);
 		FileSystemItem fileSystemItem = Cache.pathForFileSystemItems.getOrUploadIfAbsent(realAbsolutePathCleaned,
 				() -> {
 					if (Strings.isNotEmpty(realAbsolutePathCleaned)) {

@@ -295,12 +295,12 @@ public class Strings {
 			return "[" + root + "]" + squaredPath;
 		}
 
-		public String normalizeAndClean(String path) {
+		public String toCleanedAbsolute(String path) {
 			if (path.contains("..") ||
 				path.contains(".\\") ||
 				path.contains(".//")
 			) {
-				path = java.nio.file.Paths.get(path).normalize().toString();
+				path = java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString();
 			}
 			return clean(path);
 		}
