@@ -300,7 +300,7 @@ public class Strings {
 			if (path.chars().filter(ch -> ch == '/').count() == 0 || path.equals("/")) {
 				return path;
 			}
-			return java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString();
+			return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
 		}
 
 		public boolean isRoot(String path) {
