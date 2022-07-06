@@ -390,6 +390,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return absolutePath.getKey();
 	}
 
+	public FileSystemItem getRoot() {
+		FileSystemItem parent;
+		while (true) {
+			parent = getParent();
+			if (parent.isRoot()) {
+				return parent;
+			}
+		}
+	}
+
 	public Collection<FileSystemItem> getAllParents() {
 		Collection<FileSystemItem> allParents = newCollectionSupplier.get();
 		FileSystemItem parent = getParent();
@@ -486,8 +496,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);
 				}
 				conventionedPath = conventionedPath.substring(0, conventionedPath.lastIndexOf("/")) + "/";
-				return FileSystemItem.ofPath(absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/")),
-						conventionedPath);
+				String path = absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"));
+				if (conventionedPath.equals("/")) {
+					path = conventionedPath;
+				}
+				return FileSystemItem.ofPath(
+					path,
+					conventionedPath
+				);
 			} else {
 				String absolutePath = getAbsolutePath();
 				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
