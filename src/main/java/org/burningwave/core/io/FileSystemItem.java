@@ -496,14 +496,20 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);
 				}
 				conventionedPath = conventionedPath.substring(0, conventionedPath.lastIndexOf("/")) + "/";
-				String path = absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/"));
-				if (conventionedPath.equals("/")) {
-					path = conventionedPath;
+				try {
+					return FileSystemItem.ofPath(
+						absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/")),
+						conventionedPath
+					);
+				} catch (NullPointerException exc) {
+					if (conventionedPath.equals("/")) {
+						return FileSystemItem.ofPath(
+							conventionedPath,
+							conventionedPath
+						);
+					}
+					throw exc;
 				}
-				return FileSystemItem.ofPath(
-					path,
-					conventionedPath
-				);
 			} else {
 				String absolutePath = getAbsolutePath();
 				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
