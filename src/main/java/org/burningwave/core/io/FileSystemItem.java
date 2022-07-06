@@ -391,13 +391,14 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	public FileSystemItem getRoot() {
-		FileSystemItem parent;
-		while (true) {
-			parent = getParent();
+		FileSystemItem parent = getParent();
+		while (parent != null) {
 			if (parent.isRoot()) {
 				return parent;
 			}
+			parent = parent.getParent();
 		}
+		return null;
 	}
 
 	public Collection<FileSystemItem> getAllParents() {
