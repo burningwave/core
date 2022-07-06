@@ -297,8 +297,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			fileSystemItems = fileSystemItemSupplier.get();
 		} catch (Throwable exc) {
-			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
-			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
+			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving items from {}: ", getAbsolutePath(), Strings.formatMessage(exc));
+			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload items of ", getAbsolutePath());
 			reset();
 			fileSystemItems = fileSystemItemSupplier.get();
 		}
