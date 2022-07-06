@@ -300,7 +300,12 @@ public class Strings {
 			if (path.chars().filter(ch -> ch == '/').count() == 0 || path.equals("/")) {
 				return path;
 			}
-			return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
+			return java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString();
+		}
+
+		public boolean isRoot(String path) {
+			path = clean(path);
+			return path.chars().filter(ch -> ch == '/').count() == 0 || path.equals("/");
 		}
 
 		public String getExtension(String path) {
