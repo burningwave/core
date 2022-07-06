@@ -28,4 +28,4 @@ jobs:
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
       - name: Build and test
-        run: mvn -B clean package test -DskipTests=false --file pom.xml
+        run: mvn -B clean test -DskipTests=false --file pom.xml

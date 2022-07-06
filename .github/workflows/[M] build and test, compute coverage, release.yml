@@ -1,4 +1,4 @@
-name: Build and test -> Compute coverage -> Release 
+name: Build and test -> Compute coverage -> Release
 
 on:
   watch:
@@ -36,7 +36,7 @@ jobs:
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
       - name: Build and test with
-        run: mvn -B clean package test -DskipTests=false --file pom.xml
+        run: mvn -B clean test -DskipTests=false --file pom.xml
         
   test-and-compute-coverage:
     name: Test -> Compute coverage
@@ -50,7 +50,7 @@ jobs:
           distribution: 'zulu'
           architecture: x64
       - name: Build and test
-        run: mvn clean package test -DskipTests=false -Dproject.test.testSuite=AllTestsSuite -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
+        run: mvn clean test -DskipTests=false -Dproject.test.testSuite=AllTestsSuite -P run-coveralls jacoco:report coveralls:report -DrepoToken=${{ secrets.coveralls_repo_token }}
        
   release:
     name: Release
