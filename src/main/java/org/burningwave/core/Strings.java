@@ -296,6 +296,10 @@ public class Strings {
 		}
 
 		public String toNormalizedCleanedAbsolutePath(String path) {
+			path = clean(path);
+			if (path.chars().filter(ch -> ch == '/').count() == 0 || path.equals("/")) {
+				return path;
+			}
 			return clean(java.nio.file.Paths.get(path).normalize().toAbsolutePath().toString());
 		}
 
