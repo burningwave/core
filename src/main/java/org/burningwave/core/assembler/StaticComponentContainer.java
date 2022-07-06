@@ -594,11 +594,11 @@ public class StaticComponentContainer {
 			);
 			Collections.shuffle(bannerList);
 			String banner = bannerList.get(new Random().nextInt(bannerList.size()));
-			String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
-				org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE).on(GlobalProperties)
-			);
 			String additonalInformations = "";
 			try {
+				String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
+					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE).on(GlobalProperties)
+				);
 				additonalInformations = IterableObjectHelper.resolveStringValue(
 					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
 					.on(GlobalProperties).withDefaultValues(
