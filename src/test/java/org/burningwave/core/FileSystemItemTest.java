@@ -198,6 +198,14 @@ public class FileSystemItemTest extends BaseTest {
 	}
 
 	@Test
+	public void getChildrenOfRootTestOne() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		testNotEmpty(() -> componentSupplier.getPathHelper().getResource(
+			"/../../src/test/external-resources/libs-for-test.zip/ESC-Lib.ear/APP-INF/lib/jaxb-xjc-2.1.7.jar/1.0"
+		).getRoot().getChildren(), true);
+	}
+
+	@Test
 	public void readTestFifteen() {
 		ComponentSupplier componentSupplier = getComponentSupplier();
 		String basePath = componentSupplier.getPathHelper().getPath((path) -> path.endsWith("target/test-classes"));
