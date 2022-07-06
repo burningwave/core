@@ -32,6 +32,8 @@ package org.burningwave.core.io;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.Driver;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
+import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,12 +41,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 
@@ -231,5 +237,27 @@ public class Resources {
 			}
 		}
 		return paths;
+	}
+
+	public final Collection<Manifest> getManifestByMainAttributes(Predicate<Attributes> attributePredicate) {
+		Map<URL, InputStream> manifestISs = getAsInputStreams("META-INF/MANIFEST.MF", Resources.class.getClassLoader());
+		Collection<Manifest> manifests = new ArrayList<>();
+		for (Map.Entry<URL, InputStream> entry : manifestISs.entrySet()) {
+			try (InputStream iS = entry.getValue()) {
+				try {
+					Manifest manifest = new Manifest(iS);
+					Attributes attr = manifest.getMainAttributes();
+			        if (attributePredicate.test(attr)) {
+			        	manifests.add(manifest);
+			        }
+				} catch (Throwable exc){
+					ManagedLoggerRepository.logError(Resources.class::getName, "Unable to read manifest file '{}'", Paths.convertURLPathToAbsolutePath(entry.getKey().getPath()));
+				}
+			} catch (Throwable exc) {
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+			}
+		}
+		manifestISs.clear();
+		return manifests;
 	}
 }
