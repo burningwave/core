@@ -31,7 +31,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>12.54.1-SNAPSHOT</version>
+	<version>12.55.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -475,6 +475,13 @@
 										<jar update="true" destfile="${project.build.directory}/${project.build.finalName}.jar">
 											<zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
 										</jar>
+									</target>
+									<target>
+										<unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${project.build.directory}/classes" overwrite="true">
+										    <patternset>
+										        <include name="META-INF/MANIFEST.MF" />
+										    </patternset>
+									    </unzip>
 									</target>
 								</configuration>
 							</execution>

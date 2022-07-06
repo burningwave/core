@@ -248,8 +248,10 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		return findIn(this::getAllChildren0, filter, false, ConcurrentHashMap::newKeySet);
 	}
 
-	public Collection<FileSystemItem> findInAllChildren(FileSystemItem.Criteria filter,
-			Supplier<Collection<FileSystemItem>> setSupplier) {
+	public Collection<FileSystemItem> findInAllChildren(
+		FileSystemItem.Criteria filter,
+		Supplier<Collection<FileSystemItem>> setSupplier
+	) {
 		return findIn(this::getAllChildren0, filter, false, setSupplier);
 	}
 
@@ -286,37 +288,37 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 	}
 
 	private Collection<FileSystemItem> findIn(
-		Supplier<Collection<FileSystemItem>> childrenSupplier,
+		Supplier<Collection<FileSystemItem>> fileSystemItemSupplier,
 		FileSystemItem.Criteria filter,
 		boolean firstMatch,
 		Supplier<Collection<FileSystemItem>> outputCollectionSupplier
 	) {
-		Collection<FileSystemItem> children;
+		Collection<FileSystemItem> fileSystemItems;
 		try {
-			children = childrenSupplier.get();
+			fileSystemItems = fileSystemItemSupplier.get();
 		} catch (Throwable exc) {
 			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
 			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
 			reset();
-			children = childrenSupplier.get();
+			fileSystemItems = fileSystemItemSupplier.get();
 		}
-		if (children == null) {
+		if (fileSystemItems == null) {
 			return null;
 		}
 		Predicate<FileSystemItem[]> nativePredicate = filter.getOriginalPredicateOrTruePredicateIfPredicateIsNull();
 		Collection<FileSystemItem> iteratedFISWithErrors = ConcurrentHashMap.newKeySet();
 		BiFunction<Throwable, FileSystemItem[], Boolean> customExceptionHandler = filter.exceptionHandler;
-		Predicate<FileSystemItem> filterPredicate = child -> {
+		Predicate<FileSystemItem> filterPredicate = iteratedFileSystemItem -> {
 			try {
-				return nativePredicate.test(new FileSystemItem[] { child, this });
+				return nativePredicate.test(new FileSystemItem[] { iteratedFileSystemItem, this });
 			} catch (ArrayIndexOutOfBoundsException | NullPointerException exc) {
-				iteratedFISWithErrors.add(child);
+				iteratedFISWithErrors.add(iteratedFileSystemItem);
 				return false;
 			} catch (Throwable exc) {
 				if (customExceptionHandler == null) {
 					throw exc;
 				}
-				iteratedFISWithErrors.add(child);
+				iteratedFISWithErrors.add(iteratedFileSystemItem);
 				return false;
 			}
 		};
@@ -330,11 +332,11 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					);
 				}
 			} :
-			(child, outputCollectionHandler) -> {
-				if (filterPredicate.test(child)) {
+			(iteratedFileSystemItem, outputCollectionHandler) -> {
+				if (filterPredicate.test(iteratedFileSystemItem)) {
 					outputCollectionHandler.accept(
 						(outputCollection) -> {
-							outputCollection.add(child);
+							outputCollection.add(iteratedFileSystemItem);
 						}
 					);
 					IterableObjectHelper.terminateIteration();
@@ -342,7 +344,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 			};
 
 		final Collection<FileSystemItem> result = IterableObjectHelper.iterateAndGet(
-			IterationConfig.of(children)
+			IterationConfig.of(fileSystemItems)
 			.parallelIf(
 				filter.minimumCollectionSizeForParallelIterationPredicate != null ?
 					filter.minimumCollectionSizeForParallelIterationPredicate::test :
@@ -356,7 +358,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		if (!iteratedFISWithErrors.isEmpty()) {
 			Predicate<FileSystemItem[]> nativePredicateWithExceptionManaging = filter.getPredicateOrTruePredicateIfPredicateIsNull();
 			for (FileSystemItem child : iteratedFISWithErrors) {
-				FileSystemItem[] childAndThis = new FileSystemItem[] { child, this };
+				FileSystemItem[] childAndThis = { child, this };
 				if (nativePredicateWithExceptionManaging.test(childAndThis)) {
 					result.add(child);
 				}
@@ -386,6 +388,16 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public String getAbsolutePath() {
 		return absolutePath.getKey();
+	}
+
+	public Collection<FileSystemItem> getAllParents() {
+		Collection<FileSystemItem> allParents = newCollectionSupplier.get();
+		FileSystemItem parent = getParent();
+		while (parent != null) {
+			allParents.add(parent);
+			parent = parent.getParent();
+		}
+		return Collections.unmodifiableCollection(allParents);
 	}
 
 	public Collection<FileSystemItem> getAllChildren() {
@@ -438,8 +450,23 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		if (!isRoot()) {
 			return absolutePath.substring(absolutePath.lastIndexOf("/") + 1);
 		} else {
-			return absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+			return absolutePath;
 		}
+	}
+
+	public Collection<FileSystemItem> findInAllParents(FileSystemItem.Criteria filter) {
+		return findIn(this::getAllParents, filter, false, ConcurrentHashMap::newKeySet);
+	}
+
+	public Collection<FileSystemItem> findInAllParents(
+		FileSystemItem.Criteria filter,
+		Supplier<Collection<FileSystemItem>> setSupplier
+	) {
+		return findIn(this::getAllParents, filter, false, setSupplier);
+	}
+
+	public FileSystemItem findFirstInAllParents(FileSystemItem.Criteria filter) {
+		return findIn(this::getAllParents, filter, true, ConcurrentHashMap::newKeySet).stream().findFirst().orElseGet(() -> null);
 	}
 
 	public FileSystemItem getParent() {

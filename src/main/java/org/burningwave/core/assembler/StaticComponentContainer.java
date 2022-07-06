@@ -65,6 +65,8 @@ public class StaticComponentContainer {
 			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
 			private static final String BANNER_HIDE = "banner.hide";
 			private static final String BANNER_FILE = "banner.file";
+			private static final String BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE = "banner.additonal-informations.manifest-implementation-title";
+			private static final String BANNER_ADDITIONAL_INFORMATIONS = "banner.additonal-informations";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_MINIMUM_ELAPSED_TIME_TO_CONSIDER_A_TASK_AS_PROBABLE_DEAD_LOCKED = "background-executor.all-tasks-monitoring.minimum-elapsed-time-to-consider-a-task-as-probable-dead-locked";
@@ -142,6 +144,16 @@ public class StaticComponentContainer {
 				defaultValues.put(
 					Key.RESOURCE_RELEASER_ENABLED,
 					true
+				);
+
+				defaultValues.put(
+					Key.BANNER_ADDITIONAL_INFORMATIONS,
+					"${Implementation-Title} ${Implementation-Version}"
+				);
+
+				defaultValues.put(
+					Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE,
+					"Burningwave Core"
 				);
 
 				if (io.github.toolfactory.jvm.Info.Provider.getInfoInstance().getVersion() > 8) {
@@ -228,6 +240,7 @@ public class StaticComponentContainer {
 			SystemProperties = org.burningwave.core.SystemProperties.getInstance();
 			JVMInfo = io.github.toolfactory.jvm.Info.Provider.getInfoInstance();
 			Strings = org.burningwave.core.Strings.create();
+			Paths = org.burningwave.core.Strings.Paths.create();
 			Objects = org.burningwave.core.Objects.create();
 			Resources = new org.burningwave.core.io.Resources();
 			Properties properties = new Properties();
@@ -345,11 +358,10 @@ public class StaticComponentContainer {
 			if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED)))) {
 				BackgroundExecutor.setTasksCreationTrackingFlag(true);
 			}
-
+			ManagedLoggerRepository = ManagedLogger.Repository.create(GlobalProperties);
 			if (!Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.BANNER_HIDE)))) {
 				showBanner();
 			}
-			ManagedLoggerRepository = ManagedLogger.Repository.create(GlobalProperties);
 			if (propertiesFromConfigurationFile.isEmpty()) {
 				ManagedLoggerRepository.logInfo(StaticComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 			}
@@ -358,7 +370,6 @@ public class StaticComponentContainer {
 				"\n\n\tConfiguration values for static components:\n\n{}\n\n",
 				GlobalProperties.toPrettyString(2)
 			);
-			Paths = org.burningwave.core.Strings.Paths.create();
 			FileSystemHelper = org.burningwave.core.io.FileSystemHelper.create(getName("FileSystemHelper"));
 			BufferHandler = org.burningwave.core.jvm.BufferHandler.create(GlobalProperties);
 			Streams = org.burningwave.core.io.Streams.create();
@@ -582,7 +593,25 @@ public class StaticComponentContainer {
 				).toString().split("-------------------------------------------------------------------------------------------------------------")
 			);
 			Collections.shuffle(bannerList);
-			System.out.println("\n" + bannerList.get(new Random().nextInt(bannerList.size())));
+			String banner = bannerList.get(new Random().nextInt(bannerList.size()));
+			String additonalInformations = "";
+			try {
+				String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
+					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE).on(GlobalProperties)
+				);
+				additonalInformations = IterableObjectHelper.resolveStringValue(
+					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
+					.on(GlobalProperties).withDefaultValues(
+						Resources.getManifestAsMapByMainAttributes(attributes -> {
+							return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+						}).iterator().next()
+					)
+				);
+			} catch (Throwable exc) {
+
+			}
+			banner = banner.replace("${additonalInformations}", additonalInformations);
+			System.out.println("\n" + banner);
 		}
 	}
 
