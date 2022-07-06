@@ -297,8 +297,8 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		try {
 			fileSystemItems = fileSystemItemSupplier.get();
 		} catch (Throwable exc) {
-			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving children of {}: ", getAbsolutePath(), Strings.formatMessage(exc));
-			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload children/all children", getAbsolutePath());
+			ManagedLoggerRepository.logWarn(this.getClass()::getName, "Exception occurred while retrieving items from {}: ", getAbsolutePath(), Strings.formatMessage(exc));
+			ManagedLoggerRepository.logInfo(this.getClass()::getName, "Trying to reset {} and reload items of ", getAbsolutePath());
 			reset();
 			fileSystemItems = fileSystemItemSupplier.get();
 		}
@@ -388,6 +388,17 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 
 	public String getAbsolutePath() {
 		return absolutePath.getKey();
+	}
+
+	public FileSystemItem getRoot() {
+		FileSystemItem parent = getParent();
+		while (parent != null) {
+			if (parent.isRoot()) {
+				return parent;
+			}
+			parent = parent.getParent();
+		}
+		return null;
 	}
 
 	public Collection<FileSystemItem> getAllParents() {
@@ -486,8 +497,20 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 					conventionedPath = conventionedPath.substring(0, conventionedPath.length() + offset);
 				}
 				conventionedPath = conventionedPath.substring(0, conventionedPath.lastIndexOf("/")) + "/";
-				return FileSystemItem.ofPath(absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/")),
-						conventionedPath);
+				try {
+					return FileSystemItem.ofPath(
+						absolutePath.getKey().substring(0, absolutePath.getKey().lastIndexOf("/")),
+						conventionedPath
+					);
+				} catch (NullPointerException exc) {
+					if (conventionedPath.equals("/")) {
+						return FileSystemItem.ofPath(
+							conventionedPath,
+							conventionedPath
+						);
+					}
+					throw exc;
+				}
 			} else {
 				String absolutePath = getAbsolutePath();
 				String parentAbsolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));

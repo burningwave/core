@@ -599,14 +599,17 @@ public class StaticComponentContainer {
 				String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
 					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE).on(GlobalProperties)
 				);
-				additonalInformations = IterableObjectHelper.resolveStringValue(
-					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
-					.on(GlobalProperties).withDefaultValues(
-						Resources.getManifestAsMapByMainAttributes(attributes -> {
-							return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
-						}).iterator().next()
-					)
-				);
+				Collection<Map<String, String>> manifestAsMapByMainAttributes = Resources.getManifestAsMapByMainAttributes(attributes -> {
+					return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+				});
+				if (!manifestAsMapByMainAttributes.isEmpty()) {
+					additonalInformations = IterableObjectHelper.resolveStringValue(
+						org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
+						.on(GlobalProperties).withDefaultValues(
+							manifestAsMapByMainAttributes.iterator().next()
+						)
+					);
+				}
 			} catch (Throwable exc) {
 
 			}
