@@ -476,13 +476,6 @@
 											<zipfileset prefix="META-INF/versions/9" dir="${project.build.directory}/classes" includes="module-info.class" />
 										</jar>
 									</target>
-									<target>
-										<unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${project.build.directory}/classes" overwrite="true">
-										    <patternset>
-										        <include name="META-INF/MANIFEST.MF" />
-										    </patternset>
-									    </unzip>
-									</target>
 								</configuration>
 							</execution>
 						</executions>
