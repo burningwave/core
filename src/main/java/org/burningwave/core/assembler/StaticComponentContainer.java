@@ -47,9 +47,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.ManagedLogger;
@@ -597,22 +594,23 @@ public class StaticComponentContainer {
 			);
 			Collections.shuffle(bannerList);
 			String banner = bannerList.get(new Random().nextInt(bannerList.size()));
-			Collection<Manifest> manifests = Resources.getManifestByMainAttributes(attributes -> {
-				return IterableObjectHelper.resolveStringValue(
-					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE)
-					.on(GlobalProperties)
-				).equals(attributes.getValue("Implementation-Title"));
-			});
-			if (!manifests.isEmpty()) {
-				banner = banner.replace("${additonalInformations}", IterableObjectHelper.resolveStringValue(
+			String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
+				org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_MANIFEST_IMPLEMENTATION_TITLE).on(GlobalProperties)
+			);
+			String additonalInformations = "";
+			try {
+				additonalInformations = IterableObjectHelper.resolveStringValue(
 					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
-					.on(GlobalProperties).withDefaultValues(manifests.iterator().next().getMainAttributes().entrySet().stream().collect(Collectors.toMap(entry->
-						((Attributes.Name)entry.getKey()).toString(),
-						Map.Entry::getValue)))
-				));
-			} else {
-				banner = banner.replace("${additonalInformations}", "");
+					.on(GlobalProperties).withDefaultValues(
+						Resources.getManifestAsMapByMainAttributes(attributes -> {
+							return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+						}).iterator().next()
+					)
+				);
+			} catch (Throwable exc) {
+
 			}
+			banner = banner.replace("${additonalInformations}", additonalInformations);
 			System.out.println("\n" + banner);
 		}
 	}
