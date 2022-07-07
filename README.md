@@ -1143,6 +1143,10 @@ background-executor.queued-task-executor[2].priority=\
 	10
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.enabled}
+banner.additonal-informations=\
+	${Implementation-Title} ${Implementation-Version}
+banner.additonal-informations.retrieve-from-manifest-file-with-implementation-title=\
+	Burningwave Core
 banner.hide=\
 	false
 banner.file=\
