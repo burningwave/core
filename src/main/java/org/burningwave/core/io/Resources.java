@@ -239,8 +239,8 @@ public class Resources {
 		return paths;
 	}
 
-	public final Collection<Manifest> getManifestByMainAttributes(Predicate<Attributes> attributesPredicate) {
-		Map<URL, InputStream> manifestISs = getAsInputStreams("META-INF/MANIFEST.MF", Resources.class.getClassLoader());
+	public final Collection<Manifest> getManifestByMainAttributes(Predicate<Attributes> attributesPredicate, ClassLoader... resourceClassLoaders) {
+		Map<URL, InputStream> manifestISs = getAsInputStreams("META-INF/MANIFEST.MF", resourceClassLoaders);
 		Collection<Manifest> manifests = new ArrayList<>();
 		for (Map.Entry<URL, InputStream> entry : manifestISs.entrySet()) {
 			try (InputStream iS = entry.getValue()) {
@@ -261,7 +261,7 @@ public class Resources {
 		return manifests;
 	}
 
-	public final Collection<Map<String, String>> getManifestAsMapByMainAttributes(Predicate<Attributes> attributesPredicate) {
+	public final Collection<Map<String, String>> getManifestAsMapByMainAttributes(Predicate<Attributes> attributesPredicate, ClassLoader... resourceClassLoaders) {
 		Collection<Manifest> manifests = getManifestByMainAttributes(attributesPredicate);
 		Collection<Map<String, String>> manifestMaps = new ArrayList<>();
 		for (Manifest manifest : manifests) {
