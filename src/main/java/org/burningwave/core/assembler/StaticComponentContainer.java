@@ -601,9 +601,13 @@ public class StaticComponentContainer {
 						Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_WITH_IMPLEMENTATION_TITLE
 					).on(GlobalProperties)
 				);
-				Collection<Map<String, String>> manifestAsMapByMainAttributes = Resources.getManifestAsMapByMainAttributes(attributes -> {
-					return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
-				});
+				Collection<Map<String, String>> manifestAsMapByMainAttributes = Resources.getManifestAsMapByMainAttributes(
+					attributes -> {
+						return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+					},
+					Component.class.getClassLoader(),
+					Thread.currentThread().getContextClassLoader()
+				);
 				if (!manifestAsMapByMainAttributes.isEmpty()) {
 					additonalInformations = IterableObjectHelper.resolveStringValue(
 						org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS)
