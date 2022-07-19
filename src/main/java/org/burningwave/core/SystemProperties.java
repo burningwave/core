@@ -48,6 +48,11 @@ public class SystemProperties {
 		return systemProperties.get(key);
 	}
 
+	public String get(String key, String defaultValue) {
+		String value = systemProperties.get(key);
+		return value != null ? value : defaultValue;
+	}
+
 	public String put(String key, String value) {
 		java.util.Properties properties;
 		synchronized (properties = System.getProperties()) {
