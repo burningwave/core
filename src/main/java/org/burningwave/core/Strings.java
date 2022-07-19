@@ -242,7 +242,7 @@ public class Strings {
 		Function<String, String> uRLPathConverter;
 
 		private Paths() {
-			if (StaticComponentContainer.SystemProperties.get("os.name").toLowerCase().contains("windows")) {
+			if (StaticComponentContainer.SystemProperties.get("os.name", "generic").toLowerCase().contains("windows")) {
 				pathCleaner = (path) -> {
 					path = path.replace("\\", "/");
 					if (path.startsWith("/")) {
