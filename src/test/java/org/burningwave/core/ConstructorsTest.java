@@ -31,7 +31,7 @@ public class ConstructorsTest extends BaseTest {
 		testNotNull(() ->
 			Constructors.findDirectHandle(
 				Constructors.findOneAndMakeItAccessible(ExtendedService.class)
-			).invoke()
+			).invokeWithArguments()
 		);
 	}
 
