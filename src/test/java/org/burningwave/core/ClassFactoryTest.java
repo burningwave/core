@@ -108,7 +108,7 @@ public class ClassFactoryTest extends BaseTest {
 					)
 				)
 			);
-			if (JVMInfo.getVersion() > 8) {
+			if (JVMInfo.getVersion() > 8 && JVMInfo.getVersion() < 20) {
 				loadOrBuildAndDefineConfig.modifyCompilationConfig(config -> config.setVersion("8"));
 			}
 			return componentSupplier.getClassFactory().loadOrBuildAndDefine(
