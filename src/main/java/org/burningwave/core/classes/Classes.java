@@ -583,7 +583,7 @@ public class Classes implements MembersRetriever {
 
 		Object getClassLoadingLock(ClassLoader classLoader, String className) {
 			try {
-				return getGetClassLoadingLockMethod(classLoader).invoke(classLoader, className);
+				return getGetClassLoadingLockMethod(classLoader).invokeWithArguments(classLoader, className);
 			} catch (Throwable exc) {
 				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
 			}
@@ -803,7 +803,7 @@ public class Classes implements MembersRetriever {
 		) throws ClassNotFoundException, InvocationTargetException, NoClassDefFoundError {
 			try {
 				synchronized (getClassLoadingLock(classLoader, className)) {
-					return (Class<T>)method.invoke(classLoader, className, byteCode, null);
+					return (Class<T>)method.invokeWithArguments(classLoader, className, byteCode, null);
 				}
 			} catch (InvocationTargetException | ClassNotFoundException | NoClassDefFoundError exc) {
 				throw exc;
@@ -827,7 +827,7 @@ public class Classes implements MembersRetriever {
 		) throws IllegalArgumentException {
 			return Executor.get(() -> {
 				try {
-					return (Package) definePackageMethod.invoke(
+					return (Package) definePackageMethod.invokeWithArguments(
 						classLoader, name, specTitle, specVersion, specVendor,
 						implTitle, implVersion, implVendor, sealBase
 					);

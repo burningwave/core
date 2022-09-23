@@ -348,7 +348,7 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 		    functionalInterfaceSignatureSupplier.apply(methodHandle),
 		    methodHandle,
 		    methodHandle.type()
-		).getTarget().invoke();
+		).getTarget().invokeWithArguments();
 	}
 
 	Class<?> retrieveClass(Class<?> cls, Function<Integer, Class<?>> classRetriever, int parametersCount) throws ClassNotFoundException {
