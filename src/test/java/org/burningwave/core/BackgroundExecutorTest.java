@@ -15,11 +15,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 public class BackgroundExecutorTest extends BaseTest {
 
 
 	@Test
+	@EnabledForJreRange(max = JRE.JAVA_19)
 	public void killTestOne() {
 		testDoesNotThrow(() -> {
 			assertTrue(
@@ -75,6 +78,7 @@ public class BackgroundExecutorTest extends BaseTest {
 	}
 
 	@Test
+	@EnabledForJreRange(max = JRE.JAVA_19)
 	public void killTestTwo() {
 		testDoesNotThrow(() -> {
 			AtomicBoolean executed = new AtomicBoolean(false);
