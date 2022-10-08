@@ -392,7 +392,7 @@ public class QueuedTaskExecutor implements Closeable {
 		return terminate(task, Thread::interrupt, TaskAbst::interrupt, true);
 	}
 
-	@Deprecated(since="12.60.0")
+	@Deprecated/*(since="12.60.0")*/
 	public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
 		return terminate(task, Thread::kill, TaskAbst::kill, true);
 	}
@@ -401,7 +401,7 @@ public class QueuedTaskExecutor implements Closeable {
 		return terminate(task, Thread::interrupt, TaskAbst::interrupt, terminateChildren);
 	}
 
-	@Deprecated(since="12.60.0")
+	@Deprecated/*(since="12.60.0")*/
 	public <E, T extends TaskAbst<E, T>> boolean kill(T task, boolean terminateChildren) {
 		return terminate(task, Thread::kill, TaskAbst::kill, terminateChildren);
 	}
@@ -1197,7 +1197,7 @@ public class QueuedTaskExecutor implements Closeable {
 			return (T)this;
 		}
 
-		@Deprecated(since="12.60.0")
+		@Deprecated/*(since="12.60.0")*/
 		public T kill() {
 			return kill(true);
 		}
@@ -1206,7 +1206,7 @@ public class QueuedTaskExecutor implements Closeable {
 			return interrupt(true);
 		}
 
-		@Deprecated(since="12.60.0")
+		@Deprecated/*(since="12.60.0")*/
 		public T kill(boolean terminateChildren) {
 			getQueuedTasksExecutor().kill((T)this, terminateChildren);
 			return (T)this;
@@ -1728,7 +1728,7 @@ public class QueuedTaskExecutor implements Closeable {
 			return false;
 		}
 
-		@Deprecated(since="12.60.0")
+		@Deprecated/*(since="12.60.0")*/
 		public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
 			for (Entry<Integer, QueuedTaskExecutor> queuedTasksExecutorBox : queuedTasksExecutors.entrySet()) {
 				if (queuedTasksExecutorBox.getValue().kill(task)) {
