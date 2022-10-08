@@ -51,6 +51,7 @@ import org.burningwave.core.Identifiable;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
+@SuppressWarnings("deprecation")
 public abstract class Thread extends java.lang.Thread {
 	private final static ThrowingConsumer<Thread, ? extends Throwable> nullExecutableNotifier;
 
@@ -179,7 +180,6 @@ public abstract class Thread extends java.lang.Thread {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	@Deprecated(since="12.60.0")
 	public void kill() {
 		terminate(thread ->

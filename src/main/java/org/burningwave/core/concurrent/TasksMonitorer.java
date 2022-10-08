@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 import org.burningwave.core.Closeable;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.TaskAbst;
 
+@SuppressWarnings("deprecation")
 public class TasksMonitorer implements Closeable {
 	Map<QueuedTaskExecutor.TaskAbst<?, ?>, StackTraceElement[]> waitingTasksAndLastStackTrace;
 	QueuedTaskExecutor.Group queuedTasksExecutorGroup;
