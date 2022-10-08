@@ -392,7 +392,7 @@ public class QueuedTaskExecutor implements Closeable {
 		return terminate(task, Thread::interrupt, TaskAbst::interrupt, true);
 	}
 
-	@Deprecated(since="12.59.2")
+	@Deprecated(since="12.60.0")
 	public <E, T extends TaskAbst<E, T>> boolean kill(T task) {
 		return terminate(task, Thread::kill, TaskAbst::kill, true);
 	}
