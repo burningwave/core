@@ -179,6 +179,8 @@ public abstract class Thread extends java.lang.Thread {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
+	@Deprecated(since="12.60.0")
 	public void kill() {
 		terminate(thread ->
 			Driver.stop(thread),
