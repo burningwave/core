@@ -31,6 +31,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
+          cache: 'maven'
+      - name: Build and test
+        run: mvn -B clean test -DskipTests=false --file pom.xml
       - name: Cache local Maven repository
         uses: actions/cache@v3
         with:
@@ -38,8 +41,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: Build and test
-        run: mvn -B clean test -DskipTests=false --file pom.xml
         
         
   release:
