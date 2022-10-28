@@ -52,11 +52,16 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 
 	public <T> T getStatic(Field field) {
-		return Executor.get(() -> (T)field.get(null));
+		return get(null, field);
 	}
 
 	public <T> T get(Object target, Field field) {
-		return Executor.get(() -> (T)field.get(target));
+		try {
+			return (T)field.get(target);
+		} catch (IllegalAccessException exc) {
+			setAccessible(field, true);
+			return Executor.get(() -> (T)field.get(target));
+		}
 	}
 
 	public <T> T getStatic(Class<?> targetClass, String fieldName) {
@@ -68,7 +73,7 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 
 	public <T> T getStaticDirect(Field field) {
-		return Executor.get(() -> (T)Driver.getFieldValue(null, field));
+		return getDirect(null, field);
 	}
 
 	public <T> T getDirect(Object target, Field field) {
@@ -88,7 +93,17 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 	}
 
 	public void set(Object target, Field field, Object value) {
-		Executor.run(() -> field.set(target, value));
+		try {
+			field.set(target, value);
+		} catch (IllegalAccessException exc) {
+			setAccessible(field, true);
+			Executor.run(() -> field.set(target, value));
+		}
+
+	}
+
+	public void setStatic(Field field, Object value) {
+		set(null, field, value);
 	}
 
 	public void setStatic(Class<?> targetClass, String fieldName, Object value) {
@@ -109,6 +124,10 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 
 	public void setStaticDirect(Class<?> targetClass, String fieldName, Object value) {
 		setDirect(targetClass, null, fieldName, value);
+	}
+
+	public void setStaticDirect(Field field, Object value) {
+		setDirect(null, field, value);
 	}
 
 	public void setDirect(Object target, String fieldName, Object value) {
