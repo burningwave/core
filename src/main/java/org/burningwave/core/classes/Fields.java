@@ -189,6 +189,10 @@ public class Fields extends Members.Handler<Field, FieldCriteria> {
 		return members.stream().findFirst().get();
 	}
 
+	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName) {
+		return findFirstAndMakeItAccessible(targetClass, fieldName, null);
+	}
+
 	public Field findFirstAndMakeItAccessible(Class<?> targetClass, String fieldName, Class<?> fieldTypeOrSubType) {
 		Collection<Field> members = findAllByExactNameAndMakeThemAccessible(targetClass, fieldName, fieldTypeOrSubType);
 		if (members.size() < 1) {
