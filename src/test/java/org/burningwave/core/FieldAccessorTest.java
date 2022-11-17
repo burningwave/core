@@ -78,7 +78,7 @@ public class FieldAccessorTest extends BaseTest {
 	@Test
 	void setTestSeven() {
 		AtomicInteger hashCodeGenerator = new AtomicInteger(1);
-		setIndexedValue(() -> new HashSet<>() {
+		setIndexedValue(() -> new HashSet() {
 			private int hashCode = hashCodeGenerator.getAndIncrement();
 			@Override
 			public int hashCode() {
