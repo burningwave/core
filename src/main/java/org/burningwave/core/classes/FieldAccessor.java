@@ -36,6 +36,8 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -46,6 +48,7 @@ import org.burningwave.core.Component;
 import org.burningwave.core.function.ThrowingBiFunction;
 import org.burningwave.core.function.ThrowingFunction;
 
+@SuppressWarnings("unchecked")
 public abstract class FieldAccessor implements Component {
 	public final static String REG_EXP_FOR_SIMPLE_FIELDS = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
 	public final static String REG_EXP_FOR_INDEXES_OF_INDEXED_FIELDS = "\\[([a-zA-Z0-9]*)\\]";
@@ -58,21 +61,17 @@ public abstract class FieldAccessor implements Component {
 	FieldAccessor() {
 		this.fieldRetrievers = getFieldRetrievers();
 		this.fieldSetters= getFieldSetters();
-		simpleFieldSearcher = Pattern.compile(REG_EXP_FOR_SIMPLE_FIELDS);
-		indexesSearcherForIndexedField = Pattern.compile(REG_EXP_FOR_INDEXES_OF_INDEXED_FIELDS);
+		this.simpleFieldSearcher = Pattern.compile(REG_EXP_FOR_SIMPLE_FIELDS);
+		this.indexesSearcherForIndexedField = Pattern.compile(REG_EXP_FOR_INDEXES_OF_INDEXED_FIELDS);
 	}
 
 	abstract List<ThrowingFunction<Object[], Boolean, Throwable>> getFieldSetters();
 
 	abstract List<ThrowingBiFunction<Object, String, Object, Throwable>> getFieldRetrievers();
 
-	@SuppressWarnings("unchecked")
 	public <T> T get(Object obj, String path) {
 		if (path == null) {
 			throw new IllegalArgumentException("Field path cannot be null");
-		}
-		if (path.trim().isEmpty()) {
-			return (T)obj;
 		}
 		String[] pathSegments = path.split("\\.");
 		Object objToReturn = obj;
@@ -98,22 +97,19 @@ public abstract class FieldAccessor implements Component {
 		}
 		manageGetFieldExceptions(exceptions);
 		if (!matcher.group(2).isEmpty()) {
-			objToReturn = retrieveFromIndexedField(objToReturn, matcher.group(2));
+			try {
+				objToReturn = retrieveFromIndexedField(objToReturn, matcher.group(2));
+			} catch (Throwable exc) {
+				exceptions.add(exc);
+			}
 		}
 		return objToReturn;
 	}
 
 	private void manageGetFieldExceptions(List<Throwable> exceptions) {
 		if (exceptions.size() > 0) {
-			String message = "";
 			for (Throwable exception : exceptions) {
-				message += exception.getMessage() + "\n";
-			}
-			message = message.substring(0, message.length() - 1);
-			if (exceptions.size() == fieldRetrievers.size()) {
-				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(message.toString());
-			} else {
-				//logDebug("Warning: " + message);
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
 			}
 		}
 	}
@@ -150,33 +146,53 @@ public abstract class FieldAccessor implements Component {
 	}
 
 
-	private Object retrieveFromIndexedField(Object property, String indexes) {
+	private <T> Object retrieveFromIndexedField(Object fieldValue, String indexes) {
 		Matcher matcher = indexesSearcherForIndexedField.matcher(indexes);
 		if (matcher.find()) {
 			String index = matcher.group(1);
 			Supplier<Object> propertyRetriever = null;
-			if (property.getClass().isArray()) {
-				propertyRetriever = () -> Array.get(property, Integer.valueOf(index));
-			} else if (List.class.isAssignableFrom(property.getClass())) {
-				propertyRetriever = () -> ((List<?>)property).get(Integer.valueOf(index));
-			} else if (Map.class.isAssignableFrom(property.getClass())) {
-				propertyRetriever = () -> ((Map<?, ?>)property).get(index);
+			if (fieldValue.getClass().isArray()) {
+				propertyRetriever = () -> Array.get(fieldValue, Integer.valueOf(index));
+			} else if (fieldValue instanceof List) {
+				propertyRetriever = () -> ((List<?>)fieldValue).get(Integer.valueOf(index));
+			} else if (fieldValue instanceof Map) {
+				propertyRetriever = () -> ((Map<?, ?>)fieldValue).get(index);
+			} else if (fieldValue instanceof Collection) {
+				propertyRetriever = () -> {
+					Collection<T> collection = (Collection<T>)fieldValue;
+					int indexAsInt = convertAndCheckIndex(collection, index);
+					Iterator<T> itr = collection.iterator();
+					int currentIterationIndex = 0;
+					while (itr.hasNext()) {
+						Object currentIteartedObject = itr.next();
+						if (currentIterationIndex++ == indexAsInt) {
+							return currentIteartedObject;
+						}
+					}
+					return null;
+				};
 			} else {
-				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("indexed property {} of type {} is not supporterd", fieldValue, fieldValue.getClass());
 			}
 			return retrieveFromIndexedField(
 				propertyRetriever.get(),
 				indexes.substring(matcher.end(), indexes.length())
 			);
 		}
-		return property;
+		return fieldValue;
 	}
 
 	Object retrieveFieldByDirectAccess(Object target, String pathSegment) throws IllegalAccessException {
+		if (pathSegment.trim().isEmpty()) {
+			return target;
+		}
 		return Fields.getDirect(target, pathSegment);
 	}
 
 	Object retrieveFieldByGetterMethod(Object obj, String pathSegment) {
+		if (pathSegment.trim().isEmpty()) {
+			return obj;
+		}
 		Object objToReturn;
 		objToReturn = Methods.invokeDirect(
 			obj,
@@ -185,8 +201,7 @@ public abstract class FieldAccessor implements Component {
 		return objToReturn;
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> void setInIndexedField(Object property, String indexes, Object value) {
+	private <T> void setInIndexedField(Object fieldValue, String indexes, Object value) {
 		Matcher matcher = indexesSearcherForIndexedField.matcher(indexes);
 		int lastIndexOf = 0;
 		String index = null;
@@ -194,26 +209,61 @@ public abstract class FieldAccessor implements Component {
 			index = matcher.group(1);
 			lastIndexOf = matcher.start();
 		}
-		Object targetObject = retrieveFromIndexedField(property, indexes.substring(0, lastIndexOf));
+		Object targetObject = retrieveFromIndexedField(fieldValue, indexes.substring(0, lastIndexOf));
 		if (targetObject.getClass().isArray()) {
 			Array.set(targetObject, Integer.valueOf(index), value);
-		} else if (List.class.isAssignableFrom(targetObject.getClass())) {
+		} else if (targetObject instanceof List) {
 			((List<T>)targetObject).set(Integer.valueOf(index), (T)value);
-		} else if (Map.class.isAssignableFrom(property.getClass())) {
-			((Map<String, T>)property).put(index, (T)value);
+		} else if (targetObject instanceof Map) {
+			((Map<String, T>)targetObject).put(index, (T)value);
+		} else if (targetObject instanceof Collection) {
+			setIndexedValue((Collection<T>) targetObject, index, value);
 		} else {
-			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
+			org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("indexed property {} of type {} is not supporterd", fieldValue, fieldValue.getClass());
 		}
+	}
+
+	private <T> void setIndexedValue(Collection<T> collection, String index, Object value) {
+		int indexAsInt = convertAndCheckIndex(collection, index);
+		List<T> tempList = new ArrayList<>();
+		Iterator<T> itr = collection.iterator();
+		while (itr.hasNext()) {
+			tempList.add(itr.next());
+		}
+		int iterationIndex = 0;
+		collection.clear();
+		itr = tempList.iterator();
+		while (itr.hasNext()) {
+			T origVal = itr.next();
+			if (iterationIndex++ != indexAsInt) {
+				collection.add(origVal);
+			} else {
+				collection.add((T)value);
+			}
+		}
+	}
+
+	private <T> int convertAndCheckIndex(Collection<T> collection, String indexAsString) {
+		int index = Integer.valueOf(indexAsString);
+		if (collection.size() < index) {
+			throw new IndexOutOfBoundsException(("Illegal index "+ indexAsString +", collection size " + collection.size()));
+		}
+		return index;
 	}
 
 	Boolean setFieldByDirectAccess(Object target, String pathSegment, Object value) throws IllegalAccessException {
 		Matcher matcher = simpleFieldSearcher.matcher(pathSegment);
 		matcher.find();
-		Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
 		if (matcher.group(2).isEmpty()) {
+			Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
 			Fields.setDirect(target, field, value);
 		} else {
-			setInIndexedField(field.get(target), matcher.group(2), value);
+			if (target.getClass().isArray() || target instanceof Map || target instanceof Collection) {
+				setInIndexedField(target, matcher.group(2), value);
+			} else {
+				Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
+				setInIndexedField(field.get(target), matcher.group(2), value);
+			}
 		}
 		return Boolean.TRUE;
 	}
@@ -226,9 +276,13 @@ public abstract class FieldAccessor implements Component {
 				target, Methods.createSetterMethodNameByFieldPath(matcher.group(1)), value
 			);
 		} else {
-			setInIndexedField(Methods.invokeDirect(
-				target, Methods.createGetterMethodNameByFieldPath(matcher.group(1))
-			), matcher.group(2), value);
+			if (target.getClass().isArray() || target instanceof Map || target instanceof Collection) {
+				setInIndexedField(target, matcher.group(2), value);
+			} else {
+				setInIndexedField(Methods.invokeDirect(
+					target, Methods.createGetterMethodNameByFieldPath(matcher.group(1))
+				), matcher.group(2), value);
+			}
 		}
 		return Boolean.TRUE;
 	}
