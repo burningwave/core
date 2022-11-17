@@ -43,9 +43,9 @@ import org.burningwave.core.io.PathHelper;
 
 public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunter.SearchResult> {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public final static String NAME_IN_CONFIG_PROPERTIES = "byte-code-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
@@ -59,36 +59,36 @@ public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunt
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(
-				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
+					Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
+					(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
-			);
+					);
 			defaultValues.put(
-				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
-			);
+					Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+					"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 
 	public static ByteCodeHunter create(
-		PathHelper pathHelper,
-		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Map<?, ?> config
-	) {
+			PathHelper pathHelper,
+			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+			Map<?, ?> config
+			) {
 		return new ByteCodeHunterImpl(
-			pathHelper,
-			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			config
-		);
+				pathHelper,
+				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+				config
+				);
 	}
 
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<JavaClass> {
@@ -107,9 +107,9 @@ public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunt
 
 		public Map<String, ByteBuffer> getByteCodesFlatMap() {
 			return getClassesFlatMap().entrySet().stream().collect(
-				Collectors.toMap(e ->
+					Collectors.toMap(e ->
 					e.getValue().getName(), e -> e.getValue().getByteCode())
-			);
+					);
 		}
 	}
 }

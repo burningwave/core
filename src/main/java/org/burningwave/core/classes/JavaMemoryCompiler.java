@@ -48,9 +48,9 @@ import org.burningwave.core.io.PathHelper;
 
 public interface JavaMemoryCompiler {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 			public static final String CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.class-paths";
 			public static final String BLACK_LISTED_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.black-listed-class-paths";
 			public static final String ADDITIONAL_CLASS_PATHS =  PathHelper.Configuration.Key.PATHS_PREFIX + "java-memory-compiler.additional-class-paths";
@@ -64,30 +64,30 @@ public interface JavaMemoryCompiler {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(
-				Key.CLASS_PATHS,
-				PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
-			);
+					Key.CLASS_PATHS,
+					PathHelper.Configuration.Key.MAIN_CLASS_PATHS_PLACE_HOLDER + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${" + PathHelper.Configuration.Key.MAIN_CLASS_PATHS_EXTENSION + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${" + Configuration.Key.ADDITIONAL_CLASS_PATHS + "}"
+					);
 			defaultValues.put(
-				Key.CLASS_REPOSITORIES,
-				"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					Key.CLASS_REPOSITORIES,
+					"${" + PathHelper.Configuration.Key.MAIN_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${" + Configuration.Key.ADDITIONAL_CLASS_REPOSITORIES + "}" + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(
-				Key.BLACK_LISTED_CLASS_PATHS,
-				"//${paths.main-class-paths}/..//children:.*?surefirebooter\\d{0,}\\.jar"  + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					Key.BLACK_LISTED_CLASS_PATHS,
+					"//${paths.main-class-paths}/..//children:.*?surefirebooter\\d{0,}\\.jar"  + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 
 	public static JavaMemoryCompiler create(
-		PathHelper pathHelper,
-		ClassPathHelper classPathHelper,
-		Map<?, ?> config
-	) {
+			PathHelper pathHelper,
+			ClassPathHelper classPathHelper,
+			Map<?, ?> config
+			) {
 		return new JavaMemoryCompilerImpl(pathHelper, classPathHelper, config);
 	}
 
@@ -184,7 +184,7 @@ public interface JavaMemoryCompiler {
 			}
 
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config setClassPaths(Collection<String>... classPathCollections) {
@@ -202,7 +202,7 @@ public interface JavaMemoryCompiler {
 				return setClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config addClassPaths(Collection<String>... classPathCollections) {
@@ -220,7 +220,7 @@ public interface JavaMemoryCompiler {
 				return addClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config setClassRepositories(Collection<String>... classPathCollections) {
@@ -238,7 +238,7 @@ public interface JavaMemoryCompiler {
 				return setClassRepositories(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config addClassRepositories(Collection<String>... classPathCollections) {
@@ -256,7 +256,7 @@ public interface JavaMemoryCompiler {
 				return addClassRepositories(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config setBlackListedClassPaths(Collection<String>... classPathCollections) {
@@ -274,7 +274,7 @@ public interface JavaMemoryCompiler {
 				return setBlackListedClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			@SafeVarargs
 			public final Config addBlackListedClassPaths(Collection<String>... classPathCollections) {
@@ -292,7 +292,7 @@ public interface JavaMemoryCompiler {
 				return addBlackListedClassPaths(Arrays.asList(classPaths));
 			}
 
-		////////////////////
+			////////////////////
 
 			Collection<String> getSources() {
 				return sources;

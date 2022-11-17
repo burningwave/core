@@ -41,9 +41,9 @@ import java.util.function.Predicate;
 
 public interface PathHelper {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 			public static String PATHS_PREFIX = "paths.";
 			public static String MAIN_CLASS_PATHS = PATHS_PREFIX + "main-class-paths";
 			public static String MAIN_CLASS_PATHS_PLACE_HOLDER = "${" + MAIN_CLASS_PATHS + "}";
@@ -58,15 +58,15 @@ public interface PathHelper {
 
 			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			defaultValues.put(
-				Key.MAIN_CLASS_PATHS_EXTENSION,
-				"//${system.properties:java.home}/lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"//${system.properties:java.home}/../lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					Key.MAIN_CLASS_PATHS_EXTENSION,
+					"//${system.properties:java.home}/lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"//${system.properties:java.home}/../lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(
-				Key.MAIN_CLASS_REPOSITORIES,
-				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					Key.MAIN_CLASS_REPOSITORIES,
+					"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}

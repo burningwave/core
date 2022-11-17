@@ -47,9 +47,9 @@ import org.burningwave.core.io.PathHelper;
 @SuppressWarnings("unchecked")
 public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.SearchResult> {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 			public final static String NAME_IN_CONFIG_PROPERTIES = "class-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
 			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = NAME_IN_CONFIG_PROPERTIES + ".new-isolated-path-scanner-class-loader.search-config.check-file-option";
@@ -62,34 +62,34 @@ public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.Sear
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY +".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY +".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(
-				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
+					Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
+					(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
-			);
+					);
 			defaultValues.put(
-				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
-			);
+					Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+					"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 
 	public static ClassHunter create(
-		PathHelper pathHelper,
-		Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
-		Map<?, ?> config
-	) {
+			PathHelper pathHelper,
+			Object defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier,
+			Map<?, ?> config
+			) {
 		return new ClassHunterImpl(
-			pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
-		);
+				pathHelper, defaultPathScannerClassLoaderOrDefaultClassLoaderSupplier, config
+				);
 	}
 
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Class<?>> {
@@ -122,11 +122,11 @@ public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.Sear
 					final Collection<Member> membersFoundByCriteriaFinal = new HashSet<>();
 					((ClassHunterImpl.SearchContext)this.context).getMembersFoundFlatMap().values().forEach((membersCollection) -> {
 						membersCollection.stream().filter(
-							(member) ->
+								(member) ->
 								criteriaCopy.testWithFalseResultForNullEntityOrTrueResultForNullPredicate((M)member).getResult()
-						).collect(
-							Collectors.toCollection(() -> membersFoundByCriteriaFinal)
-						);
+								).collect(
+										Collectors.toCollection(() -> membersFoundByCriteriaFinal)
+										);
 					});
 					return membersFoundByCriteriaFinal;
 				}

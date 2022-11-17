@@ -55,9 +55,9 @@ import org.burningwave.core.iterable.Properties.Event;
 @SuppressWarnings("unchecked")
 public class BufferHandler implements Component {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			static final String BUFFER_SIZE = "buffer-handler.default-buffer-size";
 			static final String BUFFER_ALLOCATION_MODE = "buffer-handler.default-allocation-mode";
@@ -71,9 +71,9 @@ public class BufferHandler implements Component {
 
 			defaultValues.put(Key.BUFFER_SIZE, "1024");
 			defaultValues.put(
-				Key.BUFFER_ALLOCATION_MODE,
-				"ByteBuffer::allocateDirect"
-			);
+					Key.BUFFER_ALLOCATION_MODE,
+					"ByteBuffer::allocateDirect"
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -82,7 +82,7 @@ public class BufferHandler implements Component {
 	Field directAllocatedByteBufferAddressField;
 	int defaultBufferSize;
 	Function<Integer, ByteBuffer> defaultByteBufferAllocator;
-    final static float reallocationFactor = 1.1f;
+	final static float reallocationFactor = 1.1f;
 
 	public BufferHandler(Map<?, ?> config) {
 		init(config);
@@ -94,23 +94,23 @@ public class BufferHandler implements Component {
 		checkAndListenTo(config);
 		Class<?> directByteBufferClass = ByteBuffer.allocateDirect(0).getClass();
 		mainCycle:
-		while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
-			for (Field field : Driver.getDeclaredFields(directByteBufferClass)) {
-				if (field.getName().equals("address")) {
-					directAllocatedByteBufferAddressField = field;
-					break mainCycle;
+			while (directByteBufferClass != null && directAllocatedByteBufferAddressField == null) {
+				for (Field field : Driver.getDeclaredFields(directByteBufferClass)) {
+					if (field.getName().equals("address")) {
+						directAllocatedByteBufferAddressField = field;
+						break mainCycle;
+					}
 				}
+				directByteBufferClass = directByteBufferClass.getSuperclass();
 			}
-			directByteBufferClass = directByteBufferClass.getSuperclass();
-		}
 	}
 
 	private void setDefaultByteBufferSize(Map<?, ?> config) {
 		String defaultBufferSize = IterableObjectHelper.resolveStringValue(
-			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
-			.on(config)
-			.withDefaultValues(Configuration.DEFAULT_VALUES)
-		);
+				ResolveConfig.forNamedKey(Configuration.Key.BUFFER_SIZE)
+				.on(config)
+				.withDefaultValues(Configuration.DEFAULT_VALUES)
+				);
 		try {
 			this.defaultBufferSize = Integer.valueOf(defaultBufferSize);
 		} catch (Throwable exc) {
@@ -129,10 +129,10 @@ public class BufferHandler implements Component {
 
 	private void setDefaultByteBufferAllocationMode(Map<?, ?> config) {
 		String defaultByteBufferAllocationMode = IterableObjectHelper.resolveStringValue(
-			ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
-			.on(config)
-			.withDefaultValues(Configuration.DEFAULT_VALUES)
-		);
+				ResolveConfig.forNamedKey(Configuration.Key.BUFFER_ALLOCATION_MODE)
+				.on(config)
+				.withDefaultValues(Configuration.DEFAULT_VALUES)
+				);
 		if (defaultByteBufferAllocationMode.equalsIgnoreCase("ByteBuffer::allocate")) {
 			this.defaultByteBufferAllocator = this::allocateInHeap;
 			ManagedLoggerRepository.logInfo(getClass()::getName, "default allocation mode: ByteBuffer::allocate");
@@ -231,22 +231,22 @@ public class BufferHandler implements Component {
 	}
 
 	public byte[] toByteArray(ByteBuffer byteBuffer) {
-    	byteBuffer = shareContent(byteBuffer);
-    	byte[] result = new byte[limit(byteBuffer)];
-    	byteBuffer.get(result, 0, result.length);
-        return result;
+		byteBuffer = shareContent(byteBuffer);
+		byte[] result = new byte[limit(byteBuffer)];
+		byteBuffer.get(result, 0, result.length);
+		return result;
 	}
 
-    public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes) {
-        return ensureRemaining(byteBuffer, requiredBytes, 0);
-    }
+	public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes) {
+		return ensureRemaining(byteBuffer, requiredBytes, 0);
+	}
 
-    public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes, int initialPosition) {
-        if (requiredBytes > remaining(byteBuffer)) {
-        	return expandBuffer(byteBuffer, requiredBytes, initialPosition);
-        }
-        return byteBuffer;
-    }
+	public ByteBuffer ensureRemaining(ByteBuffer byteBuffer, int requiredBytes, int initialPosition) {
+		if (requiredBytes > remaining(byteBuffer)) {
+			return expandBuffer(byteBuffer, requiredBytes, initialPosition);
+		}
+		return byteBuffer;
+	}
 
 	public ByteBuffer expandBuffer(ByteBuffer byteBuffer, int requiredBytes) {
 		return expandBuffer(byteBuffer, requiredBytes, 0);
@@ -257,9 +257,9 @@ public class BufferHandler implements Component {
 		ByteBuffer newBuffer = allocate(Math.max((int)(limit * reallocationFactor), position(byteBuffer) + requiredBytes));
 		flip(byteBuffer);
 		newBuffer.put(byteBuffer);
-        limit(byteBuffer, limit);
-        position(byteBuffer, initialPosition);
-        return newBuffer;
+		limit(byteBuffer, limit);
+		position(byteBuffer, initialPosition);
+		return newBuffer;
 	}
 
 	public <T extends Buffer> long getAddress(T buffer) {
@@ -364,8 +364,8 @@ public class BufferHandler implements Component {
 					if (getAddress() != 0) {
 						Methods.invokeDirect(cleaner, "clean");
 						getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
-							Fields.setDirect(linkedBuffer, "address", 0L)
-						);
+						Fields.setDirect(linkedBuffer, "address", 0L)
+								);
 						return true;
 					}
 					return false;
@@ -396,8 +396,8 @@ public class BufferHandler implements Component {
 						if (getAddress() != 0) {
 							Methods.invokeDirect(deallocator, "run");
 							getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
-								Fields.setDirect(linkedBuffer, "address", 0L)
-							);
+							Fields.setDirect(linkedBuffer, "address", 0L)
+									);
 							return true;
 						} else {
 							return false;

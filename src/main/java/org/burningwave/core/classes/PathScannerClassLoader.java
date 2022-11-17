@@ -62,8 +62,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	FileSystemItem.Criteria fileFilterAndProcessor;
 	BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+		public static abstract class Key {
 
 			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
 			public final static String SEARCH_CONFIG_CHECK_FILE_OPTION = "path-scanner-class-loader.search-config.check-file-option";
@@ -77,9 +77,9 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 
 			defaultValues = new HashMap<>();
 			defaultValues.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Configuration.Key.PARENT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" +  IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.PARENT_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY + ".additional-imports}" +  IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(Configuration.Key.PARENT_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, PathScannerClassLoader.class.getPackage().getName() + ".ParentClassLoaderRetrieverForPathScannerClassLoader");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(Key.PARENT_CLASS_LOADER, Thread.currentThread().getContextClassLoader());
@@ -90,14 +90,14 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	}
 
 	static {
-        ClassLoader.registerAsParallelCapable();
-    }
+		ClassLoader.registerAsParallelCapable();
+	}
 
 	protected PathScannerClassLoader(
-		ClassLoader parentClassLoader,
-		PathHelper pathHelper,
-		FileSystemItem.Criteria fileFilter
-	) {
+			ClassLoader parentClassLoader,
+			PathHelper pathHelper,
+			FileSystemItem.Criteria fileFilter
+			) {
 		super(parentClassLoader);
 		this.pathHelper = pathHelper;
 		this.loadedPaths = new ConcurrentHashMap<>();
@@ -157,8 +157,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 							Predicate<FileSystemItem[]> classFilePredicateAndConsumer = fileFilterAndProcessor.getPredicateOrTruePredicateIfPredicateIsNull();
 							for (FileSystemItem child : pathFIS.getAllChildren()) {
 								classFilePredicateAndConsumer.test(
-									new FileSystemItem [] {child, pathFIS}
-								);
+										new FileSystemItem [] {child, pathFIS}
+										);
 							}
 							loadedPaths.put(path, Boolean.TRUE);
 							scannedPaths.add(path);
@@ -264,20 +264,20 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	@Override
 	protected Task closeResources() {
 		return closeResources(
-			PathScannerClassLoader.class.getName() + "@" + System.identityHashCode(this),
-			() ->
+				PathScannerClassLoader.class.getName() + "@" + System.identityHashCode(this),
+				() ->
 				this.loadedPaths == null,
-			task -> {
-				super.closeResources().waitForFinish();
-				this.loadedPaths.clear();
-				this.loadedPaths = null;
-				pathHelper = null;
-				fileFilterAndProcessor = null;
-				if (this.getClass().equals(PathScannerClassLoader.class)) {
-					ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+				task -> {
+					super.closeResources().waitForFinish();
+					this.loadedPaths.clear();
+					this.loadedPaths = null;
+					pathHelper = null;
+					fileFilterAndProcessor = null;
+					if (this.getClass().equals(PathScannerClassLoader.class)) {
+						ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
+					}
 				}
-			}
-		);
+				);
 	}
 
 }

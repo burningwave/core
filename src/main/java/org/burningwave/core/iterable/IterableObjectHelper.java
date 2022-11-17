@@ -54,15 +54,17 @@ import org.burningwave.core.iterable.Properties.Event;
 @SuppressWarnings("unchecked")
 public interface IterableObjectHelper {
 
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+
+		public static abstract class Key {
+
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD =
-				"iterable-object-helper.parallel-iteration.applicability.max-runtime-thread-count-threshold";
+					"iterable-object-helper.parallel-iteration.applicability.max-runtime-thread-count-threshold";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_DEFAULT_MINIMUM_COLLECTION_SIZE =
-				"iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size";
+					"iterable-object-helper.parallel-iteration.applicability.default-minimum-collection-size";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES =
-				"iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types";
+					"iterable-object-helper.parallel-iteration.applicability.output-collection-enabled-types";
 		}
 
 		public final static Map<String, Object> DEFAULT_VALUES;
@@ -79,17 +81,17 @@ public interface IterableObjectHelper {
 			String defaultValuesSeparator = (String)defaultValues.get(Key.DEFAULT_VALUES_SEPERATOR);
 			//The semicolons in this value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 			defaultValues.put(
-				Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
-				ConcurrentHashMap.class.getName() + "$CollectionView" + defaultValuesSeparator +
-				Collections.class.getName() + "$SynchronizedCollection" + defaultValuesSeparator +
-				CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
-				CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
-				BlockingQueue.class.getName() + defaultValuesSeparator +
-				ConcurrentSkipListSet.class.getName() + defaultValuesSeparator +
-				ConcurrentSkipListMap.class.getName() + "$EntrySet" + defaultValuesSeparator +
-				ConcurrentSkipListMap.class.getName() + "$KeySet" + defaultValuesSeparator +
-				ConcurrentSkipListMap.class.getName() + "$Values" + defaultValuesSeparator
-			);
+					Key.PARELLEL_ITERATION_APPLICABILITY_OUTPUT_COLLECTION_ENABLED_TYPES,
+					ConcurrentHashMap.class.getName() + "$CollectionView" + defaultValuesSeparator +
+					Collections.class.getName() + "$SynchronizedCollection" + defaultValuesSeparator +
+					CopyOnWriteArrayList.class.getName() + defaultValuesSeparator +
+					CopyOnWriteArraySet.class.getName() + defaultValuesSeparator +
+					BlockingQueue.class.getName() + defaultValuesSeparator +
+					ConcurrentSkipListSet.class.getName() + defaultValuesSeparator +
+					ConcurrentSkipListMap.class.getName() + "$EntrySet" + defaultValuesSeparator +
+					ConcurrentSkipListMap.class.getName() + "$KeySet" + defaultValuesSeparator +
+					ConcurrentSkipListMap.class.getName() + "$Values" + defaultValuesSeparator
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -116,10 +118,10 @@ public interface IterableObjectHelper {
 	public <V, E extends Throwable> void deepClear(Collection<V> map, ThrowingConsumer<V, E> itemDestroyer) throws E;
 
 	public <T> Collection<T> merge(
-		Supplier<Collection<T>> baseCollectionSupplier,
-		Supplier<Collection<T>> additionalCollectionSupplier,
-		Supplier<Collection<T>> defaultCollectionSupplier
-	);
+			Supplier<Collection<T>> baseCollectionSupplier,
+			Supplier<Collection<T>> additionalCollectionSupplier,
+			Supplier<Collection<T>> defaultCollectionSupplier
+			);
 
 	public <T> T getRandom(Collection<T> coll);
 
@@ -153,22 +155,22 @@ public interface IterableObjectHelper {
 	public Collection<String> getAllPlaceHolders(Map<?, ?> map, String propertyName);
 
 	public <I, IC, O, OC> OC iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
-	);
+			IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
+			);
 
 	public <I, IC, K, O, OM> OM iterateAndGet(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
-	);
+			IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
+			);
 
 	public <I, IC> void iterate(IterationConfig<I, IC, ?> config);
 
 	public <I, IC, O, OC> QueuedTaskExecutor.ProducerTask<OC> createIterateAndGetTask(
-		IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
-	);
+			IterableObjectHelper.IterationConfig.WithOutputOfCollection<I, IC, O, OC> config
+			);
 
 	public <I, IC, K, O, OM> QueuedTaskExecutor.ProducerTask<OM> createIterateAndGetTask(
-		IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
-	);
+			IterableObjectHelper.IterationConfig.WithOutputOfMap<I, IC, K, O, OM> config
+			);
 
 	public <I, IC> QueuedTaskExecutor.Task createIterateTask(IterationConfig<I, IC, ?> config);
 
@@ -195,11 +197,11 @@ public interface IterableObjectHelper {
 	}
 
 	public <K, V> String toString(
-		Map<K, V> map,
-		Function<K, String> keyTransformer,
-		Function<V, String> valueTransformer,
-		int marginTabCount
-	);
+			Map<K, V> map,
+			Function<K, String> keyTransformer,
+			Function<V, String> valueTransformer,
+			int marginTabCount
+			);
 
 	public static class TerminateIteration extends RuntimeException {
 		private static final long serialVersionUID = 4182825598193659018L;
@@ -212,10 +214,10 @@ public interface IterableObjectHelper {
 			ONLY_FOR_THE_CURRENT_THREAD_NOTIFICATION = new IterableObjectHelper.TerminateIteration();
 		}
 
-        @Override
-        public synchronized Throwable fillInStackTrace() {
-            return this;
-        }
+		@Override
+		public synchronized Throwable fillInStackTrace() {
+			return this;
+		}
 
 	}
 

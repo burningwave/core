@@ -45,9 +45,9 @@ import org.burningwave.core.io.PathHelper;
 
 public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, ClassPathHunter.SearchResult> {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public final static String NAME_IN_CONFIG_PROPERTIES = "class-path-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
@@ -61,36 +61,36 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_IMPORTS_SUFFIX,
-				"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY +".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
-				PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + "." + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_KEY +".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					PathScannerClassLoader.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 			defaultValues.put(Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER + CodeExecutor.Configuration.Key.PROPERTIES_FILE_SUPPLIER_NAME_SUFFIX, ClassHunter.class.getPackage().getName() + ".DefaultPathScannerClassLoaderRetrieverForClassHunter");
 			//DEFAULT_VALUES.put(Key.PARENT_CLASS_LOADER_FOR_PATH_SCANNER_CLASS_LOADER, "Thread.currentThread().getContextClassLoader()");
 			defaultValues.put(
-				Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
-				(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
+					Key.DEFAULT_PATH_SCANNER_CLASS_LOADER,
+					(Function<ComponentSupplier, ClassLoader>)(componentSupplier) ->
 					componentSupplier.getPathScannerClassLoader()
-			);
+					);
 			defaultValues.put(
-				Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
-			);
+					Key.PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+					"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
 	}
 
 	public static ClassPathHunter create(
-		PathHelper pathHelper,
-		Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-		Map<?, ?> config
-	) {
+			PathHelper pathHelper,
+			Object defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+			Map<?, ?> config
+			) {
 		return new ClassPathHunterImpl(
-			pathHelper,
-			defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
-			config
-		);
+				pathHelper,
+				defaultPathScannerClassLoaderOrDefaultPathScannerClassLoaderSupplier,
+				config
+				);
 	}
 
 	public static class SearchResult extends org.burningwave.core.classes.SearchResult<Collection<Class<?>>> {
@@ -102,9 +102,9 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 
 		public Collection<FileSystemItem> getClassPaths(ClassCriteria criteria) {
 			ClassCriteria criteriaCopy = criteria.createCopy().init(
-				context.getSearchConfig().getClassCriteria().getClassSupplier(),
-				context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
-			);
+					context.getSearchConfig().getClassCriteria().getClassSupplier(),
+					context.getSearchConfig().getClassCriteria().getByteCodeSupplier()
+					);
 			Optional.ofNullable(context.getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
 			Map<String, Collection<Class<?>>> itemsFound = new HashMap<>();
 			getItemsFoundFlatMap().forEach((path, classColl) -> {
@@ -125,12 +125,12 @@ public interface ClassPathHunter extends ClassPathScanner<Collection<Class<?>>, 
 				synchronized (itemsFoundFlatMaps) {
 					if (classPaths == null) {
 						classPaths = itemsFoundFlatMaps.keySet().stream().map(path ->
-							FileSystemItem.ofPath(path)
-						).collect(
-							Collectors.toCollection(
-								HashSet::new
-							)
-						);
+						FileSystemItem.ofPath(path)
+								).collect(
+										Collectors.toCollection(
+												HashSet::new
+												)
+										);
 					}
 				}
 			}

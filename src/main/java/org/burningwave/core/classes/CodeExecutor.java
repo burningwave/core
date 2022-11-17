@@ -45,9 +45,10 @@ import org.burningwave.core.io.PathHelper;
 
 public interface CodeExecutor {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
+
 			public static final String COMMON_IMPORTS = "code-executor.common.imports";
 			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
 			public static final String PROPERTIES_FILE_IMPORTS_SUFFIX = ".imports";
@@ -70,17 +71,17 @@ public interface CodeExecutor {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(Key.COMMON_IMPORTS,
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggerRepository" + IterableObjectHelper.getDefaultValuesSeparator() +
-				"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + IterableObjectHelper.getDefaultValuesSeparator() +
- 				ComponentSupplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				Function.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				FileSystemItem.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				PathHelper.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				QueuedTaskExecutor.ProducerTask.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				QueuedTaskExecutor.Task.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-				Supplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-			);
+					"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".BackgroundExecutor" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"static " + org.burningwave.core.assembler.StaticComponentContainer.class.getName() + ".ManagedLoggerRepository" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Key.ADDITIONAL_COMMON_IMPORTS +  "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					ComponentSupplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					Function.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					FileSystemItem.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					PathHelper.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					QueuedTaskExecutor.ProducerTask.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					QueuedTaskExecutor.Task.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					Supplier.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+					);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -88,15 +89,15 @@ public interface CodeExecutor {
 	}
 
 	public static CodeExecutor create(
-		Supplier<ClassFactory> classFactorySupplier,
-		PathHelper pathHelper,
-		Map<?, ?> config
-	) {
+			Supplier<ClassFactory> classFactorySupplier,
+			PathHelper pathHelper,
+			Map<?, ?> config
+			) {
 		return new CodeExecutorImpl(
-			classFactorySupplier,
-			pathHelper,
-			config
-		);
+				classFactorySupplier,
+				pathHelper,
+				config
+				);
 	}
 
 	public <T> T executeProperty(String propertyName, Object... params);
