@@ -31,6 +31,7 @@ package org.burningwave.core.classes;
 
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Fields;
+import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.reflect.Array;
@@ -108,8 +109,16 @@ public abstract class FieldAccessor implements Component {
 
 	private void manageGetFieldExceptions(List<Throwable> exceptions) {
 		if (exceptions.size() > 0) {
+			String message = "";
 			for (Throwable exception : exceptions) {
-				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exception);
+				message += exception.getMessage() + "\n";
+			}
+			message = message.substring(0, message.length() - 1);
+			if (exceptions.size() == fieldRetrievers.size()) {
+				ManagedLoggerRepository.logError(getClass()::getName, message.toString());
+				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exceptions.iterator().next());
+			} else {
+				//logDebug("Warning: " + message);
 			}
 		}
 	}
