@@ -189,13 +189,13 @@ public abstract class FieldAccessor implements Component {
 		return Fields.getDirect(target, pathSegment);
 	}
 
-	Object retrieveFieldByGetterMethod(Object obj, String pathSegment) {
+	Object retrieveFieldByGetterMethod(Object target, String pathSegment) {
 		if (pathSegment.trim().isEmpty()) {
-			return obj;
+			return target;
 		}
 		Object objToReturn;
 		objToReturn = Methods.invokeDirect(
-			obj,
+			target,
 			Methods.createGetterMethodNameByFieldPath(pathSegment)
 		);
 		return objToReturn;
