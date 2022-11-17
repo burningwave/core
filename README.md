@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.62.0</version>
+    <version>12.62.1</version>
 </dependency>
 ```
 
@@ -1067,8 +1067,8 @@ It is represented by the **org.burningwave.core.assembler.StaticComponentContain
 ```java
 public static final org.burningwave.core.concurrent.QueuedTasksExecutor.Group BackgroundExecutor;
 public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
-public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
-public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
+public static final org.burningwave.core.classes.FieldAccessor ByFieldOrByMethodPropertyAccessor;
+public static final org.burningwave.core.classes.FieldAccessor ByMethodOrByFieldPropertyAccessor;
 public static final org.burningwave.core.Cache Cache;
 public static final org.burningwave.core.classes.Classes Classes;
 public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
