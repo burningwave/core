@@ -45,9 +45,9 @@ import org.burningwave.core.io.PathHelper;
 
 public interface CodeExecutor {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 			public static final String COMMON_IMPORTS = "code-executor.common.imports";
 			public static final String ADDITIONAL_COMMON_IMPORTS = "code-executor.common.additional-imports";
 			public static final String PROPERTIES_FILE_IMPORTS_SUFFIX = ".imports";

@@ -84,15 +84,15 @@ import org.burningwave.core.iterable.Properties.Event;
 @SuppressWarnings({"unchecked", "resource"})
 public class ComponentContainer implements ComponentSupplier, Properties.Listener {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public static final String AFTER_INIT = "component-container.after-init.operations";
 
 		}
 
-		public static class Default {
+		public static abstract class Default {
 
 			private static Map<String, String> FILE_NAME;
 			private final static Map<String, Object> VALUES;

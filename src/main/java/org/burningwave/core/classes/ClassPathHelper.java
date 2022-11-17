@@ -41,9 +41,9 @@ import org.burningwave.core.io.FileSystemItem;
 
 public interface ClassPathHelper {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public static final String CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = "class-path-helper.class-path-hunter.search-config.check-file-option";
 

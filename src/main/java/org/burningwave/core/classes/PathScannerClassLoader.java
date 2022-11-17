@@ -62,8 +62,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 	FileSystemItem.Criteria fileFilterAndProcessor;
 	BiFunction<Throwable, FileSystemItem[], Boolean> exceptionHandler;
 
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+		public static abstract class Key {
 
 			public final static String PARENT_CLASS_LOADER = "path-scanner-class-loader.parent";
 			public final static String SEARCH_CONFIG_CHECK_FILE_OPTION = "path-scanner-class-loader.search-config.check-file-option";

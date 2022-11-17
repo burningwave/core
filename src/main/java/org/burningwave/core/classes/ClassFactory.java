@@ -57,9 +57,9 @@ import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
 public interface ClassFactory {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public static final String DEFAULT_CLASS_LOADER = "class-factory.default-class-loader";
 

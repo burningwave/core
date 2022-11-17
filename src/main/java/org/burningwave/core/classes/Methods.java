@@ -57,15 +57,15 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 		return new Methods();
 	}
 
-	String createGetterMethodNameByPropertyName(String property) {
+	String createGetterMethodNameByFieldPath(String fieldPath) {
 		String methodName =
-			"get" + Strings.capitalizeFirstCharacter(property);
+			"get" + Strings.capitalizeFirstCharacter(fieldPath);
 		return methodName;
 	}
 
-	String createSetterMethodNameByPropertyName(String property) {
+	String createSetterMethodNameByFieldPath(String fieldPath) {
 		String methodName =
-			"set" + Strings.capitalizeFirstCharacter(property);
+			"set" + Strings.capitalizeFirstCharacter(fieldPath);
 		return methodName;
 	}
 

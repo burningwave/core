@@ -7,9 +7,9 @@ import java.lang.reflect.Modifier;
 import org.burningwave.core.assembler.ComponentSupplier;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.classes.ClassSourceGenerator;
+import org.burningwave.core.classes.FieldAccessor;
 import org.burningwave.core.classes.JavaMemoryCompiler;
 import org.burningwave.core.classes.MemoryClassLoader;
-import org.burningwave.core.classes.PropertyAccessor;
 import org.burningwave.core.classes.TypeDeclarationSourceGenerator;
 import org.burningwave.core.classes.UnitSourceGenerator;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ public class MemoryClassLoaderTest extends BaseTest {
 	public void loadClassTestOne() {
 		testNotNull(() -> {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
-				return memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
+				return memoryClassLoader.loadOrDefineClass(FieldAccessor.class);
 			}
 		});
 	}
@@ -53,8 +53,8 @@ public class MemoryClassLoaderTest extends BaseTest {
 	public void getResourceAsStreamTestOne() throws ClassNotFoundException {
 		testNotNull(() -> {
 			try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
-				memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
-				return memoryClassLoader.getResourceAsStream(PropertyAccessor.class.getName().replace(".", "/") + ".class");
+				memoryClassLoader.loadOrDefineClass(FieldAccessor.class);
+				return memoryClassLoader.getResourceAsStream(FieldAccessor.class.getName().replace(".", "/") + ".class");
 			}
 		});
 	}
@@ -62,8 +62,8 @@ public class MemoryClassLoaderTest extends BaseTest {
 	@Test
 	public void getResourceAsStreamTestTwo() throws ClassNotFoundException {
 		try(MemoryClassLoader memoryClassLoader = getMemoryClassLoader(null);) {
-			memoryClassLoader.loadOrDefineClass(PropertyAccessor.class);
-			assertTrue(memoryClassLoader.hasPackageBeenDefined(PropertyAccessor.class.getPackage().getName()));
+			memoryClassLoader.loadOrDefineClass(FieldAccessor.class);
+			assertTrue(memoryClassLoader.hasPackageBeenDefined(FieldAccessor.class.getPackage().getName()));
 		}
 	}
 

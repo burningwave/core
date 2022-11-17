@@ -103,9 +103,9 @@ public interface ManagedLogger {
 
 
 	public static interface Repository extends Closeable {
-		public static class Configuration {
+		public static abstract class Configuration {
 
-			public static class Key {
+			public static abstract class Key {
 
 				public static final String TYPE = "managed-logger.repository";
 				public static final String ENABLED_FLAG = "managed-logger.repository.enabled";

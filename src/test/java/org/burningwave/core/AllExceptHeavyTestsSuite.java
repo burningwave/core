@@ -33,7 +33,7 @@ import org.junit.runner.RunWith;
     MethodsTest.class,
     PathHelperTest.class,
     PathScannerClassLoaderTest.class,
-    PropertyAccessorTest.class,
+    FieldAccessorTest.class,
     PropertiesTest.class,
     SourceCodeHandlerTest.class,
     StringsTest.class,

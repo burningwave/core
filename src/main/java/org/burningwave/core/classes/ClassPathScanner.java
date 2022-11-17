@@ -52,8 +52,8 @@ import org.burningwave.core.iterable.Properties.Event;
 
 public interface ClassPathScanner<I, R extends SearchResult<I>> {
 
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+		public static abstract class Key {
 
 			public final static String DEFAULT_CHECK_FILE_OPTIONS = "hunters.default-search-config.check-file-option";
 			public static final String DEFAULT_SEARCH_CONFIG_PATHS = PathHelper.Configuration.Key.PATHS_PREFIX + "hunters.default-search-config.paths";

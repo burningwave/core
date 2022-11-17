@@ -59,8 +59,8 @@ import org.burningwave.core.iterable.Properties.Event;
 
 
 public class StaticComponentContainer {
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+		public static abstract class Key {
 
 			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
 			private static final String BANNER_HIDE = "banner.hide";
@@ -82,7 +82,7 @@ public class StaticComponentContainer {
 
 		}
 
-		public static class Default {
+		public static abstract class Default {
 
 			private static Map<String, String> FILE_NAME;
 			private final static Map<String, Object> VALUES;
@@ -205,8 +205,8 @@ public class StaticComponentContainer {
 
 	public static final org.burningwave.core.concurrent.QueuedTaskExecutor.Group BackgroundExecutor;
 	public static final org.burningwave.core.jvm.BufferHandler BufferHandler;
-	public static final org.burningwave.core.classes.PropertyAccessor ByFieldOrByMethodPropertyAccessor;
-	public static final org.burningwave.core.classes.PropertyAccessor ByMethodOrByFieldPropertyAccessor;
+	public static final org.burningwave.core.classes.FieldAccessor ByFieldOrByMethodPropertyAccessor;
+	public static final org.burningwave.core.classes.FieldAccessor ByMethodOrByFieldPropertyAccessor;
 	public static final org.burningwave.core.Cache Cache;
 	public static final org.burningwave.core.classes.Classes Classes;
 	public static final org.burningwave.core.classes.Classes.Loaders ClassLoaders;
@@ -380,8 +380,8 @@ public class StaticComponentContainer {
 			Constructors = org.burningwave.core.classes.Constructors.create();
 			Methods = org.burningwave.core.classes.Methods.create();
 			ClassLoaders = org.burningwave.core.classes.Classes.Loaders.create();
-			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByFieldOrByMethod.create();
-			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.PropertyAccessor.ByMethodOrByField.create();
+			ByFieldOrByMethodPropertyAccessor = org.burningwave.core.classes.FieldAccessor.ByFieldOrByMethod.create();
+			ByMethodOrByFieldPropertyAccessor = org.burningwave.core.classes.FieldAccessor.ByMethodOrByField.create();
 			SourceCodeHandler = org.burningwave.core.classes.SourceCodeHandler.create();
 			if (Objects.toBoolean(IterableObjectHelper.resolveValue(onGlobalPropertiesforNamedKey(Configuration.Key.RESOURCE_RELEASER_ENABLED)))) {
 				Runtime.getRuntime().addShutdownHook(

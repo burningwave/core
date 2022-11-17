@@ -55,9 +55,9 @@ import org.burningwave.core.iterable.Properties.Event;
 @SuppressWarnings("unchecked")
 public class BufferHandler implements Component {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			static final String BUFFER_SIZE = "buffer-handler.default-buffer-size";
 			static final String BUFFER_ALLOCATION_MODE = "buffer-handler.default-allocation-mode";

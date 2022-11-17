@@ -398,8 +398,8 @@ public abstract class Thread extends java.lang.Thread {
 
 
 	public static class Supplier implements Identifiable {
-		public static class Configuration {
-			public static class Key {
+		public static abstract class Configuration {
+			public static abstract class Key {
 				public static final String MAX_POOLABLE_THREAD_COUNT = "thread-supplier.max-poolable-thread-count";
 				public static final String MAX_DETACHED_THREAD_COUNT = "thread-supplier.max-detached-thread-count";
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";

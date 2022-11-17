@@ -47,9 +47,9 @@ import org.burningwave.core.io.PathHelper;
 @SuppressWarnings("unchecked")
 public interface ClassHunter extends ClassPathScanner<Class<?>, ClassHunter.SearchResult> {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 			public final static String NAME_IN_CONFIG_PROPERTIES = "class-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
 			public final static String PATH_SCANNER_CLASS_LOADER_SEARCH_CONFIG_CHECK_FILE_OPTIONS = NAME_IN_CONFIG_PROPERTIES + ".new-isolated-path-scanner-class-loader.search-config.check-file-option";

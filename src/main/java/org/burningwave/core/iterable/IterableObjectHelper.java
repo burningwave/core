@@ -54,8 +54,8 @@ import org.burningwave.core.iterable.Properties.Event;
 @SuppressWarnings("unchecked")
 public interface IterableObjectHelper {
 
-	public static class Configuration {
-		public static class Key {
+	public static abstract class Configuration {
+		public static abstract class Key {
 			public final static String DEFAULT_VALUES_SEPERATOR = "iterable-object-helper.default-values-separator";
 			public final static String PARELLEL_ITERATION_APPLICABILITY_MAX_RUNTIME_THREAD_COUNT_THRESHOLD =
 				"iterable-object-helper.parallel-iteration.applicability.max-runtime-thread-count-threshold";

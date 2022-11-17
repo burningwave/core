@@ -43,9 +43,9 @@ import org.burningwave.core.io.PathHelper;
 
 public interface ByteCodeHunter extends ClassPathScanner<JavaClass, ByteCodeHunter.SearchResult> {
 
-	public static class Configuration {
+	public static abstract class Configuration {
 
-		public static class Key {
+		public static abstract class Key {
 
 			public final static String NAME_IN_CONFIG_PROPERTIES = "byte-code-hunter";
 			public final static String DEFAULT_PATH_SCANNER_CLASS_LOADER = NAME_IN_CONFIG_PROPERTIES + ".default-path-scanner-class-loader";
