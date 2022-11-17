@@ -76,11 +76,11 @@ public abstract class Thread extends java.lang.Thread {
 		this.supplier = threadSupplier;
 		typeName = getClass().getSimpleName();
 		defaultName = Strings.compile(
-				"{} - {} executor {}",
-				supplier.name,
-				typeName,
-				number
-				);
+			"{} - {} executor {}",
+			supplier.name,
+			typeName,
+			number
+		);
 		setIndexedName();
 		setDaemon(threadSupplier.daemon);
 		setPriority(supplier.defaultThreadPriority);
@@ -183,9 +183,9 @@ public abstract class Thread extends java.lang.Thread {
 	@Deprecated/*(since="12.60.0")*/
 	public void kill() {
 		terminate(thread ->
-		Driver.stop(thread),
-		"stop"
-				);
+			Driver.stop(thread),
+			"stop"
+		);
 	}
 
 	@Override
@@ -195,15 +195,15 @@ public abstract class Thread extends java.lang.Thread {
 
 	void terminate(Consumer<Thread> operation, String operationName) {
 		ManagedLoggerRepository.logWarn(
-				getClass()::getName,
-				"Called {} by {}{}\n\ton {} (executable: {}):{}",
-				operationName,
-				java.lang.Thread.currentThread(),
-				Strings.from(Methods.retrieveExternalCallersInfo(), 2),
-				this,
-				executableWrapper.get(),
-				Strings.from(getStackTrace(), 2)
-				);
+			getClass()::getName,
+			"Called {} by {}{}\n\ton {} (executable: {}):{}",
+			operationName,
+			java.lang.Thread.currentThread(),
+			Strings.from(Methods.retrieveExternalCallersInfo(), 2),
+			this,
+			executableWrapper.get(),
+			Strings.from(getStackTrace(), 2)
+		);
 		shutDown();
 		removePermanently();
 		java.lang.Thread currentThread = java.lang.Thread.currentThread();
@@ -232,12 +232,12 @@ public abstract class Thread extends java.lang.Thread {
 	@Override
 	public String toString() {
 		return Strings.compile(
-				"{}{}",
-				super.toString(),
-				Optional.ofNullable(getState()).map(threadState ->
+			"{}{}",
+			super.toString(),
+			Optional.ofNullable(getState()).map(threadState ->
 				Strings.compile("({})", Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")))
-						).orElseGet(() -> "")
-				);
+			).orElseGet(() -> "")
+		);
 	}
 
 	public static long waitFor(long millis) {
@@ -296,10 +296,10 @@ public abstract class Thread extends java.lang.Thread {
 					synchronized(executableWrapper) {
 						if (supplier.addPoolableSleepingThreadFunction.apply(this) == null) {
 							ManagedLoggerRepository.logWarn(
-									getClass()::getName,
-									"Could not add thread '{}' to poolable sleeping container: it will be shutted down",
-									this
-									);
+								getClass()::getName,
+								"Could not add thread '{}' to poolable sleeping container: it will be shutted down",
+								this
+							);
 							this.shutDown();
 							continue;
 						}
@@ -399,15 +399,13 @@ public abstract class Thread extends java.lang.Thread {
 
 	public static class Supplier implements Identifiable {
 		public static abstract class Configuration {
-
 			public static abstract class Key {
-
 				public static final String MAX_POOLABLE_THREAD_COUNT = "thread-supplier.max-poolable-thread-count";
 				public static final String MAX_DETACHED_THREAD_COUNT = "thread-supplier.max-detached-thread-count";
 				public static final String DEFAULT_DAEMON_FLAG_VALUE = "thread-supplier.default-daemon-flag-value";
 				public static final String POOLABLE_THREAD_REQUEST_TIMEOUT = "thread-supplier.poolable-thread-request-timeout";
 				public static final String MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE =
-						"thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
+					"thread-supplier.max-detached-thread-count.elapsed-time-threshold-from-last-increase-for-gradual-decreasing-to-initial-value";
 				public static final String MAX_DETACHED_THREAD_COUNT_INCREASING_STEP = "thread-supplier.max-detached-thread-count.increasing-step";
 				public static final String DEFAULT_THREAD_PRIORITY = "thread-supplier.default-thread-priority";
 			}
@@ -418,39 +416,39 @@ public abstract class Thread extends java.lang.Thread {
 				Map<String, Object> defaultValues =  new HashMap<>();
 
 				defaultValues.put(
-						Key.MAX_POOLABLE_THREAD_COUNT,
-						"autodetect"
-						);
+					Key.MAX_POOLABLE_THREAD_COUNT,
+					"autodetect"
+				);
 
 				defaultValues.put(
-						Key.MAX_DETACHED_THREAD_COUNT,
-						"${" + Key.MAX_POOLABLE_THREAD_COUNT + "}"
-						);
+					Key.MAX_DETACHED_THREAD_COUNT,
+					"${" + Key.MAX_POOLABLE_THREAD_COUNT + "}"
+				);
 
 				defaultValues.put(
-						Key.POOLABLE_THREAD_REQUEST_TIMEOUT,
-						6000
-						);
+					Key.POOLABLE_THREAD_REQUEST_TIMEOUT,
+					6000
+				);
 
 				defaultValues.put(
-						Key.DEFAULT_DAEMON_FLAG_VALUE,
-						true
-						);
+					Key.DEFAULT_DAEMON_FLAG_VALUE,
+					true
+				);
 
 				defaultValues.put(
-						Key.MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
-						30000
-						);
+					Key.MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE,
+					30000
+				);
 
 				defaultValues.put(
-						Key.MAX_DETACHED_THREAD_COUNT_INCREASING_STEP,
-						"autodetect"
-						);
+					Key.MAX_DETACHED_THREAD_COUNT_INCREASING_STEP,
+					"autodetect"
+				);
 
 				defaultValues.put(
-						Key.DEFAULT_THREAD_PRIORITY,
-						java.lang.Thread.NORM_PRIORITY
-						);
+					Key.DEFAULT_THREAD_PRIORITY,
+					java.lang.Thread.NORM_PRIORITY
+				);
 
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
@@ -483,9 +481,9 @@ public abstract class Thread extends java.lang.Thread {
 		private int defaultThreadPriority;
 
 		Supplier (
-				String name,
-				Map<Object, Object> config
-				) {
+			String name,
+			Map<Object, Object> config
+		) {
 			this.addForwardPoolableSleepingThreadFunction = this::addForwardPoolableSleepingThread;
 			this.addReversePoolableSleepingThreadFunction = this::addReversePoolableSleepingThread;
 			this.addPoolableSleepingThreadFunction = addForwardPoolableSleepingThreadFunction;
@@ -494,20 +492,20 @@ public abstract class Thread extends java.lang.Thread {
 			this.getPoolableThreadFunction = this.getForwardPoolableThreadFunction;
 			this.name = name;
 			this.daemon = Objects.toBoolean(
-					IterableObjectHelper.resolveValue(
-							ResolveConfig.forNamedKey(Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE)
-							.on(config)
-							)
-					);
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(Configuration.Key.DEFAULT_DAEMON_FLAG_VALUE)
+					.on(config)
+				)
+			);
 			int availableProcessors = Runtime.getRuntime().availableProcessors();
 			int multiplier = 3;
 			try {
 				maxPoolableThreadCount = Objects.toInt(
-						IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey(Configuration.Key.MAX_POOLABLE_THREAD_COUNT)
-								.on(config)
-								)
-						);
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(Configuration.Key.MAX_POOLABLE_THREAD_COUNT)
+						.on(config)
+					)
+				);
 			} catch (Throwable exc) {
 				maxPoolableThreadCount = availableProcessors * multiplier;
 			}
@@ -518,11 +516,11 @@ public abstract class Thread extends java.lang.Thread {
 			int maxDetachedThreadCount;
 			try {
 				maxDetachedThreadCount = Objects.toInt(
-						IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREAD_COUNT)
-								.on(config)
-								)
-						);
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREAD_COUNT)
+						.on(config)
+					)
+				);
 			} catch (Throwable exc) {
 				maxDetachedThreadCount = availableProcessors * multiplier;
 			}
@@ -550,26 +548,26 @@ public abstract class Thread extends java.lang.Thread {
 
 			this.inititialMaxThreadCount = this.maxThreadCount = maxPoolableThreadCount + maxDetachedThreadCount;
 			this.poolableThreadRequestTimeout = Objects.toLong(
-					IterableObjectHelper.resolveValue(
-							ResolveConfig.forNamedKey(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)
-							.on(config)
-							)
-					);
+				IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(Configuration.Key.POOLABLE_THREAD_REQUEST_TIMEOUT)
+					.on(config)
+				)
+			);
 			this.elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount =
-					Objects.toLong(IterableObjectHelper.resolveValue(
-							ResolveConfig.forNamedKey(
-									Configuration.Key.MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE
-									)
-							.on(config)
-							)
-							);
+				Objects.toLong(IterableObjectHelper.resolveValue(
+					ResolveConfig.forNamedKey(
+						Configuration.Key.MAX_DETACHED_THREAD_COUNT_ELAPSED_TIME_THRESHOLD_FROM_LAST_INCREASE_FOR_GRADUAL_DECREASING_TO_INITIAL_VALUE
+					)
+					.on(config)
+				)
+			);
 			try {
 				this.maxDetachedThreadCountIncreasingStep = Objects.toInt(
-						IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREAD_COUNT_INCREASING_STEP)
-								.on(config)
-								)
-						);
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(Configuration.Key.MAX_DETACHED_THREAD_COUNT_INCREASING_STEP)
+						.on(config)
+					)
+				);
 			} catch (Throwable exc) {
 				maxDetachedThreadCountIncreasingStep = availableProcessors;
 			}
@@ -580,23 +578,23 @@ public abstract class Thread extends java.lang.Thread {
 			this.timeOfLastIncreaseOfMaxDetachedThreadCount = Long.MAX_VALUE;
 			try {
 				this.defaultThreadPriority = Objects.toInt(
-						IterableObjectHelper.resolveValue(
-								ResolveConfig.forNamedKey(
-										Configuration.Key.DEFAULT_THREAD_PRIORITY
-										)
-								.on(config)
-								)
-						);
+					IterableObjectHelper.resolveValue(
+						ResolveConfig.forNamedKey(
+							Configuration.Key.DEFAULT_THREAD_PRIORITY
+						)
+						.on(config)
+					)
+				);
 			} catch (Throwable exc) {
 				this.defaultThreadPriority = java.lang.Thread.currentThread().getPriority();
 			}
 		}
 
 		public static Supplier create(
-				String name,
-				Map<Object, Object> config,
-				boolean undestroyable
-				) {
+			String name,
+			Map<Object, Object> config,
+			boolean undestroyable
+		) {
 			if (undestroyable) {
 				return new Supplier(name, config) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();
@@ -673,15 +671,15 @@ public abstract class Thread extends java.lang.Thread {
 							long waitElapsedTime = endWaitTime - startWaitTime;
 							if (waitElapsedTime < poolableThreadRequestTimeout) {
 								if (inititialMaxThreadCount < maxThreadCount &&
-										(System.currentTimeMillis() - timeOfLastIncreaseOfMaxDetachedThreadCount) >
-								elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount
-										) {
+									(System.currentTimeMillis() - timeOfLastIncreaseOfMaxDetachedThreadCount) >
+										elapsedTimeThresholdFromLastIncreaseForGradualDecreasingOfMaxDetachedThreadsCount
+								) {
 									maxThreadCount -= (maxDetachedThreadCountIncreasingStep / 2);
 									ManagedLoggerRepository.logInfo(
-											getClass()::getName,
-											"{}: decreasing maxThreadCount to {}",
-											java.lang.Thread.currentThread(), maxThreadCount
-											);
+										getClass()::getName,
+										"{}: decreasing maxThreadCount to {}",
+										java.lang.Thread.currentThread(), maxThreadCount
+									);
 									timeOfLastIncreaseOfMaxDetachedThreadCount = Long.MAX_VALUE;
 								}
 								return getOrCreateThread(initialValue, tentativeCount);
@@ -689,10 +687,10 @@ public abstract class Thread extends java.lang.Thread {
 								timeOfLastIncreaseOfMaxDetachedThreadCount = System.currentTimeMillis();
 								maxThreadCount += maxDetachedThreadCountIncreasingStep;
 								ManagedLoggerRepository.logInfo(
-										getClass()::getName,
-										"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
-										java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
-										);
+									getClass()::getName,
+									"{} waited for {}ms: maxThreadCount will be temporarily increased to {} to avoid performance degradation",
+									java.lang.Thread.currentThread(), waitElapsedTime, maxThreadCount
+								);
 								return getOrCreateThread(initialValue, --tentativeCount);
 							}
 						}
@@ -908,21 +906,21 @@ public abstract class Thread extends java.lang.Thread {
 			int poolableSleepingThreadCount = getPoolableSleepingThreadCount();
 			int detachedThreadCount = threadCount - poolableThreadCount;
 			ManagedLoggerRepository.logInfo(
-					getClass()::getName,
-					"\n" +
-							"\tThread count: {}" +
-							"\tRunning threads: {}\n" +
-							"\tPoolable threads: {}\n" +
-							"\tPoolable running threads: {}\n" +
-							"\tPoolable sleeping threads: {}\n" +
-							"\tDetached threads: {}\n",
-							threadCount,
-							runningThreadCount,
-							poolableThreadCount,
-							poolableThreadCount - poolableSleepingThreadCount,
-							poolableSleepingThreadCount,
-							detachedThreadCount
-					);
+				getClass()::getName,
+				"\n" +
+				"\tThread count: {}" +
+				"\tRunning threads: {}\n" +
+				"\tPoolable threads: {}\n" +
+				"\tPoolable running threads: {}\n" +
+				"\tPoolable sleeping threads: {}\n" +
+				"\tDetached threads: {}\n",
+				threadCount,
+				runningThreadCount,
+				poolableThreadCount,
+				poolableThreadCount - poolableSleepingThreadCount,
+				poolableSleepingThreadCount,
+				detachedThreadCount
+			);
 		}
 
 	}
@@ -941,9 +939,9 @@ public abstract class Thread extends java.lang.Thread {
 		}
 
 		public static Holder create(
-				Thread.Supplier supplier,
-				boolean undestroyable
-				) {
+			Thread.Supplier supplier,
+			boolean undestroyable
+		) {
 			if (undestroyable) {
 				return new Holder(supplier) {
 					StackTraceElement[] stackTraceOnCreation = Thread.currentThread().getStackTrace();

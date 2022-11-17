@@ -102,15 +102,15 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				Map<String, Object> defaultValues = new HashMap<>();
 
 				defaultValues.put(Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_IMPORTS_SUFFIX,
-						"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
-						"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
-						Arrays.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
-						SearchResult.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
-						);
+					"${"+ CodeExecutor.Configuration.Key.COMMON_IMPORTS + "}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					"${"+ Configuration.Key.AFTER_INIT + ".additional-imports}" + IterableObjectHelper.getDefaultValuesSeparator() +
+					Arrays.class.getName() + IterableObjectHelper.getDefaultValuesSeparator() +
+					SearchResult.class.getName() + IterableObjectHelper.getDefaultValuesSeparator()
+				);
 				defaultValues.put(
-						Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,
-						ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
-						);
+					Configuration.Key.AFTER_INIT + CodeExecutor.Configuration.Key.PROPERTIES_FILE_EXECUTOR_NAME_SUFFIX,
+					ComponentContainer.class.getPackage().getName() + ".AfterInitOperationsExecutor"
+				);
 
 				FILE_NAME = new ConcurrentHashMap<>();
 				FILE_NAME.put("file-name", "burningwave.properties");
@@ -173,11 +173,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					classLoaders.add(ComponentContainer.class.getClassLoader());
 					classLoaders.add(Thread.currentThread().getContextClassLoader());
 					java.util.Properties config = io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
-							configFileName,
-							"priority-of-this-configuration",
-							classLoaders,
-							!Configuration.Default.ADDITIONAL_VALUES.isEmpty() ? Configuration.Default.ADDITIONAL_VALUES.toArray(new Map[Configuration.Default.ADDITIONAL_VALUES.size()]) : null
-							);
+						configFileName,
+						"priority-of-this-configuration",
+						classLoaders,
+						!Configuration.Default.ADDITIONAL_VALUES.isEmpty() ? Configuration.Default.ADDITIONAL_VALUES.toArray(new Map[Configuration.Default.ADDITIONAL_VALUES.size()]) : null
+					);
 					if (config.isEmpty()) {
 						ManagedLoggerRepository.logInfo(ComponentContainer.class::getName, "No custom properties found for file {}", configFileName);
 					}
@@ -199,11 +199,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					Map<?, ?>[] configurations = !Configuration.Default.ADDITIONAL_VALUES.isEmpty() ? Configuration.Default.ADDITIONAL_VALUES.toArray(new Map[Configuration.Default.ADDITIONAL_VALUES.size() + 1]) : new Map[1];
 					configurations[configurations.length - 1] = properties;
 					return io.github.toolfactory.jvm.util.Properties.loadFromResourcesAndMerge(
-							"///",
-							"priority-of-this-configuration",
-							null,
-							configurations
-							);
+						"///",
+						"priority-of-this-configuration",
+						null,
+						configurations
+					);
 				} catch (IOException | ParseException exc) {
 					return Driver.throwException(exc);
 				}
@@ -310,9 +310,9 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		componentContainerConfig.putAll(this.config);
 		componentContainerConfig.keySet().removeAll(GlobalProperties.keySet());
 		ManagedLoggerRepository.logInfo(getClass()::getName,
-				"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
-				componentContainerConfig.toPrettyString(2)
-				);
+			"\n\n\tConfiguration values for dynamic components:\n\n{}\n\n",
+			componentContainerConfig.toPrettyString(2)
+		);
 	}
 
 	ComponentContainer markAsUndestroyable() {
@@ -337,23 +337,23 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 							ClassLoader pathScannerClassLoader = (ClassLoader)components.get(ClassLoader.class);
 							if (pathScannerClassLoader != null) {
 								ClassLoaders.setAsParent(pathScannerClassLoader, resolveProperty(
-										this.config,
-										PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
-										));
+									this.config,
+									PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
+								));
 							}
 						} else if (keyAsString.equals(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)) {
 							ClassLoader pathScannerClassLoader = (ClassLoader)components.get(ClassLoader.class);
 							if (pathScannerClassLoader != null) {
 								Fields.setDirect(
-										pathScannerClassLoader,
-										"fileFilterAndProcessor",
-										FileSystemItem.Criteria.forClassTypeFiles(
-												IterableObjectHelper.resolveStringValue(
-														ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
-														.on(config)
-														)
-												)
-										);
+									pathScannerClassLoader,
+									"fileFilterAndProcessor",
+									FileSystemItem.Criteria.forClassTypeFiles(
+										IterableObjectHelper.resolveStringValue(
+											ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+											.on(config)
+										)
+									)
+								);
 							}
 						}
 					}
@@ -383,8 +383,8 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 	public String getConfigProperty(String propertyName, Map<String, String> defaultValues) {
 		return IterableObjectHelper.resolveStringValue(
-				ResolveConfig.forNamedKey(propertyName).on(config).withDefaultValues(defaultValues)
-				);
+			ResolveConfig.forNamedKey(propertyName).on(config).withDefaultValues(defaultValues)
+		);
 	}
 
 	public Object setConfigProperty(String propertyName, Object propertyValue) {
@@ -439,120 +439,120 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 	@Override
 	public org.burningwave.core.classes.PathScannerClassLoader getPathScannerClassLoader() {
 		return getOrCreate(
-				ClassLoader.class,
-				() -> {
-					return new ComponentContainer.ClassLoader(this);
-				}
-				);
+			ClassLoader.class,
+			() -> {
+				return new ComponentContainer.ClassLoader(this);
+			}
+		);
 	}
 
 	@Override
 	public ClassFactory getClassFactory() {
 		return getOrCreate(ClassFactory.class, () ->
-		ClassFactory.create(
+			ClassFactory.create(
 				getByteCodeHunter(),
 				() -> getClassPathHunter(),
 				getJavaMemoryCompiler(),
 				getPathHelper(),
 				getClassPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
-						this.config, ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER
-						),
+					this.config, ClassFactory.Configuration.Key.DEFAULT_CLASS_LOADER
+				),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public CodeExecutor getCodeExecutor() {
 		return getOrCreate(CodeExecutor.class, () ->
-		CodeExecutor.create(
+			CodeExecutor.create(
 				() -> getClassFactory(),
 				getPathHelper(),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public JavaMemoryCompiler getJavaMemoryCompiler() {
 		return getOrCreate(JavaMemoryCompiler.class, () ->
-		JavaMemoryCompiler.create(
+			JavaMemoryCompiler.create(
 				getPathHelper(),
 				getClassPathHelper(),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public ClassHunter getClassHunter() {
 		return getOrCreate(ClassHunter.class, () -> {
 			return ClassHunter.create(
-					getPathHelper(),
-					(Supplier<?>)() -> resolveProperty(
-							this.config,
-							ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
-							),
-					config
-					);
+				getPathHelper(),
+				(Supplier<?>)() -> resolveProperty(
+					this.config,
+					ClassHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
+				config
+			);
 		});
 	}
 
 	@Override
 	public ClassPathHelper getClassPathHelper() {
 		return getOrCreate(ClassPathHelper.class, () ->
-		ClassPathHelper.create(
+			ClassPathHelper.create(
 				getClassPathHunter(),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public ClassPathHunter getClassPathHunter() {
 		return getOrCreate(ClassPathHunter.class, () ->
-		ClassPathHunter.create(
+			ClassPathHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
-						this.config,
-						ClassPathHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
-						),
+					this.config,
+					ClassPathHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public ByteCodeHunter getByteCodeHunter() {
 		return getOrCreate(ByteCodeHunter.class, () ->
-		ByteCodeHunter.create(
+			ByteCodeHunter.create(
 				getPathHelper(),
 				(Supplier<?>)() -> resolveProperty(
-						this.config,
-						ByteCodeHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
-						),
+					this.config,
+					ByteCodeHunter.Configuration.Key.DEFAULT_PATH_SCANNER_CLASS_LOADER
+				),
 				config
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public FunctionalInterfaceFactory getFunctionalInterfaceFactory() {
 		return getOrCreate(FunctionalInterfaceFactory.class, () ->
-		FunctionalInterfaceFactory.create(
+			FunctionalInterfaceFactory.create(
 				getClassFactory()
-				)
-				);
+			)
+		);
 	}
 
 	@Override
 	public PathHelper getPathHelper() {
 		return getOrCreate(PathHelper.class, () ->
-		PathHelper.create(
+			PathHelper.create(
 				config
-				)
-				);
+			)
+		);
 	}
 
 	public <T> T resolveProperty(Map<?, ?> properties, String configKey) {
@@ -563,16 +563,16 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		T object = IterableObjectHelper.resolveValue(ResolveConfig.forNamedKey(configKey).on(config).withDefaultValues(defaultValues));
 		if (object instanceof String) {
 			ExecuteConfig.ForProperties executeConfig = ExecuteConfig.fromDefaultProperties()
-					.setPropertyName(configKey)
-					.withParameter(this)
-					.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
-					.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>());
+			.setPropertyName(configKey)
+			.withParameter(this)
+			.useAsParentClassLoader(Classes.getClassLoader(Executable.class))
+			.setClassRepositoriesWhereToSearchNotFoundClassesDuringLoading(new HashSet<>());
 			if (defaultValues != null) {
 				executeConfig.withDefaultPropertyValues(defaultValues);
 			}
 			return getCodeExecutor().execute(
-					executeConfig
-					);
+				executeConfig
+			);
 		} else if (object instanceof Function) {
 			return (T)(Supplier<?>)() -> ((Function<ComponentSupplier, ?>)object).apply(this);
 		} else {
@@ -614,11 +614,11 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 				componentContainer.reset();
 			} catch (Throwable exc) {
 				ManagedLoggerRepository.logError(
-						ComponentContainer.class::getName,
-						"Exception occurred while executing reset on {}",
-						exc,
-						componentContainer.toString()
-						);
+					ComponentContainer.class::getName,
+					"Exception occurred while executing reset on {}",
+					exc,
+					componentContainer.toString()
+				);
 			}
 		}
 	}
@@ -724,7 +724,7 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 			if (hunter != null) {
 				hunter.closeSearchResults();
 			}
-			hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassHunter.class);
+			 hunter = (ClassPathScanner.Abst<?, ?, ?>)components.get(ClassHunter.class);
 			if (hunter != null) {
 				hunter.closeSearchResults();
 			}
@@ -760,26 +760,26 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 
 
 		static {
-			ClassLoader.registerAsParallelCapable();
-		}
+	        ClassLoader.registerAsParallelCapable();
+	    }
 
 
 		ClassLoader(
-				ComponentContainer componentContainer
-				) {
+			ComponentContainer componentContainer
+		) {
 			super(
-					componentContainer.resolveProperty(
-							componentContainer.config,
-							PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
-							),
-					componentContainer.getPathHelper(),
-					FileSystemItem.Criteria.forClassTypeFiles(
-							IterableObjectHelper.resolveStringValue(
-									ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
-									.on(componentContainer.config)
-									)
-							)
-					);
+				componentContainer.resolveProperty(
+					componentContainer.config,
+					PathScannerClassLoader.Configuration.Key.PARENT_CLASS_LOADER
+				),
+				componentContainer.getPathHelper(),
+				FileSystemItem.Criteria.forClassTypeFiles(
+					IterableObjectHelper.resolveStringValue(
+						ResolveConfig.forNamedKey(PathScannerClassLoader.Configuration.Key.SEARCH_CONFIG_CHECK_FILE_OPTION)
+						.on(componentContainer.config)
+					)
+				)
+			);
 			this.components = componentContainer.components;
 			this.componentContainer = componentContainer;
 			register(componentContainer);
@@ -799,18 +799,18 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 					return isClosed;
 				}
 				closeCalled = Synchronizer.execute(
-						componentContainer.getMutexForComponentsId(),
-						() -> {
-							ClassLoader cL = (ClassLoader)components.remove(ClassLoader.class);
-							if (cL != null) {
-								if (cL != this) {
-									throw new IllegalStateException(Strings.compile("{} is not the same instance of {} in the components map", this, cL));
-								}
-								return super.unregister(componentContainer, close, markAsCloseable);
+					componentContainer.getMutexForComponentsId(),
+					() -> {
+						ClassLoader cL = (ClassLoader)components.remove(ClassLoader.class);
+						if (cL != null) {
+							if (cL != this) {
+								throw new IllegalStateException(Strings.compile("{} is not the same instance of {} in the components map", this, cL));
 							}
-							return false;
+							return super.unregister(componentContainer, close, markAsCloseable);
 						}
-						);
+						return false;
+					}
+				);
 			}
 			return isClosed || closeCalled;
 		}
@@ -818,18 +818,18 @@ public class ComponentContainer implements ComponentSupplier, Properties.Listene
 		@Override
 		protected Task closeResources() {
 			return closeResources(
-					ComponentContainer.ClassLoader.class.getName() + "@" + System.identityHashCode(this),
-					() ->
+				ComponentContainer.ClassLoader.class.getName() + "@" + System.identityHashCode(this),
+				() ->
 					this.componentContainer == null,
-					task -> {
-						super.closeResources().waitForFinish();
-						components = null;
-						componentContainer = null;
-						if (this.getClass().equals(ClassLoader.class)) {
-							ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
-						}
+				task -> {
+					super.closeResources().waitForFinish();
+					components = null;
+					componentContainer = null;
+					if (this.getClass().equals(ClassLoader.class)) {
+						ManagedLoggerRepository.logInfo(getClass()::getName, "ClassLoader {} successfully closed", this);
 					}
-					);
+				}
+			);
 		}
 	}
 }

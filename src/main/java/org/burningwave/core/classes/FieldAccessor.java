@@ -67,19 +67,24 @@ public abstract class FieldAccessor implements Component {
 	abstract List<ThrowingBiFunction<Object, String, Object, Throwable>> getFieldRetrievers();
 
 	@SuppressWarnings("unchecked")
-	public <T> T get(Object obj, String propertyPath) {
-		String[] propertyAddress = propertyPath.split("\\.");
+	public <T> T get(Object obj, String path) {
+		if (path == null) {
+			throw new IllegalArgumentException("Field path cannot be null");
+		}
+		if (path.trim().isEmpty()) {
+			return (T)obj;
+		}
+		String[] pathSegments = path.split("\\.");
 		Object objToReturn = obj;
-		for (int j = 0; j < propertyAddress.length; j++) {
-			objToReturn = getField(j != 0 ? objToReturn : obj,
-					propertyAddress[j]);
+		for (int j = 0; j < pathSegments.length; j++) {
+			objToReturn = getField(j != 0 ? objToReturn : obj, pathSegments[j]);
 		}
 		return (T)objToReturn;
 	}
 
-	private Object getField(Object obj, String property) {
+	private Object getField(Object obj, String pathSegment) {
 		Object objToReturn = null;
-		Matcher matcher = simpleFieldSearcher.matcher(property);
+		Matcher matcher = simpleFieldSearcher.matcher(pathSegment);
 		matcher.find();
 		List<Throwable> exceptions = new ArrayList<>();
 		for (ThrowingBiFunction<Object, String, Object, Throwable> retriever : fieldRetrievers) {
@@ -113,24 +118,29 @@ public abstract class FieldAccessor implements Component {
 		}
 	}
 
-	public void set(Object obj, String propertyPath, Object value) {
+	public void set(Object obj, String path, Object value) {
+		if (path == null) {
+			throw new IllegalArgumentException("Field path cannot be null");
+		}
+		if (path.trim().isEmpty()) {
+			return;
+		}
 		Object target =
-				propertyPath.contains(".")?
-						get(obj, propertyPath.substring(0, propertyPath.lastIndexOf("."))) :
+				path.contains(".")?
+						get(obj, path.substring(0, path.lastIndexOf("."))) :
 							obj;
-		String targetPropertyName =
-				propertyPath.contains(".")?
-						propertyPath.substring(propertyPath.lastIndexOf(".") + 1, propertyPath.length()) :
-							propertyPath;
-		setField(target, targetPropertyName, value);
+		String targetPathSegment =
+				path.contains(".")?
+						path.substring(path.lastIndexOf(".") + 1, path.length()) :
+							path;
+		setField(target, targetPathSegment, value);
 	}
 
-	private void setField(Object target, String property,
-			Object value) {
+	private void setField(Object target, String pathSegment, Object value) {
 		List<Throwable> exceptions = new ArrayList<>();
 		for (ThrowingFunction<Object[], Boolean, Throwable> setter : fieldSetters) {
 			try {
-				setter.apply(new Object[] {target, property, value});
+				setter.apply(new Object[] {target, pathSegment, value});
 				break;
 			} catch (Throwable exc) {
 				exceptions.add(exc);
@@ -155,23 +165,23 @@ public abstract class FieldAccessor implements Component {
 				return org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException("indexed property {} of type {} is not supporterd", property, property.getClass());
 			}
 			return retrieveFromIndexedField(
-					propertyRetriever.get(),
-					indexes.substring(matcher.end(), indexes.length())
-					);
+				propertyRetriever.get(),
+				indexes.substring(matcher.end(), indexes.length())
+			);
 		}
 		return property;
 	}
 
-	Object retrieveFieldByDirectAccess(Object target, String propertyName) throws IllegalAccessException {
-		return Fields.getDirect(target, propertyName);
+	Object retrieveFieldByDirectAccess(Object target, String pathSegment) throws IllegalAccessException {
+		return Fields.getDirect(target, pathSegment);
 	}
 
-	Object retrieveFieldByGetterMethod(Object obj, String propertyName) {
+	Object retrieveFieldByGetterMethod(Object obj, String pathSegment) {
 		Object objToReturn;
 		objToReturn = Methods.invokeDirect(
-				obj,
-				Methods.createGetterMethodNameByPropertyName(propertyName)
-				);
+			obj,
+			Methods.createGetterMethodNameByFieldPath(pathSegment)
+		);
 		return objToReturn;
 	}
 
@@ -196,11 +206,10 @@ public abstract class FieldAccessor implements Component {
 		}
 	}
 
-	Boolean setFieldByDirectAccess(Object target, String propertyPath, Object value) throws IllegalAccessException {
-		Matcher matcher = simpleFieldSearcher.matcher(propertyPath);
+	Boolean setFieldByDirectAccess(Object target, String pathSegment, Object value) throws IllegalAccessException {
+		Matcher matcher = simpleFieldSearcher.matcher(pathSegment);
 		matcher.find();
-		Field field = Fields.findOneAndMakeItAccessible(target.getClass(),
-				matcher.group(1));
+		Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
 		if (matcher.group(2).isEmpty()) {
 			Fields.setDirect(target, field, value);
 		} else {
@@ -209,17 +218,17 @@ public abstract class FieldAccessor implements Component {
 		return Boolean.TRUE;
 	}
 
-	Boolean setFieldBySetterMethod(Object target, String propertyPath, Object value) {
-		Matcher matcher = simpleFieldSearcher.matcher(propertyPath);
+	Boolean setFieldBySetterMethod(Object target, String pathSegment, Object value) {
+		Matcher matcher = simpleFieldSearcher.matcher(pathSegment);
 		matcher.find();
 		if (matcher.group(2).isEmpty()) {
 			Methods.invokeDirect(
-					target, Methods.createSetterMethodNameByPropertyName(matcher.group(1)), value
-					);
+				target, Methods.createSetterMethodNameByFieldPath(matcher.group(1)), value
+			);
 		} else {
 			setInIndexedField(Methods.invokeDirect(
-					target, Methods.createGetterMethodNameByPropertyName(matcher.group(1))
-					), matcher.group(2), value);
+				target, Methods.createGetterMethodNameByFieldPath(matcher.group(1))
+			), matcher.group(2), value);
 		}
 		return Boolean.TRUE;
 	}
@@ -237,8 +246,8 @@ public abstract class FieldAccessor implements Component {
 		@Override
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getFieldRetrievers() {
 			List<ThrowingBiFunction<Object, String, Object, Throwable>> retrievers = new ArrayList<>();
-			retrievers.add((object, propertyName) -> retrieveFieldByDirectAccess(object, propertyName));
-			retrievers.add((object, propertyName) -> retrieveFieldByGetterMethod(object, propertyName));
+			retrievers.add((object, pathSegment) -> retrieveFieldByDirectAccess(object, pathSegment));
+			retrievers.add((object, pathSegment) -> retrieveFieldByGetterMethod(object, pathSegment));
 			return retrievers;
 		}
 
@@ -265,8 +274,8 @@ public abstract class FieldAccessor implements Component {
 		@Override
 		List<ThrowingBiFunction<Object, String, Object, Throwable>> getFieldRetrievers() {
 			List<ThrowingBiFunction<Object, String, Object, Throwable>> retrievers = new ArrayList<>();
-			retrievers.add((object, propertyName) -> retrieveFieldByGetterMethod(object, propertyName));
-			retrievers.add((object, propertyName) -> retrieveFieldByDirectAccess(object, propertyName));
+			retrievers.add((object, pathSegment) -> retrieveFieldByGetterMethod(object, pathSegment));
+			retrievers.add((object, pathSegment) -> retrieveFieldByDirectAccess(object, pathSegment));
 			return retrievers;
 		}
 

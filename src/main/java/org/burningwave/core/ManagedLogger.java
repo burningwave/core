@@ -130,45 +130,45 @@ public interface ManagedLogger {
 				defaultValues.put(Key.ENABLED_FLAG, String.valueOf(true));
 
 				String defaultValuesSeparator = (String)org.burningwave.core.iterable.IterableObjectHelper.Configuration.DEFAULT_VALUES.get(
-						org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR
-						);
+					org.burningwave.core.iterable.IterableObjectHelper.Configuration.Key.DEFAULT_VALUES_SEPERATOR
+				);
 
 				//The semicolons in this value value will be replaced by the method StaticComponentContainer.adjustConfigurationValues
 				defaultValues.put(Key.WARN_LOGGING_DISABLED_FOR,
-						ComponentContainer.class.getName() + "$ClassLoader" + defaultValuesSeparator +
-						MemoryClassLoader.class.getName() + defaultValuesSeparator +
-						PathScannerClassLoader.class.getName() + defaultValuesSeparator
-						);
+					ComponentContainer.class.getName() + "$ClassLoader" + defaultValuesSeparator +
+					MemoryClassLoader.class.getName() + defaultValuesSeparator +
+					PathScannerClassLoader.class.getName() + defaultValuesSeparator
+				);
 
 				DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 			}
 		}
 
 		public static ManagedLogger.Repository create(
-				Map<?, ?> config
-				) {
+			Map<?, ?> config
+		) {
 			try {
 				String className = IterableObjectHelper.resolveStringValue(
-						ResolveConfig.forNamedKey(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE)
-						.on(config)
-						.withDefaultValues(ManagedLogger.Repository.Configuration.DEFAULT_VALUES)
-						);
+					ResolveConfig.forNamedKey(org.burningwave.core.ManagedLogger.Repository.Configuration.Key.TYPE)
+					.on(config)
+					.withDefaultValues(ManagedLogger.Repository.Configuration.DEFAULT_VALUES)
+				);
 				if ("autodetect".equalsIgnoreCase(className = className.trim())) {
 					try {
 						Driver.getClassByName("org.slf4j.Logger", false,
-								ManagedLogger.Repository.class.getClassLoader(),
-								ManagedLogger.Repository.class
-								);
+							ManagedLogger.Repository.class.getClassLoader(),
+							ManagedLogger.Repository.class
+						);
 						return new org.burningwave.core.SLF4JManagedLoggerRepository(config);
 					} catch (Throwable exc2) {
 						return new org.burningwave.core.SimpleManagedLoggerRepository(config);
 					}
 				} else {
 					return (org.burningwave.core.ManagedLogger.Repository)
-							Driver.getClassByName(className, false,
-									ManagedLogger.Repository.class.getClassLoader(),
-									ManagedLogger.Repository.class
-									).getConstructor(Map.class).newInstance(config);
+						Driver.getClassByName(className, false,
+							ManagedLogger.Repository.class.getClassLoader(),
+							ManagedLogger.Repository.class
+						).getConstructor(Map.class).newInstance(config);
 				}
 
 			} catch (Throwable exc) {
@@ -244,11 +244,11 @@ public interface ManagedLogger {
 
 			boolean getEnabledLoggingFlag(Map<?, ?> properties) {
 				return Objects.toBoolean(
-						IterableObjectHelper.resolveStringValue(
-								ResolveConfig.forNamedKey(Configuration.Key.ENABLED_FLAG)
-								.on(properties)
-								)
-						);
+					IterableObjectHelper.resolveStringValue(
+						ResolveConfig.forNamedKey(Configuration.Key.ENABLED_FLAG)
+						.on(properties)
+					)
+				);
 			}
 
 			@Override
@@ -275,8 +275,8 @@ public interface ManagedLogger {
 				removeLoggingLevels(properties, Repository.Configuration.Key.WARN_LOGGING_DISABLED_FOR, LoggingLevel.WARN);
 				removeLoggingLevels(properties, Repository.Configuration.Key.ERROR_LOGGING_DISABLED_FOR, LoggingLevel.ERROR);
 				removeLoggingLevels(properties, Repository.Configuration.Key.ALL_LOGGING_LEVEL_DISABLED_FOR,
-						LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
-						);
+					LoggingLevel.TRACE, LoggingLevel.DEBUG, LoggingLevel.INFO, LoggingLevel.WARN, LoggingLevel.ERROR
+				);
 			}
 
 			protected void removeLoggingLevels(Map<?, ?> properties, String configKey, LoggingLevel... loggingLevels) {

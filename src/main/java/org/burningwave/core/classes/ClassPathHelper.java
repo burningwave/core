@@ -55,9 +55,9 @@ public interface ClassPathHelper {
 			Map<String, Object> defaultValues = new HashMap<>();
 
 			defaultValues.put(
-					Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
-					"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
-					);
+				Key.CLASS_PATH_HUNTER_SEARCH_CONFIG_CHECK_FILE_OPTIONS,
+				"${" + ClassPathScanner.Configuration.Key.DEFAULT_CHECK_FILE_OPTIONS + "}"
+			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
@@ -124,8 +124,8 @@ public interface ClassPathHelper {
 			}
 
 			public static AndAddToClassLoaderConfig create(
-					ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
-					) {
+				ClassLoader classLoader, Collection<String> classRepositories, String nameOfTheClassToBeLoaded
+			) {
 				if (classLoader == null) {
 					throw new IllegalArgumentException("No class loader has been provided");
 				}
@@ -162,8 +162,8 @@ public interface ClassPathHelper {
 			}
 
 			public static BySourceImportsConfig create(
-					Collection<String>sources, Collection<String> classRepositories
-					) {
+				Collection<String>sources, Collection<String> classRepositories
+			) {
 				if (sources == null) {
 					throw new IllegalArgumentException("No source has been provided");
 				}
@@ -225,8 +225,8 @@ public interface ClassPathHelper {
 
 
 				public static ByClasses.AndBySourceImportsConfig create(
-						Collection<String>sources, Collection<String> classRepositories
-						) {
+					Collection<String>sources, Collection<String> classRepositories
+				) {
 					if (sources == null) {
 						throw new IllegalArgumentException("No source has been provided");
 					}

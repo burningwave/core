@@ -58,15 +58,15 @@ public interface PathHelper {
 
 			defaultValues.put(Key.MAIN_CLASS_PATHS, "${system.properties:java.class.path}");
 			defaultValues.put(
-					Key.MAIN_CLASS_PATHS_EXTENSION,
-					"//${system.properties:java.home}/lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
-					"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
-					"//${system.properties:java.home}/../lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator()
-					);
+				Key.MAIN_CLASS_PATHS_EXTENSION,
+				"//${system.properties:java.home}/lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"//${system.properties:java.home}/lib/ext//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator() +
+				"//${system.properties:java.home}/../lib//children:.*?\\.jar" + IterableObjectHelper.getDefaultValuesSeparator()
+			);
 			defaultValues.put(
-					Key.MAIN_CLASS_REPOSITORIES,
-					"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + IterableObjectHelper.getDefaultValuesSeparator()
-					);
+				Key.MAIN_CLASS_REPOSITORIES,
+				"//${system.properties:java.home}/jmods//children:.*?\\.jmod" + IterableObjectHelper.getDefaultValuesSeparator()
+			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);
 		}
