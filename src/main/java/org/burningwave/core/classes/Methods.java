@@ -116,10 +116,14 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 
 	public Collection<Method> findAllByMatchedNameAndMakeThemAccessible(
 		Class<?> targetClass,
-		String methodName,
+		String regEx,
 		Class<?>... inputParameterTypesOrSubTypes
 	) {
-		return findAllByNamePredicateAndMakeThemAccessible(targetClass, "match " + methodName, methodName::matches, inputParameterTypesOrSubTypes);
+		return findAllByNamePredicateAndMakeThemAccessible(
+			targetClass, "match " + regEx,
+			name -> name.matches(regEx),
+			inputParameterTypesOrSubTypes
+		);
 	}
 
 	private Collection<Method> findAllByNamePredicateAndMakeThemAccessible(

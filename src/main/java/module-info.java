@@ -1,5 +1,5 @@
 /*
- * This file is part of Burningwave JVM driver.
+ * This file is part of Burningwave Core.
  *
  * Author: Roberto Gentili
  *
