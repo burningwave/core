@@ -29,7 +29,6 @@
 package org.burningwave.core.classes;
 
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
-import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 import java.lang.reflect.Executable;
 import java.lang.reflect.Parameter;
@@ -40,6 +39,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.burningwave.core.Criteria;
+import org.burningwave.core.classes.Members.Handler;
 import org.burningwave.core.function.TriPredicate;
 
 @SuppressWarnings("unchecked")
@@ -101,7 +101,7 @@ public abstract class ExecutableMemberCriteria<
 						) {
 							return false;
 						}
-						Class<?>[] memberParameterTypes = Methods.retrieveParameterTypes(member, argumentsClassesAsList);
+						Class<?>[] memberParameterTypes = Handler.OfExecutable.retrieveParameterTypes(member, argumentsClassesAsList);
 						if (argumentsClassesAsList.size() == memberParameterTypes.length) {
 							if (context.getCriteria().getClassSupplier() == null) {
 								return predicate.test(argumentsClassesAsList, memberParameterTypes, index);
@@ -154,8 +154,8 @@ public abstract class ExecutableMemberCriteria<
 		this.predicate = concat(
 			this.predicate,
 			getPredicateWrapper(
-				(criteria, member) -> member.getParameters(),
-				(criteria, array, index) -> predicate.test(array, index)
+				(testContext, member) -> member.getParameters(),
+				(testContext, array, index) -> predicate.test(array, index)
 			)
 		);
 		return (C)this;
@@ -165,8 +165,8 @@ public abstract class ExecutableMemberCriteria<
 		this.predicate = concat(
 			this.predicate,
 			getPredicateWrapper(
-				(context, member) -> member.getParameters(),
-				(context, array, index) -> predicate.test(context.getCriteria().getUploadedClasses(), array, index)
+				(testContext, member) -> member.getParameters(),
+				(testContext, array, index) -> predicate.test(testContext.getCriteria().getUploadedClasses(), array, index)
 			)
 		);
 		return (C)this;
