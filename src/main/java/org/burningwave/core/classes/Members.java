@@ -377,7 +377,7 @@ public class Members {
 				return argumentList;
 			}
 
-			Class<?>[] retrieveParameterTypes(Executable member, List<Class<?>> argumentsClassesAsList) {
+			static Class<?>[] retrieveParameterTypes(Executable member, List<Class<?>> argumentsClassesAsList) {
 				Parameter[] memberParameter = member.getParameters();
 				Class<?>[] memberParameterTypes = member.getParameterTypes();
 				if (memberParameter.length > 0 && memberParameter[memberParameter.length - 1].isVarArgs()) {
