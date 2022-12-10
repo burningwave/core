@@ -67,7 +67,7 @@ requires org.burningwave.core;
 
 For this purpose is necessary the use of **ClassFactory** component and of the **sources generating components**. Once the sources have been set in **UnitSourceGenerator** objects, they must be passed to **`loadOrBuildAndDefine`** method of ClassFactory with the ClassLoader where you want to define new generated classes. This method performs the following operations: tries to load all the classes present in the UnitSourceGenerator through the class loader, if at least one of these is not found it proceeds to compiling all the UnitSourceGenerators and uploading their classes on class loader: **in this case, keep in mind that if a class with the same name was previously loaded by the class loader, the compiled class will not be uploaded**. **If you need more information you can**:
 * see a [**complete example about source code generators**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/UnitSourceGeneratorTest.java#L153)
-* read this [**guide**](https://www.burningwave.org/forum/topic/how-can-i-use-classes-outside-the-runtime-class-path-in-my-generated-sources/) where you also can find a link to an [**example about generating classes by using libraries located outside the runtime class paths**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)
+* read this [**guide**](https://github.com/burningwave/core/wiki/FAQ#how-can-i-use-classes-located-outside-the-runtime-class-path-in-my-sources-to-be-generated) where you also can find a link to an [**example about generating classes by using libraries located outside the runtime class paths**](https://github.com/burningwave/core/blob/master/src/test/java/org/burningwave/core/examples/classfactory/ExternalClassRuntimeExtender.java)
 * go [**here**](https://github.com/burningwave/core/tree/master/src/test/java/org/burningwave/core/examples/classfactory) for more examples
 * [**ask for assistance**](#Ask-for-assistance)
 
@@ -1114,7 +1114,7 @@ public class UseOfStaticComponentsExample {
 ```
 ### <a name="static-components-configuration-file"></a>Configuration
 The configuration of this type of container is done via **burningwave.static.properties** file that must be located in the base path of your class path: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method  `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Default.setFileName` before using the static component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method  `org.burningwave.core.assembler.StaticComponentContainer.Configuration.Default.setFileName` before using the static component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://github.com/burningwave/core/wiki/FAQ#how-can-i-integrate-the-configuration-properties-into-spring). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 background-executor.all-tasks-monitoring.enabled=\
 	true
@@ -1273,7 +1273,7 @@ public class RetrievingDynamicComponentContainerAndComponents {
 ### Configuration
 The configuration of this type of container can be done via Properties file or programmatically via a Properties object.
 If you use the singleton instance obtained via **`ComponentContainer.getInstance()`** method, you must create a **burningwave.properties** file and put it on base path of your class path project: the library looks for all files with this name and **merges them according to
-to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method `org.burningwave.core.assembler.ComponentContainer.Configuration.Default.setFileName` before using the component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://www.burningwave.org/forum/topic/how-can-i-integrate-the-configuration-properties-in-spring/#postid-102). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
+to the property `priority-of-this-configuration` contained within it** which is optional but becomes mandatory if in the base class paths there are multiple files with the file name indicated above. It is possible to change the file name of the configuration file through the method `org.burningwave.core.assembler.ComponentContainer.Configuration.Default.setFileName` before using the component container or if you need **to integrate the configuration properties into Spring** you can follow [this guide](https://github.com/burningwave/core/wiki/FAQ#how-can-i-integrate-the-configuration-properties-into-spring). **If no configuration file is found, the library programmatically sets the default configuration with following values**:
 ```properties
 byte-code-hunter.default-path-scanner-class-loader=\
 	(Supplier<PathScannerClassLoader>)() -> ((ComponentSupplier)parameter[0]).getPathScannerClassLoader()
@@ -1631,8 +1631,7 @@ ComponentContainer.create("org/burningwave/custom-config-file.properties")
 <br />
 
 # <a name="Ask-for-assistance"></a>Ask for assistance
-If the [**wiki**](https://github.com/burningwave/core/wiki) and the [**help guide**](https://www.burningwave.org/forum/topic/help-guide/) can't help you, you can:
-* [subscribe](https://www.burningwave.org/registration/) to the [forum](https://www.burningwave.org/forum/) and then ask in the topic ["How to do?"](https://www.burningwave.org/forum/forum/how-to/)
+If the [**wiki**](https://github.com/burningwave/core/wiki) and the [**FAQ**](https://github.com/burningwave/core/wiki/FAQ) can't help you, you can:
 * [open a discussion](https://github.com/burningwave/core/discussions) here on GitHub
 * [report a bug](https://github.com/burningwave/core/issues) here on GitHub
 * ask on [Stack Overflow](https://stackoverflow.com/search?q=burningwave)
