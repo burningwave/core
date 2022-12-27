@@ -35,7 +35,6 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'zulu'
           architecture: ${{ matrix.architecture }}
-          cache: 'maven'
       - name: Build and test with
         run: mvn -B clean test -DskipTests=false --file pom.xml
         
