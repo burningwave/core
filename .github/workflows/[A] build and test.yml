@@ -19,11 +19,12 @@ jobs:
       fail-fast: false
       max-parallel: 15
       matrix:
-#        architecture: [x64]
         os: [windows-latest, macOS-latest, ubuntu-latest]
         architecture: [x64]
-#        os: [ubuntu-latest, ubuntu-latest, ubuntu-latest]
         java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20-ea]
+        exclude:
+          - os: ubuntu-latest
+            java: 10
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
