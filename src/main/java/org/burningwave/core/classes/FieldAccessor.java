@@ -52,7 +52,7 @@ import org.burningwave.core.function.ThrowingFunction;
 @SuppressWarnings("unchecked")
 public abstract class FieldAccessor implements Component {
 	public final static String REG_EXP_FOR_SIMPLE_FIELDS = "([a-zA-Z\\$\\_\\-0-9]*)(\\[*.*)";
-	public final static String REG_EXP_FOR_INDEXES_OF_INDEXED_FIELDS = "\\[([a-zA-Z0-9]*)\\]";
+	public final static String REG_EXP_FOR_INDEXES_OF_INDEXED_FIELDS = "\\[(.*?)\\]";
 
 	private List<ThrowingBiFunction<Object, String, Object, Throwable>> fieldRetrievers;
 	private List<ThrowingFunction<Object[], Boolean, Throwable>> fieldSetters;
