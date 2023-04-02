@@ -39,7 +39,6 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 
 	private Collection<String> outerCode;
 	private String elementPrefix;
-	private Collection<AnnotationSourceGenerator> annotations;
 	private String assignmentOperator;
 	private String delimiter;
 	private Integer modifier;
@@ -149,10 +148,6 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 			this.usedTypes.add(TypeDeclarationSourceGenerator.create(cls));
 		}
 		return this;
-	}
-
-	private String getAnnotations() {
-		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 
 	@Override

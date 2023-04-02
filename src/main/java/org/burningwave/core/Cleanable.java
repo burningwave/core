@@ -38,8 +38,4 @@ public interface Cleanable {
 		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
 	}
 
-	public default QueuedTaskExecutor.Task clearInBackground() {
-		throw new UnsupportedOperationException(Strings.compile("Method is not defined by class {} and its super classes", getClass().getName()));
-	}
-
 }

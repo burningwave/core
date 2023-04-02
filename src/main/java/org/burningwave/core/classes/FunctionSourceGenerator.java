@@ -40,7 +40,6 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 
 	private Collection<TypeDeclarationSourceGenerator> usedTypes;
 	private Collection<String> outerCode;
-	private Collection<AnnotationSourceGenerator> annotations;
 	private Collection<TypeDeclarationSourceGenerator> throwables;
 	private Integer modifier;
 	private boolean defaultFunction;
@@ -230,10 +229,6 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 			}
 		});
 		return types;
-	}
-
-	private String getAnnotations() {
-		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 
 	private String getThrowables() {

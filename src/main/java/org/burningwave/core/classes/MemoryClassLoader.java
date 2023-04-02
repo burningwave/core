@@ -422,7 +422,6 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		return loadedClasses;
 	}
 
-	@Override
 	public QueuedTaskExecutor.Task clearInBackground() {
 		Map<String, ByteBuffer> notLoadedByteCodes = this.notLoadedByteCodes;
 		Map<String, ByteBuffer> loadedByteCodes = this.loadedByteCodes;

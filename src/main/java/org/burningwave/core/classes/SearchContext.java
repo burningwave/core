@@ -32,14 +32,17 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Background
 import static org.burningwave.core.assembler.StaticComponentContainer.Classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLoggerRepository;
 
+import java.lang.reflect.Member;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Context;
+import org.burningwave.core.Criteria;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingSupplier;
@@ -313,5 +316,23 @@ class SearchContext<T> implements Closeable {
 		SearchConfig getSearchConfig() {
 			return get(Elements.SEARCH_CONFIG);
 		}
+	}
+
+	<C extends CriteriaWithClassElementsSupplyingSupport<T, C, E>, E extends Criteria.TestContext<T, C>> C createCriteriaCopy(C criteria) {
+		C criteriaCopy = criteria.createCopy().init(
+				getSearchConfig().getClassCriteria().getClassSupplier(),
+				getSearchConfig().getClassCriteria().getByteCodeSupplier()
+		);
+		Optional.ofNullable(getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+		return criteriaCopy;
+	}
+
+	<M extends Member, C extends MemberCriteria<M, C, E>, E extends Criteria.TestContext<M, C>> C createCriteriaCopy(C criteria) {
+		C criteriaCopy = criteria.createCopy().init(
+				getSearchConfig().getClassCriteria().getClassSupplier(),
+				getSearchConfig().getClassCriteria().getByteCodeSupplier()
+		);
+		Optional.ofNullable(getSearchConfig().getClassCriteria().getClassesToBeUploaded()).ifPresent(classesToBeUploaded -> criteriaCopy.useClasses(classesToBeUploaded));
+		return criteriaCopy;
 	}
 }

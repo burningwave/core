@@ -40,7 +40,6 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 
 	private static final long serialVersionUID = -4865516517027747031L;
 
-	private Collection<AnnotationSourceGenerator> annotations;
 	private Collection<String> outerCode;
 	private Integer modifier;
 	private String classType;
@@ -232,10 +231,6 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 			this.innerClasses.add(cls);
 		}
 		return this;
-	}
-
-	private String getAnnotations() {
-		return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
 	}
 
 	private String getFieldsCode() {

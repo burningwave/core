@@ -74,6 +74,12 @@ public interface SourceGenerator extends Serializable {
 		static final String COMMA = ",";
 		static final String SEMICOLON = ";";
 
+		Collection<AnnotationSourceGenerator> annotations;
+
+		String getAnnotations() {
+			return Optional.ofNullable(annotations).map(annts -> getOrEmpty(annts, "\n") +"\n").orElseGet(() -> null);
+		}
+
 		@Override
 		public String toString() {
 			return make();
