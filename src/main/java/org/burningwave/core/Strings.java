@@ -242,7 +242,7 @@ public class Strings {
 		Function<String, String> uRLPathConverter;
 
 		private Paths() {
-			if (StaticComponentContainer.SystemProperties.get("os.name", "generic").toLowerCase().contains("windows")) {
+			if (isWindowsOS()) {
 				pathCleaner = (path) -> {
 					path = path.replace("\\", "/");
 					if (path.startsWith("/")) {
@@ -264,6 +264,10 @@ public class Strings {
 				};
 				uRLPathConverter = this::convertURLPathToAbsolutePath1;
 			}
+		}
+
+		private boolean isWindowsOS() {
+			return StaticComponentContainer.SystemProperties.get("os.name", "generic").toLowerCase().contains("windows");
 		}
 
 		public static Paths create() {
