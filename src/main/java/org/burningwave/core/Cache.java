@@ -123,7 +123,7 @@ public class Cache {
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = Synchronizer.execute(instanceId + "_" + Objects.getId(object), () -> getPathForResourceTemp(object));
+				pathForResources = Synchronizer.execute(instanceId + "_" + Objects.getId(object), () -> getPathForResource(object));
 			}
 			return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 		}
@@ -131,18 +131,18 @@ public class Cache {
 		public R get(T object, String path) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = Synchronizer.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> getPathForResourceTemp(object));
+				pathForResources = Synchronizer.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> getPathForResource(object));
 			}
 			return pathForResources.get(path);
 		}
 
-		private PathForResources<R> getPathForResourceTemp(T object) {
-			PathForResources<R> pathForResourcesTemp = resources.get(object);
-			if (pathForResourcesTemp == null) {
-				pathForResourcesTemp = pathForResourcesSupplier.get();
-				resources.put(object, pathForResourcesTemp);
+		private PathForResources<R> getPathForResource(T object) {
+			PathForResources<R> pathForResources = resources.get(object);
+			if (pathForResources == null) {
+				pathForResources = pathForResourcesSupplier.get();
+				resources.put(object, pathForResources);
 			}
-			return pathForResourcesTemp;
+			return pathForResources;
 		}
 
 		public PathForResources<R> remove(T object, boolean destroyItems) {
@@ -318,8 +318,7 @@ public class Cache {
 		}
 
 		public R upload(String path, Supplier<R> resourceSupplier, boolean destroy) {
-			Map<String, R> nestedPartition = getNestedPartition(path);;
-			return upload(nestedPartition, path, resourceSupplier, destroy);
+			return upload(getNestedPartition(path), path, resourceSupplier, destroy);
 		}
 
 		private Map<String, R> getNestedPartition(String path) {
