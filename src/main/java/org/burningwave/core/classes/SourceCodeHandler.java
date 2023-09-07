@@ -85,9 +85,9 @@ public class SourceCodeHandler implements Component {
 		StringBuffer newSource = new StringBuffer();
 		String[] lines = source.split("\n");
 		int maxDigitCount = 0;
-		int temp = lines.length;
-		while(temp > 0) {
-			temp = temp / 10;
+		int totalLines = lines.length;
+		while(totalLines > 0) {
+			totalLines = totalLines / 10;
 			++maxDigitCount;
 		}
 		for (int lineCounter = 1; lineCounter <= lines.length; lineCounter++) {

@@ -123,14 +123,7 @@ public class Cache {
 		public R getOrUploadIfAbsent(T object, String path, Supplier<R> resourceSupplier) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = Synchronizer.execute(instanceId + "_" + Objects.getId(object), () -> {
-					PathForResources<R> pathForResourcesTemp = resources.get(object);
-					if (pathForResourcesTemp == null) {
-						pathForResourcesTemp = pathForResourcesSupplier.get();
-						resources.put(object, pathForResourcesTemp);
-					}
-					return pathForResourcesTemp;
-				});
+				pathForResources = Synchronizer.execute(instanceId + "_" + Objects.getId(object), () -> getPathForResource(object));
 			}
 			return pathForResources.getOrUploadIfAbsent(path, resourceSupplier);
 		}
@@ -138,16 +131,18 @@ public class Cache {
 		public R get(T object, String path) {
 			PathForResources<R> pathForResources = resources.get(object);
 			if (pathForResources == null) {
-				pathForResources = Synchronizer.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> {
-					PathForResources<R> pathForResourcesTemp = resources.get(object);
-					if (pathForResourcesTemp == null) {
-						pathForResourcesTemp = pathForResourcesSupplier.get();
-						resources.put(object, pathForResourcesTemp);
-					}
-					return pathForResourcesTemp;
-				});
+				pathForResources = Synchronizer.execute(instanceId + "_mutexManagerForResources_" + Objects.getId(object), () -> getPathForResource(object));
 			}
 			return pathForResources.get(path);
+		}
+
+		private PathForResources<R> getPathForResource(T object) {
+			PathForResources<R> pathForResources = resources.get(object);
+			if (pathForResources == null) {
+				pathForResources = pathForResourcesSupplier.get();
+				resources.put(object, pathForResources);
+			}
+			return pathForResources;
 		}
 
 		public PathForResources<R> remove(T object, boolean destroyItems) {
@@ -323,18 +318,18 @@ public class Cache {
 		}
 
 		public R upload(String path, Supplier<R> resourceSupplier, boolean destroy) {
+			return upload(getNestedPartition(path), path, resourceSupplier, destroy);
+		}
+
+		private Map<String, R> getNestedPartition(String path) {
 			Long occurences = path.chars().filter(ch -> ch == '/').count();
 			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
 			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
-			return upload(nestedPartition, path, resourceSupplier, destroy);
+			return retrievePartition(partion, partitionIndex, path);
 		}
 
 		public R getOrUploadIfAbsent(String path, Supplier<R> resourceSupplier) {
-			Long occurences = path.chars().filter(ch -> ch == '/').count();
-			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+			Map<String, R> nestedPartition = getNestedPartition(path);
 			return getOrUploadIfAbsent(nestedPartition, path, resourceSupplier);
 		}
 
@@ -343,10 +338,7 @@ public class Cache {
 		}
 
 		public R remove(String path, boolean destroy) {
-			Long occurences = path.chars().filter(ch -> ch == '/').count();
-			Long partitionIndex = occurences > partitionStartLevel? occurences : partitionStartLevel;
-			Map<String, Map<String, R>> partion = retrievePartition(resources, partitionIndex);
-			Map<String, R> nestedPartition = retrievePartition(partion, partitionIndex, path);
+			Map<String, R> nestedPartition = getNestedPartition(path);
 			R item = Synchronizer.execute(instanceId + "_mutexManagerForLoadedResources_" + path, () -> {
 				return nestedPartition.remove(path);
 			});
