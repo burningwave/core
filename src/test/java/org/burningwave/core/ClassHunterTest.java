@@ -1436,4 +1436,35 @@ public class ClassHunterTest extends BaseTest {
 	        }
 		}, true);
 	}
+
+	@Test
+	public void findAllAnnotatedClassesWithoutDefaultConstructor() {
+		ComponentSupplier componentSupplier = getComponentSupplier();
+		PathHelper pathHelper = componentSupplier.getPathHelper();
+		testNotEmpty(
+			() -> componentSupplier.getClassHunter().findBy(
+				SearchConfig.forPaths(
+					componentSupplier.getPathHelper().getMainClassPaths(),
+					Arrays.asList(pathHelper.getAbsolutePathOfResource("../../src/test/external-resources/libs-for-test.zip"))
+				).by(ClassCriteria.create().allThoseThatMatch((cls) ->
+		        	cls.getAnnotations() != null && cls.getAnnotations().length > 0
+					    ).and(
+					        ClassCriteria.create().byMembers(
+					            ConstructorCriteria.withoutConsideringParentClasses().allThoseThatMatch((constructor) ->
+					                constructor.getParameterCount() == 0
+					            )
+					        ).negate()
+					    ).and().byMembers(
+					        ConstructorCriteria.withoutConsideringParentClasses().allThoseThatMatch((constructor) ->
+					            constructor.getParameterCount() > 0
+					        )
+					    )
+					).useDefaultPathScannerClassLoaderAsParent(
+					true
+				)
+			),
+			(result) ->
+				result.getClasses()
+		);
+	}
 }
