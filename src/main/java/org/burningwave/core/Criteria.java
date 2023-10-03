@@ -65,17 +65,17 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 		return (C)this;
 	}
 
-	public C negate() {
-		predicate = predicate.negate();
-		return (C)this;
-	}
-
 	public C and(C criteria) {
 		return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
 	}
 
 	public C or(C criteria) {
 		return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+	}
+
+	public C negate() {
+		predicate = predicate.negate();
+		return (C)this;
 	}
 
 	protected C logicOperation(C leftCriteria, C rightCriteria,
@@ -348,17 +348,17 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			return (C)this;
 		}
 
-		public C negate() {
-			predicate = predicate.negate();
-			return (C)this;
-		}
-
 		public C and(C criteria) {
 			return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::and, newInstance());
 		}
 
 		public C or(C criteria) {
 			return logicOperation(this.createCopy(), criteria.createCopy(), (predicate) -> predicate::or, newInstance());
+		}
+
+		public C negate() {
+			predicate = predicate.negate();
+			return (C)this;
 		}
 
 		protected C logicOperation(C leftCriteria, C rightCriteria,
