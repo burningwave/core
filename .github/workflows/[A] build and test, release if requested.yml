@@ -21,7 +21,7 @@ jobs:
       matrix:
         architecture: [x64]
         os: [windows-latest, macOS-latest, ubuntu-latest]
-        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        java: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22-ea]
         exclude:
           - os: ubuntu-latest
             java: 10
