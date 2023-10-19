@@ -90,7 +90,7 @@
 		<repository.url>https://burningwave@github.com/burningwave/core.git</repository.url>
 
 		<coveralls-maven-plugin.version>4.3.0</coveralls-maven-plugin.version>
-		<logback.version>1.4.11</logback.version>
+		<logback.version>1.3.11</logback.version>
 		<jacoco-maven-plugin.version>0.7.6.201602180812</jacoco-maven-plugin.version>
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.10.0</junit-jupiter.version>
@@ -279,14 +279,14 @@
 				<configuration>
 					<manifestLocation>${project.build.outputDirectory}/META-INF/</manifestLocation>
 					<instructions>					
-							<Bundle-Category>Framework</Bundle-Category>
-							<built-by>${organization.name}</built-by>
-							<Bundle-License>https://github.com/burningwave/core/blob/master/LICENSE</Bundle-License>
-							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
-							<Bundle-Name>Core</Bundle-Name>
-							<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-							<Bundle-Vendor>${organization.name}</Bundle-Vendor>
-							<Bundle-Description>${project.description}</Bundle-Description>
+						<Bundle-Category>Framework</Bundle-Category>
+						<built-by>${organization.name}</built-by>
+						<Bundle-License>https://github.com/burningwave/core/blob/master/LICENSE</Bundle-License>
+						<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+						<Bundle-Name>Core</Bundle-Name>
+						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Vendor>${organization.name}</Bundle-Vendor>
+						<Bundle-Description>${project.description}</Bundle-Description>
 							<Bundle-Version>${project.version}</Bundle-Version>
 							<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
 							<Import-Package>javax.tools,io.github.toolfactory.jvm;version="9.6.0",org.burningwave.jvm;version="${burningwave-jvm-driver.version}";resolution:=optional,io.github.toolfactory.jvm.util,org.slf4j;version="1.7.0";resolution:=optional</Import-Package>
