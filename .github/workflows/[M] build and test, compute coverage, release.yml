@@ -7,13 +7,14 @@ on:
 jobs:
   
   send-notification:
+    name: Send push notification
     runs-on: ubuntu-latest
     steps:
       - name: Send Push Notification
         uses: techulus/push-github-action@1.0.0
         env:
           API_KEY: ${{ secrets.PUSH_NOTIFICATION_API_KEY }}
-          MESSAGE: "There is a new commit!"
+          MESSAGE: ${{ format('New star for {0}!', github.repository) }}
           
   ask-for-authorization:
     name: Ask for authorization
