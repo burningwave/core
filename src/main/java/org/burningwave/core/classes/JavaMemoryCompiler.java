@@ -76,7 +76,7 @@ public interface JavaMemoryCompiler {
 			);
 			defaultValues.put(
 				Key.BLACK_LISTED_CLASS_PATHS,
-				"//${paths.main-class-paths}/..//children:.*?surefirebooter\\d{0,}\\.jar"  + IterableObjectHelper.getDefaultValuesSeparator()
+				"//${paths.main-class-paths}/..//children:.*?surefirebooter[^\\/\\\\]{0,}\\.jar"  + IterableObjectHelper.getDefaultValuesSeparator()
 			);
 
 			DEFAULT_VALUES = Collections.unmodifiableMap(defaultValues);

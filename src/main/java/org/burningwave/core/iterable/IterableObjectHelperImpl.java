@@ -231,9 +231,9 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		).orElseGet(() ->
 			defaultCollectionSupplier.get()
 		);
-		Collection<T> additionalClassPaths = additionalCollectionSupplier.get();
-		if (additionalClassPaths != null) {
-			mergedCollection.addAll(additionalClassPaths);
+		Collection<T> additionalCollection = additionalCollectionSupplier.get();
+		if (additionalCollection != null) {
+			mergedCollection.addAll(additionalCollection);
 		}
 		return mergedCollection;
 	}
