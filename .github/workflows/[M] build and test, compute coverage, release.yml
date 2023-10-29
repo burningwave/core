@@ -68,8 +68,8 @@ jobs:
   release:
     name: Release
 #    needs: [build-and-test-with-Java-8-and-later]
-    if: ${{ fromJSON(env.MANUAL_RELEASE_ENABLED) }}
     runs-on: ubuntu-latest
+    if: ${{ env.MANUAL_RELEASE_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 21
