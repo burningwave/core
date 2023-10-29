@@ -3,9 +3,8 @@ name: Build and test -> Compute coverage -> Release
 on:
   watch:
     types: [started]
-
-env:
-  MANUAL_RELEASE_ENABLED: true
+  env:
+    MANUAL_RELEASE_ENABLED: true
 
 jobs:
             
