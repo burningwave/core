@@ -65,6 +65,8 @@ jobs:
   release:
     name: Release
 #    needs: [build-and-test-with-Java-8-and-later]
+    # This is an organization variable: see https://docs.github.com/en/actions/learn-github-actions/variables
+    if: ${{ fromJSON(vars.MANUAL_RELEASE_ENABLED) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -77,8 +79,6 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central repository
-        # This is an organization variable: see https://docs.github.com/en/actions/learn-github-actions/variables
-        if: ${{ fromJSON(vars.MANUAL_RELEASE_ENABLED) }}
         run: |
           export GPG_TTY=$(tty)
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
