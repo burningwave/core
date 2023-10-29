@@ -64,7 +64,7 @@ jobs:
        
   release:
     name: Release
-#    needs: [build-and-test-with-Java-8-and-later]
+    needs: [build-and-test-with-Java-8-and-later]
     # This is an organization variable: see https://docs.github.com/en/actions/learn-github-actions/variables
     if: ${{ fromJSON(vars.MANUAL_RELEASE_ENABLED) }}
     runs-on: ubuntu-latest
