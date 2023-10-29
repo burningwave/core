@@ -69,7 +69,6 @@ jobs:
     name: Release
 #    needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
-    if: ${{ env.MANUAL_RELEASE_STATUS == 'enabled' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 21
@@ -81,6 +80,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Publish to the Maven Central repository
+        if: ${{ env.MANUAL_RELEASE_STATUS == 'enabled' }}
         run: |
           export GPG_TTY=$(tty)
           echo "${{ secrets.gpg_private_key }}" | gpg --batch --import
