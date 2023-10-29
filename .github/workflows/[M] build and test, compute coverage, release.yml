@@ -68,7 +68,7 @@ jobs:
   release:
     name: Release
 #    needs: [build-and-test-with-Java-8-and-later]
-    if: ${{ fromJSON(MANUAL_RELEASE_ENABLED) }}
+    if: ${{ fromJSON(env.MANUAL_RELEASE_ENABLED) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
