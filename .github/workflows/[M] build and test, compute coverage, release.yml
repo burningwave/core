@@ -4,6 +4,9 @@ on:
   watch:
     types: [started]
 
+env:
+  MANUAL_RELEASE_ENABLED: true
+
 jobs:
             
   ask-for-authorization:
@@ -16,8 +19,8 @@ jobs:
         repository: ${{ github.repository }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Send Push Notification
-      if: failure()
+    - name: Send push notification
+      if: ${{ failure() }}
       uses: techulus/push-github-action@1.0.0
       env:
         API_KEY: ${{ secrets.PUSH_NOTIFICATION_API_KEY }}
@@ -64,8 +67,8 @@ jobs:
        
   release:
     name: Release
-    needs: [build-and-test-with-Java-8-and-later]
-    if: ${{ false }}  # disabled for now
+#    needs: [build-and-test-with-Java-8-and-later]
+    if: ${{ fromJSON(MANUAL_RELEASE_ENABLED) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
