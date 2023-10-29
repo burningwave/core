@@ -5,17 +5,7 @@ on:
     types: [started]
 
 jobs:
-  
-  send-notification:
-    name: Send push notification
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Push Notification
-        uses: techulus/push-github-action@1.0.0
-        env:
-          API_KEY: ${{ secrets.PUSH_NOTIFICATION_API_KEY }}
-          MESSAGE: ${{ format('New star for {0}!', github.repository) }}
-          
+            
   ask-for-authorization:
     name: Ask for authorization
     runs-on: ubuntu-latest
@@ -26,6 +16,17 @@ jobs:
         repository: ${{ github.repository }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  send-notification:
+    name: Send push notification
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Push Notification
+        uses: techulus/push-github-action@1.0.0
+        env:
+          API_KEY: ${{ secrets.PUSH_NOTIFICATION_API_KEY }}
+          MESSAGE: ${{ format('New star for {0}!', github.repository) }}
 
   build-and-test-with-Java-8-and-later:
     name: Build -> Test (JVM ${{ matrix.java }}, ${{ matrix.os }})
