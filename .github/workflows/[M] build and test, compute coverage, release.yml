@@ -5,7 +5,7 @@ on:
     types: [started]
 
 env:
-  MANUAL_RELEASE_ENABLED: false
+  MANUAL_RELEASE_ENABLED: true
 
 jobs:
             
