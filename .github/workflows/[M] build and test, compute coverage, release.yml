@@ -5,7 +5,7 @@ on:
     types: [started]
 
 env:
-  MANUAL_RELEASE_ENABLED: true
+  MANUAL_RELEASE_ENABLED: 'true'
 
 jobs:
             
@@ -69,7 +69,7 @@ jobs:
     name: Release
 #    needs: [build-and-test-with-Java-8-and-later]
     runs-on: ubuntu-latest
-    if: ${{ env.MANUAL_RELEASE_ENABLED == 'true' }}
+    if: ${{ MANUAL_RELEASE_ENABLED == 'true' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 21
