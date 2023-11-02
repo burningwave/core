@@ -394,19 +394,11 @@ public class BufferHandler implements Component {
 					@Override
 					public boolean freeMemory() {
 						if (getAddress() != 0) {
-							synchronized (this) {
-								if (getAddress() != 0) {
-									Methods.invokeDirect(deallocator, "run");
-									getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
-										Fields.setDirect(linkedBuffer, "address", 0L)
-									);
-									if (getAddress() != 0) {
-										Fields.setDirect(deallocator, "address", 0L);
-									}
-									return true;
-								}
-								return false;
-							}
+							Methods.invokeDirect(deallocator, "run");
+							getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
+								Fields.setDirect(linkedBuffer, "address", 0L)
+							);
+							return true;
 						} else {
 							return false;
 						}
