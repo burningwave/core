@@ -400,16 +400,15 @@ public class BufferHandler implements Component {
 									getAllLinkedBuffers(buffer).stream().forEach(linkedBuffer ->
 										Fields.setDirect(linkedBuffer, "address", 0L)
 									);
+									//Patch for JDK 22
 									if (getAddress() != 0) {
 										Fields.setDirect(deallocator, "address", 0L);
 									}
 									return true;
 								}
-								return false;
 							}
-						} else {
-							return false;
 						}
+						return false;
 					}
 
 					public long getAddress() {
