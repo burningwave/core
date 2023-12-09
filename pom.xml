@@ -295,7 +295,7 @@
 							io.github.toolfactory.jvm;version="9.6.0",
 							io.github.toolfactory.jvm.util;version="9.6.0",
 							org.slf4j;version="1.7.0";resolution:=optional,
-							org.burningwave.jvm;version="8.15.0";resolution:=optional
+							org.burningwave.jvm;version="${burningwave-jvm-driver.version}";resolution:=optional
 						</Import-Package>
 						<Multi-Release>true</Multi-Release>
     					<_dsannotations>*</_dsannotations><!-- Enable processing of OSGI DS component annotations -->
