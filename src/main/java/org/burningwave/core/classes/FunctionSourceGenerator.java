@@ -199,8 +199,8 @@ public class FunctionSourceGenerator extends SourceGenerator.Abst {
 		}
 		return paramsCode + ")";
 	}
-
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> {
 			types.addAll(usedTypes);
