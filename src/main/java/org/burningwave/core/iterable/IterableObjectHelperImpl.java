@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.burningwave.core.Identifiable;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.ThrowingBiConsumer;
@@ -434,7 +435,7 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 		if (value != null && value instanceof String) {
 			String stringValue = (String)value;
 			Collection<Object> values = new IterableObjectHelperImpl.ArrayList<>();
-			if (!Strings.isEmpty(stringValue)) {
+			if (!StringUtils.isEmpty(stringValue)) {
 				Map<Integer, List<String>> subProperties = Strings.extractAllGroups(Strings.PLACE_HOLDER_NAME_EXTRACTOR_PATTERN, stringValue);
 				if (!subProperties.isEmpty()) {
 					for (Map.Entry<Integer, List<String>> entry : subProperties.entrySet()) {
@@ -591,12 +592,12 @@ public class IterableObjectHelperImpl implements IterableObjectHelper, Propertie
 			value = defaultValues.get(key);
 		}
 		if (value != null && value instanceof String) {
-			if (Strings.isEmpty((String)value) && defaultValues != null) {
+			if (StringUtils.isEmpty((String)value) && defaultValues != null) {
 				value = defaultValues.get(key);
 			}
 			if (value != null && value instanceof String) {
 				String stringValue = (String)value;
-				if (!Strings.isEmpty(stringValue)) {
+				if (!StringUtils.isEmpty(stringValue)) {
 					if (object instanceof String) {
 						String objectString = (String)object;
 						if (stringValue.contains(objectString)) {
