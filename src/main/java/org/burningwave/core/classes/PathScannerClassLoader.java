@@ -254,14 +254,8 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 		FileSystemItem pathFIS = FileSystemItem.ofPath(path);
 		for (String loadedPath : ClassLoaders.getAllLoadedPaths(ClassLoaders.getParent(this))) {
 			FileSystemItem loadedPathFIS = FileSystemItem.ofPath(loadedPath);
-			try {
-				if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
-					return true;
-				}
-			} catch (NullPointerException exc) {
-				if (loadedPathFIS.exists() && pathFIS.exists()) {
-					throw exc;
-				}
+			if (pathFIS.isChildOf(loadedPathFIS) || pathFIS.equals(loadedPathFIS)) {
+				return true;
 			}
 		}
 		return false;
