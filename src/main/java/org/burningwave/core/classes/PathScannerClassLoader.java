@@ -259,7 +259,7 @@ public class PathScannerClassLoader extends org.burningwave.core.classes.MemoryC
 					return true;
 				}
 			} catch (NullPointerException exc) {
-				if (loadedPathFIS.exists() && pathFIS.exists()) {
+				if (loadedPathFIS.refresh().exists() && pathFIS.refresh().exists()) {
 					throw exc;
 				}
 			}
