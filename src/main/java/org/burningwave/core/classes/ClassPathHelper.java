@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.io.FileSystemItem;
 
 public interface ClassPathHelper {
@@ -132,7 +133,7 @@ public interface ClassPathHelper {
 				if (classRepositories == null) {
 					throw new IllegalArgumentException("No class repository has been provided");
 				}
-				if (Strings.isEmpty(nameOfTheClassToBeLoaded)) {
+				if (StringUtils.isEmpty(nameOfTheClassToBeLoaded)) {
 					throw new IllegalArgumentException("No class name to be found has been provided");
 				}
 				return new AndAddToClassLoaderConfig(classLoader, classRepositories, nameOfTheClassToBeLoaded);

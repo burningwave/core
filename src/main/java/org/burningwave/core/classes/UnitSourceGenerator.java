@@ -131,7 +131,8 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 		return new LinkedHashSet<>(imports);
 	}
 
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(classes).ifPresent(clazzes -> {
 			clazzes.forEach(cls -> {

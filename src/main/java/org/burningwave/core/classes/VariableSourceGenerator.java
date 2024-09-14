@@ -105,7 +105,8 @@ public class VariableSourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(annotations).ifPresent(annotations -> {
 			for (AnnotationSourceGenerator annotation : annotations) {
