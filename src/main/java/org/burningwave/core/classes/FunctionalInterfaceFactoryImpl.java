@@ -125,31 +125,44 @@ class FunctionalInterfaceFactoryImpl implements FunctionalInterfaceFactory, Comp
 	@Override
 	public <F> F getOrCreate(Executable executable) {
 		if (executable instanceof Method) {
-			Method targetMethod = (Method)executable;
-			if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
-				return getOrCreateBindedRunnable(targetMethod);
-			} else if ((targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class) &&
-				(targetMethod.getParameterTypes().length > 0 || (targetMethod.getParameterTypes().length == 0 && !Modifier.isStatic(targetMethod.getModifiers())))
-			) {
-				return getOrCreateBindedPredicate(targetMethod);
-			} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
-				return getOrCreateBindedSupplier(targetMethod);
-			} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() == void.class) {
-				return getOrCreateBindedConsumer(targetMethod);
-			} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() != void.class) {
-				return getOrCreateBindedFunction(targetMethod);
-			}
+			return getOrCreateMethod(executable);
 		} else if (executable instanceof Constructor) {
-			Constructor<?> targetConstructor = (Constructor<?>)executable;
-			if (targetConstructor.getParameterTypes().length == 0) {
-				return getOrCreateBindedSupplier(targetConstructor);
-			} else {
-				return getOrCreateBindedFunction(targetConstructor);
-			}
+			return getOrCreateConstructor(executable);
 		}
 		return null;
 	}
 
+	public <F> F getOrCreateConstructor(Executable executable){
+		Constructor<?> targetConstructor = (Constructor<?>)executable;
+
+		if (targetConstructor.getParameterTypes().length == 0) {
+			return getOrCreateBindedSupplier(targetConstructor);
+		}
+
+		return getOrCreateBindedFunction(targetConstructor);
+	}
+
+	public <F> F getOrCreateMethod(Executable executable){
+		Method targetMethod = (Method)executable;
+
+		boolean isBoolean = (targetMethod.getReturnType() == boolean.class || targetMethod.getReturnType() == Boolean.class);
+		boolean hasParameters = targetMethod.getParameterTypes().length > 0;
+		boolean hasNoParametersAndNoStaticModifiers = targetMethod.getParameterTypes().length == 0 && !Modifier.isStatic(targetMethod.getModifiers());
+
+
+		if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() == void.class) {
+			return getOrCreateBindedRunnable(targetMethod);
+		} else if ( isBoolean && ( hasParameters || (hasNoParametersAndNoStaticModifiers))) {
+			return getOrCreateBindedPredicate(targetMethod);
+		} else if (targetMethod.getParameterTypes().length == 0 && targetMethod.getReturnType() != void.class) {
+			return getOrCreateBindedSupplier(targetMethod);
+		} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() == void.class) {
+			return getOrCreateBindedConsumer(targetMethod);
+		} else if (targetMethod.getParameterTypes().length > 0 && targetMethod.getReturnType() != void.class) {
+			return getOrCreateBindedFunction(targetMethod);
+		}
+		return null;
+	}
 	<F> F getOrCreateBindedRunnable(Executable executable) {
 		return (F) Cache.bindedFunctionalInterfaces.getOrUploadIfAbsent(
 			Classes.getClassLoader(executable.getDeclaringClass()),

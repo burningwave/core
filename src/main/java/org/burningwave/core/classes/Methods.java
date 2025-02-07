@@ -47,6 +47,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.function.ThrowingFunction;
 
@@ -59,13 +60,13 @@ public class Methods extends Members.Handler.OfExecutable<Method, MethodCriteria
 
 	String createGetterMethodNameByFieldPath(String fieldPath) {
 		String methodName =
-			"get" + Strings.capitalizeFirstCharacter(fieldPath);
+			"get" + StringUtils.capitalizeFirstCharacter(fieldPath);
 		return methodName;
 	}
 
 	String createSetterMethodNameByFieldPath(String fieldPath) {
 		String methodName =
-			"set" + Strings.capitalizeFirstCharacter(fieldPath);
+			"set" + StringUtils.capitalizeFirstCharacter(fieldPath);
 		return methodName;
 	}
 
