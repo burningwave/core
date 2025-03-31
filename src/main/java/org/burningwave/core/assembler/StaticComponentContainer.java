@@ -148,7 +148,7 @@ public class StaticComponentContainer {
 
 				defaultValues.put(
 					Key.BANNER_ADDITIONAL_INFORMATIONS,
-					"${Implementation-Title} ${Implementation-Version}"
+					"${Bundle-Vendor} ${Bundle-Name} ${Bundle-Version}"
 				);
 
 				defaultValues.put(
@@ -603,7 +603,7 @@ public class StaticComponentContainer {
 				);
 				Collection<Map<String, String>> manifestAsMapByMainAttributes = Resources.getManifestAsMapByMainAttributes(
 					attributes -> {
-						return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+						return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Bundle-Vendor") + " " + attributes.getValue("Bundle-Name"));
 					},
 					Component.class.getClassLoader(),
 					Thread.currentThread().getContextClassLoader()
