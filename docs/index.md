@@ -49,7 +49,7 @@ To include Burningwave Core library in your projects simply use with **Apache Ma
 <dependency>
     <groupId>org.burningwave</groupId>
     <artifactId>core</artifactId>
-    <version>12.65.2</version>
+    <version>12.66.0</version>
 </dependency>
 ```
 
@@ -1145,7 +1145,7 @@ background-executor.queued-task-executor[2].priority=\
 background-executor.task-creation-tracking.enabled=\
 	${background-executor.all-tasks-monitoring.enabled}
 banner.additonal-informations=\
-	${Implementation-Title} ${Implementation-Version}
+	${Bundle-Vendor} ${Bundle-Name} ${Bundle-Version}
 banner.additonal-informations.retrieve-from-manifest-file-with-implementation-title=\
 	Burningwave Core
 banner.hide=\
