@@ -22,7 +22,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_SHOW_CODEDETAILS_IN_EXCEPTION_MESSAGES" value="true"/>
     <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
-    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/20/"/>
+    <stringAttribute key="org.eclipse.jdt.launching.JRE_CONTAINER" value="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/24/"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.burningwave.core.AllExceptHeavyTestsSuite"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="org.burningwave.core"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="core"/>
