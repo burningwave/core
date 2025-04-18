@@ -65,7 +65,7 @@ public class StaticComponentContainer {
 			private static final String GROUP_NAME_FOR_NAMED_ELEMENTS = "group-name-for-named-elements";
 			private static final String BANNER_HIDE = "banner.hide";
 			private static final String BANNER_FILE = "banner.file";
-			private static final String BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_WITH_IMPLEMENTATION_TITLE = "banner.additonal-informations.retrieve-from-manifest-file-with-implementation-title";
+			private static final String BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_OF = "banner.additonal-informations.retrieve-from-manifest-file-of";
 			private static final String BANNER_ADDITIONAL_INFORMATIONS = "banner.additonal-informations";
 			private static final String BACKGROUND_EXECUTOR_TASK_CREATION_TRACKING_ENABLED = "background-executor.task-creation-tracking.enabled";
 			private static final String BACKGROUND_EXECUTOR_ALL_TASKS_MONITORING_ENABLED = "background-executor.all-tasks-monitoring.enabled";
@@ -148,11 +148,11 @@ public class StaticComponentContainer {
 
 				defaultValues.put(
 					Key.BANNER_ADDITIONAL_INFORMATIONS,
-					"${Implementation-Title} ${Implementation-Version}"
+					"${Bundle-Vendor} ${Bundle-Name} ${Bundle-Version}"
 				);
 
 				defaultValues.put(
-					Key.BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_WITH_IMPLEMENTATION_TITLE,
+					Key.BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_OF,
 					"Burningwave Core"
 				);
 
@@ -598,12 +598,16 @@ public class StaticComponentContainer {
 			try {
 				String additionalInformationsManifestImplementationTitle = IterableObjectHelper.resolveStringValue(
 					org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig.forNamedKey(
-						Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_WITH_IMPLEMENTATION_TITLE
+						Configuration.Key.BANNER_ADDITIONAL_INFORMATIONS_RETRIEVE_FROM_MANIFEST_FILE_OF
 					).on(GlobalProperties)
 				);
 				Collection<Map<String, String>> manifestAsMapByMainAttributes = Resources.getManifestAsMapByMainAttributes(
 					attributes -> {
-						return additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title"));
+						return
+							additionalInformationsManifestImplementationTitle.equals(attributes.getValue("Implementation-Title")) ||
+							additionalInformationsManifestImplementationTitle.equals(
+								attributes.getValue("Bundle-Vendor") + " " + attributes.getValue("Bundle-Name")
+							);
 					},
 					Component.class.getClassLoader(),
 					Thread.currentThread().getContextClassLoader()
