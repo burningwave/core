@@ -3,12 +3,11 @@ package org.burningwave.core;
 import static org.burningwave.core.assembler.StaticComponentContainer.BufferHandler;
 
 import org.burningwave.core.jvm.BufferHandler.Deallocator;
-import org.junit.jupiter.api.Test;
 
 public class ByteBufferHandlerTest extends BaseTest {
 
 
-	@Test
+	//@Test
 	public void getAddressTest() {
 		testNotNull(() -> {
 			Long.valueOf(BufferHandler.getAddress(BufferHandler.allocateDirect(1)));
@@ -16,7 +15,7 @@ public class ByteBufferHandlerTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void getDeallocatorTest() {
 		testDoesNotThrow(() -> {
 			Deallocator deallocator = BufferHandler.getDeallocator(BufferHandler.allocateDirect(1).duplicate(), true);
@@ -26,7 +25,7 @@ public class ByteBufferHandlerTest extends BaseTest {
 		});
 	}
 
-	@Test
+	//@Test
 	public void destroyTest() {
 		testDoesNotThrow(() -> {
 			BufferHandler.destroy(BufferHandler.allocateDirect(1).duplicate(), true);

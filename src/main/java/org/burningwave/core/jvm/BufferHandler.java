@@ -262,65 +262,6 @@ public class BufferHandler implements Component {
         return newBuffer;
 	}
 
-	public <T extends Buffer> long getAddress(T buffer) {
-		try {
-			return (long)Driver.getFieldValue(buffer, directAllocatedByteBufferAddressField);
-		} catch (NullPointerException exc) {
-			return (long)Driver.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
-		}
-	}
-
-	private Field getDirectAllocatedByteBufferAddressField() {
-		if (directAllocatedByteBufferAddressField == null) {
-			synchronized (this) {
-				if (directAllocatedByteBufferAddressField == null) {
-					try {
-						this.wait();
-					} catch (InterruptedException exc) {
-						org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
-					}
-				}
-			}
-		}
-		return directAllocatedByteBufferAddressField;
-	}
-
-	public <T extends Buffer> boolean destroy(T buffer, boolean force) {
-		if (buffer.isDirect()) {
-			BufferHandler.Cleaner cleaner = getCleaner(buffer, force);
-			if (cleaner != null) {
-				return cleaner.clean();
-			}
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
-		if (buffer.isDirect()) {
-			if (buffer != null) {
-				Object cleaner;
-				if ((cleaner = Fields.get(buffer, "cleaner")) != null) {
-					return cleaner;
-				} else if (findInAttachments){
-					return getInternalCleaner(Fields.getDirect(buffer, "att"), findInAttachments);
-				}
-			}
-		}
-		return null;
-	}
-
-	private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
-		if (buffer.isDirect()) {
-			Object cleaner = getInternalCleaner(buffer, findInAttachments);
-			if (cleaner != null) {
-				return Fields.getDirect(cleaner, "thunk");
-			}
-		}
-		return null;
-	}
-
 	private <T extends Buffer> Collection<T> getAllLinkedBuffers(T buffer) {
 		Collection<T> allLinkedBuffers = new ArrayList<>();
 		allLinkedBuffers.add(buffer);
@@ -354,6 +295,71 @@ public class BufferHandler implements Component {
 		return new byte[size > -1? size : defaultBufferSize];
 	}
 
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	public <T extends Buffer> long getAddress(T buffer) {
+		try {
+			return (long)Driver.getFieldValue(buffer, directAllocatedByteBufferAddressField);
+		} catch (NullPointerException exc) {
+			return (long)Driver.getFieldValue(buffer, getDirectAllocatedByteBufferAddressField());
+		}
+	}
+
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	private Field getDirectAllocatedByteBufferAddressField() {
+		if (directAllocatedByteBufferAddressField == null) {
+			synchronized (this) {
+				if (directAllocatedByteBufferAddressField == null) {
+					try {
+						this.wait();
+					} catch (InterruptedException exc) {
+						org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(exc);
+					}
+				}
+			}
+		}
+		return directAllocatedByteBufferAddressField;
+	}
+
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	public <T extends Buffer> boolean destroy(T buffer, boolean force) {
+		if (buffer.isDirect()) {
+			BufferHandler.Cleaner cleaner = getCleaner(buffer, force);
+			if (cleaner != null) {
+				return cleaner.clean();
+			}
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
+		if (buffer.isDirect()) {
+			if (buffer != null) {
+				Object cleaner;
+				if ((cleaner = Fields.get(buffer, "cleaner")) != null) {
+					return cleaner;
+				} else if (findInAttachments){
+					return getInternalCleaner(Fields.getDirect(buffer, "att"), findInAttachments);
+				}
+			}
+		}
+		return null;
+	}
+
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
+		if (buffer.isDirect()) {
+			Object cleaner = getInternalCleaner(buffer, findInAttachments);
+			if (cleaner != null) {
+				return Fields.getDirect(cleaner, "thunk");
+			}
+		}
+		return null;
+	}
+
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
 	public  <T extends Buffer> BufferHandler.Cleaner getCleaner(T buffer, boolean findInAttachments) {
 		Object cleaner;
 		if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
@@ -385,6 +391,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
 	public <T extends Buffer> BufferHandler.Deallocator getDeallocator(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			Object deallocator;
@@ -426,6 +433,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
 	public static interface Deallocator {
 
 		public boolean freeMemory();
@@ -434,6 +442,7 @@ public class BufferHandler implements Component {
 
 	}
 
+	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
 	public static interface Cleaner {
 
 		public boolean clean();

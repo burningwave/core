@@ -31,7 +31,7 @@
 
 	<groupId>org.burningwave</groupId>
 	<artifactId>core</artifactId>
-	<version>12.66.3-SNAPSHOT</version>
+	<version>12.67.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Burningwave Core</name>
@@ -141,6 +141,12 @@
 			<groupId>org.burningwave</groupId>
 			<artifactId>jvm-driver</artifactId>
 			<version>${burningwave-jvm-driver.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.github.toolfactory</groupId>
+			<artifactId>jvm-driver</artifactId>
+			<version>9.9.10</version>
 		</dependency>
 
 		<dependency>
@@ -292,8 +298,8 @@
 						<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
 						<Import-Package>
 							javax.tools,
-							io.github.toolfactory.jvm;version="9.8.0",
-							io.github.toolfactory.jvm.util;version="9.8.0",
+							io.github.toolfactory.jvm;version="9.9.10",
+							io.github.toolfactory.jvm.util;version="9.9.10",
 							org.slf4j;version="1.7.0";resolution:=optional,
 							org.burningwave.jvm;version="${burningwave-jvm-driver.version}";resolution:=optional
 						</Import-Package>
