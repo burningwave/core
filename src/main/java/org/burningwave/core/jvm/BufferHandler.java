@@ -295,7 +295,7 @@ public class BufferHandler implements Component {
 		return new byte[size > -1? size : defaultBufferSize];
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public <T extends Buffer> long getAddress(T buffer) {
 		try {
 			return (long)Driver.getFieldValue(buffer, directAllocatedByteBufferAddressField);
@@ -304,7 +304,7 @@ public class BufferHandler implements Component {
 		}
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	private Field getDirectAllocatedByteBufferAddressField() {
 		if (directAllocatedByteBufferAddressField == null) {
 			synchronized (this) {
@@ -320,7 +320,7 @@ public class BufferHandler implements Component {
 		return directAllocatedByteBufferAddressField;
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public <T extends Buffer> boolean destroy(T buffer, boolean force) {
 		if (buffer.isDirect()) {
 			BufferHandler.Cleaner cleaner = getCleaner(buffer, force);
@@ -333,7 +333,7 @@ public class BufferHandler implements Component {
 		}
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	private <T extends Buffer> Object getInternalCleaner(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			if (buffer != null) {
@@ -348,7 +348,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	private <T extends Buffer> Object getInternalDeallocator(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			Object cleaner = getInternalCleaner(buffer, findInAttachments);
@@ -359,7 +359,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public  <T extends Buffer> BufferHandler.Cleaner getCleaner(T buffer, boolean findInAttachments) {
 		Object cleaner;
 		if ((cleaner = getInternalCleaner(buffer, findInAttachments)) != null) {
@@ -391,7 +391,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public <T extends Buffer> BufferHandler.Deallocator getDeallocator(T buffer, boolean findInAttachments) {
 		if (buffer.isDirect()) {
 			Object deallocator;
@@ -433,7 +433,7 @@ public class BufferHandler implements Component {
 		return null;
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public static interface Deallocator {
 
 		public boolean freeMemory();
@@ -442,7 +442,7 @@ public class BufferHandler implements Component {
 
 	}
 
-	@Deprecated(forRemoval = true)/*(since="12.67.0")*/
+	@Deprecated/*(since="12.67.0")*/
 	public static interface Cleaner {
 
 		public boolean clean();
