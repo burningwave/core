@@ -140,8 +140,8 @@ public class TypeDeclarationSourceGenerator extends SourceGenerator.Abst {
 		this.generics.addAll(Arrays.asList(generics));
 		return this;
 	}
-
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		types.add(this);
 		Optional.ofNullable(generics).ifPresent(generics -> {

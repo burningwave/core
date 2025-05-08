@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.burningwave.core.Component;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.assembler.StaticComponentContainer;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.function.Executor;
@@ -210,13 +211,13 @@ class PathHelperImpl implements Component, PathHelper {
 		Collection<String> groupPaths = ConcurrentHashMap.newKeySet();
 		synchronized(this) {
 			String currentPropertyPaths = (String)config.get(pathGroupPropertyName);
-			if (Strings.isNotEmpty(currentPropertyPaths) && Strings.isNotEmpty(paths)) {
+			if (StringUtils.isNotEmpty(currentPropertyPaths) && StringUtils.isNotEmpty(paths)) {
 				if (!currentPropertyPaths.endsWith(IterableObjectHelper.getDefaultValuesSeparator())) {
 					currentPropertyPaths += IterableObjectHelper.getDefaultValuesSeparator();
 				}
 				currentPropertyPaths += paths;
 				((Map<Object, Object>)config).put(pathGroupPropertyName, currentPropertyPaths);
-			} else if (Strings.isNotEmpty(paths)) {
+			} else if (StringUtils.isNotEmpty(paths)) {
 				currentPropertyPaths = paths;
 				((Map<Object, Object>)config).put(pathGroupPropertyName, currentPropertyPaths);
 			}
