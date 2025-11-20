@@ -32,6 +32,7 @@ import static org.burningwave.core.assembler.StaticComponentContainer.ManagedLog
 import static org.burningwave.core.assembler.StaticComponentContainer.Paths;
 import static org.burningwave.core.assembler.StaticComponentContainer.Streams;
 
+import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,8 +183,12 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 	}
 
 	public FileSystemItem storeToClassPath(String classPathFolder) {
+		return storeToClassPath(classPathFolder, true);
+	}
+
+	public FileSystemItem storeToClassPath(String classPathFolder, boolean overwriteExisting) {
 		classPathFolder = Paths.clean(classPathFolder);
-		String classRelativePath = packageName != null? packageName.replace(".", "/") : "";
+		String unitRelativePath = packageName != null? packageName.replace(".", "/") : "";
 		String fileName = null;
 		for (ClassSourceGenerator cSG : classes) {
 			if (fileName == null || (cSG.getModifier() != null && Modifier.isPublic(cSG.getModifier()))) {
@@ -194,10 +199,14 @@ public class UnitSourceGenerator extends SourceGenerator.Abst {
 			}
 		}
 		if (fileName != null) {
-			classRelativePath += "/" + fileName;
+			unitRelativePath += "/" + fileName;
 		} else {
-			classRelativePath += "/" + UUID.randomUUID().toString() + ".java";
+			unitRelativePath += "/" + UUID.randomUUID().toString() + ".java";
 		}
-		return Streams.store(classPathFolder + "/" + classRelativePath, make().getBytes());
+		if (!overwriteExisting && new File(classPathFolder + "/" + unitRelativePath).exists()) {
+			ManagedLoggerRepository.logWarn(getClass()::getName, "Could not write {} because already exists", classPathFolder + "/" + unitRelativePath);
+			return null;
+		}
+		return Streams.store(classPathFolder + "/" + unitRelativePath, make().getBytes());
 	}
 }
