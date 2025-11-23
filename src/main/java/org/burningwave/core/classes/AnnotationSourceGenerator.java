@@ -56,7 +56,9 @@ public class AnnotationSourceGenerator extends SourceGenerator.Abst {
 		return annotation;
 	}
 
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(body).ifPresent(hirearchyElements -> {
 			types.addAll(body.getTypeDeclarations());

@@ -437,13 +437,15 @@ public class Criteria<E, C extends Criteria<E, C, T>, T extends Criteria.TestCon
 			Function<Predicate<E>,
 			Predicate<E>> logicalOperator
 		) {
+			int methodIndex = 10;
+			int messageIndex = 11;
 			return Optional.ofNullable(logicalOperator).map(logOp -> {
 				return logicalOperator.apply(input);
 			}).orElseGet(() ->
 				org.burningwave.core.assembler.StaticComponentContainer.Driver.throwException(
 					"A call to and/or method is necessary before calling {} at {}",
-					Thread.currentThread().getStackTrace()[10].getMethodName(),
-					Thread.currentThread().getStackTrace()[11]
+					Thread.currentThread().getStackTrace()[methodIndex].getMethodName(),
+					Thread.currentThread().getStackTrace()[messageIndex]
 				)
 			);
 		}

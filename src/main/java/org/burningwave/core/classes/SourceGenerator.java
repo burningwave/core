@@ -53,6 +53,8 @@ public interface SourceGenerator extends Serializable {
 		return Objects.serializeToPath(this, absolutePath);
 	}
 
+	public abstract Collection<TypeDeclarationSourceGenerator> getTypeDeclarations();
+
 	public static <S extends SourceGenerator> S deserializeFromPath(String absolutePath) {
 		return Objects.deserializeFromPath(absolutePath);
 	}

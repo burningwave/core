@@ -69,6 +69,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.classes.JavaClass;
 import org.burningwave.core.function.Executor;
 import org.burningwave.core.iterable.IterableObjectHelper.IterationConfig;
@@ -126,7 +127,7 @@ public class FileSystemItem implements Comparable<FileSystemItem> {
 		final String realAbsolutePathCleaned = Paths.toNormalizedCleanedAbsolutePath(realAbsolutePath);
 		FileSystemItem fileSystemItem = Cache.pathForFileSystemItems.getOrUploadIfAbsent(realAbsolutePathCleaned,
 				() -> {
-					if (Strings.isNotEmpty(realAbsolutePathCleaned)) {
+					if (StringUtils.isNotEmpty(realAbsolutePathCleaned)) {
 						return new FileSystemItem(realAbsolutePathCleaned, conventionedAbsolutePath);
 					}
 					return null;

@@ -30,7 +30,7 @@ public class StringsTest extends BaseTest {
 
 	@Test
 	public void stripTest() {
-		assertTrue(!Strings.contains(Strings.strip(" Hello! ", " "), ' '));
+		assertTrue(!StringUtils.contains(Strings.strip(" Hello! ", " "), ' '));
 	}
 
 
@@ -39,6 +39,6 @@ public class StringsTest extends BaseTest {
 		Map<String, String> parameters = new HashMap<>();
 		parameters.put("${firstParameter}", "firstParameter");
 		parameters.put("${secondParameter}", "secondParameter");
-		assertTrue(!Strings.contains(Strings.replace("${firstParameter},${secondParameter}", parameters), '$'));
+		assertTrue(!StringUtils.contains(Strings.replace("${firstParameter},${secondParameter}", parameters), '$'));
 	}
 }

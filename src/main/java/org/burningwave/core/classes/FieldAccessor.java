@@ -267,7 +267,9 @@ public abstract class FieldAccessor implements Component {
 			Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
 			Fields.setDirect(target, field, value);
 		} else {
-			if (target.getClass().isArray() || target instanceof Map || target instanceof Collection) {
+			boolean isArray = target.getClass().isArray();
+			boolean isMapOrCollection = target instanceof Map || target instanceof Collection;
+			if ( isArray || isMapOrCollection) {
 				setInIndexedField(target, matcher.group(2), value);
 			} else {
 				Field field = Fields.findOneAndMakeItAccessible(target.getClass(), matcher.group(1));
