@@ -95,7 +95,8 @@
 		<jakarta.validation.version>2.0.2</jakarta.validation.version>
 		<junit-jupiter.version>5.10.0</junit-jupiter.version>
 		<junit.version>1.10.0</junit.version>
-		<burningwave-jvm-driver.version>8.19.1</burningwave-jvm-driver.version>
+		<burningwave-jvm-driver.version>8.20.1</burningwave-jvm-driver.version>
+		<io_github_toolfactory-jvm-driver.version>9.10.1</io_github_toolfactory-jvm-driver.version>
 		<maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
 		<maven-bundle-plugin.version>5.1.9</maven-bundle-plugin.version>
 		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
@@ -146,7 +147,7 @@
 		<dependency>
 			<groupId>io.github.toolfactory</groupId>
 			<artifactId>jvm-driver</artifactId>
-			<version>9.9.10</version>
+			<version>${io_github_toolfactory-jvm-driver.version}</version>
 		</dependency>
 
 		<dependency>
@@ -298,8 +299,8 @@
 						<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
 						<Import-Package>
 							javax.tools,
-							io.github.toolfactory.jvm;version="9.9.10",
-							io.github.toolfactory.jvm.util;version="9.9.10",
+							io.github.toolfactory.jvm;version="${io_github_toolfactory-jvm-driver.version}",
+							io.github.toolfactory.jvm.util;version="${io_github_toolfactory-jvm-driver.version}",
 							org.slf4j;version="1.7.0";resolution:=optional,
 							org.burningwave.jvm;version="${burningwave-jvm-driver.version}";resolution:=optional
 						</Import-Package>
