@@ -9,7 +9,7 @@
 
 [![Platforms](https://img.shields.io/badge/platforms-Windows%2C%20Mac%20OS%2C%20Linux-orange)](https://github.com/burningwave/core/actions/runs/32490416286)
 
-[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(24)-blueviolet)](https://github.com/burningwave/core/actions/runs/32490416286)
+[![Supported JVM](https://img.shields.io/badge/supported%20JVM-8%2C%209+%20(26)-blueviolet)](https://github.com/burningwave/core/actions/runs/32490416286)
 
 [![Coveralls github branch](https://img.shields.io/coveralls/github/burningwave/core/master)](https://coveralls.io/github/burningwave/core?branch=master)
 [![GitHub open issues](https://img.shields.io/github/issues/burningwave/core)](https://github.com/burningwave/core/issues)
