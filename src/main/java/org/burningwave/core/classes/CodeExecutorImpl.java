@@ -32,7 +32,6 @@ package org.burningwave.core.classes;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Constructors;
 import static org.burningwave.core.assembler.StaticComponentContainer.IterableObjectHelper;
-import static org.burningwave.core.assembler.StaticComponentContainer.Strings;
 
 import java.util.Collection;
 import java.util.Map;
@@ -41,6 +40,7 @@ import java.util.function.Supplier;
 
 import org.burningwave.core.Component;
 import org.burningwave.core.Executable;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.io.FileSystemItem;
 import org.burningwave.core.io.PathHelper;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
@@ -124,9 +124,9 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			Configuration.Key.PROPERTIES_FILE_SUPPLIER_SIMPLE_NAME_SUFFIX,
 			Configuration.Key.PROPERTIES_FILE_EXECUTOR_SIMPLE_NAME_SUFFIX
 		);
-		if (Strings.isNotEmpty(executorName)) {
+		if (StringUtils.isNotEmpty(executorName)) {
 			config.setName(executorName);
-		} else if (Strings.isNotEmpty(executorSimpleName)) {
+		} else if (StringUtils.isNotEmpty(executorSimpleName)) {
 			config.setSimpleName(executorSimpleName);
 		}
 		String code = IterableObjectHelper.resolveStringValue(
@@ -139,7 +139,7 @@ public class CodeExecutorImpl implements CodeExecutor, Component {
 			if (config.isIndentCodeActive()) {
 				code = code.replaceAll(";{2,}", ";");
 				for (String codeLine : code.split(";")) {
-					if (Strings.isNotEmpty(codeLine)) {
+					if (StringUtils.isNotEmpty(codeLine)) {
 						body.addCodeLine(codeLine + ";");
 					}
 				}

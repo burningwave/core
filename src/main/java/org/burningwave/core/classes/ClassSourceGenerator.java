@@ -62,7 +62,8 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		this.typeDeclaration = typeDeclaration;
 	}
 
-	TypeDeclarationSourceGenerator getTypeDeclaration() {
+
+	public TypeDeclarationSourceGenerator getTypeDeclaration() {
 		return typeDeclaration;
 	}
 
@@ -326,7 +327,8 @@ public class ClassSourceGenerator extends SourceGenerator.Abst {
 		).orElseGet(() -> null);
 	}
 
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = typeDeclaration.getTypeDeclarations();
 		Optional.ofNullable(staticInitializer).ifPresent(stcInit -> {
 			types.addAll(stcInit.getTypeDeclarations());

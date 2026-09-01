@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.classes.Classes.Loaders.ChangeParentsContext;
 import org.burningwave.core.concurrent.QueuedTaskExecutor;
 import org.burningwave.core.io.ByteBufferInputStream;
@@ -205,7 +206,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 	}
 
 	public boolean hasPackageBeenDefined(String packageName) {
-		return Strings.isEmpty(packageName) || ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
+		return StringUtils.isEmpty(packageName) || ClassLoaders.retrieveLoadedPackage(this, packageName) != null;
 	}
 
     @Override
@@ -214,7 +215,7 @@ public class MemoryClassLoader extends ClassLoader implements Component, org.bur
 		String implVersion, String implVendor, URL sealBase
 	) throws IllegalArgumentException {
     	Package pkg = null;
-    	if (Strings.isNotEmpty(packageName)) {
+    	if (StringUtils.isNotEmpty(packageName)) {
     		try {
 				pkg = super.definePackage(packageName, specTitle, specVersion, specVendor, implTitle,
 		    			implVersion, implVendor, sealBase);

@@ -70,6 +70,7 @@ import javax.tools.ToolProvider;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Component;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.classes.ClassPathHelper.Compute;
 import org.burningwave.core.classes.JavaMemoryCompiler.Compilation.Config;
 import org.burningwave.core.concurrent.QueuedTaskExecutor.ProducerTask;
@@ -340,7 +341,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 						}
 					}
 				}
-				if (Strings.isNotEmpty(packageName)) {
+				if (StringUtils.isNotEmpty(packageName)) {
 					try {
 						fsObjects = context.findForPackageName(packageName);
 					} catch (Exception exc) {
@@ -561,7 +562,7 @@ public class JavaMemoryCompilerImpl implements JavaMemoryCompiler, Component {
 			}
 
 			void addToClassPath(String path) {
-				if (Strings.isNotBlank(path)) {
+				if (StringUtils.isNotBlank(path)) {
 					if (blackListedClassPaths.contains(path)) {
 						ManagedLoggerRepository.logWarn(getClass()::getName, "Could not add {} to class path because it is black listed", path);
 						return;

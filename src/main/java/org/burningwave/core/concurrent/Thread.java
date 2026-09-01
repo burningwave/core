@@ -48,6 +48,7 @@ import java.util.function.Function;
 
 import org.burningwave.core.Closeable;
 import org.burningwave.core.Identifiable;
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.function.ThrowingConsumer;
 import org.burningwave.core.iterable.IterableObjectHelper.ResolveConfig;
 
@@ -235,7 +236,7 @@ public abstract class Thread extends java.lang.Thread {
 			"{}{}",
 			super.toString(),
 			Optional.ofNullable(getState()).map(threadState ->
-				Strings.compile("({})", Strings.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")))
+				Strings.compile("({})", StringUtils.capitalizeFirstCharacter(threadState.name().toLowerCase().replace("_", " ")))
 			).orElseGet(() -> "")
 		);
 	}

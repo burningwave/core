@@ -30,6 +30,7 @@ package org.burningwave.core.classes;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 @SuppressWarnings("unchecked")
@@ -99,6 +100,11 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 				public String make() {
 					return element;
 				}
+
+				@Override
+				public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations(){
+					return Collections.emptyList();
+				}
 			});
 		}
 		return this;
@@ -127,33 +133,13 @@ public class BodySourceGenerator extends SourceGenerator.Abst {
 		return this;
 	}
 
-	Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
+	@Override
+	public Collection<TypeDeclarationSourceGenerator> getTypeDeclarations() {
 		Collection<TypeDeclarationSourceGenerator> types = new ArrayList<>();
 		Optional.ofNullable(usedTypes).ifPresent(usedTypes -> types.addAll(usedTypes));
 		Optional.ofNullable(bodyGenerators).ifPresent(bodyGenerators -> {
 			for (SourceGenerator generator : bodyGenerators) {
-				if (generator instanceof AnnotationSourceGenerator) {
-					types.addAll(((AnnotationSourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof BodySourceGenerator) {
-					types.addAll(((BodySourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof ClassSourceGenerator) {
-					types.addAll(((ClassSourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof FunctionSourceGenerator) {
-					types.addAll(((FunctionSourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof GenericSourceGenerator) {
-					types.addAll(((GenericSourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof TypeDeclarationSourceGenerator) {
-					types.addAll(((TypeDeclarationSourceGenerator)generator).getTypeDeclarations());
-				}
-				if (generator instanceof VariableSourceGenerator) {
-					types.addAll(((VariableSourceGenerator)generator).getTypeDeclarations());
-				}
-
+				types.addAll(generator.getTypeDeclarations());
 			}
 		});
 		return types;

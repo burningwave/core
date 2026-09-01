@@ -46,6 +46,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
+import org.burningwave.core.StringUtils;
 import org.burningwave.core.function.PentaConsumer;
 import org.burningwave.core.function.TriConsumer;
 
@@ -141,7 +142,7 @@ public class PojoSourceGenerator {
 		if (superClass != null) {
 			String superClassPackage = Optional.ofNullable(superClass.getPackage()).map(pckg -> pckg.getName()).orElseGet(() -> "");
 			Predicate<Executable> modifierTester =
-				Strings.areEquals(packageName, superClassPackage) ?
+				StringUtils.areEquals(packageName, superClassPackage) ?
 					executable ->
 						!Modifier.isPrivate(executable.getModifiers()) :
 					executable ->
